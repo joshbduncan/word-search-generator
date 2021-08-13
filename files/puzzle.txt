@@ -1,0 +1,16 @@
+** WORD SEARCH **
+
+Y O Z F P L R O F
+G D N L I E T W L
+W K F H G A H X T
+B S L D C D O Y G
+T R F V F H R N P
+F G A J Z J S D H
+W P R B D X E R Q
+X F D O G B P B X
+J P K V J Z M A C
+
+Find these words: CAT, DOG, HORSE, PIG
+* Words can go NE, E, SE, and S.
+
+Answer Key: CAT NE @ (4, 5), DOG E @ (8, 3), HORSE S @ (3, 7), PIG S @ (1, 5)

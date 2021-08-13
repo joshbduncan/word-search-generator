@@ -1,0 +1,36 @@
+#!/bin/sh
+
+function build {
+    # build the app for pypi
+    source venv/bin/activate
+    if test ; then
+        echo "⚙️ building Word-Search-Generator..."
+        python -m build
+    else
+        echo "❌ build was unsuccessful"
+    fi
+}
+
+# function test {
+    # test app using pytest
+    # echo "🧾 testing Swatcher..."
+    # source venv/bin/activate
+    # pytest
+# }
+
+function upload {
+    # upload to pypi
+    echo "⬆️ uploading to pypi..."
+    twine upload dist/*
+}
+
+function help {
+  printf "%s <task> [args]\n\nTasks:\n" "${0}"
+
+  compgen -A function | grep -v "^_" | cat -n
+
+  printf "\nExtended help:\n  Each task has comments for general usage\n"
+}
+
+TIMEFORMAT=$'\nTask completed in %3lR'
+time "${@:-help}"
