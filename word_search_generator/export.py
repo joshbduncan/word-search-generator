@@ -20,7 +20,7 @@ def validate_path(path: str, ftype: str) -> pathlib.Path:
     Returns:
         pathlib.Path: Validated output path for writing to.
     """
-    path = pathlib.Path(path).expanduser()
+    path = pathlib.Path(path).absolute() if path else pathlib.Path.cwd()
     # don't overwrite any file
     if path.is_file():
         raise FileExistsError(f"Sorry, output file '{path}' already exists.")
@@ -33,7 +33,6 @@ def validate_path(path: str, ftype: str) -> pathlib.Path:
         fpath = path
     else:
         raise FileNotFoundError(f"Sorry, output path '{path}' is invalid.")
-    # return the validated output path
     return fpath
 
 
@@ -64,7 +63,6 @@ def write_csv_file(
             print(f'\n"Answer Key: {utils.get_answer_key_str(key)}"', file=f)
     except OSError:
         raise OSError(f"File could not be saved to '{fpath}'.")
-    # return the file output path
     return fpath.absolute()
 
 
@@ -91,7 +89,6 @@ def write_pdf_file(
     pdf.set_creator(config.pdf_creator)
     pdf.set_title(config.pdf_title)
     pdf.add_page()
-
     # draw a page border
     pdf.set_margin(0.5)
     pdf.rect(0.5, 0.5, pdf.epw, pdf.eph)
@@ -105,12 +102,7 @@ def write_pdf_file(
     pdf.set_text_color(0)
     # calculate the text size based on puzzle size
     font_size = 15
-    if len(puzzle) <= 15:
-        font_adjust = 12 / len(puzzle)
-    elif len(puzzle) <= 20:
-        font_adjust = 15 / len(puzzle)
-    else:
-        font_adjust = 18 / len(puzzle)
+    font_adjust = 15 / len(puzzle)
     # setup grid and font sizing for puzzle characters
     pdf.set_font("Courier", size=font_size * font_adjust)
     gsize = pdf.font_size * 1.75
@@ -126,7 +118,7 @@ def write_pdf_file(
     pdf.ln(0.25)
     # write word list heading
     pdf.set_font("Courier", "BU", size=font_size * font_adjust)
-    pdf.cell(pdf.epw, txt=f"Find these words:", border=0, align="C", ln=2)
+    pdf.cell(pdf.epw, txt="Find these words:", border=0, align="C", ln=2)
     pdf.ln(0.125)
     pdf.set_font("Courier", size=font_size * font_adjust)
     # write the word list
@@ -155,5 +147,4 @@ def write_pdf_file(
         pdf.output(fpath)
     except OSError:
         raise OSError(f"File could not be saved to '{fpath}'.")
-    # return the file output path
     return fpath.absolute()

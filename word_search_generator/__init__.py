@@ -8,7 +8,7 @@
     :license: MIT, see LICENSE for more details.
 """
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 from . import export
 from . import generate
@@ -78,7 +78,7 @@ class WordSearch:
             TypeError: Must be an integer.
             ValueError: Must be 1, 2, or 3.
         """
-        if type(val) != int:
+        if not isinstance(val, int):
             raise TypeError("Level must be an integer.")
         if val not in [1, 2, 3]:
             raise ValueError("Level must be 1, 2, or 3.")
@@ -101,7 +101,7 @@ class WordSearch:
             TypeError: Must be an integer.
             ValueError: Must be greater than 10.
         """
-        if type(val) != int:
+        if not isinstance(val, int):
             raise TypeError("Size must be an integer.")
         if val < 10:
             raise ValueError("Minimum size is 10")
@@ -152,11 +152,12 @@ class WordSearch:
             if key:
                 print(f"\nAnswer Key: {utils.get_answer_key_str(self.key)}")
 
-    def save(self, path: str, format: str = "pdf") -> str:
+    def save(self, path: str = None, format: str = "pdf") -> str:
         """Save puzzle to a text file.
 
         Args:
             path (str): A filename (string) or pathlib.Path object.
+            Defaults to current directory.
             format (str, optional): Save file format (csv or pdf). Defaults to 'pdf'.
 
         Raises:
@@ -184,13 +185,9 @@ class WordSearch:
 
         Args:
             words (str): A string of words separated by spaces, commas, or new lines.
-
-        Returns:
-            set: The updated puzzle words.
         """
         self.words.update(utils.cleanup_input(words))
         self._reset_puzzle()
-        return self.words
 
     def remove_words(self, words: str) -> set:
         """Remove words from the puzzle.

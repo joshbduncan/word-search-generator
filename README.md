@@ -2,6 +2,8 @@
 
 Word-Search-Generator is a Python module for generating fun [Word Search Puzzles](https://en.wikipedia.org/wiki/Word_search).
 
+<p align="center"><img src="/files/word-search.gif?raw=true"/></p>
+
 Like most of my programming endeavors, Word-Search-Generator was born out of necessity. I needed an easy way to generate a bunch of word search puzzles for kid's food menus at the day job.
 
 🤦‍♂️ Does the world need this? Probably not.  
@@ -82,7 +84,7 @@ Find these words: CAT, DOG, DONKEY, GOAT, HORSE, PIG, SHEEP, TURTLE
 Answer Key: CAT S @ (4, 8), DOG SE @ (2, 4), DONKEY E @ (8, 1), GOAT S @ (4, 10), HORSE NE @ (7, 2), PIG SE @ (3, 3), SHEEP E @ (10, 5), TURTLE E @ (7, 3)
 ```
 
-ℹ️ The answer key uses a 1-based index as that's more familiar with non-programmers. First number is the row, second is the column. Directions are cardinal from first letter to last.
+ℹ️ The output answer key uses a 1-based index as that's more familiar with non-programmers. First number is the row, second is the column. Directions are cardinal from first letter to last. The stored `puzzle.key` is 0-based.
 
 🍰 Too easy? Up the difficulty level with `puzzle.level = 3`.
 
@@ -259,25 +261,17 @@ optional arguments:
 
 ℹ️ You can also use words from a file...
 
-```
+```bash
 $ word-search -w "$(cat words.txt)"
-** WORD SEARCH **
+```
 
-D Y J I A L K N U I X I
-E F K S E P A R A T E U
-I W U W M T F X L D P S
-Z O L F S A R Z E C Y O
-Y N V B R P J G Y R J F
-D B G K V O B K A Q O B
-X M F N Y R M S J Z H W
-I J K E F V D A X T U X
-X Q C Y X R T I E W D V
-Z N V T O B S L X R K C
-Q Y U W C L I T V A J B
-N P R L Y F G R Q G O R
+This really came in handy for those kid's food menus. I was able to take a folder full of .txt documents with themed words and generate dozens of level 1 Word Search Puzzles at exactly 15 characters in size super fast...
 
-Find these words: FILE, FROM, SEPARATE, WORDS
-* Words can go NE, E, SE, and S.
+```bash
+$ for f in ~/.../words*.txt; word-search -w "$(cat $f)" -l 1 -s 15 -e pdf -p ~/.../puzzles/"$(basename $f)".pdf; done;
+Puzzle saved: ~/.../puzzles/words-theme01.txt
+...
+Puzzle saved: ~/.../puzzles/words-theme99.txt
 ```
 
 ## Resources

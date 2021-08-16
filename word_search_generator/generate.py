@@ -15,18 +15,10 @@ def calc_puzzle_size(words: set, level: int) -> int:
     Returns:
         int: Final puzzle grid size.
     """
-    # get the len of the longest word
-    longest = max(set(len(word) for word in words))
-    # calculate multipler for larger word list so that most have room to fit
+    longest = len(max(words, key=len))
+    # calculate multipler for larger word lists so that most have room to fit
     multiplier = len(words) / 15 if len(words) > 15 else 1
-    # set the final puzzle size base on level
-    if level == 1:
-        size = int((longest + 2) * multiplier)
-    elif level == 2:
-        size = int((longest + 4) * multiplier)
-    else:
-        size = int((longest + 8) * multiplier)
-    # limit size to max
+    size = int(longest + level * 2 * multiplier)
     if size > config.max_puzzle_size:
         size = config.max_puzzle_size
     return size
@@ -49,21 +41,18 @@ def test_a_fit(puzzle: list, word: str, row: int, col: int, dir: str) -> list:
     coords = []
     # iterate over each letter in the word
     for char in word:
+        rmove, cmove = config.dir_moves[dir]
         # if the current puzzle space is empty or if letters match
         if puzzle[row][col] == "•" or puzzle[row][col] == char:
-            # add the coordinates to the list
             coords.append((row, col))
         else:
-            # if the current puzzle spot is already filled cancel fit test
             return False
-
-        # adjust the coordinates along the correction path for this direction
-        row += config.dir_moves[dir][0]
-        col += config.dir_moves[dir][1]
+        # adjust the coordinates along the word path for direction
+        row += rmove
+        col += cmove
         # if new coordinates are off of board cancel fit test
         if row < 0 or col < 0 or row > len(puzzle) - 1 or col > len(puzzle[0]) - 1:
             return False
-
     return coords
 
 
@@ -103,12 +92,10 @@ def fill_words(words: set, level: int, size: int = None) -> dict:
         size (int, optional): Final puzzle grid size.
 
     Returns:
-        dict: Completed puzzle, puzzle aanswer key, final word placements.
+        dict: Completed puzzle, puzzle answer key, final word placements.
     """
-    # calculate the puzzle size based on input or words
+    # calculate the puzzle size and setup a new empty puzzle
     size = size if size else calc_puzzle_size(words, level)
-
-    # setup empty puzzle to hold all letters and placement to hold fit details
     puzzle = [["•"] * size for _ in range(size)]
     key = {}
 
@@ -129,17 +116,15 @@ def fill_words(words: set, level: int, size: int = None) -> dict:
                 for i, char in enumerate(word):
                     puzzle[coords[i][0]][coords[i][1]] = char
                 # update placement info for word
-                # increase row and col by one so count is normal
-                key[word] = {"start": (row + 1, col + 1), "dir": dir}
+                # increase row and col by one so they are 1-based
+                key[word] = {"start": (row, col), "dir": dir}
                 # go to next word
                 break
             # if there was no fit at starting coordinates try again
             tries += 1
-    # make a copy of the puzzle answer key
+    # make a copy of the puzzle answer key, fill in the puzzle with random characters
     solution = copy.deepcopy(puzzle)
-    # fill in the empty spots with random characters
     puzzle = fill_blanks(puzzle)
-    # return the completed puzzle, solution puzzle, and answer key
     return {"puzzle": puzzle, "solution": solution, "key": key}
 
 
@@ -159,6 +144,7 @@ def no_matching_neighbors(puzzle: list, char: str, row: int, col: int) -> bool:
     for dir in config.dir_moves:
         test_row = row + config.dir_moves[dir][0]
         test_col = col + config.dir_moves[dir][1]
+        # if test coordinates are off board skip
         if (
             test_row < 0
             or test_col < 0
@@ -166,6 +152,7 @@ def no_matching_neighbors(puzzle: list, char: str, row: int, col: int) -> bool:
             or test_col > len(puzzle[0]) - 1
         ):
             continue
+        # if this neighbor matchs try another character
         if char == puzzle[test_row][test_col]:
             return False
     return True
@@ -184,9 +171,8 @@ def fill_blanks(puzzle: list) -> list:
     # iterate over the entire puzzle
     for row in range(len(puzzle)):
         for col in range(len(puzzle[0])):
-            # if the current spot is empty
+            # if the current spot is empty fill with random character
             if puzzle[row][col] == "•":
-                # fill it with a random character
                 while True:
                     random_char = random.choice(alphabet)
                     if no_matching_neighbors(puzzle, random_char, row, col):

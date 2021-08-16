@@ -2,7 +2,6 @@ import argparse
 import pathlib
 
 from . import WordSearch
-from . import utils
 
 
 class MinSizeAction(argparse.Action):
@@ -15,6 +14,8 @@ class MinSizeAction(argparse.Action):
 
 
 def cli():
+    """Word Search Generator CLI"""
+
     # setup argparse to capture cli arguments
     parser = argparse.ArgumentParser(
         description="Generate Word Search Puzzles!",
@@ -55,18 +56,12 @@ def cli():
         parser.error(
             "You must provide a list of words. Use '-h' or '--help' for more info.\n"
         )
-    # if export flag make sure output path was specified
-    if args.export and args.path is None:
-        parser.error("-e, --export requires -p, --path.")
-
     # create a new puzzle object from provided arguments
     puzzle = WordSearch(",".join(args.words), level=args.level, size=args.size)
     # show the result
     if args.export:
-        exported_file = puzzle.save(
-            path=args.path.absolute(), format=args.export.upper()
-        )
-        print(f"Puzzle saved: {exported_file}")
+        fexport = puzzle.save(path=args.path, format=args.export.upper())
+        print(f"Puzzle saved: {fexport}")
     else:
         puzzle.show(key=args.key, tabs=args.tabs)
 

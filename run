@@ -1,26 +1,29 @@
 #!/bin/sh
 
+cdir=$(pwd)
+app=$(basename $cdir)
+
 function build {
     # build the app for pypi
     source venv/bin/activate
-    if test ; then
-        echo "⚙️ building Word-Search-Generator..."
+    if tests ; then
+        echo "⚙️ building $app..."
         python -m build
     else
         echo "❌ build was unsuccessful"
     fi
 }
 
-# function test {
+function tests {
     # test app using pytest
-    # echo "🧾 testing Swatcher..."
-    # source venv/bin/activate
-    # pytest
-# }
+    echo "🧾 testing $app..."
+    source venv/bin/activate
+    pytest
+}
 
 function upload {
     # upload to pypi
-    echo "⬆️ uploading to pypi..."
+    echo "⬆️ uploading $app to pypi..."
     twine upload dist/*
 }
 
