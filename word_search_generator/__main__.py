@@ -1,5 +1,6 @@
 import argparse
 import pathlib
+import sys
 
 from . import WordSearch
 
@@ -22,7 +23,13 @@ def cli():
         epilog="Copyright 2021 Josh Duncan (joshbduncan.com)",
     )
     # define all possible arguments
-    parser.add_argument("-w", "--words", nargs="+", help="words to hide in the puzzle")
+    parser.add_argument(
+        "words",
+        type=str,
+        nargs="*",
+        help="words to include in the puzzle",
+        default=sys.stdin,
+    )
     parser.add_argument(
         "-l",
         "--level",
@@ -44,23 +51,19 @@ def cli():
         choices=["csv", "pdf"],
     )
     parser.add_argument(
-        "-p",
-        "--path",
-        help="export path for '-e', '--export' flag",
+        "-o",
+        "--output",
+        help="output path for '-e', '--export' flag",
         type=pathlib.Path,
     )
 
     # capture all cli arguments and make sure words were provided
     args = parser.parse_args()
-    if not args.words:
-        parser.error(
-            "You must provide a list of words. Use '-h' or '--help' for more info.\n"
-        )
     # create a new puzzle object from provided arguments
     puzzle = WordSearch(",".join(args.words), level=args.level, size=args.size)
     # show the result
     if args.export:
-        fexport = puzzle.save(path=args.path, format=args.export.upper())
+        fexport = puzzle.save(path=args.output, format=args.export.upper())
         print(f"Puzzle saved: {fexport}")
     else:
         puzzle.show(key=args.key, tabs=args.tabs)

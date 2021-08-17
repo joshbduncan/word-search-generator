@@ -214,7 +214,7 @@ puzzle.save(path="puzzle.csv", format='csv')
 
 ℹ️ Using the Word-Search-Generator [CLI Integration](#cli-integration) and [redirections](https://www.gnu.org/software/bash/manual/html_node/Redirections.html) in your terminal you can also save the puzzle to a text file.
 
-    $ word-search -w dog, cat, pig, horse -k > puzzle.txt
+    $ word-search dog, cat, pig, horse -k > puzzle.txt
 
 📁 **View Sample Files:**
 [Word-Search PDF](https://github.com/joshbduncan/word-search-generator/blob/main/files/puzzle.pdf), [Word-Search CSV](https://github.com/joshbduncan/word-search-generator/blob/main/files/puzzle.csv), [Word-Search TXT](https://github.com/joshbduncan/word-search-generator/blob/main/files/puzzle.txt)
@@ -225,14 +225,15 @@ Word-Search-Generator works in your terminal too! 🙌
 
 ```
 $ word-search -h
-usage: word-search [-h] [-w WORDS [WORDS ...]] [-l {1,2,3}] [-s SIZE] [-k] [-t] [-e {csv,pdf}] [-p PATH]
+usage: word-search [-h] [-l {1,2,3}] [-s SIZE] [-k] [-t] [-e {csv,pdf}] [-o OUTPUT] [words ...]
 
-Generate a Word Search Puzzles!
+Generate Word Search Puzzles!
+
+positional arguments:
+  words                 words to include in the puzzle
 
 optional arguments:
   -h, --help            show this help message and exit
-  -w WORDS [WORDS ...], --words WORDS [WORDS ...]
-                        words to hide in the puzzle
   -l {1,2,3}, --level {1,2,3}
                         difficulty level (1) beginner, (2) intermediate, (3) expert
   -s SIZE, --size SIZE  puzzle size >=10
@@ -240,35 +241,36 @@ optional arguments:
   -t, --tabs            use tabs as character separator
   -e {csv,pdf}, --export {csv,pdf}
                         export puzzle as 'csv' or 'pdf' file
-  -p PATH, --path PATH  export path for '-e', '--export' flag
+  -o OUTPUT, --output OUTPUT
+                        output path for '-e', '--export' flag
 ```
 
 💻 Generate a puzzle.
 
-    $ word-search -w works, in, the, terminal, too
+    $ word-search works, in, the, terminal, too
 
 💻 Generate a puzzle **20 characters wide** with **difficulty level 1**.
 
-    $ word-search -w works, in, the, terminal, too -l 1 -s 20
+    $ word-search works, in, the, terminal, too -l 1 -s 20
 
 💻 Generate a puzzle and **save as a pdf**.
 
-    $ word-search -w works, in, the, terminal, too -e pdf -p ~/Desktop
+    $ word-search works, in, the, terminal, too -e pdf -o ~/Desktop
 
 💻 Generate a puzzle and **save as a csv**.
 
-    $ word-search -w works, in, the, terminal, too -e csv -p ~/Desktop/puzzle.csv
+    $ word-search works, in, the, terminal, too -e csv -o ~/Desktop/puzzle.csv
 
 ℹ️ You can also use words from a file...
 
 ```bash
-$ word-search -w "$(cat words.txt)"
+$ word-search "$(cat words.txt)"
 ```
 
 This really came in handy for those kid's food menus. I was able to take a folder full of .txt documents with themed words and generate dozens of level 1 Word Search Puzzles at exactly 15 characters in size super fast...
 
 ```bash
-$ for f in ~/.../words*.txt; word-search -w "$(cat $f)" -l 1 -s 15 -e pdf -p ~/.../puzzles/"$(basename $f)".pdf; done;
+$ for f in tests/word*.txt; do word-search "$(cat $f)" -l 1 -s 15 -e pdf -o $f.pdf; done
 Puzzle saved: ~/.../puzzles/words-theme01.txt
 ...
 Puzzle saved: ~/.../puzzles/words-theme99.txt
