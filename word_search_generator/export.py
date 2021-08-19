@@ -95,17 +95,18 @@ def write_pdf_file(
     pdf.rect(0.5, 0.5, pdf.epw, 0.5, "FD")
     # draw title box and text
     pdf.set_text_color(255)
-    pdf.set_font("Courier", "B", 30)
+    pdf.set_font("Courier", "B", config.pdf_title_font_size)
     pdf.cell(pdf.epw, 0.5, "** WORD SEARCH **", border=0, ln=1, align="C", center=True)
     # move down and reset text fill color for puzzle
     pdf.ln(0.50)
     pdf.set_text_color(0)
     # calculate the text size based on puzzle size
-    font_size = 15
-    font_adjust = 15 / len(puzzle)
+    font_size = config.pdf_font_size
+    font_adjust = config.pdf_font_adjust / len(puzzle)
     # setup grid and font sizing for puzzle characters
     pdf.set_font("Courier", size=font_size * font_adjust)
-    gsize = pdf.font_size * 1.75
+    gmargin = config.max_puzzle_size / len(puzzle)
+    gsize = (pdf.epw - gmargin) / len(puzzle)
     # calculate new margin to make puzzle centered
     pdf.set_left_margin(pdf.epw / 2 - len(puzzle[0]) * gsize / 2 + pdf.l_margin)
     # draw the puzzle
@@ -117,21 +118,24 @@ def write_pdf_file(
     pdf.set_margin(1)
     pdf.ln(0.25)
     # write word list heading
-    pdf.set_font("Courier", "BU", size=font_size * font_adjust)
-    pdf.cell(pdf.epw, txt="Find these words:", border=0, align="C", ln=2)
-    pdf.ln(0.125)
-    pdf.set_font("Courier", size=font_size * font_adjust)
-    # write the word list
-    pdf.multi_cell(
-        pdf.epw, pdf.font_size * 1.5, utils.get_word_list_str(key), align="C", ln=2
+    info_font_adjust = (
+        font_size * font_adjust * config.pdf_font_adjust / config.max_puzzle_words
     )
+    info_font_size = (
+        font_size if info_font_adjust < config.pdf_font_size else info_font_adjust
+    )
+    pdf.set_font("Courier", "BU", size=info_font_size)
+    pdf.cell(pdf.epw, txt="Find these words:", align="C", ln=2)
+    pdf.ln(0.125)
+    pdf.set_font("Courier", size=info_font_size)
+    # write the word list
+    pdf.multi_cell(pdf.epw, None, utils.get_word_list_str(key), align="C", ln=2)
     # move down and insert word direction info
     pdf.ln(0.125)
-    pdf.set_font("Courier", size=(font_size - 3) * font_adjust)
+    pdf.set_font("Courier", size=info_font_size)
     pdf.cell(
         w=pdf.epw,
         txt=f"* Words can go {utils.get_level_dirs_str(level)}.",
-        border=0,
         align="C",
     )
     # resetting the margin before rotating makes layout easier to figure
@@ -140,7 +144,7 @@ def write_pdf_file(
     with pdf.rotation(angle=180, x=pdf.epw / 2, y=pdf.eph / 2):
         pdf.set_xy(pdf.epw - pdf.epw, 0)
         pdf.set_margin(0.625)
-        pdf.set_font("Courier", size=6)
+        pdf.set_font("Courier", size=config.pdf_key_font_size)
         pdf.write(txt="Answer Key: " + utils.get_answer_key_str(key))
     # write the final PDF to the filesystem
     try:

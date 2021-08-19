@@ -5,26 +5,31 @@ import string
 from . import config
 
 
-def calc_puzzle_size(words: set, level: int) -> int:
+def calc_puzzle_size(words: set, level: int, size: int = None) -> int:
     """Calculate the puzzle grid size based on longest word, word count and level.
 
     Args:
         words (set): Words to be placed in the puzzle.
         level (int): Puzzle difficulty level.
+        size (int): User requested size of puzzle.
 
     Returns:
         int: Final puzzle grid size.
     """
-    longest = len(max(words, key=len))
-    # calculate multipler for larger word lists so that most have room to fit
-    multiplier = len(words) / 15 if len(words) > 15 else 1
-    size = int(longest + level * 2 * multiplier)
+    if not size:
+        longest = len(max(words, key=len))
+        # calculate multipler for larger word lists so that most have room to fit
+        multiplier = len(words) / 15 if len(words) > 15 else 1
+        size = int(longest + level * 2 * multiplier)
+    # make sure size isn't too small or too big
     if size > config.max_puzzle_size:
         size = config.max_puzzle_size
+    elif size < config.min_puzzle_size:
+        size = config.min_puzzle_size
     return size
 
 
-def test_a_fit(puzzle: list, word: str, row: int, col: int, dir: str) -> list:
+def test_a_fit(puzzle: list, word: str, row: int, col: int, direction: str) -> list:
     """Test if word fits in the puzzle at the specified
     coordinates heading in the specified direction.
 
@@ -33,7 +38,7 @@ def test_a_fit(puzzle: list, word: str, row: int, col: int, dir: str) -> list:
         word (str): Word to try and fit in the puzzle.
         row (int): Start position row.
         col (int): Start position column.
-        dir (str): Direction word is heading.
+        direction (str): Direction word is heading.
 
     Returns:
         list: Coordinates for each letter of the word.
@@ -41,7 +46,7 @@ def test_a_fit(puzzle: list, word: str, row: int, col: int, dir: str) -> list:
     coords = []
     # iterate over each letter in the word
     for char in word:
-        rmove, cmove = config.dir_moves[dir]
+        rmove, cmove = config.dir_moves[direction]
         # if the current puzzle space is empty or if letters match
         if puzzle[row][col] == "•" or puzzle[row][col] == char:
             coords.append((row, col))
@@ -50,7 +55,7 @@ def test_a_fit(puzzle: list, word: str, row: int, col: int, dir: str) -> list:
         # adjust the coordinates along the word path for direction
         row += rmove
         col += cmove
-        # if new coordinates are off of board cancel fit test
+        # if new coordinates are off of puzzle cancel fit test
         if row < 0 or col < 0 or row > len(puzzle) - 1 or col > len(puzzle[0]) - 1:
             return False
     return coords
@@ -71,10 +76,10 @@ def find_a_fit(puzzle: list, word: str, row: int, col: int, level: int) -> tuple
     """
     fits = {}
     # check all directions for level
-    for dir in config.level_dirs[level]:
-        coords = test_a_fit(puzzle, word, row, col, dir)
+    for d in config.level_dirs[level]:
+        coords = test_a_fit(puzzle, word, row, col, d)
         if coords:
-            fits[dir] = coords
+            fits[d] = coords
     # if the word fit in the puzzle pick a random fit
     if fits:
         return random.choice(list(fits.items()))
@@ -95,7 +100,7 @@ def fill_words(words: set, level: int, size: int = None) -> dict:
         dict: Completed puzzle, puzzle answer key, final word placements.
     """
     # calculate the puzzle size and setup a new empty puzzle
-    size = size if size else calc_puzzle_size(words, level)
+    size = calc_puzzle_size(words, level, size)
     puzzle = [["•"] * size for _ in range(size)]
     key = {}
 
@@ -104,20 +109,20 @@ def fill_words(words: set, level: int, size: int = None) -> dict:
         # track how many times a word has been tried to speed execution
         tries = 0
         # try to find a fit in the puzzle for the current word
-        while tries < 100:
+        while tries < config.max_fit_tries:
             # pick a random row and column to try
             row = random.randint(0, size - 1)
             col = random.randint(0, size - 1)
             # try and find a directional fit using the starting coordinates
             fit = find_a_fit(puzzle, word, row, col, level)
             if fit:
-                dir, coords = fit
+                d, coords = fit
                 # add word letters to the puzzle at the fit coordinates
                 for i, char in enumerate(word):
                     puzzle[coords[i][0]][coords[i][1]] = char
                 # update placement info for word
                 # increase row and col by one so they are 1-based
-                key[word] = {"start": (row, col), "dir": dir}
+                key[word] = {"start": (row, col), "direction": d}
                 # go to next word
                 break
             # if there was no fit at starting coordinates try again
@@ -141,10 +146,10 @@ def no_matching_neighbors(puzzle: list, char: str, row: int, col: int) -> bool:
     Returns:
         bool: True is no neighbors match `char`.
     """
-    for dir in config.dir_moves:
-        test_row = row + config.dir_moves[dir][0]
-        test_col = col + config.dir_moves[dir][1]
-        # if test coordinates are off board skip
+    for d in config.dir_moves:
+        test_row = row + config.dir_moves[d][0]
+        test_col = col + config.dir_moves[d][1]
+        # if test coordinates are off puzzle skip
         if (
             test_row < 0
             or test_col < 0

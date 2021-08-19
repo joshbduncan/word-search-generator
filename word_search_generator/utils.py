@@ -86,10 +86,10 @@ def get_word_list_str(key: dict) -> str:
 
 
 def get_answer_key_str(key: dict) -> str:
-    """Retunr a easy to read answer key for display/export."""
-    return ", ".join(
-        [
-            f"{k} {key[k]['dir']} @ {(key[k]['start'][0] + 1, key[k]['start'][1] + 1)}"
-            for k in sorted(key.keys())
-        ]
-    )
+    """Return a easy to read answer key for display/export."""
+    keys = []
+    for k in sorted(key.keys()):
+        direction = key[k]["direction"]
+        coords = (key[k]["start"][0] + 1, key[k]["start"][1] + 1)
+        keys.append(f"{k} {direction} @ {coords}")
+    return ", ".join(keys)

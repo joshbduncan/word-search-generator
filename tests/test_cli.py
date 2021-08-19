@@ -22,13 +22,13 @@ def test_just_words():
 
 
 def test_export_pdf():
-    temp_path = TEMP_DIR.name + "test.pdf"
+    temp_path = TEMP_DIR.name + "/test.pdf"
     exit_status = os.system(f"word-search some test words -e pdf -o {temp_path}")
     assert exit_status == 0 and pathlib.Path(temp_path).exists()
 
 
 def test_export_csv():
-    temp_path = TEMP_DIR.name + "test.csv"
+    temp_path = TEMP_DIR.name + "/test.csv"
     exit_status = os.system(f"word-search some test words -e csv -o {temp_path}")
     assert exit_status == 0 and pathlib.Path(temp_path).exists()
 

@@ -8,8 +8,9 @@
     :license: MIT, see LICENSE for more details.
 """
 
-__version__ = "1.0.2"
+__version__ = "1.0.3"
 
+from . import config
 from . import export
 from . import generate
 from . import utils
@@ -99,12 +100,15 @@ class WordSearch:
 
         Raises:
             TypeError: Must be an integer.
-            ValueError: Must be greater than 10.
+            ValueError: Must be greater than `config.min_puzzle_size` and
+            less than `config.max_puzzle_size`.
         """
         if not isinstance(val, int):
             raise TypeError("Size must be an integer.")
-        if val < 10:
-            raise ValueError("Minimum size is 10")
+        if val < config.min_puzzle_size:
+            raise ValueError(f"Minimum size is {config.min_puzzle_size}")
+        elif val > config.max_puzzle_size:
+            raise ValueError(f"Maximum size is {config.max_puzzle_size}")
         self._size = val
         self._reset_puzzle()
 

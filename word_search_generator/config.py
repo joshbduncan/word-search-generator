@@ -1,9 +1,8 @@
-pdf_author = "Josh Duncan"
-pdf_creator = "word-search @ joshbduncan.com"
-pdf_title = "Word Search Puzzle"
-
+# puzzle settings
+min_puzzle_size = 10
 max_puzzle_size = 25
 max_puzzle_words = 30
+max_fit_tries = 100
 
 dir_moves = {
     "N": (-1, 0),
@@ -21,3 +20,12 @@ level_dirs = {
     2: ("NE", "E", "SE", "S"),
     3: ("N", "NE", "E", "SE", "S", "SW", "W", "NW"),
 }
+
+# pdf export settings
+pdf_author = "Josh Duncan"
+pdf_creator = "word-search @ joshbduncan.com"
+pdf_title = "Word Search Puzzle"
+pdf_title_font_size = 30
+pdf_font_size = 12
+pdf_key_font_size = 6
+pdf_font_adjust = 21

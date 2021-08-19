@@ -27,6 +27,7 @@ pycodestyle==2.7.0
 pyflakes==2.3.1
 Pygments==2.9.0
 pyparsing==2.4.7
+PyPDF2==1.26.0
 pytest==6.2.4
 readme-renderer==29.0
 regex==2021.8.3
@@ -40,4 +41,5 @@ tqdm==4.62.0
 twine==3.4.2
 urllib3==1.26.6
 webencodings==0.5.1
+-e git+https://github.com/joshbduncan/word-search-generator.git@c0b6277506d638cdb2968cfca7b003d652310c99#egg=word_search_generator
 zipp==3.5.0

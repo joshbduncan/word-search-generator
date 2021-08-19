@@ -52,14 +52,14 @@ Puzzle words can be provided as a string variable or directly as above. Words ca
 🤷‍♂️ Can't finding all the words? Try, `puzzle.key`.
 
 ```python
-{'TURTLE': {'start': (7, 3), 'dir': 'E'},
- 'PIG': {'start': (3, 3), 'dir': 'SE'},
- 'HORSE': {'start': (7, 2), 'dir': 'NE'},
- 'GOAT': {'start': (4, 10), 'dir': 'S'},
- 'DOG': {'start': (2, 4), 'dir': 'SE'},
- 'DONKEY': {'start': (8, 1), 'dir': 'E'},
- 'SHEEP': {'start': (10, 5), 'dir': 'E'},
- 'CAT': {'start': (4, 8), 'dir': 'S'}}
+{"TURTLE": {"start": (7, 3), "direction": "E"},
+ "PIG": {"start": (3, 3), "direction": "SE"},
+ "HORSE": {"start": (7, 2), "direction": "NE"},
+ "GOAT": {"start": (4, 10), "direction": "S"},
+ "DOG": {"start": (2, 4), "direction": "SE"},
+ "DONKEY": {"start": (8, 1), "direction": "E"},
+ "SHEEP": {"start": (10, 5), "direction": "E"},
+ "CAT": {"start": (4, 8), "direction": "S"}}
 ```
 
 You can also show the key with the puzzle with `puzzle.show(key=True)`.
@@ -144,7 +144,7 @@ The difficulty level controls whether words can go forward or backward, the card
 
 ### Puzzle Size
 
-By default, the puzzle (characters) size is determined by the amount of words provided and the difficulty level. Need a puzzle an exact size, override the default with `puzzle.size = x` (integer >= 10). All puzzles are square so size` will be the width and height.
+By default, the puzzle (characters) size is determined by the amount of words provided and the difficulty level. Need a puzzle an exact size, override the default with `puzzle.size = x` (30 >= integer >= 10). All puzzles are square so size` will be the width and height.
 
 ```
 ** WORD SEARCH **
@@ -201,15 +201,15 @@ Word-Search-Generator can save puzzles as PDF and CSV files.
 💾 Save a PDF to a specific directory with default filename.
 
 ```python
-puzzle.save(path="~/Desktop", format='pdf')
-'.../Desktop/Word Search 2021-01-01T000000.pdf'
+puzzle.save(path="~/Desktop", format="pdf")
+".../Desktop/Word Search 2021-01-01T000000.pdf"
 ```
 
 💾 Save a CSV with to the current directory with a specific filename.
 
 ```python
-puzzle.save(path="puzzle.csv", format='csv')
-'.../projects/word-search/puzzle.csv'
+puzzle.save(path="puzzle.csv", format="csv")
+".../projects/word-search/puzzle.csv"
 ```
 
 ℹ️ Using the Word-Search-Generator [CLI Integration](#cli-integration) and [redirections](https://www.gnu.org/software/bash/manual/html_node/Redirections.html) in your terminal you can also save the puzzle to a text file.
@@ -236,7 +236,7 @@ optional arguments:
   -h, --help            show this help message and exit
   -l {1,2,3}, --level {1,2,3}
                         difficulty level (1) beginner, (2) intermediate, (3) expert
-  -s SIZE, --size SIZE  puzzle size >=10
+  -s SIZE, --size SIZE  puzzle size >=10 and <=25
   -k, --key             show answer key
   -t, --tabs            use tabs as character separator
   -e {csv,pdf}, --export {csv,pdf}

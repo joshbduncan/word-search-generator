@@ -14,7 +14,7 @@ def check_key(key: dict, puzzle: list) -> bool:
     """Test the puzzle key against the current puzzle state."""
     for word, info in key.items():
         row, col = info["start"]
-        rmove, cmove = dir_moves[info["dir"]]
+        rmove, cmove = dir_moves[info["direction"]]
         for char in word:
             if puzzle[row][col] != char:
                 return False

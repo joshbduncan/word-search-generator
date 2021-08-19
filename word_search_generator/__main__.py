@@ -3,14 +3,17 @@ import pathlib
 import sys
 
 from . import WordSearch
+from . import config
 
 
 class MinSizeAction(argparse.Action):
-    """Restrict argparse `-s`, `--size` value to >=10."""
+    """Restrict argparse `-s`, `--size` inputs."""
 
     def __call__(self, parser, namespace, values, option_string=None):
-        if values < 10:
-            parser.error("minimum size for {0} is 10".format(option_string))
+        min_val = config.min_puzzle_size
+        max_val = config.max_puzzle_size
+        if values < min_val or values > max_val:
+            parser.error(f"{option_string} must be >={min_val} and <={max_val}")
         setattr(namespace, self.dest, values)
 
 
@@ -38,7 +41,11 @@ def cli():
         choices=[1, 2, 3],
     )
     parser.add_argument(
-        "-s", "--size", help="puzzle size >=10", action=MinSizeAction, type=int
+        "-s",
+        "--size",
+        help=f"puzzle size >={config.min_puzzle_size} and <={config.max_puzzle_size}",
+        action=MinSizeAction,
+        type=int,
     )
     parser.add_argument("-k", "--key", help="show answer key", action="store_true")
     parser.add_argument(

@@ -23,8 +23,9 @@ function tests {
 
 function upload {
     # upload to pypi
+    read -p '❓ version? ' version
     echo "⬆️ uploading $app to pypi..."
-    twine upload dist/*
+    twine upload dist/*$version*
 }
 
 function help {
