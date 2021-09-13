@@ -10,6 +10,9 @@
 
 __version__ = "1.0.3"
 
+import pathlib
+
+from typing import Dict, List, Union
 from . import config
 from . import export
 from . import generate
@@ -20,7 +23,7 @@ class WordSearch:
     """This class represents a WordSearch object
     used for generating Word Search puzzles."""
 
-    def __init__(self, words: str, level: str = None, size: str = None):
+    def __init__(self, words: str, level: int = None, size: int = None):
         """Initializa a Word Search puzzle.
 
         Args:
@@ -28,11 +31,11 @@ class WordSearch:
             new lines and limited to 30 word max. Will be trimmed if more.
         """
         self.words = utils.cleanup_input(words)
-        self._key = None
+        self._key: Dict[str, dict] = {}
         self._level = 2
-        self._puzzle = None
-        self._size = None
-        self._solution = None
+        self._puzzle: List[list] = []
+        self._size: int = 0
+        self._solution: List[list] = []
         # generate puzzle
         self.generate(level, size)
 
@@ -138,6 +141,8 @@ class WordSearch:
         self._solution = result["solution"]
         self._key = result["key"]
 
+        return self.puzzle
+
     def show(self, key: bool = False, solution: bool = False, tabs: bool = False):
         """Show the word search puzzle.
 
@@ -156,7 +161,7 @@ class WordSearch:
             if key:
                 print(f"\nAnswer Key: {utils.get_answer_key_str(self.key)}")
 
-    def save(self, path: str = None, format: str = "pdf") -> str:
+    def save(self, path: Union[str, pathlib.Path] = "", format: str = "pdf") -> str:
         """Save puzzle to a text file.
 
         Args:
@@ -192,6 +197,8 @@ class WordSearch:
         """
         self.words.update(utils.cleanup_input(words))
         self._reset_puzzle()
+
+        return self.words
 
     def remove_words(self, words: str) -> set:
         """Remove words from the puzzle.

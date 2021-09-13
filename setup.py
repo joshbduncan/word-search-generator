@@ -11,7 +11,7 @@ setup(
     description="Make awesome Word Search puzzles.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="http://github.com/joshbduncan/word-search",
+    url="https://github.com/joshbduncan/word-search-generator",
     license="MIT",
     classifiers=[
         "Programming Language :: Python :: 3",

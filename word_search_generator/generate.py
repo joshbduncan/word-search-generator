@@ -29,62 +29,62 @@ def calc_puzzle_size(words: set, level: int, size: int = None) -> int:
     return size
 
 
-def test_a_fit(puzzle: list, word: str, row: int, col: int, direction: str) -> list:
+def test_a_fit(puzzle: list, word: str, position: tuple, direction: str) -> list:
     """Test if word fits in the puzzle at the specified
     coordinates heading in the specified direction.
 
     Args:
         puzzle (list): Current puzzle state.
         word (str): Word to try and fit in the puzzle.
-        row (int): Start position row.
-        col (int): Start position column.
+        position (tuple): Word (row, column) start position.
         direction (str): Direction word is heading.
 
     Returns:
         list: Coordinates for each letter of the word.
     """
-    coords = []
+    coordinates = []
+    row, col = position
     # iterate over each letter in the word
     for char in word:
         rmove, cmove = config.dir_moves[direction]
         # if the current puzzle space is empty or if letters match
         if puzzle[row][col] == "•" or puzzle[row][col] == char:
-            coords.append((row, col))
+            coordinates.append((row, col))
         else:
-            return False
+            return []
         # adjust the coordinates along the word path for direction
         row += rmove
         col += cmove
         # if new coordinates are off of puzzle cancel fit test
         if row < 0 or col < 0 or row > len(puzzle) - 1 or col > len(puzzle[0]) - 1:
-            return False
-    return coords
+            return []
+    return coordinates
 
 
-def find_a_fit(puzzle: list, word: str, row: int, col: int, level: int) -> tuple:
+def find_a_fit(puzzle: list, word: str, position: tuple, level: int) -> tuple:
     """Look for a fit for `word` in the current puzzle.
 
     Args:
         puzzle (list): Current puzzle state.
         word (str): Word to try and fit in the puzzle.
-        row (int): Start position row.
-        col (int): Start position column.
+        position (tuple): Word (row, column) start position.
         level (int): Puzzle difficulty level.
 
     Returns:
         tuple: Random direction and coordinates for `word` to fit in puzzle.
     """
     fits = {}
+    row, col = position
     # check all directions for level
     for d in config.level_dirs[level]:
-        coords = test_a_fit(puzzle, word, row, col, d)
+        coords = test_a_fit(puzzle, word, (row, col), d)
         if coords:
             fits[d] = coords
     # if the word fit in the puzzle pick a random fit
     if fits:
         return random.choice(list(fits.items()))
     else:
-        return False
+        return ()
 
 
 def fill_words(words: set, level: int, size: int = None) -> dict:
@@ -114,7 +114,7 @@ def fill_words(words: set, level: int, size: int = None) -> dict:
             row = random.randint(0, size - 1)
             col = random.randint(0, size - 1)
             # try and find a directional fit using the starting coordinates
-            fit = find_a_fit(puzzle, word, row, col, level)
+            fit = find_a_fit(puzzle, word, (row, col), level)
             if fit:
                 d, coords = fit
                 # add word letters to the puzzle at the fit coordinates
@@ -133,19 +133,20 @@ def fill_words(words: set, level: int, size: int = None) -> dict:
     return {"puzzle": puzzle, "solution": solution, "key": key}
 
 
-def no_matching_neighbors(puzzle: list, char: str, row: int, col: int) -> bool:
+def no_matching_neighbors(puzzle: list, char: str, position: tuple) -> bool:
     """Ensure no neighboring cells have save to limit the
     very small chance of a duplicate word.
 
     Args:
         puzzle (list): Current puzzle state.
         char (str): Random "fill-in" characer to check against neighbors.
-        row (int): Current row in puzzle.
-        col (int): Current column in puzzle.
+        position (tuple): Word (row, column) start position.
 
     Returns:
         bool: True is no neighbors match `char`.
     """
+    row, col = position
+    # check all 8 possible neighbors
     for d in config.dir_moves:
         test_row = row + config.dir_moves[d][0]
         test_col = col + config.dir_moves[d][1]
@@ -180,7 +181,7 @@ def fill_blanks(puzzle: list) -> list:
             if puzzle[row][col] == "•":
                 while True:
                     random_char = random.choice(alphabet)
-                    if no_matching_neighbors(puzzle, random_char, row, col):
+                    if no_matching_neighbors(puzzle, random_char, (row, col)):
                         puzzle[row][col] = random_char
                         break
     return puzzle

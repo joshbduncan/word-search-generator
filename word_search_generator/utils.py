@@ -1,5 +1,6 @@
 import string
 
+from typing import Set
 from . import config
 
 
@@ -24,18 +25,18 @@ def cleanup_input(words: str) -> set:
     # remove new lines
     words = words.replace("\n", ",")
     # remove excess spaces and commas
-    words = ",".join(words.split(" ")).split(",")
+    word_list = ",".join(words.split(" ")).split(",")
     # iterate through all words and pick first set that match criteria
-    word_list = set()
-    for word in words:
-        if len(word_list) > config.max_puzzle_words:
+    word_set: Set[str] = set()
+    for word in word_list:
+        if len(word_set) > config.max_puzzle_words:
             break
         if len(word) > 1 and not contains_punctuation(word):
-            word_list.add(word.upper())
+            word_set.add(word.upper())
     # if no words were left raise exception
-    if not word_list:
+    if not word_set:
         raise ValueError("Use words longer than one-character and without punctuation.")
-    return word_list
+    return word_set
 
 
 def contains_punctuation(word):
@@ -60,19 +61,11 @@ def stringify(puzzle: list, tabs: bool = False):
     return string.strip("\n")
 
 
-def replace_right(s: str, target: str, replacement: str, replacements: int = 1) -> str:
-    """Replace `target` with `replacement` from the right size of the string.
-
-    Args:
-        s (str): A string to do replacement on.
-        target (str): String to be replaced.
-        replacement (str): New string to insert.
-        replacements (int, optional): Number of times replace. Defaults to 1.
-
-    Returns:
-        str: Updated string with replacement(s).
-    """
-    return replacement.join(s.rsplit(target, replacements))
+def replace_right(
+    string: str, target: str, replacement: str, replacements: int = 1
+) -> str:
+    """Replace `target` with `replacement` from the right size of the string."""
+    return replacement.join(string.rsplit(target, replacements))
 
 
 def get_level_dirs_str(level: int) -> str:
