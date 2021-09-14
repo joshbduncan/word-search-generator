@@ -43,5 +43,5 @@ twine==3.4.2
 typing-extensions==3.10.0.2
 urllib3==1.26.6
 webencodings==0.5.1
--e git+https://github.com/joshbduncan/word-search-generator.git@e67df46300740eba8ec3188273ebb57741d7685c#egg=word_search_generator
+-e git+https://github.com/joshbduncan/word-search-generator.git@1ea102f8cd4a61e2e73cc5ddc5cb045a926facf1#egg=word_search_generator
 zipp==3.5.0
