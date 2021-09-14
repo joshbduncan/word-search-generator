@@ -1,7 +1,7 @@
 import string
 
 from typing import Set
-from . import config
+from word_search_generator import config
 
 
 def cleanup_input(words: str) -> set:

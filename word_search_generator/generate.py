@@ -2,7 +2,7 @@ import copy
 import random
 import string
 
-from . import config
+from word_search_generator import config
 
 
 def calc_puzzle_size(words: set, level: int, size: int = None) -> int:

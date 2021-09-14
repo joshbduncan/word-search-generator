@@ -3,8 +3,8 @@ import pathlib
 from datetime import datetime
 from fpdf import FPDF
 from typing import Union
-from . import config
-from . import utils
+from word_search_generator import config
+from word_search_generator import utils
 
 
 def validate_path(path: Union[str, pathlib.Path], ftype: str) -> pathlib.Path:

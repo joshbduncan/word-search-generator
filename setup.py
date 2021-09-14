@@ -1,3 +1,5 @@
+import word_search_generator
+
 from setuptools import setup, find_packages
 
 with open("README.md", "r", encoding="utf-8") as fh:
@@ -5,19 +7,22 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="word-search-generator",
-    version="1.0.3",
+    version=getattr(word_search_generator, "__version__"),
     author="Josh Duncan",
     author_email="joshbduncan@gmail.com",
     description="Make awesome Word Search puzzles.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/joshbduncan/word-search-generator",
-    license="MIT",
+    project_urls={
+        "Bug Tracker": "https://github.com/joshbduncan/word-search-generator/issues",
+    },
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
+    license="MIT",
     keywords=["puzzles", "words", "games"],
     packages=find_packages(include=["word_search_generator"]),
     install_requires=["fpdf2"],

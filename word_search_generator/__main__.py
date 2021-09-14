@@ -2,8 +2,8 @@ import argparse
 import pathlib
 import sys
 
-from . import WordSearch
-from . import config
+from word_search_generator import WordSearch
+from word_search_generator import config
 
 
 class MinSizeAction(argparse.Action):

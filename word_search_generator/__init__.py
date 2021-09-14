@@ -13,10 +13,10 @@ __version__ = "1.0.3"
 import pathlib
 
 from typing import Dict, List, Union
-from . import config
-from . import export
-from . import generate
-from . import utils
+from word_search_generator import config
+from word_search_generator import export
+from word_search_generator import generate
+from word_search_generator import utils
 
 
 class WordSearch:
