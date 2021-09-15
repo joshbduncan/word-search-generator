@@ -4,10 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.0.4] - 2021-09-15
+### Added
+- Fully typed
+
 ### Changed
-- Fixed all mypy typing errors
 - Changed all functions that took `row` and `col` to now take a tuple of (row, col) as `position`
+- moved cli to cli module and out of __main__.py
+- switched from setup.py to setup.cfg
 
 
 ## [1.0.3] - 2021-08-19

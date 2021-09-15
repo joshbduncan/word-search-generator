@@ -17,7 +17,7 @@ class MinSizeAction(argparse.Action):
         setattr(namespace, self.dest, values)
 
 
-def cli():
+def main():
     """Word Search Generator CLI"""
 
     # setup argparse to capture cli arguments
@@ -74,7 +74,3 @@ def cli():
         print(f"Puzzle saved: {fexport}")
     else:
         puzzle.show(key=args.key, tabs=args.tabs)
-
-
-if __name__ == "__main__":
-    cli()

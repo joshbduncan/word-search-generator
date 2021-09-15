@@ -1,11 +1,13 @@
 import copy
 import random
 import string
+from typing import Dict, List, Set, Tuple
 
 from word_search_generator import config
+from word_search_generator.types import CompletedPuzzle
 
 
-def calc_puzzle_size(words: set, level: int, size: int = None) -> int:
+def calc_puzzle_size(words: Set[str], level: int, size: int = 0) -> int:
     """Calculate the puzzle grid size based on longest word, word count and level.
 
     Args:
@@ -29,7 +31,9 @@ def calc_puzzle_size(words: set, level: int, size: int = None) -> int:
     return size
 
 
-def test_a_fit(puzzle: list, word: str, position: tuple, direction: str) -> list:
+def test_a_fit(
+    puzzle: List[List[str]], word: str, position: Tuple[int, int], direction: str
+) -> List[Tuple[int, int]]:
     """Test if word fits in the puzzle at the specified
     coordinates heading in the specified direction.
 
@@ -61,7 +65,9 @@ def test_a_fit(puzzle: list, word: str, position: tuple, direction: str) -> list
     return coordinates
 
 
-def find_a_fit(puzzle: list, word: str, position: tuple, level: int) -> tuple:
+def find_a_fit(
+    puzzle: List[List[str]], word: str, position: Tuple[int, int], level: int
+) -> Dict[str, List[Tuple[int, int]]]:
     """Look for a fit for `word` in the current puzzle.
 
     Args:
@@ -71,23 +77,19 @@ def find_a_fit(puzzle: list, word: str, position: tuple, level: int) -> tuple:
         level (int): Puzzle difficulty level.
 
     Returns:
-        tuple: Random direction and coordinates for `word` to fit in puzzle.
+        dict: All directions (with coordinates) where `word` fits in the puzzle.
     """
-    fits = {}
+    fits: Dict[str, List[Tuple[int, int]]] = {}
     row, col = position
     # check all directions for level
     for d in config.level_dirs[level]:
         coords = test_a_fit(puzzle, word, (row, col), d)
         if coords:
             fits[d] = coords
-    # if the word fit in the puzzle pick a random fit
-    if fits:
-        return random.choice(list(fits.items()))
-    else:
-        return ()
+    return fits
 
 
-def fill_words(words: set, level: int, size: int = None) -> dict:
+def fill_words(words: Set[str], level: int, size: int = 0) -> CompletedPuzzle:
     """Fill the puzzle with the supplied `words`.
     Some words will be skipped if they don't fit.
 
@@ -111,12 +113,14 @@ def fill_words(words: set, level: int, size: int = None) -> dict:
         # try to find a fit in the puzzle for the current word
         while tries < config.max_fit_tries:
             # pick a random row and column to try
-            row = random.randint(0, size - 1)
-            col = random.randint(0, size - 1)
+            row = int(random.randint(0, size - 1))
+            col = int(random.randint(0, size - 1))
             # try and find a directional fit using the starting coordinates
-            fit = find_a_fit(puzzle, word, (row, col), level)
-            if fit:
-                d, coords = fit
+            fits = find_a_fit(puzzle, word, (row, col), level)
+            if fits:
+                # if the word fit in the puzzle pick a random fit
+                random_direction = random.choice(list(fits.items()))
+                d, coords = random_direction
                 # add word letters to the puzzle at the fit coordinates
                 for i, char in enumerate(word):
                     puzzle[coords[i][0]][coords[i][1]] = char
@@ -133,7 +137,9 @@ def fill_words(words: set, level: int, size: int = None) -> dict:
     return {"puzzle": puzzle, "solution": solution, "key": key}
 
 
-def no_matching_neighbors(puzzle: list, char: str, position: tuple) -> bool:
+def no_matching_neighbors(
+    puzzle: List[List[str]], char: str, position: Tuple[int, int]
+) -> bool:
     """Ensure no neighboring cells have save to limit the
     very small chance of a duplicate word.
 
@@ -164,7 +170,7 @@ def no_matching_neighbors(puzzle: list, char: str, position: tuple) -> bool:
     return True
 
 
-def fill_blanks(puzzle: list) -> list:
+def fill_blanks(puzzle: List[List[str]]) -> List[List[str]]:
     """Fill in the empty puzzle spaces with random characters.
 
     Args:

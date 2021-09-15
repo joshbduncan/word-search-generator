@@ -1,10 +1,11 @@
 import string
 
-from typing import Set
+from typing import Dict, List, Set
 from word_search_generator import config
+from word_search_generator.types import KeyDict
 
 
-def cleanup_input(words: str) -> set:
+def cleanup_input(words: str) -> Set[str]:
     """Cleanup provided input string. Removing spaces
     one-letter words, and words with punctuation.
 
@@ -44,7 +45,7 @@ def contains_punctuation(word):
     return any([True if c in string.punctuation else False for c in word])
 
 
-def stringify(puzzle: list, tabs: bool = False):
+def stringify(puzzle: List[List[str]], tabs: bool = False):
     """Convert a list of list into a string separated by either spaces or tabs.
 
     Args:
@@ -73,12 +74,12 @@ def get_level_dirs_str(level: int) -> str:
     return replace_right(", ".join(config.level_dirs[level]), ", ", ", and ")
 
 
-def get_word_list_str(key: dict) -> str:
+def get_word_list_str(key: Dict[str, KeyDict]) -> str:
     """Return all placed puzzle words as a list."""
     return ", ".join([k for k in sorted(key.keys())])
 
 
-def get_answer_key_str(key: dict) -> str:
+def get_answer_key_str(key: Dict[str, KeyDict]) -> str:
     """Return a easy to read answer key for display/export."""
     keys = []
     for k in sorted(key.keys()):

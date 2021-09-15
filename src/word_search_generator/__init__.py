@@ -8,14 +8,15 @@
     :license: MIT, see LICENSE for more details.
 """
 
-__version__ = "1.0.3"
+__version__ = "1.0.4"
 
 import pathlib
 
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, Set, Union
 from word_search_generator import config
 from word_search_generator import export
 from word_search_generator import generate
+from word_search_generator.types import KeyDict
 from word_search_generator import utils
 
 
@@ -23,7 +24,9 @@ class WordSearch:
     """This class represents a WordSearch object
     used for generating Word Search puzzles."""
 
-    def __init__(self, words: str, level: int = None, size: int = None):
+    def __init__(
+        self, words: str, level: Optional[int] = None, size: Optional[int] = None
+    ):
         """Initializa a Word Search puzzle.
 
         Args:
@@ -31,26 +34,26 @@ class WordSearch:
             new lines and limited to 30 word max. Will be trimmed if more.
         """
         self.words = utils.cleanup_input(words)
-        self._key: Dict[str, dict] = {}
-        self._level = 2
-        self._puzzle: List[list] = []
-        self._size: int = 0
-        self._solution: List[list] = []
+        self._key: Dict[str, KeyDict] = {}
+        self._level: int = 1
+        self._puzzle: List[List[str]] = []
+        self._size: int = 10
+        self._solution: List[List[str]] = []
         # generate puzzle
         self.generate(level, size)
 
     @property
-    def puzzle(self) -> list:
+    def puzzle(self) -> List[List[str]]:
         """The current puzzle state."""
         return self._puzzle
 
     @property
-    def solution(self) -> list:
+    def solution(self) -> List[List[str]]:
         """The solution to the current puzzle state."""
         return self._solution
 
     @property
-    def key(self) -> dict:
+    def key(self) -> Dict[str, KeyDict]:
         """The current puzzle answer key."""
         return self._key
 
@@ -118,10 +121,12 @@ class WordSearch:
     def reset_size(self):
         """Reset the size to the default setting
         (based on longest word length and total words)."""
-        self._size = None
+        self._size = 0
         self._reset_puzzle()
 
-    def generate(self, level: int = None, size: int = None) -> list:
+    def generate(
+        self, level: Optional[int] = None, size: Optional[int] = None
+    ) -> List[List[str]]:
         """Generate a word search puzzle using `self.words`.
 
         Args:
@@ -189,7 +194,7 @@ class WordSearch:
         # return saved file path
         return str(saved_file)
 
-    def add_words(self, words: str) -> set:
+    def add_words(self, words: str) -> Set[str]:
         """Add new words to the puzzle.
 
         Args:
@@ -200,7 +205,7 @@ class WordSearch:
 
         return self.words
 
-    def remove_words(self, words: str) -> set:
+    def remove_words(self, words: str) -> Set[str]:
         """Remove words from the puzzle.
 
         Args:
@@ -229,10 +234,11 @@ class WordSearch:
 
     def _reset_puzzle(self):
         """Reset the puzzle after changes to attributes."""
-        self._puzzle = None
-        self._solution = None
-        self._key = None
-        self.generate()
+        if self._puzzle:
+            self._puzzle = []
+            self._solution = []
+            self._key = {}
+            self.generate()
 
     def __repr__(self):
         return f"WordSearch('{self.words}')"

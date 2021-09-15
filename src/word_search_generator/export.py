@@ -2,9 +2,10 @@ import pathlib
 
 from datetime import datetime
 from fpdf import FPDF
-from typing import Union
+from typing import Dict, List, Union
 from word_search_generator import config
 from word_search_generator import utils
+from word_search_generator.types import KeyDict
 
 
 def validate_path(path: Union[str, pathlib.Path], ftype: str) -> pathlib.Path:
@@ -38,7 +39,10 @@ def validate_path(path: Union[str, pathlib.Path], ftype: str) -> pathlib.Path:
 
 
 def write_csv_file(
-    fpath: pathlib.Path, puzzle: list, key: dict, level: int
+    fpath: pathlib.Path,
+    puzzle: List[List[str]],
+    key: Dict[str, KeyDict],
+    level: int,
 ) -> pathlib.Path:
     """Generate a CSV file from the current puzzle and write it to `path`.
 
@@ -68,7 +72,10 @@ def write_csv_file(
 
 
 def write_pdf_file(
-    fpath: pathlib.Path, puzzle: list, key: dict, level: int
+    fpath: pathlib.Path,
+    puzzle: List[List[str]],
+    key: Dict[str, KeyDict],
+    level: int,
 ) -> pathlib.Path:
     """Generate a PDF file from the current puzzle and write it to `path`.
 
