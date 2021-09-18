@@ -2,10 +2,9 @@ import pathlib
 
 from datetime import datetime
 from fpdf import FPDF
-from typing import Dict, List
 from word_search_generator import config
 from word_search_generator import utils
-from word_search_generator.types import Key, KeyInfo, Puzzle, SavePath
+from word_search_generator.types import Key, Puzzle, SavePath
 
 
 def validate_path(path: SavePath, ftype: str) -> pathlib.Path:

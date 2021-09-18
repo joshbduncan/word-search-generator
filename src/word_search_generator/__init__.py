@@ -30,8 +30,8 @@ class WordSearch:
         Args:
             words (str): A string of words separated by spaces, commas, or
             new lines and limited to 30 word max. Will be trimmed if more.
-            level (Optional[int], optional): The difficulty level of the puzzle. Defaults to None.
-            size (Optional[int], optional): The size of the word search puzzle. Defaults to None.
+            level (Optional[int], optional): Difficulty level. Defaults to None.
+            size (Optional[int], optional): Puzzle size. Defaults to None.
         """
         self.words = utils.cleanup_input(words)
         self._key: Key = {}
@@ -113,7 +113,8 @@ class WordSearch:
             raise TypeError("Size must be an integer.")
         if not config.min_puzzle_size < val < config.max_puzzle_size:
             raise ValueError(
-                f"Puzzle size must be >= {config.min_puzzle_size} and <= {config.max_puzzle_size}"
+                f"Puzzle size must be >= {config.min_puzzle_size}"
+                + f" and <= {config.max_puzzle_size}"
             )
         self._size = val
         self._reset_puzzle()
@@ -130,8 +131,8 @@ class WordSearch:
         """Generate a word search puzzle using `self.words`.
 
         Args:
-            level (Optional[int], optional): The difficulty level of the puzzle. Defaults to None.
-            size (Optional[int], optional): The size of the word search puzzle. Defaults to None.
+            level (Optional[int], optional): Difficulty level. Defaults to None.
+            size (Optional[int], optional): Puzzle size. Defaults to None.
 
         Returns:
             Puzzle: A newly generated puzzle.
@@ -152,9 +153,9 @@ class WordSearch:
         """Show the current puzzle.
 
         Args:
-            key (bool, optional): Show the puzzle solution key. Defaults to False.
-            solution (bool, optional): Show the puzzle with only the hidden words. Defaults to False.
-            tabs (bool, optional): Use tabs between characters instead of spaces. Defaults to False.
+            key (bool, optional): Show solution key. Defaults to False.
+            solution (bool, optional): Show only the hidden words. Defaults to False.
+            tabs (bool, optional): Use tabs between characters. Defaults to False.
         """
         if solution:
             print(utils.stringify(self.solution, tabs=tabs))
@@ -170,7 +171,8 @@ class WordSearch:
         """Save the current puzzle to a file.
 
         Args:
-            path (SavePath, optional): A filename (string) or pathlib.Path object. Defaults to None.
+            path (SavePath, optional): A filename (string) or
+            pathlib.Path object. Defaults to None.
             format (str, optional): Save file format (csv or pdf). Defaults to "pdf".
 
         Raises:

@@ -1,7 +1,7 @@
 import random
 import string
 
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Set, Tuple
 from word_search_generator import config
 from word_search_generator.types import Fit, Fits, KeyInfo, Key, Puzzle
 
@@ -91,7 +91,8 @@ def find_a_fit(puzzle: Puzzle, word: str, position: Tuple[int, int], level: int)
 
 
 def fill_words(words: Set[str], level: int, size: int) -> Tuple[Puzzle, Key]:
-    """Fill `puzzle` with the supplied `words`. Some words will be skipped if they don't fit.
+    """Fill `puzzle` with the supplied `words`.
+    Some words will be skipped if they don't fit.
 
     Args:
         words (Set[str]): Words to be placed in the puzzle.

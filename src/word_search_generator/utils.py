@@ -1,6 +1,6 @@
 import string
 
-from typing import Dict, List, Set, Tuple
+from typing import Set, Tuple
 from word_search_generator import config
 from word_search_generator.types import Key, Puzzle
 
