@@ -1,8 +1,8 @@
 import string
 
-from typing import Dict, List, Set
+from typing import Dict, List, Set, Tuple
 from word_search_generator import config
-from word_search_generator.types import KeyDict
+from word_search_generator.types import Key, Puzzle
 
 
 def cleanup_input(words: str) -> Set[str]:
@@ -17,7 +17,7 @@ def cleanup_input(words: str) -> Set[str]:
         ValueError: No proper words were provided.
 
     Returns:
-        set: Words to be placed in the puzzle.
+        Set[str]: Words to be placed in the puzzle.
     """
     if not isinstance(words, str):
         raise TypeError(
@@ -45,15 +45,15 @@ def contains_punctuation(word):
     return any([True if c in string.punctuation else False for c in word])
 
 
-def stringify(puzzle: List[List[str]], tabs: bool = False):
-    """Convert a list of list into a string separated by either spaces or tabs.
+def stringify(puzzle: Puzzle, tabs: bool = False) -> str:
+    """Convert nested lists into a string separated by either spaces or tabs.
 
     Args:
-        puzzle (list): The current puzzle state.
-        tabs (bool, optional): Use tabs between characters.
+        puzzle (Puzzle): he current puzzle state.
+        tabs (bool, optional): Use tabs between characters. Defaults to False.
 
     Returns:
-        [type]: A string with of the current puzzle.
+        [str]: The current puzzle as a string.
     """
     string = ""
     spacer = "\t" if tabs else " "
@@ -74,16 +74,17 @@ def get_level_dirs_str(level: int) -> str:
     return replace_right(", ".join(config.level_dirs[level]), ", ", ", and ")
 
 
-def get_word_list_str(key: Dict[str, KeyDict]) -> str:
+def get_word_list_str(key: Key) -> str:
     """Return all placed puzzle words as a list."""
     return ", ".join([k for k in sorted(key.keys())])
 
 
-def get_answer_key_str(key: Dict[str, KeyDict]) -> str:
+def get_answer_key_str(key: Key) -> str:
     """Return a easy to read answer key for display/export."""
     keys = []
     for k in sorted(key.keys()):
         direction = key[k]["direction"]
-        coords = (key[k]["start"][0] + 1, key[k]["start"][1] + 1)
+        raw_coords: Tuple[int, int] = key[k]["start"]
+        coords = (raw_coords[0] + 1, raw_coords[1] + 1)
         keys.append(f"{k} {direction} @ {coords}")
     return ", ".join(keys)

@@ -1,19 +1,18 @@
-import copy
 import random
 import string
-from typing import Dict, List, Set, Tuple
 
+from typing import Dict, List, Optional, Set, Tuple
 from word_search_generator import config
-from word_search_generator.types import CompletedPuzzle
+from word_search_generator.types import Fit, Fits, KeyInfo, Key, Puzzle
 
 
 def calc_puzzle_size(words: Set[str], level: int, size: int = 0) -> int:
     """Calculate the puzzle grid size based on longest word, word count and level.
 
     Args:
-        words (set): Words to be placed in the puzzle.
+        words (Set[str]): Words to be placed in the puzzle.
         level (int): Puzzle difficulty level.
-        size (int): User requested size of puzzle.
+        size (int, optional): User requested size of puzzle. Defaults to 0.
 
     Returns:
         int: Final puzzle grid size.
@@ -32,19 +31,19 @@ def calc_puzzle_size(words: Set[str], level: int, size: int = 0) -> int:
 
 
 def test_a_fit(
-    puzzle: List[List[str]], word: str, position: Tuple[int, int], direction: str
+    puzzle: Puzzle, word: str, position: Tuple[int, int], direction: str
 ) -> List[Tuple[int, int]]:
     """Test if word fits in the puzzle at the specified
     coordinates heading in the specified direction.
 
     Args:
-        puzzle (list): Current puzzle state.
+        puzzle (Puzzle): Current puzzle state.
         word (str): Word to try and fit in the puzzle.
-        position (tuple): Word (row, column) start position.
+        position (Tuple[int, int]): Word (row, column) start position.
         direction (str): Direction word is heading.
 
     Returns:
-        list: Coordinates for each letter of the word.
+        List[Tuple[int, int]]: Coordinates for each letter of the word.
     """
     coordinates = []
     row, col = position
@@ -65,46 +64,47 @@ def test_a_fit(
     return coordinates
 
 
-def find_a_fit(
-    puzzle: List[List[str]], word: str, position: Tuple[int, int], level: int
-) -> Dict[str, List[Tuple[int, int]]]:
+def find_a_fit(puzzle: Puzzle, word: str, position: Tuple[int, int], level: int) -> Fit:
     """Look for a fit for `word` in the current puzzle.
 
     Args:
-        puzzle (list): Current puzzle state.
+        puzzle (Puzzle): Current puzzle state.
         word (str): Word to try and fit in the puzzle.
-        position (tuple): Word (row, column) start position.
+        position (Tuple[int, int]): Word (row, column) start position.
         level (int): Puzzle difficulty level.
 
     Returns:
-        dict: All directions (with coordinates) where `word` fits in the puzzle.
+        Fit: A random position where the word fits in the puzzle.
     """
-    fits: Dict[str, List[Tuple[int, int]]] = {}
+    fits: Fits = {}
+    random_direction = None
     row, col = position
     # check all directions for level
     for d in config.level_dirs[level]:
         coords = test_a_fit(puzzle, word, (row, col), d)
         if coords:
             fits[d] = coords
-    return fits
+    # if the word fits, pick a random fit for placement
+    if fits:
+        random_direction = random.choice(list(fits.items()))
+    return random_direction
 
 
-def fill_words(words: Set[str], level: int, size: int = 0) -> CompletedPuzzle:
-    """Fill the puzzle with the supplied `words`.
-    Some words will be skipped if they don't fit.
+def fill_words(words: Set[str], level: int, size: int) -> Tuple[Puzzle, Key]:
+    """Fill `puzzle` with the supplied `words`. Some words will be skipped if they don't fit.
 
     Args:
-        words (set): Words to be placed in the puzzle.
-        level (int, optional): Puzzle difficulty level.
+        words (Set[str]): Words to be placed in the puzzle.
+        level (int): Puzzle difficulty level.
         size (int, optional): Final puzzle grid size.
 
     Returns:
-        dict: Completed puzzle, puzzle answer key, final word placements.
+        Tuple[Puzzle, Key]: Currnet puzzle and puzzle answer key.
     """
     # calculate the puzzle size and setup a new empty puzzle
     size = calc_puzzle_size(words, level, size)
     puzzle = [["•"] * size for _ in range(size)]
-    key = {}
+    key: Dict[str, KeyInfo] = {}
 
     # try to place each word on the puzzle
     for word in words:
@@ -116,11 +116,9 @@ def fill_words(words: Set[str], level: int, size: int = 0) -> CompletedPuzzle:
             row = int(random.randint(0, size - 1))
             col = int(random.randint(0, size - 1))
             # try and find a directional fit using the starting coordinates
-            fits = find_a_fit(puzzle, word, (row, col), level)
-            if fits:
-                # if the word fit in the puzzle pick a random fit
-                random_direction = random.choice(list(fits.items()))
-                d, coords = random_direction
+            fit = find_a_fit(puzzle, word, (row, col), level)
+            if fit:
+                d, coords = fit
                 # add word letters to the puzzle at the fit coordinates
                 for i, char in enumerate(word):
                     puzzle[coords[i][0]][coords[i][1]] = char
@@ -131,22 +129,17 @@ def fill_words(words: Set[str], level: int, size: int = 0) -> CompletedPuzzle:
                 break
             # if there was no fit at starting coordinates try again
             tries += 1
-    # make a copy of the puzzle answer key, fill in the puzzle with random characters
-    solution = copy.deepcopy(puzzle)
-    puzzle = fill_blanks(puzzle)
-    return {"puzzle": puzzle, "solution": solution, "key": key}
+    return (puzzle, key)
 
 
-def no_matching_neighbors(
-    puzzle: List[List[str]], char: str, position: Tuple[int, int]
-) -> bool:
-    """Ensure no neighboring cells have save to limit the
+def no_matching_neighbors(puzzle: Puzzle, char: str, position: Tuple[int, int]) -> bool:
+    """Ensure no neighboring cells have save character to limit the
     very small chance of a duplicate word.
 
     Args:
-        puzzle (list): Current puzzle state.
+        puzzle (Puzzle): Current puzzle state.
         char (str): Random "fill-in" characer to check against neighbors.
-        position (tuple): Word (row, column) start position.
+        position (Tuple[int, int]): Word (row, column) start position.
 
     Returns:
         bool: True is no neighbors match `char`.
@@ -170,14 +163,14 @@ def no_matching_neighbors(
     return True
 
 
-def fill_blanks(puzzle: List[List[str]]) -> List[List[str]]:
-    """Fill in the empty puzzle spaces with random characters.
+def fill_blanks(puzzle: Puzzle) -> Puzzle:
+    """Fill all empty puzzle spaces with random characters.
 
     Args:
-        puzzle (list): Current puzzle state.
+        puzzle (Puzzle): Current puzzle state.
 
     Returns:
-        list: A complete word search puzzle.
+        Puzzle: A complete word search puzzle.
     """
     alphabet = list(string.ascii_uppercase)
     # iterate over the entire puzzle
