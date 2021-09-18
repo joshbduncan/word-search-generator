@@ -4,13 +4,13 @@ import tempfile
 
 from word_search_generator import WordSearch
 from word_search_generator.config import dir_moves
-
+from word_search_generator.types import Key, Puzzle
 
 WORDS = "dog, cat, pig, horse, donkey, turtle, goat, sheep"
 TEMP_DIR = tempfile.TemporaryDirectory()
 
 
-def check_key(key: dict, puzzle: list) -> bool:
+def check_key(key: Key, puzzle: Puzzle) -> bool:
     """Test the puzzle key against the current puzzle state."""
     for word, info in key.items():
         row, col = info["start"]
