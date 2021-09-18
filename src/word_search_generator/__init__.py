@@ -10,13 +10,11 @@
 
 __version__ = "1.0.5"
 
-import pathlib
-
-from typing import Dict, List, Optional, Set, Union
+from typing import Optional, Set
 from word_search_generator import config
 from word_search_generator import export
 from word_search_generator import generate
-from word_search_generator.types import KeyDict
+from word_search_generator.types import Key, Puzzle, SavePath
 from word_search_generator import utils
 
 
@@ -32,28 +30,30 @@ class WordSearch:
         Args:
             words (str): A string of words separated by spaces, commas, or
             new lines and limited to 30 word max. Will be trimmed if more.
+            level (Optional[int], optional): Difficulty level. Defaults to None.
+            size (Optional[int], optional): Puzzle size. Defaults to None.
         """
         self.words = utils.cleanup_input(words)
-        self._key: Dict[str, KeyDict] = {}
+        self._key: Key = {}
         self._level: int = 1
-        self._puzzle: List[List[str]] = []
+        self._puzzle: Puzzle = []
         self._size: int = 10
-        self._solution: List[List[str]] = []
+        self._solution: Puzzle = []
         # generate puzzle
         self.generate(level, size)
 
     @property
-    def puzzle(self) -> List[List[str]]:
+    def puzzle(self) -> Puzzle:
         """The current puzzle state."""
         return self._puzzle
 
     @property
-    def solution(self) -> List[List[str]]:
+    def solution(self) -> Puzzle:
         """The solution to the current puzzle state."""
         return self._solution
 
     @property
-    def key(self) -> Dict[str, KeyDict]:
+    def key(self) -> Key:
         """The current puzzle answer key."""
         return self._key
 
@@ -99,10 +99,10 @@ class WordSearch:
 
     @size.setter
     def size(self, val: int):
-        """Set the size the puzzle grid. All puzzles are square.
+        """Set the size the puzzle. All puzzles are square.
 
         Args:
-            val (int): Size in grid squares (characters)
+            val (int): Size in grid squares (characters).
 
         Raises:
             TypeError: Must be an integer.
@@ -111,10 +111,11 @@ class WordSearch:
         """
         if not isinstance(val, int):
             raise TypeError("Size must be an integer.")
-        if val < config.min_puzzle_size:
-            raise ValueError(f"Minimum size is {config.min_puzzle_size}")
-        elif val > config.max_puzzle_size:
-            raise ValueError(f"Maximum size is {config.max_puzzle_size}")
+        if not config.min_puzzle_size < val < config.max_puzzle_size:
+            raise ValueError(
+                f"Puzzle size must be >= {config.min_puzzle_size}"
+                + f" and <= {config.max_puzzle_size}"
+            )
         self._size = val
         self._reset_puzzle()
 
@@ -126,35 +127,35 @@ class WordSearch:
 
     def generate(
         self, level: Optional[int] = None, size: Optional[int] = None
-    ) -> List[List[str]]:
+    ) -> Puzzle:
         """Generate a word search puzzle using `self.words`.
 
         Args:
-            level (int, optional): The difficulty level of the puzzle
-            size (int, optional): The size of the word search puzzle.
+            level (Optional[int], optional): Difficulty level. Defaults to None.
+            size (Optional[int], optional): Puzzle size. Defaults to None.
 
         Returns:
-            list: An updated puzzle using current settings.
+            Puzzle: A newly generated puzzle.
         """
         if level:
             self.level = level
         if size:
             self.size = size
 
-        result = generate.fill_words(self.words, self.level, self.size)
-        self._puzzle = result["puzzle"]
-        self._solution = result["solution"]
-        self._key = result["key"]
+        self._solution, self._key = generate.fill_words(
+            self.words, self.level, self.size
+        )
+        self._puzzle = generate.fill_blanks(self._solution)
 
         return self.puzzle
 
     def show(self, key: bool = False, solution: bool = False, tabs: bool = False):
-        """Show the word search puzzle.
+        """Show the current puzzle.
 
         Args:
-            key (bool, optional): Show the puzzle solution key.
-            solution (bool, optional): Show the puzzle solution.
-            tabs (bool, optional): Use tabs between characters.
+            key (bool, optional): Show solution key. Defaults to False.
+            solution (bool, optional): Show only the hidden words. Defaults to False.
+            tabs (bool, optional): Use tabs between characters. Defaults to False.
         """
         if solution:
             print(utils.stringify(self.solution, tabs=tabs))
@@ -166,13 +167,13 @@ class WordSearch:
             if key:
                 print(f"\nAnswer Key: {utils.get_answer_key_str(self.key)}")
 
-    def save(self, path: Union[str, pathlib.Path] = "", format: str = "pdf") -> str:
-        """Save puzzle to a text file.
+    def save(self, path: SavePath = None, format: str = "pdf") -> str:
+        """Save the current puzzle to a file.
 
         Args:
-            path (str): A filename (string) or pathlib.Path object.
-            Defaults to current directory.
-            format (str, optional): Save file format (csv or pdf). Defaults to 'pdf'.
+            path (SavePath, optional): A filename (string) or
+            pathlib.Path object. Defaults to None.
+            format (str, optional): Save file format (csv or pdf). Defaults to "pdf".
 
         Raises:
             ValueError: Format must be either 'csv' or 'pdf'.
@@ -199,6 +200,9 @@ class WordSearch:
 
         Args:
             words (str): A string of words separated by spaces, commas, or new lines.
+
+        Returns:
+            Set[str]: An updated set of words.
         """
         self.words.update(utils.cleanup_input(words))
         self._reset_puzzle()
@@ -212,7 +216,7 @@ class WordSearch:
             words (str): A string of words separated by spaces, commas, or new lines.
 
         Returns:
-            set: The updated puzzle words.
+            Set[str]: An updated set of words.
         """
         removals = utils.cleanup_input(words)
         self.words = self.words - removals
@@ -226,7 +230,7 @@ class WordSearch:
             words (str): A string of words separated by spaces, commas, or new lines.
 
         Returns:
-            set: The updated puzzle words.
+            [type]: An updated set of words.
         """
         self.words = utils.cleanup_input(words)
         self._reset_puzzle()
