@@ -16,7 +16,7 @@ def random_word_generator(length: int = 6, chars: str = string.ascii_uppercase) 
     return "".join(random.choice(chars) for _ in range(length))
 
 
-def generate_test_key(length: int) -> dict:
+def generate_test_key(length: int):
     """Generate a test answer key of size `length`."""
     key = {}
     for i in range(length):
@@ -29,8 +29,8 @@ def generate_test_key(length: int) -> dict:
 
 def test_export_pdf_puzzles():
     """Export a bunch of puzzles as PDF and make sure they are all 1-page."""
-    sizes = [s for s in range(config.min_puzzle_size, config.max_puzzle_size + 1)]
-    keys = [k for k in range(3, config.max_puzzle_words + 1, 9)]
+    sizes = [s for s in range(config.min_puzzle_size, config.max_puzzle_size)]
+    keys = [k for k in range(3, config.max_puzzle_words, 9)]
     for s in sizes:
         for k in keys:
             puzzle = [["X"] * s for _ in range(s)]
