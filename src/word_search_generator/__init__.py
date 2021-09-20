@@ -111,7 +111,7 @@ class WordSearch:
         """
         if not isinstance(val, int):
             raise TypeError("Size must be an integer.")
-        if not config.min_puzzle_size < val < config.max_puzzle_size:
+        if not config.min_puzzle_size <= val <= config.max_puzzle_size:
             raise ValueError(
                 f"Puzzle size must be >= {config.min_puzzle_size}"
                 + f" and <= {config.max_puzzle_size}"

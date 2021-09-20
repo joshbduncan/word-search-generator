@@ -264,7 +264,7 @@ optional arguments:
 ℹ️ You can also use words from a file...
 
 ```bash
-$ word-search "$(cat words.txt)"
+$ cat words.txt | word-search
 ```
 
 This really came in handy for those kid's food menus. I was able to take a folder full of .txt documents with themed words and generate dozens of level 1 Word Search Puzzles at exactly 15 characters in size super fast...
