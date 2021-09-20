@@ -96,63 +96,59 @@ def write_pdf_file(
     pdf.set_creator(config.pdf_creator)
     pdf.set_title(config.pdf_title)
     pdf.add_page()
-    # draw a page border
     pdf.set_margin(0.5)
-    pdf.rect(0.5, 0.5, pdf.epw, pdf.eph)
-    pdf.rect(0.5, 0.5, pdf.epw, 0.5, "FD")
-    # draw title box and text
-    pdf.set_text_color(255)
-    pdf.set_font("Courier", "B", config.pdf_title_font_size)
-    pdf.cell(pdf.epw, 0.5, "** WORD SEARCH **", border=0, ln=1, align="C", center=True)
-    # move down and reset text fill color for puzzle
-    pdf.ln(0.50)
-    pdf.set_text_color(0)
-    # calculate the text size based on puzzle size
-    font_size = config.pdf_font_size
-    font_adjust = config.pdf_font_adjust / len(puzzle)
-    # setup grid and font sizing for puzzle characters
-    pdf.set_font("Courier", size=font_size * font_adjust)
-    gmargin = config.max_puzzle_size / len(puzzle)
-    gsize = (pdf.epw - gmargin) / len(puzzle)
-    # calculate new margin to make puzzle centered
-    pdf.set_left_margin(pdf.epw / 2 - len(puzzle[0]) * gsize / 2 + pdf.l_margin)
+
+    # insert the title
+    pdf.set_font("Helvetica", "B", config.pdf_title_font_size)
+    pdf.cell(pdf.epw, 0.25, "WORD SEARCH", ln=2, align="C", center=True)
+    pdf.ln(0.375)
+
+    # calculate the puzzle size and letter font size
+    pdf.set_left_margin(0.75)
+    gsize = 7 / len(puzzle)
+    gmargin = 0.6875 if gsize > 36 else 0.75
+    font_size = 72 * gsize * gmargin
+    info_font_size = font_size if font_size < 18 else 18
+    pdf.set_font_size(font_size)
+
     # draw the puzzle
     for row in puzzle:
         for char in row:
             pdf.multi_cell(gsize, gsize, char, align="C", ln=3)
         pdf.ln(gsize)
-    # set margin, placement, and font for word list
-    pdf.set_margin(1)
     pdf.ln(0.25)
-    # write word list heading
-    info_font_adjust = (
-        font_size * font_adjust * config.pdf_font_adjust / config.max_puzzle_words
-    )
-    info_font_size = (
-        font_size if info_font_adjust < config.pdf_font_size else info_font_adjust
-    )
-    pdf.set_font("Courier", "BU", size=info_font_size)
-    pdf.cell(pdf.epw, txt="Find these words:", align="C", ln=2)
-    pdf.ln(0.125)
-    pdf.set_font("Courier", size=info_font_size)
-    # write the word list
-    pdf.multi_cell(pdf.epw, None, utils.get_word_list_str(key), align="C", ln=2)
-    # move down and insert word direction info
-    pdf.ln(0.125)
-    pdf.set_font("Courier", size=info_font_size)
+
+    # write word list info
+    pdf.set_font("Helvetica", "BU", size=info_font_size)
     pdf.cell(
-        w=pdf.epw,
-        txt=f"* Words can go {utils.get_level_dirs_str(level)}.",
+        pdf.epw,
+        txt=f"Find words going {utils.get_level_dirs_str(level)}:",
         align="C",
+        ln=2,
     )
+    pdf.ln(0.125)
+
+    # write word list
+    pdf.set_font("Helvetica", "B", size=info_font_size)
+    pdf.set_font_size(info_font_size)
+    pdf.multi_cell(
+        pdf.epw,
+        info_font_size / 72 * 1.125,
+        utils.get_word_list_str(key),
+        align="C",
+        ln=2,
+    )
+
+    # write the puzzle answer key
     # resetting the margin before rotating makes layout easier to figure
     pdf.set_margin(0)
     # rotate the page to write answer key upside down
     with pdf.rotation(angle=180, x=pdf.epw / 2, y=pdf.eph / 2):
         pdf.set_xy(pdf.epw - pdf.epw, 0)
-        pdf.set_margin(0.625)
-        pdf.set_font("Courier", size=config.pdf_key_font_size)
+        pdf.set_margin(0.25)
+        pdf.set_font("Helvetica", size=config.pdf_key_font_size)
         pdf.write(txt="Answer Key: " + utils.get_answer_key_str(key))
+
     # write the final PDF to the filesystem
     try:
         pdf.output(fpath)

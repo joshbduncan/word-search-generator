@@ -66,6 +66,7 @@ def main():
 
     # capture all cli arguments and make sure words were provided
     args = parser.parse_args()
+    # TODO: setup check for no words provided
     # create a new puzzle object from provided arguments
     puzzle = WordSearch(",".join(args.words), level=args.level, size=args.size)
     # show the result
