@@ -13,7 +13,7 @@ def test_entrypoint():
 
 def test_no_words_provided():
     exit_status = os.system("word-search")
-    assert os.WEXITSTATUS(exit_status) == 1
+    assert os.WEXITSTATUS(exit_status) == 2
 
 
 def test_just_words():

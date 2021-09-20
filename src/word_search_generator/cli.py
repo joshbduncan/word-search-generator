@@ -29,7 +29,7 @@ def main():
     parser.add_argument(
         "words",
         type=str,
-        nargs="*",
+        nargs="+",
         help="words to include in the puzzle",
         default=sys.stdin,
     )
