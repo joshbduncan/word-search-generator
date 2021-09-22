@@ -253,6 +253,10 @@ optional arguments:
 
     $ word-search works, in, the, terminal, too -l 1 -s 20
 
+💻 Generate a puzzle with **10 random dictionary words**.
+
+    $ word-search -r 10
+
 💻 Generate a puzzle and **save as a pdf**.
 
     $ word-search works, in, the, terminal, too -e pdf -o ~/Desktop

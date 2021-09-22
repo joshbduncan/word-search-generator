@@ -4,12 +4,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.7] - 2021-09-22
+### Added
+- You can now generate puzzle from random dictionary words. No need to even supply your own words.
+```bash
+# just provide the -r or --random flag and the number of words you want
+$ words-search -r 10
+```
+
 ## [1.0.6] - 2021-09-20
 ### Added
-- add error check for cli when no words are provided
+- Add error check for cli when no words are provided
 
 ### Changed
-- updated PDF layout and font sizes
+- Updated PDF layout and font sizes
 
 ## [1.0.5] - 2021-09-18
 ### Changed
