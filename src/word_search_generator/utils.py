@@ -95,7 +95,7 @@ def get_random_words(n: int) -> str:
     return ",".join(random.sample(WORD_LIST, n))
 
 
-WORD_LIST = {
+WORD_LIST = [
     "ability",
     "able",
     "about",
@@ -1068,4 +1068,4 @@ WORD_LIST = {
     "young",
     "your",
     "yourself",
-}
+]

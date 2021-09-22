@@ -13,12 +13,17 @@ def test_entrypoint():
 
 def test_no_words_provided():
     exit_status = os.system("word-search")
-    assert os.WEXITSTATUS(exit_status) == 2
+    assert os.WEXITSTATUS(exit_status) == 1
 
 
 def test_just_words():
     exit_status = os.system("word-search some test words")
     assert exit_status == 0
+
+
+def test_stdin():
+    exit_status = os.system("echo computer robot soda | word-search")
+    assert os.WEXITSTATUS(exit_status) == 0
 
 
 def test_export_pdf():

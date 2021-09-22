@@ -5,22 +5,18 @@ import tempfile
 
 from PyPDF2 import PdfFileReader
 from word_search_generator import config
+from word_search_generator import utils
 from word_search_generator.export import write_pdf_file
 
 
 TEMP_DIR = tempfile.TemporaryDirectory()
 
 
-def random_word_generator(length: int = 6, chars: str = string.ascii_uppercase) -> str:
-    """Generate a random fake word size `length`."""
-    return "".join(random.choice(chars) for _ in range(length))
-
-
 def generate_test_key(length: int):
     """Generate a test answer key of size `length`."""
     key = {}
     for i in range(length):
-        word = random_word_generator(random.randint(3, 10))
+        word = utils.get_random_words(1)
         start = (random.randint(0, 9), random.randint(0, 9))
         direction = random.choice(list(config.dir_moves))
         key[word] = {"start": start, "direction": direction}
