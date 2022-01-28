@@ -2,6 +2,21 @@
 requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
+[tool.black]
+line-length = 88
+exclude = '''
+/(
+    \.git
+  | \.mypy_cache
+  | venv
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black" 
+
 [tool.pytest.ini_options]
 addopts = "--cov=word_search_generator"
 testpaths = [

@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.8] - 2022-01-28
+### Changed
+- Updated typing to simpler format
+- Cleaned up all imports using isort
+- Added black and isort settings to pyproject.toml
+- Added optional [tests] and [dev] requirements to setup.cfg `pip install word-search-generator[dev]`
+- Added isort to run file linting
+- Added typing to run file
+
+
 ## [1.0.7] - 2021-09-22
 ### Added
 - You can now generate puzzle from random dictionary words. No need to even supply your own words.

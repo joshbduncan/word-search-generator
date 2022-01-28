@@ -1,15 +1,14 @@
 import pathlib
-
-from typing import Dict, List, Optional, Tuple, TypedDict, Union
+from typing import Optional, TypedDict, Union
 
 
 class KeyInfo(TypedDict):
-    start: Tuple[int, int]
+    start: tuple[int, int]
     direction: str
 
 
-Puzzle = List[List[str]]
-Key = Dict[str, KeyInfo]
-Fit = Optional[Tuple[str, List[Tuple[int, int]]]]
-Fits = Dict[str, List[Tuple[int, int]]]
+Puzzle = list[list[str]]
+Key = dict[str, KeyInfo]
+Fit = Optional[tuple[str, list[tuple[int, int]]]]
+Fits = dict[str, list[tuple[int, int]]]
 SavePath = Union[str, pathlib.Path, None]

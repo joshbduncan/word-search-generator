@@ -1,0 +1,8 @@
+black==21.12b0
+flake8==4.0.1
+fpdf2==2.5.0
+isort==5.10.1
+mypy==0.931
+PyPDF2==1.26.0
+pytest==6.2.5
+pytest-cov==3.0.0

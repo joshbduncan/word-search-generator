@@ -1,12 +1,11 @@
 import random
 import string
 
-from typing import Set, Tuple
 from word_search_generator import config
 from word_search_generator.types import Key, Puzzle
 
 
-def cleanup_input(words: str) -> Set[str]:
+def cleanup_input(words: str) -> set[str]:
     """Cleanup provided input string. Removing spaces
     one-letter words, and words with punctuation.
 
@@ -18,7 +17,7 @@ def cleanup_input(words: str) -> Set[str]:
         ValueError: No proper words were provided.
 
     Returns:
-        Set[str]: Words to be placed in the puzzle.
+        set[str]: Words to be placed in the puzzle.
     """
     if not isinstance(words, str):
         raise TypeError(
@@ -29,7 +28,7 @@ def cleanup_input(words: str) -> Set[str]:
     # remove excess spaces and commas
     word_list = ",".join(words.split(" ")).split(",")
     # iterate through all words and pick first set that match criteria
-    word_set: Set[str] = set()
+    word_set: set[str] = set()
     for word in word_list:
         if len(word_set) > config.max_puzzle_words:
             break
@@ -85,7 +84,7 @@ def get_answer_key_str(key: Key) -> str:
     keys = []
     for k in sorted(key.keys()):
         direction = key[k]["direction"]
-        raw_coords: Tuple[int, int] = key[k]["start"]
+        raw_coords: tuple[int, int] = key[k]["start"]
         coords = (raw_coords[0] + 1, raw_coords[1] + 1)
         keys.append(f"{k} {direction} @ {coords}")
     return ", ".join(keys)

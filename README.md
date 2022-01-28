@@ -124,7 +124,7 @@ puzzle.level = 2
 puzzle.size = 25
 ```
 
-It's easy to set setting when creating a puzzle too...
+It's easy to define options when creating a puzzle too...
 
 ```python
 words = "dog, cat, pig, horse, donkey, turtle, goat, sheep"

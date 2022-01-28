@@ -8,14 +8,12 @@
     :license: MIT, see LICENSE for more details.
 """
 
-__version__ = "1.0.7"
+__version__ = "1.0.8"
 
-from typing import Optional, Set
-from word_search_generator import config
-from word_search_generator import export
-from word_search_generator import generate
+from typing import Optional
+
+from word_search_generator import config, export, generate, utils
 from word_search_generator.types import Key, Puzzle, SavePath
-from word_search_generator import utils
 
 
 class WordSearch:
@@ -195,28 +193,28 @@ class WordSearch:
         # return saved file path
         return str(saved_file)
 
-    def add_words(self, words: str) -> Set[str]:
+    def add_words(self, words: str) -> set[str]:
         """Add new words to the puzzle.
 
         Args:
             words (str): A string of words separated by spaces, commas, or new lines.
 
         Returns:
-            Set[str]: An updated set of words.
+            set[str]: An updated set of words.
         """
         self.words.update(utils.cleanup_input(words))
         self._reset_puzzle()
 
         return self.words
 
-    def remove_words(self, words: str) -> Set[str]:
+    def remove_words(self, words: str) -> set[str]:
         """Remove words from the puzzle.
 
         Args:
             words (str): A string of words separated by spaces, commas, or new lines.
 
         Returns:
-            Set[str]: An updated set of words.
+            set[str]: An updated set of words.
         """
         removals = utils.cleanup_input(words)
         self.words = self.words - removals

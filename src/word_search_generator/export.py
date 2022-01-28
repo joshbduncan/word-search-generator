@@ -1,9 +1,9 @@
 import pathlib
-
 from datetime import datetime
+
 from fpdf import FPDF
-from word_search_generator import config
-from word_search_generator import utils
+
+from word_search_generator import config, utils
 from word_search_generator.types import Key, Puzzle, SavePath
 
 

@@ -2,9 +2,7 @@ import argparse
 import pathlib
 import sys
 
-from word_search_generator import WordSearch
-from word_search_generator import config
-from word_search_generator import utils
+from word_search_generator import WordSearch, config, utils
 
 
 class RandomAction(argparse.Action):
