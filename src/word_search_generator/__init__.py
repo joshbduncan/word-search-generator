@@ -9,7 +9,7 @@
 """
 
 __app_name__ = "word-search"
-__version__ = "1.0.9"
+__version__ = "1.0.9.post1"
 
 from typing import Optional
 
