@@ -1,31 +1,28 @@
+import copy
 import random
 import string
+from typing import Optional
 
 from word_search_generator import config
 from word_search_generator.types import Fit, Fits, Key, KeyInfo, Puzzle
 
 
-def calc_puzzle_size(words: set[str], level: int, size: int = 0) -> int:
+def calc_puzzle_size(words: set[str], level: int, size: Optional[int] = None) -> int:
     """Calculate the puzzle grid size based on longest word, word count and level.
 
     Args:
         words (set[str]): Words to be placed in the puzzle.
         level (int): Puzzle difficulty level.
-        size (int, optional): User requested size of puzzle. Defaults to 0.
+        size (Optional[int], optional): [description]. Defaults to None.
 
     Returns:
         int: Final puzzle grid size.
     """
     if not size:
-        longest = len(max(words, key=len))
+        longest = max(10, len(max(words, key=len)))
         # calculate multipler for larger word lists so that most have room to fit
         multiplier = len(words) / 15 if len(words) > 15 else 1
         size = int(longest + level * 2 * multiplier)
-    # make sure size isn't too small or too big
-    if size > config.max_puzzle_size:
-        size = config.max_puzzle_size
-    elif size < config.min_puzzle_size:
-        size = config.min_puzzle_size
     return size
 
 
@@ -99,11 +96,11 @@ def fill_words(words: set[str], level: int, size: int) -> tuple[Puzzle, Key]:
         size (int, optional): Final puzzle grid size.
 
     Returns:
-        tuple[Puzzle, Key]: Currnet puzzle and puzzle answer key.
+        tuple[Puzzle, Key]: Current puzzle and puzzle answer key.
     """
     # calculate the puzzle size and setup a new empty puzzle
     size = calc_puzzle_size(words, level, size)
-    puzzle = [["•"] * size for _ in range(size)]
+    puzzle_solution = [["•"] * size for _ in range(size)]
     key: dict[str, KeyInfo] = {}
 
     # try to place each word on the puzzle
@@ -116,12 +113,12 @@ def fill_words(words: set[str], level: int, size: int) -> tuple[Puzzle, Key]:
             row = int(random.randint(0, size - 1))
             col = int(random.randint(0, size - 1))
             # try and find a directional fit using the starting coordinates
-            fit = find_a_fit(puzzle, word, (row, col), level)
+            fit = find_a_fit(puzzle_solution, word, (row, col), level)
             if fit:
                 d, coords = fit
                 # add word letters to the puzzle at the fit coordinates
                 for i, char in enumerate(word):
-                    puzzle[coords[i][0]][coords[i][1]] = char
+                    puzzle_solution[coords[i][0]][coords[i][1]] = char
                 # update placement info for word
                 # increase row and col by one so they are 1-based
                 key[word] = {"start": (row, col), "direction": d}
@@ -129,7 +126,7 @@ def fill_words(words: set[str], level: int, size: int) -> tuple[Puzzle, Key]:
                 break
             # if there was no fit at starting coordinates try again
             tries += 1
-    return (puzzle, key)
+    return (puzzle_solution, key)
 
 
 def no_matching_neighbors(puzzle: Puzzle, char: str, position: tuple[int, int]) -> bool:
@@ -163,7 +160,7 @@ def no_matching_neighbors(puzzle: Puzzle, char: str, position: tuple[int, int]) 
     return True
 
 
-def fill_blanks(puzzle: Puzzle) -> Puzzle:
+def fill_blanks(puzzle_solution: Puzzle) -> Puzzle:
     """Fill all empty puzzle spaces with random characters.
 
     Args:
@@ -172,6 +169,7 @@ def fill_blanks(puzzle: Puzzle) -> Puzzle:
     Returns:
         Puzzle: A complete word search puzzle.
     """
+    puzzle = copy.deepcopy(puzzle_solution)
     alphabet = list(string.ascii_uppercase)
     # iterate over the entire puzzle
     for row in range(len(puzzle)):

@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Added
+- __app_name__ to init.py
+- Lots of new tests to get closer to 100% coverage
+- conftest.py for pytest
+    - Added temp_dir fixture for testing
+- setup and configure tox for testing on github
+
+### Changed
+- Added typing to correct exit status on cli
+- __main__.py now passes __app_name__ to cli so help title display correctly
+- Changed __str__ to print entire puzzle along with answer key
+- Updated README.md with all additions, changes, fixes, and removals
+- Reworked `cleanup_input()` function
+
+### Fixed
+- Puzzle solution wasn't showing correctly
+
+### Removed
+- Removed `show()` function, now just use print(object)
+- Removed -k --key and -t --tabs from cli options
+
 ## [1.0.8] - 2022-01-28
 ### Changed
 - Updated typing to simpler format

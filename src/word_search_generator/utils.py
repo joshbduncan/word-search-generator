@@ -29,9 +29,8 @@ def cleanup_input(words: str) -> set[str]:
     word_list = ",".join(words.split(" ")).split(",")
     # iterate through all words and pick first set that match criteria
     word_set: set[str] = set()
-    for word in word_list:
-        if len(word_set) > config.max_puzzle_words:
-            break
+    while word_list and len(word_set) <= config.max_puzzle_words:
+        word = word_list.pop(0)
         if len(word) > 1 and not contains_punctuation(word):
             word_set.add(word.upper())
     # if no words were left raise exception

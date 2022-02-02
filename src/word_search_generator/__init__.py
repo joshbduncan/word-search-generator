@@ -8,6 +8,7 @@
     :license: MIT, see LICENSE for more details.
 """
 
+__app_name__ = "word-search"
 __version__ = "1.0.8"
 
 from typing import Optional
@@ -35,7 +36,7 @@ class WordSearch:
         self._key: Key = {}
         self._level: int = 1
         self._puzzle: Puzzle = []
-        self._size: int = 10
+        self._size: int = 0
         self._solution: Puzzle = []
         # generate puzzle
         self.generate(level, size)
@@ -144,26 +145,18 @@ class WordSearch:
             self.words, self.level, self.size
         )
         self._puzzle = generate.fill_blanks(self._solution)
+        self._size = len(self._puzzle[0])
 
         return self.puzzle
 
-    def show(self, key: bool = False, solution: bool = False, tabs: bool = False):
-        """Show the current puzzle.
+    def show_solution(self):
+        """Show the current puzzle solution."""
+        print(
+            f"""
+** WORD SEARCH SOLUTION **
 
-        Args:
-            key (bool, optional): Show solution key. Defaults to False.
-            solution (bool, optional): Show only the hidden words. Defaults to False.
-            tabs (bool, optional): Use tabs between characters. Defaults to False.
-        """
-        if solution:
-            print(utils.stringify(self.solution, tabs=tabs))
-        else:
-            print("** WORD SEARCH **\n")
-            print(utils.stringify(self.puzzle, tabs=tabs))
-            print(f"\nFind these words: {', '.join(sorted(self.words))}")
-            print(f"* Words can go {utils.get_level_dirs_str(self.level)}.")
-            if key:
-                print(f"\nAnswer Key: {utils.get_answer_key_str(self.key)}")
+{utils.stringify(self.solution)}"""
+        )
 
     def save(self, path: SavePath = None, format: str = "pdf") -> str:
         """Save the current puzzle to a file.
@@ -243,7 +236,16 @@ class WordSearch:
             self.generate()
 
     def __repr__(self):
-        return f"WordSearch('{self.words}')"
+        return f"{self.__class__.__name__}('{self.words}')"
 
     def __str__(self):
-        return utils.stringify(self.puzzle)
+        return f"""
+** WORD SEARCH PUZZLE **
+
+{utils.stringify(self.puzzle)}
+
+Find these words: {utils.get_word_list_str(self.key)}
+
+* Words can go {utils.get_level_dirs_str(self.level)}.
+
+Answer Key: {utils.get_answer_key_str(self.key)}"""

@@ -27,7 +27,7 @@ function tests {
     # test app using pytest
     echo "🧾 testing $app..."
     source venv/bin/activate
-    pytest
+    pytest -vv --cov-report term-missing
 }
 
 function typing {

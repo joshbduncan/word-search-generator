@@ -1,8 +1,9 @@
 import argparse
 import pathlib
 import sys
+from typing import Optional, Sequence
 
-from word_search_generator import WordSearch, config, utils
+from word_search_generator import WordSearch, __app_name__, config, utils
 
 
 class RandomAction(argparse.Action):
@@ -27,13 +28,16 @@ class SizeAction(argparse.Action):
         setattr(namespace, self.dest, values)
 
 
-def main():
+def main(
+    argv: Optional[Sequence[str]] = None, prog: Optional[str] = __app_name__
+) -> int:
     """Word Search Generator CLI"""
 
     # setup argparse to capture cli arguments
     parser = argparse.ArgumentParser(
         description="Generate Word Search Puzzles!",
         epilog="Copyright 2021 Josh Duncan (joshbduncan.com)",
+        prog=prog,
     )
     # define all possible arguments
     group = parser.add_mutually_exclusive_group()
@@ -49,7 +53,7 @@ def main():
         "--random",
         type=int,
         action=RandomAction,
-        help="difficulty level (1) beginner, (2) intermediate, (3) expert",
+        help="generate {n} random words to include in the puzzle",
     )
     parser.add_argument(
         "-l",
@@ -64,10 +68,6 @@ def main():
         action=SizeAction,
         type=int,
         help=f"puzzle size >={config.min_puzzle_size} and <={config.max_puzzle_size}",
-    )
-    parser.add_argument("-k", "--key", help="show answer key", action="store_true")
-    parser.add_argument(
-        "-t", "--tabs", help="use tabs as character separator", action="store_true"
     )
     parser.add_argument(
         "-e",
@@ -98,4 +98,10 @@ def main():
         fexport = puzzle.save(path=args.output, format=args.export.upper())
         print(f"Puzzle saved: {fexport}")
     else:
-        puzzle.show(key=args.key, tabs=args.tabs)
+        print(puzzle)
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -5,7 +5,6 @@ import string
 from word_search_generator import config
 from word_search_generator.export import write_pdf_file
 
-
 TEMP_DIR = "/Users/jbd/Desktop/sample-puzzles"
 
 

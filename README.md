@@ -27,45 +27,10 @@ from word_search_generator import WordSearch
 puzzle = WordSearch("dog, cat, pig, horse, donkey, turtle, goat, sheep")
 ```
 
-👀 Wanna see it? `puzzle.show()`
+👀 Wanna see it? `print(puzzle)`
 
 ```
-** WORD SEARCH **
-
-B T Z L K J C G E H
-X O N D G S W X M B
-W H P V O E H Q D N
-K G D I S G D C J G
-C J Y R G W F A H O
-M K O X N U K T F A
-C H T U R T L E I T
-D O N K E Y H C R M
-V R T U X G O L W H
-H J D G S H E E P Y
-
-Find these words: CAT, DOG, DONKEY, GOAT, HORSE, PIG, SHEEP, TURTLE
-* Words can go NE, E, SE, and S.
-```
-
-Puzzle words can be provided as a string variable or directly as above. Words can be separated by spaces, commas, or new lines and Word-Search-Generator will sort them out for you.
-
-🤷‍♂️ Can't finding all the words? Try, `puzzle.key`.
-
-```python
-{"TURTLE": {"start": (7, 3), "direction": "E"},
- "PIG": {"start": (3, 3), "direction": "SE"},
- "HORSE": {"start": (7, 2), "direction": "NE"},
- "GOAT": {"start": (4, 10), "direction": "S"},
- "DOG": {"start": (2, 4), "direction": "SE"},
- "DONKEY": {"start": (8, 1), "direction": "E"},
- "SHEEP": {"start": (10, 5), "direction": "E"},
- "CAT": {"start": (4, 8), "direction": "S"}}
-```
-
-You can also show the key with the puzzle with `puzzle.show(key=True)`.
-
-```
-** WORD SEARCH **
+** WORD SEARCH PUZZLE **
 
 B T Z L K J C G E H
 X O N D G S W X M B
@@ -86,28 +51,63 @@ Answer Key: CAT S @ (4, 8), DOG SE @ (2, 4), DONKEY E @ (8, 1), GOAT S @ (4, 10)
 
 ℹ️ The output answer key uses a 1-based index as that's more familiar with non-programmers. First number is the row, second is the column. Directions are cardinal from first letter to last. The stored `puzzle.key` is 0-based.
 
+Puzzle words can be provided as a string variable or directly as above. Words can be separated by spaces, commas, or new lines and Word-Search-Generator will sort them out for you.
+
+🤷‍♂️ Can't finding all the words? Try, `puzzle.key`...
+
+```python
+{"TURTLE": {"start": (7, 3), "direction": "E"},
+ "PIG": {"start": (3, 3), "direction": "SE"},
+ "HORSE": {"start": (7, 2), "direction": "NE"},
+ "GOAT": {"start": (4, 10), "direction": "S"},
+ "DOG": {"start": (2, 4), "direction": "SE"},
+ "DONKEY": {"start": (8, 1), "direction": "E"},
+ "SHEEP": {"start": (10, 5), "direction": "E"},
+ "CAT": {"start": (4, 8), "direction": "S"}}
+```
+
+or show just the hidden words `puzzle.show_solution()`.
+
+```
+** WORD SEARCH SOLUTION **
+
+• • • • • • • C D H P •
+• • • • • • • A O O I •
+• • • • • D • T N R G •
+• • • • • O • • K S • •
+• • • • • G • • E E • •
+• • • • • • • G Y • • •
+• • • • • • • O • • • •
+• • S H E E P A • • • •
+• • • • T U R T L E • •
+• • • • • • • • • • • •
+• • • • • • • • • • • •
+• • • • • • • • • • • •
+```
+
 🍰 Too easy? Up the difficulty level with `puzzle.level = 3`.
 
 ```
-** WORD SEARCH **
+** WORD SEARCH PUZZLE **
 
-Q B O I U A D G I P S I L N
-V G U Z G O N C V C O Q D T
-R I S B G O D U W M G V K R
-K X O H W P A Z D J U H E T
-H T B K R Y K T O X N O L Y
-F I G E P D Q Z N W Y R T A
-T B R H W R M U K O J S R S
-O S X N F I J W E N X E U W
-G A U S X T G N Y V A F T Y
-I T O W J I V P A T J G O W
-O B I Y D S E C L W C V T R
-I H E O Q E P F J A K H C I
-F Y W Z H Z Y L T L R U T A
-I Z U S T M Q V O K W F E F
+P X Y F L S O C Z R G R
+H M S G O A T Y N T J N
+G E C R S H U B O K X Y
+T N Z I O C P H Y L W H
+A J W R T M I E K T Y D
+C X S Z A S G Y E U C E
+P E C N F X E L D H B L
+V T J I G K R K O M S T
+L C H Y N H I N G Z W R
+K Z A O F G E Y E N V U
+R X D T V Y S U P F J T
+C A M R U R P H E X K D
 
 Find these words: CAT, DOG, DONKEY, GOAT, HORSE, PIG, SHEEP, TURTLE
+
 * Words can go N, NE, E, SE, S, SW, W, and NW.
+
+Answer Key: CAT N @ (6, 1), DOG S @ (7, 9), DONKEY NE @ (11, 3), GOAT E @ (2, 4), HORSE SW @ (3, 6), PIG S @ (4, 7), SHEEP NW @ (8, 11), TURTLE N @ (11, 12)
 ```
 
 😓 Too hard? Go the easy route with `puzzle.level = 1`.
@@ -147,25 +147,26 @@ The difficulty level controls whether words can go forward or backward, the card
 By default, the puzzle (characters) size is determined by the amount of words provided and the difficulty level. Need a puzzle an exact size, override the default with `puzzle.size = x` (30 >= integer >= 10). All puzzles are square so size` will be the width and height.
 
 ```
-** WORD SEARCH **
+** WORD SEARCH PUZZLE **
 
-P I G O Z D U M Y D A F C N
-T F L Q T P X I Q O W L A W
-B P D K U Y M W Z N G S T B
-L C L O R O Q G A K O H U P
-M G S Z T J R N U E A E M H
-Y T R I L W E Q S Y T E F N
-I N K U E X D C U D X P B A
-B F B F P V K I J P O E Y S
-A L N I L H F G R S W Q M R
-X Y Q E S C V W B E J X F K
-Z D S T A J E X U C Y M I J
-L I H G X W U N S D O G K E
-S W D W C D G K A U N B T H
-P M F V T W J L H O R S E P
+T M Y T U R T L E T O A
+Y B V D L S A J X C K G
+J Z K A T B N K U N R L
+K U F V R K C G D H J T
+P Q P I G P N V O Z G S
+X C G J N Y A B N F O H
+G A X L C G T J K U A E
+O T R B H E O X E L T E
+G A D Y M S C U Y Q K P
+R X O N K Z H O R S E C
+Y Q G H G F M U K L Z B
+H W T C P W S X N U D N
 
 Find these words: CAT, DOG, DONKEY, GOAT, HORSE, PIG, SHEEP, TURTLE
+
 * Words can go E, and S.
+
+Answer Key: CAT S @ (6, 2), DOG S @ (9, 3), DONKEY S @ (4, 9), GOAT S @ (5, 11), HORSE E @ (10, 7), PIG E @ (5, 3), SHEEP S @ (5, 12), TURTLE E @ (1, 4)
 ```
 
 ⚠️ All provided words may not fit a specified puzzle size!
@@ -225,24 +226,28 @@ Word-Search-Generator works in your terminal too! 🙌
 
 ```
 $ word-search -h
-usage: word-search [-h] [-l {1,2,3}] [-s SIZE] [-k] [-t] [-e {csv,pdf}] [-o OUTPUT] [words ...]
+usage: word-search [-h] [-r RANDOM] [-l {1,2,3}] [-s SIZE] [-e {csv,pdf}]
+                   [-o OUTPUT]
+                   [words ...]
 
 Generate Word Search Puzzles!
 
 positional arguments:
   words                 words to include in the puzzle
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
+  -r RANDOM, --random RANDOM
+                        generate {n} random words to include in the puzzle
   -l {1,2,3}, --level {1,2,3}
                         difficulty level (1) beginner, (2) intermediate, (3) expert
   -s SIZE, --size SIZE  puzzle size >=10 and <=25
-  -k, --key             show answer key
-  -t, --tabs            use tabs as character separator
   -e {csv,pdf}, --export {csv,pdf}
                         export puzzle as 'csv' or 'pdf' file
   -o OUTPUT, --output OUTPUT
                         output path for '-e', '--export' flag
+
+Copyright 2021 Josh Duncan (joshbduncan.com)
 ```
 
 💻 Generate a puzzle.
