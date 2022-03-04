@@ -1,11 +1,25 @@
 import os
 import pathlib
 import random
+import tempfile
 
 import pytest
 from PyPDF2 import PdfFileReader
 
 from word_search_generator import WordSearch, config, export, utils
+
+
+@pytest.fixture()
+def temp_dir():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        yield temp_dir
+
+
+@pytest.fixture()
+def temp_file():
+    with tempfile.NamedTemporaryFile() as temp_file:
+        yield temp_file
+
 
 WORDS = "dog, cat, pig, horse, donkey, turtle, goat, sheep"
 
@@ -36,40 +50,8 @@ def test_export_pdf_puzzles(temp_dir):
             assert pathlib.Path(path).exists() and pdf.getNumPages() == 1
 
 
-def test_export_to_dir(temp_dir):
-    """Try to export a puzzle with only a path to the directory."""
-    path = pathlib.Path(f"{temp_dir}")
-    fpath = export.validate_path(path, "pdf")
-    assert fpath.parent == path
-
-
-def test_export_overwrite_file_error(temp_dir):
+def test_export_overwrite_file_error(temp_file):
     """Try to export a puzzle with the name of a file that is already present."""
-    fname = "dont_overwrite_me.pdf"
-    ftype = "pdf"
-    fpath = pathlib.Path(f"{temp_dir}/{fname}")
-    os.system(f"touch {fpath.as_posix()}")
+    puzzle = WordSearch(WORDS)
     with pytest.raises(FileExistsError):
-        export.validate_path(fpath, ftype)
-
-
-def test_export_csv_overwrite_file_os_error(temp_dir):
-    """Try to export a puzzle with the name of a file that is already present."""
-    puzzle = WordSearch(WORDS)
-    fname = "dont_overwrite_me.pdf"
-    fpath = pathlib.Path(f"{temp_dir}/{fname}")
-    os.chmod(temp_dir, 4)
-    # os.system(f"touch {fpath.as_posix()}")
-    with pytest.raises(OSError):
-        export.write_csv_file(fpath, puzzle.puzzle, puzzle.key, puzzle.level)
-
-
-def test_export_pdf_overwrite_file_os_error(temp_dir):
-    """Try to export a puzzle with the name of a file that is already present."""
-    puzzle = WordSearch(WORDS)
-    fname = "dont_overwrite_me.pdf"
-    fpath = pathlib.Path(f"{temp_dir}/{fname}")
-    os.chmod(temp_dir, 4)
-    # os.system(f"touch {fpath.as_posix()}")
-    with pytest.raises(OSError):
-        export.write_pdf_file(fpath, puzzle.puzzle, puzzle.key, puzzle.level)
+        puzzle.save(temp_file.name)

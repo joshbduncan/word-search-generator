@@ -1,4 +1,4 @@
-import pathlib
+from pathlib import Path
 from typing import Optional, TypedDict, Union
 
 
@@ -11,4 +11,4 @@ Puzzle = list[list[str]]
 Key = dict[str, KeyInfo]
 Fit = Optional[tuple[str, list[tuple[int, int]]]]
 Fits = dict[str, list[tuple[int, int]]]
-SavePath = Union[str, pathlib.Path, None]
+FilePath = Union[str, Path]

@@ -11,10 +11,11 @@
 __app_name__ = "word-search"
 __version__ = "1.0.9.post2"
 
+from pathlib import Path
 from typing import Optional
 
-from word_search_generator import config, export, generate, utils
-from word_search_generator.types import Key, Puzzle, SavePath
+from word_search_generator import config, export, generate, utils, types
+from word_search_generator.types import FilePath, Key, Puzzle
 
 
 class WordSearch:
@@ -158,28 +159,25 @@ class WordSearch:
 {utils.stringify(self.solution)}"""
         )
 
-    def save(self, path: SavePath = None, format: str = "pdf") -> str:
+    def save(self, path: FilePath) -> str:
         """Save the current puzzle to a file.
 
         Args:
-            path (SavePath, optional): A filename (string) or
-            pathlib.Path object. Defaults to None.
-            format (str, optional): Save file format (csv or pdf). Defaults to "pdf".
-
-        Raises:
-            ValueError: Format must be either 'csv' or 'pdf'.
+            path (str): A filename (string).
 
         Returns:
             str: Final save path of the file.
         """
-        # check validity of format
-        if format.lower() not in ["csv", "pdf"]:
-            raise ValueError("Format must be either 'csv' or 'pdf'")
-        ftype = ".pdf" if format.lower() == "pdf" else ".csv"
+
+        # check type of path provided
+        if isinstance(path, Path):
+            ftype = "csv" if ".csv" in path.name.lower() else "pdf"
+        else:
+            ftype = "csv" if ".csv" in path.lower() else "pdf"
         # validate export path
-        fpath = export.validate_path(path, ftype)
+        fpath = export.validate_path(path)
         # write the file
-        if ftype == ".csv":
+        if ftype == "csv":
             saved_file = export.write_csv_file(fpath, self.puzzle, self.key, self.level)
         else:
             saved_file = export.write_pdf_file(fpath, self.puzzle, self.key, self.level)

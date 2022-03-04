@@ -1,9 +1,17 @@
 import pathlib
+import tempfile
 
 import pytest
 
 from word_search_generator import WordSearch, config, utils
 from word_search_generator.types import Key, Puzzle
+
+
+@pytest.fixture()
+def temp_dir():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        yield temp_dir
+
 
 WORDS = "dog, cat, pig, horse, donkey, turtle, goat, sheep"
 
@@ -93,22 +101,21 @@ def test_puzzle_key():
 def test_export_pdf(temp_dir):
     puzzle = WordSearch(WORDS)
     temp_path = temp_dir + "test.pdf"
-    puzzle.save(temp_path, "pdf")
+    puzzle.save(temp_path)
     assert pathlib.Path(temp_path).exists()
 
 
 def test_export_csv(temp_dir):
-    print("%^@(*(*Y#(*&(*&#", temp_dir)
     puzzle = WordSearch(WORDS)
     temp_path = temp_dir + "test.csv"
-    puzzle.save(temp_path, "csv")
+    puzzle.save(temp_path)
     assert pathlib.Path(temp_path).exists()
 
 
 def test_invalid_save_path():
     puzzle = WordSearch(WORDS)
-    with pytest.raises(FileNotFoundError):
-        puzzle.save("~/some/random/dir/that/doesnt/exists", "csv")
+    with pytest.raises(OSError):
+        puzzle.save("~/some/random/dir/that/doesnt/exists")
 
 
 def test_add_words(temp_dir):
@@ -145,12 +152,6 @@ def test_puzzle_solution():
     key_chars = set([char for word in puzzle.key for char in word])
     key_chars.add("•")
     assert puzzle_chars == key_chars
-
-
-def test_bad_puzzle_save_value():
-    puzzle = WordSearch(WORDS)
-    with pytest.raises(ValueError):
-        puzzle.save(format="doc")
 
 
 def test_puzzle_repr():

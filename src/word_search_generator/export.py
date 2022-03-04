@@ -1,18 +1,16 @@
 import pathlib
-from datetime import datetime
 
 from fpdf import FPDF
 
 from word_search_generator import config, utils
-from word_search_generator.types import Key, Puzzle, SavePath
+from word_search_generator.types import FilePath, Key, Puzzle
 
 
-def validate_path(path: SavePath, ftype: str) -> pathlib.Path:
+def validate_path(path: FilePath) -> pathlib.Path:
     """Path to save location.
 
     Args:
-        path (SavePath): Path to save location.
-        ftype (str): Reqeusted export file type.
+        path (str): Path to save location.
 
     Raises:
         FileExistsError: The output path already exists as a file.
@@ -21,19 +19,12 @@ def validate_path(path: SavePath, ftype: str) -> pathlib.Path:
     Returns:
         pathlib.Path: Validated output path.
     """
-    path = pathlib.Path(path).absolute() if path else pathlib.Path.cwd()
-    # don't overwrite any file
+
+    if isinstance(path, str):
+        path = pathlib.Path(path)
     if path.is_file():
         raise FileExistsError(f"Sorry, output file '{path}' already exists.")
-    # check to see if outpath is a directory or a file
-    if path.is_dir():
-        tstamp = datetime.now().replace(microsecond=0).isoformat().replace(":", "")
-        fname = "Word Search " + tstamp + ftype
-        fpath = path.joinpath(fname)
-    elif path.parent.exists() and path.suffix:
-        fpath = path
-    else:
-        raise FileNotFoundError(f"Sorry, output path '{path}' is invalid.")
+    fpath = pathlib.Path(path)
     return fpath
 
 
@@ -57,6 +48,11 @@ def write_csv_file(
     Returns:
         pathlib.Path: Final save path.
     """
+
+    # check to make sure file type was specified
+    if not fpath.suffix:
+        fpath = pathlib.Path(str(fpath.absolute()) + ".pdf")
+
     try:
         with open(fpath, "w") as f:
             print("** WORD SEARCH **\n", file=f)
