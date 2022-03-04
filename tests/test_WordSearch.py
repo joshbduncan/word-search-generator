@@ -10,7 +10,7 @@ from word_search_generator.types import Key, Puzzle
 @pytest.fixture()
 def temp_dir():
     with tempfile.TemporaryDirectory() as temp_dir:
-        yield temp_dir
+        yield pathlib.Path(temp_dir)
 
 
 WORDS = "dog, cat, pig, horse, donkey, turtle, goat, sheep"
@@ -100,16 +100,16 @@ def test_puzzle_key():
 
 def test_export_pdf(temp_dir):
     puzzle = WordSearch(WORDS)
-    temp_path = temp_dir + "test.pdf"
+    temp_path = pathlib.Path.joinpath(temp_dir, "test.pdf")
     puzzle.save(temp_path)
-    assert pathlib.Path(temp_path).exists()
+    assert temp_path.exists()
 
 
 def test_export_csv(temp_dir):
     puzzle = WordSearch(WORDS)
-    temp_path = temp_dir + "test.csv"
+    temp_path = pathlib.Path.joinpath(temp_dir, "test.csv")
     puzzle.save(temp_path)
-    assert pathlib.Path(temp_path).exists()
+    assert temp_path.exists()
 
 
 def test_invalid_save_path():

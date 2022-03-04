@@ -14,7 +14,7 @@ __version__ = "1.0.9.post2"
 from pathlib import Path
 from typing import Optional
 
-from word_search_generator import config, export, generate, utils, types
+from word_search_generator import config, export, generate, utils
 from word_search_generator.types import FilePath, Key, Puzzle
 
 
@@ -175,12 +175,12 @@ class WordSearch:
         else:
             ftype = "csv" if ".csv" in path.lower() else "pdf"
         # validate export path
-        fpath = export.validate_path(path)
+        path = export.validate_path(path)
         # write the file
         if ftype == "csv":
-            saved_file = export.write_csv_file(fpath, self.puzzle, self.key, self.level)
+            saved_file = export.write_csv_file(path, self.puzzle, self.key, self.level)
         else:
-            saved_file = export.write_pdf_file(fpath, self.puzzle, self.key, self.level)
+            saved_file = export.write_pdf_file(path, self.puzzle, self.key, self.level)
         # return saved file path
         return str(saved_file)
 

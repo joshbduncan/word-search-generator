@@ -73,7 +73,8 @@ def main(
         "-o",
         "--output",
         type=pathlib.Path,
-        help="Output path for saved puzzle. Specify export type by appending '.pdf' or '.csv' to your path (defaults to PDF)",
+        help="Output path for saved puzzle. Specify export type by appending "
+        "'.pdf' or '.csv' to your path (defaults to PDF)",
     )
 
     # capture all cli arguments and make sure words were provided

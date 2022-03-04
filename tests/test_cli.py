@@ -8,7 +8,7 @@ import pytest
 @pytest.fixture()
 def temp_dir():
     with tempfile.TemporaryDirectory() as temp_dir:
-        yield temp_dir
+        yield pathlib.Path(temp_dir)
 
 
 def get_exit_status(exit_code):
@@ -46,17 +46,15 @@ def test_stdin():
 
 
 def test_export_pdf(temp_dir):
-    print(temp_dir)
-    temp_path = str(temp_dir + "/test.pdf")
+    temp_path = pathlib.Path.joinpath(temp_dir, "test.pdf")
     result = os.system(f"word-search some test words -o {temp_path}")
-    assert get_exit_status(result) == 0 and pathlib.Path(temp_path).exists()
+    assert get_exit_status(result) == 0 and temp_path.exists()
 
 
 def test_export_csv(temp_dir):
-    temp_path = str(temp_dir + "/test.csv")
+    temp_path = pathlib.Path.joinpath(temp_dir, "test.csv")
     result = os.system(f"word-search some test words -o {temp_path}")
-    print(result)
-    assert get_exit_status(result) == 0 and pathlib.Path(temp_path).exists()
+    assert get_exit_status(result) == 0 and temp_path.exists()
 
 
 def test_random_word_valid_input():
