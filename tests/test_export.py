@@ -1,18 +1,10 @@
 import pathlib
 import random
-import tempfile
 
 import pytest
 from PyPDF2 import PdfFileReader
 
 from word_search_generator import WordSearch, config, export, utils
-
-
-@pytest.fixture()
-def temp_dir():
-    with tempfile.TemporaryDirectory() as temp_dir:
-        yield pathlib.Path(temp_dir)
-
 
 WORDS = "dog, cat, pig, horse, donkey, turtle, goat, sheep"
 
@@ -28,7 +20,7 @@ def generate_test_key(length: int):
     return key
 
 
-def test_export_pdf_puzzles(temp_dir):
+def test_export_pdf_puzzles(tmp_path):
     """Export a bunch of puzzles as PDF and make sure they are all 1-page."""
     sizes = [s for s in range(config.min_puzzle_size, config.max_puzzle_size)]
     keys = [k for k in range(3, config.max_puzzle_words, 9)]
@@ -40,7 +32,7 @@ def test_export_pdf_puzzles(temp_dir):
             key = generate_test_key(k)
             level = random.randint(1, 3)
             path = pathlib.Path.joinpath(
-                temp_dir, f"test_s{s}_l{level}_k{len(key)}.pdf"
+                tmp_path, f"test_s{s}_l{level}_k{len(key)}.pdf"
             )
             puzzles.append(path)
             export.write_pdf_file(path, puzzle, key, level)
@@ -50,24 +42,24 @@ def test_export_pdf_puzzles(temp_dir):
     assert pages == {1}
 
 
-def test_export_overwrite_file_error(temp_dir):
+def test_export_overwrite_file_error(tmp_path):
     """Try to export a puzzle with the name of a file that is already present."""
-    path = pathlib.Path.joinpath(temp_dir, "test.pdf")
+    path = pathlib.Path.joinpath(tmp_path, "test.pdf")
     path.touch()
     with pytest.raises(FileExistsError):
         export.validate_path(path)
 
 
-def test_export_pdf_no_extension_provided(temp_dir):
+def test_export_pdf_no_extension_provided(tmp_path):
     """Try to export a puzzle with no extension on the path."""
     puzzle = WordSearch(WORDS)
-    path = pathlib.Path.joinpath(temp_dir, "test")
+    path = pathlib.Path.joinpath(tmp_path, "test")
     puzzle.save(path)
     correct_path = path.with_suffix(".pdf")
     assert correct_path.exists()
 
 
-def test_export_pdf_os_error(temp_dir):
+def test_export_pdf_os_error(tmp_path):
     """Try to export a puzzle to a place you don't have access to."""
     puzzle = WordSearch(WORDS)
     with pytest.raises(OSError):

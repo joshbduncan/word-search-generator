@@ -1,14 +1,5 @@
 import os
 import pathlib
-import tempfile
-
-import pytest
-
-
-@pytest.fixture()
-def temp_dir():
-    with tempfile.TemporaryDirectory() as temp_dir:
-        yield pathlib.Path(temp_dir)
 
 
 def get_exit_status(exit_code):
@@ -45,16 +36,16 @@ def test_stdin():
     assert get_exit_status(result) == 0
 
 
-def test_export_pdf(temp_dir):
-    temp_path = pathlib.Path.joinpath(temp_dir, "test.pdf")
-    result = os.system(f"word-search some test words -o {temp_path}")
-    assert get_exit_status(result) == 0 and temp_path.exists()
+def test_export_pdf(tmp_path):
+    tmp_path = pathlib.Path.joinpath(tmp_path, "test.pdf")
+    result = os.system(f"word-search some test words -o {tmp_path}")
+    assert get_exit_status(result) == 0 and tmp_path.exists()
 
 
-def test_export_csv(temp_dir):
-    temp_path = pathlib.Path.joinpath(temp_dir, "test.csv")
-    result = os.system(f"word-search some test words -o {temp_path}")
-    assert get_exit_status(result) == 0 and temp_path.exists()
+def test_export_csv(tmp_path):
+    tmp_path = pathlib.Path.joinpath(tmp_path, "test.csv")
+    result = os.system(f"word-search some test words -o {tmp_path}")
+    assert get_exit_status(result) == 0 and tmp_path.exists()
 
 
 def test_random_word_valid_input():

@@ -18,9 +18,9 @@ function linting {
     # lint app using black and flake8
     echo "🧾 linting $app..."
     source venv/bin/activate
-    isort src
-    black src
-    flake8 src
+    isort src tests
+    black src tests
+    flake8 src tests
 }
 
 function tests {

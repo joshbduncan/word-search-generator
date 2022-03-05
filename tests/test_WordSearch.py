@@ -1,17 +1,9 @@
 import pathlib
-import tempfile
 
 import pytest
 
 from word_search_generator import WordSearch, config, utils
 from word_search_generator.types import Key, Puzzle
-
-
-@pytest.fixture()
-def temp_dir():
-    with tempfile.TemporaryDirectory() as temp_dir:
-        yield pathlib.Path(temp_dir)
-
 
 WORDS = "dog, cat, pig, horse, donkey, turtle, goat, sheep"
 
@@ -98,18 +90,18 @@ def test_puzzle_key():
     assert check_key(puzzle.key, puzzle.puzzle)
 
 
-def test_export_pdf(temp_dir):
+def test_export_pdf(tmp_path):
     puzzle = WordSearch(WORDS)
-    temp_path = pathlib.Path.joinpath(temp_dir, "test.pdf")
-    puzzle.save(temp_path)
-    assert temp_path.exists()
+    tmp_path = pathlib.Path.joinpath(tmp_path, "test.pdf")
+    puzzle.save(tmp_path)
+    assert tmp_path.exists()
 
 
-def test_export_csv(temp_dir):
+def test_export_csv(tmp_path):
     puzzle = WordSearch(WORDS)
-    temp_path = pathlib.Path.joinpath(temp_dir, "test.csv")
-    puzzle.save(temp_path)
-    assert temp_path.exists()
+    tmp_path = pathlib.Path.joinpath(tmp_path, "test.csv")
+    puzzle.save(tmp_path)
+    assert tmp_path.exists()
 
 
 def test_invalid_save_path():
@@ -118,13 +110,13 @@ def test_invalid_save_path():
         puzzle.save("~/some/random/dir/that/doesnt/exists")
 
 
-def test_add_words(temp_dir):
+def test_add_words():
     puzzle = WordSearch(WORDS)
     puzzle.add_words("test")
     assert "test".upper() in puzzle.words
 
 
-def test_remove_words(temp_dir):
+def test_remove_words():
     puzzle = WordSearch(WORDS)
     puzzle.remove_words("test")
     assert "test".upper() not in puzzle.words
