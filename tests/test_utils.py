@@ -17,7 +17,7 @@ def test_valid_cleanup_input_with_commas():
 
 def test_invalid_cleanup_input():
     with pytest.raises(TypeError):
-        utils.cleanup_input(1)
+        utils.cleanup_input(1)  # type: ignore
 
 
 def test_invalid_input_too_short():

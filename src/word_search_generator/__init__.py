@@ -9,18 +9,17 @@
 """
 
 __app_name__ = "word-search"
-__version__ = "1.0.9.post2"
+__version__ = "1.1.0"
 
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 from word_search_generator import config, export, generate, utils
-from word_search_generator.types import FilePath, Key, Puzzle
+from word_search_generator.types import Key, Puzzle
 
 
 class WordSearch:
-    """This class represents a WordSearch object
-    used for generating Word Search puzzles."""
+    """This class represents a WordSearch object."""
 
     def __init__(
         self, words: str, level: Optional[int] = None, size: Optional[int] = None
@@ -28,8 +27,8 @@ class WordSearch:
         """Initializa a Word Search puzzle.
 
         Args:
-            words (str): A string of words separated by spaces, commas, or
-            new lines and limited to 30 word max. Will be trimmed if more.
+            words (str): words (str): A string of words separated by spaces, commas,
+            or new lines and limited to 30 word max. Will be trimmed if more.
             level (Optional[int], optional): Difficulty level. Defaults to None.
             size (Optional[int], optional): Puzzle size. Defaults to None.
         """
@@ -65,6 +64,7 @@ class WordSearch:
     @level.setter
     def level(self, val: int):
         """Set the difficulty level of the word search.
+
         Level 1 (Easy): Words can go forward in directions
         EAST (E), or SOUTH (S).
         Puzzle size is small by default.
@@ -128,7 +128,7 @@ class WordSearch:
     def generate(
         self, level: Optional[int] = None, size: Optional[int] = None
     ) -> Puzzle:
-        """Generate a word search puzzle using `self.words`.
+        """_summary_
 
         Args:
             level (Optional[int], optional): Difficulty level. Defaults to None.
@@ -159,16 +159,15 @@ class WordSearch:
 {utils.stringify(self.solution)}"""
         )
 
-    def save(self, path: FilePath) -> str:
+    def save(self, path: Union[str, Path]) -> str:
         """Save the current puzzle to a file.
 
         Args:
-            path (str): A filename (string).
+            path (Union[str, Path]): A file save path.
 
         Returns:
             str: Final save path of the file.
         """
-
         # check type of path provided
         if isinstance(path, Path):
             ftype = "csv" if ".csv" in path.name.lower() else "pdf"
@@ -188,7 +187,8 @@ class WordSearch:
         """Add new words to the puzzle.
 
         Args:
-            words (str): A string of words separated by spaces, commas, or new lines.
+            words (str): A string of words separated by
+            spaces, commas, or new lines.
 
         Returns:
             set[str]: An updated set of words.
@@ -202,7 +202,8 @@ class WordSearch:
         """Remove words from the puzzle.
 
         Args:
-            words (str): A string of words separated by spaces, commas, or new lines.
+            words (str): A string of words separated by
+            spaces, commas, or new lines.
 
         Returns:
             set[str]: An updated set of words.
@@ -216,7 +217,8 @@ class WordSearch:
         """Replace all words in the puzzle.
 
         Args:
-            words (str): A string of words separated by spaces, commas, or new lines.
+            words (str): A string of words separated by
+            spaces, commas, or new lines.
 
         Returns:
             [type]: An updated set of words.

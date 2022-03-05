@@ -8,15 +8,17 @@ from word_search_generator.types import Fit, Fits, Key, KeyInfo, Puzzle
 
 
 def calc_puzzle_size(words: set[str], level: int, size: Optional[int] = None) -> int:
-    """Calculate the puzzle grid size based on longest word, word count and level.
+    """Calculate the puzzle grid size.
+
+    Based on longest word, word count, and level.
 
     Args:
         words (set[str]): Words to be placed in the puzzle.
         level (int): Puzzle difficulty level.
-        size (Optional[int], optional): [description]. Defaults to None.
+        size (Optional[int], optional): Puzzle size.
 
     Returns:
-        int: Final puzzle grid size.
+        int: Puzzle grid size.
     """
     if not size:
         longest = max(10, len(max(words, key=len)))

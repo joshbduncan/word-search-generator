@@ -64,7 +64,7 @@ def test_bad_puzzle_level_value():
 def test_bad_puzzle_level_type():
     puzzle = WordSearch(WORDS)
     with pytest.raises(TypeError):
-        puzzle.level = "A"
+        puzzle.level = "A"  # type: ignore
 
 
 def test_set_puzzle_size():
@@ -82,7 +82,7 @@ def test_bad_puzzle_size_value():
 def test_bad_puzzle_size_type():
     puzzle = WordSearch(WORDS)
     with pytest.raises(TypeError):
-        puzzle.size = "A"
+        puzzle.size = "A"  # type: ignore
 
 
 def test_puzzle_key():

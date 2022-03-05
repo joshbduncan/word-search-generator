@@ -1,5 +1,4 @@
-from pathlib import Path
-from typing import Optional, TypedDict, Union
+from typing import Optional, TypedDict
 
 
 class KeyInfo(TypedDict):
@@ -11,4 +10,3 @@ Puzzle = list[list[str]]
 Key = dict[str, KeyInfo]
 Fit = Optional[tuple[str, list[tuple[int, int]]]]
 Fits = dict[str, list[tuple[int, int]]]
-FilePath = Union[str, Path]

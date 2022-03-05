@@ -6,4 +6,5 @@ def main():
 
 
 if __name__ == "__main__":
+    """WordSearch CLI access point."""
     main()

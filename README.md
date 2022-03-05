@@ -55,7 +55,7 @@ Answer Key: CAT S @ (4, 8), DOG SE @ (2, 4), DONKEY E @ (8, 1), GOAT S @ (4, 10)
 
 Puzzle words can be provided as a string variable or directly as above. Words can be separated by spaces, commas, or new lines and Word-Search-Generator will sort them out for you.
 
-🤷‍♂️ Can't finding all the words? Try, `puzzle.key`...
+🤷‍♂️ Can't find all of the words? Try, `puzzle.key`...
 
 ```python
 {"TURTLE": {"start": (7, 3), "direction": "E"},
@@ -204,15 +204,15 @@ Word-Search-Generator can save puzzles as PDF and CSV files.
 💾 Save a PDF to a specific directory with default filename.
 
 ```python
-puzzle.save(path="~/Desktop", format="pdf")
-".../Desktop/Word Search 2021-01-01T000000.pdf"
+puzzle.save(path="~/Desktop/puzzle.pdf")
+"~/Desktop/puzzle.pdf"
 ```
 
 💾 Save a CSV with to the current directory with a specific filename.
 
 ```python
-puzzle.save(path="puzzle.csv", format="csv")
-".../projects/word-search/puzzle.csv"
+puzzle.save(path="puzzle.csv")
+"./puzzle.csv"
 ```
 
 ℹ️ Using the Word-Search-Generator [CLI Integration](#cli-integration) and [redirections](https://www.gnu.org/software/bash/manual/html_node/Redirections.html) in your terminal you can also save the puzzle to a text file.
@@ -228,28 +228,24 @@ Word-Search-Generator works in your terminal too! 🙌
 
 ```
 $ word-search -h
-usage: word-search [-h] [-r RANDOM] [-l {1,2,3}] [-s SIZE] [-e {csv,pdf}]
-                   [-o OUTPUT]
-                   [words ...]
+usage: word-search [-h] [-r RANDOM] [-l {1,2,3}] [-s SIZE] [-o OUTPUT] [words ...]
 
 Generate Word Search Puzzles!
 
 positional arguments:
-  words                 words to include in the puzzle
+  words                 Words to include in the puzzle
 
 options:
   -h, --help            show this help message and exit
   -r RANDOM, --random RANDOM
-                        generate {n} random words to include in the puzzle
+                        Generate {n} random words to include in the puzzle
   -l {1,2,3}, --level {1,2,3}
-                        difficulty level (1) beginner, (2) intermediate, (3) expert
-  -s SIZE, --size SIZE  puzzle size >=10 and <=25
-  -e {csv,pdf}, --export {csv,pdf}
-                        export puzzle as 'csv' or 'pdf' file
+                        Difficulty level (1) beginner, (2) intermediate, (3) expert
+  -s SIZE, --size SIZE  Puzzle size >=10 and <=25
   -o OUTPUT, --output OUTPUT
-                        output path for '-e', '--export' flag
+                        Output path for saved puzzle. Specify export type by appending '.pdf' or '.csv' to your path (defaults to PDF)
 
-Copyright 2021 Josh Duncan (joshbduncan.com)
+Copyright 2021 Josh Duncan (joshd.xyz)
 ```
 
 💻 Generate a puzzle.
@@ -266,11 +262,11 @@ Copyright 2021 Josh Duncan (joshbduncan.com)
 
 💻 Generate a puzzle and **save as a pdf**.
 
-    $ word-search works, in, the, terminal, too -e pdf -o ~/Desktop
+    $ word-search works, in, the, terminal, too -o ~/Desktop/puzzle.pdf
 
 💻 Generate a puzzle and **save as a csv**.
 
-    $ word-search works, in, the, terminal, too -e csv -o ~/Desktop/puzzle.csv
+    $ word-search works, in, the, terminal, too -o puzzle.csv
 
 ℹ️ You can also use words from a file...
 

@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2022-03-04
+### Added
+- New/cleaned-up testing.
+- More type hints.
+
+### Changes
+- Tests were cleaned up and changed a bunch to pass on windows.
+- Updated minimum version and testing version to Python 3.10.
+- WordSearch.save() method now determines CSV or PDF export type from file name. Default to PDF is no extension if provided.
+- Cleaned up variable names to match across entire project.
+- Cleaned up type hints.
+- Remove custom FilePath type and replace with `Union[str, Path]`.
+
+### Removed
+- Format argument on WordSearch.save() method. The file type is now determined by the provided save path. If no extension is provided it defaults to pdf.
+    - Makes the -e, --export cli option no longer needed.
+
 ## [1.0.9] - 2022-02-01
 ### Added
 - __app_name__ to init.py

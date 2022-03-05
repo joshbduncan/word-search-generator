@@ -1,28 +1,27 @@
-import pathlib
+from pathlib import Path
+from typing import Union
 
 from fpdf import FPDF
 
 from word_search_generator import config, utils
-from word_search_generator.types import FilePath, Key, Puzzle
+from word_search_generator.types import Key, Puzzle
 
 
-def validate_path(path: FilePath) -> pathlib.Path:
-    """Path to save location.
+def validate_path(path: Union[str, Path]) -> Path:
+    """Validate the save path.
 
     Args:
-        path (str): Path to save location.
+        path (Union[str, Path]): Path to save location.
 
     Raises:
         FileExistsError: The output path already exists as a file.
-        FileNotFoundError: Output path is invalid.
 
     Returns:
-        pathlib.Path: Validated output path.
+        Path: Validated path.
     """
-
     # if string provided convert to pathlib Path object
     if isinstance(path, str):
-        path = pathlib.Path(path)
+        path = Path(path)
     # check to make sure file type was specified
     if not path.suffix or path.suffix.lower() not in [".csv", ".pdf"]:
         path = path.with_suffix(".pdf")
@@ -32,26 +31,25 @@ def validate_path(path: FilePath) -> pathlib.Path:
 
 
 def write_csv_file(
-    path: pathlib.Path,
+    path: Path,
     puzzle: Puzzle,
     key: Key,
     level: int,
-) -> pathlib.Path:
-    """Write a CSV file of the current puzzle to `path`.
+) -> Path:
+    """Write current puzzle to CSV format at `path`.
 
     Args:
-        path (pathlib.Path): Path to write the CSV to.
+        path (Path): Path to write the file to.
         puzzle (Puzzle): Current Word Search puzzle.
-        key (Key): Puzzle Answer Key.
+        key (Key): Puzzle answer key.
         level (int): Puzzle level.
 
     Raises:
-        OSError: The file could not be written.
+        OSError: File could not be written.
 
     Returns:
-        pathlib.Path: Final save path.
+        Path: Final save path.
     """
-
     try:
         with open(path, "w") as f:
             print("** WORD SEARCH **\n", file=f)
@@ -66,26 +64,25 @@ def write_csv_file(
 
 
 def write_pdf_file(
-    path: pathlib.Path,
+    path: Path,
     puzzle: Puzzle,
     key: Key,
     level: int,
-) -> pathlib.Path:
-    """Write a PDF file of the current puzzle to `path`.
+) -> Path:
+    """Write current puzzle to PDF format at `path`.
 
     Args:
-        path (pathlib.Path): Path to write the CSV to.
+        path (Path): Path to write the file to.
         puzzle (Puzzle): Current Word Search puzzle.
-        key (Key): Puzzle Answer Key.
+        key (Key): Puzzle answer key.
         level (int): Puzzle level.
 
     Raises:
-        OSError: The file could not be written.
+        OSError: File could not be written.
 
     Returns:
-        pathlib.Path: Final save path.
+        Path: Final save path.
     """
-
     # setup the PDF document
     pdf = FPDF(orientation="P", unit="in", format="Letter")
     pdf.set_author(config.pdf_author)

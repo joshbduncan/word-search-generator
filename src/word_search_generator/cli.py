@@ -31,12 +31,20 @@ class SizeAction(argparse.Action):
 def main(
     argv: Optional[Sequence[str]] = None, prog: Optional[str] = __app_name__
 ) -> int:
-    """Word Search Generator CLI"""
+    """Word Search Generator CLI.
 
+    Args:
+        argv (Optional[Sequence[str]], optional): Command line arguments.
+        Defaults to None.
+        prog (Optional[str], optional): Program name. Defaults to __app_name__.
+
+    Returns:
+        int: Exit status.
+    """
     # setup argparse to capture cli arguments
     parser = argparse.ArgumentParser(
         description="Generate Word Search Puzzles!",
-        epilog="Copyright 2021 Josh Duncan (joshbduncan.com)",
+        epilog="Copyright 2021 Josh Duncan (joshd.xyz)",
         prog=prog,
     )
     # define all possible arguments
