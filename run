@@ -23,6 +23,13 @@ function linting {
     flake8 src tests
 }
 
+function typing {
+    # test app using pytest
+    echo "🧾 type checking $app..."
+    source venv/bin/activate
+    mypy src tests
+}
+
 function tests {
     # test app using pytest
     echo "🧾 testing $app..."
@@ -30,11 +37,11 @@ function tests {
     pytest -vv --cov-report term-missing
 }
 
-function typing {
-    # test app using pytest
-    echo "🧾 type checking $app..."
+function tox {
+    # run full tox testing
+    echo "🧾 running tox on $app..."
     source venv/bin/activate
-    mypy src
+    tox
 }
 
 function upload {
