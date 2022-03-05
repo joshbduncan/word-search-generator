@@ -1,18 +1,16 @@
 import pathlib
-from datetime import datetime
 
 from fpdf import FPDF
 
 from word_search_generator import config, utils
-from word_search_generator.types import Key, Puzzle, SavePath
+from word_search_generator.types import FilePath, Key, Puzzle
 
 
-def validate_path(path: SavePath, ftype: str) -> pathlib.Path:
+def validate_path(path: FilePath) -> pathlib.Path:
     """Path to save location.
 
     Args:
-        path (SavePath): Path to save location.
-        ftype (str): Reqeusted export file type.
+        path (str): Path to save location.
 
     Raises:
         FileExistsError: The output path already exists as a file.
@@ -21,24 +19,20 @@ def validate_path(path: SavePath, ftype: str) -> pathlib.Path:
     Returns:
         pathlib.Path: Validated output path.
     """
-    path = pathlib.Path(path).absolute() if path else pathlib.Path.cwd()
-    # don't overwrite any file
-    if path.is_file():
+
+    # if string provided convert to pathlib Path object
+    if isinstance(path, str):
+        path = pathlib.Path(path)
+    # check to make sure file type was specified
+    if not path.suffix or path.suffix.lower() not in [".csv", ".pdf"]:
+        path = path.with_suffix(".pdf")
+    if path.exists():
         raise FileExistsError(f"Sorry, output file '{path}' already exists.")
-    # check to see if outpath is a directory or a file
-    if path.is_dir():
-        tstamp = datetime.now().replace(microsecond=0).isoformat().replace(":", "")
-        fname = "Word Search " + tstamp + ftype
-        fpath = path.joinpath(fname)
-    elif path.parent.exists() and path.suffix:
-        fpath = path
-    else:
-        raise FileNotFoundError(f"Sorry, output path '{path}' is invalid.")
-    return fpath
+    return path
 
 
 def write_csv_file(
-    fpath: pathlib.Path,
+    path: pathlib.Path,
     puzzle: Puzzle,
     key: Key,
     level: int,
@@ -46,7 +40,7 @@ def write_csv_file(
     """Write a CSV file of the current puzzle to `path`.
 
     Args:
-        fpath (pathlib.Path): Path to write the CSV to.
+        path (pathlib.Path): Path to write the CSV to.
         puzzle (Puzzle): Current Word Search puzzle.
         key (Key): Puzzle Answer Key.
         level (int): Puzzle level.
@@ -57,8 +51,9 @@ def write_csv_file(
     Returns:
         pathlib.Path: Final save path.
     """
+
     try:
-        with open(fpath, "w") as f:
+        with open(path, "w") as f:
             print("** WORD SEARCH **\n", file=f)
             for row in puzzle:
                 print(",".join(row), file=f)
@@ -66,12 +61,12 @@ def write_csv_file(
             print(f'"* Words can go {utils.get_level_dirs_str(level)}."', file=f)
             print(f'\n"Answer Key: {utils.get_answer_key_str(key)}"', file=f)
     except OSError:
-        raise OSError(f"File could not be saved to '{fpath}'.")
-    return fpath.absolute()
+        raise OSError(f"File could not be saved to '{path}'.")
+    return path.absolute()
 
 
 def write_pdf_file(
-    fpath: pathlib.Path,
+    path: pathlib.Path,
     puzzle: Puzzle,
     key: Key,
     level: int,
@@ -79,7 +74,7 @@ def write_pdf_file(
     """Write a PDF file of the current puzzle to `path`.
 
     Args:
-        fpath (pathlib.Path): Path to write the CSV to.
+        path (pathlib.Path): Path to write the CSV to.
         puzzle (Puzzle): Current Word Search puzzle.
         key (Key): Puzzle Answer Key.
         level (int): Puzzle level.
@@ -90,6 +85,7 @@ def write_pdf_file(
     Returns:
         pathlib.Path: Final save path.
     """
+
     # setup the PDF document
     pdf = FPDF(orientation="P", unit="in", format="Letter")
     pdf.set_author(config.pdf_author)
@@ -151,7 +147,7 @@ def write_pdf_file(
 
     # write the final PDF to the filesystem
     try:
-        pdf.output(fpath)
+        pdf.output(path)
     except OSError:
-        raise OSError(f"File could not be saved to '{fpath}'.")
-    return fpath.absolute()
+        raise OSError(f"File could not be saved to '{path}'.")
+    return path.absolute()

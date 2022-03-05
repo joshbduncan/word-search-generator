@@ -90,34 +90,33 @@ def test_puzzle_key():
     assert check_key(puzzle.key, puzzle.puzzle)
 
 
-def test_export_pdf(temp_dir):
+def test_export_pdf(tmp_path):
     puzzle = WordSearch(WORDS)
-    temp_path = temp_dir + "test.pdf"
-    puzzle.save(temp_path, "pdf")
-    assert pathlib.Path(temp_path).exists()
+    tmp_path = pathlib.Path.joinpath(tmp_path, "test.pdf")
+    puzzle.save(tmp_path)
+    assert tmp_path.exists()
 
 
-def test_export_csv(temp_dir):
-    print("%^@(*(*Y#(*&(*&#", temp_dir)
+def test_export_csv(tmp_path):
     puzzle = WordSearch(WORDS)
-    temp_path = temp_dir + "test.csv"
-    puzzle.save(temp_path, "csv")
-    assert pathlib.Path(temp_path).exists()
+    tmp_path = pathlib.Path.joinpath(tmp_path, "test.csv")
+    puzzle.save(tmp_path)
+    assert tmp_path.exists()
 
 
 def test_invalid_save_path():
     puzzle = WordSearch(WORDS)
-    with pytest.raises(FileNotFoundError):
-        puzzle.save("~/some/random/dir/that/doesnt/exists", "csv")
+    with pytest.raises(OSError):
+        puzzle.save("~/some/random/dir/that/doesnt/exists")
 
 
-def test_add_words(temp_dir):
+def test_add_words():
     puzzle = WordSearch(WORDS)
     puzzle.add_words("test")
     assert "test".upper() in puzzle.words
 
 
-def test_remove_words(temp_dir):
+def test_remove_words():
     puzzle = WordSearch(WORDS)
     puzzle.remove_words("test")
     assert "test".upper() not in puzzle.words
@@ -145,12 +144,6 @@ def test_puzzle_solution():
     key_chars = set([char for word in puzzle.key for char in word])
     key_chars.add("•")
     assert puzzle_chars == key_chars
-
-
-def test_bad_puzzle_save_value():
-    puzzle = WordSearch(WORDS)
-    with pytest.raises(ValueError):
-        puzzle.save(format="doc")
 
 
 def test_puzzle_repr():

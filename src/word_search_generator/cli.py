@@ -46,40 +46,35 @@ def main(
         type=str,
         nargs="*",
         default=sys.stdin,
-        help="words to include in the puzzle",
+        help="Words to include in the puzzle",
     )
     group.add_argument(
         "-r",
         "--random",
         type=int,
         action=RandomAction,
-        help="generate {n} random words to include in the puzzle",
+        help="Generate {n} random words to include in the puzzle",
     )
     parser.add_argument(
         "-l",
         "--level",
         type=int,
         choices=[1, 2, 3],
-        help="difficulty level (1) beginner, (2) intermediate, (3) expert",
+        help="Difficulty level (1) beginner, (2) intermediate, (3) expert",
     )
     parser.add_argument(
         "-s",
         "--size",
         action=SizeAction,
         type=int,
-        help=f"puzzle size >={config.min_puzzle_size} and <={config.max_puzzle_size}",
-    )
-    parser.add_argument(
-        "-e",
-        "--export",
-        choices=["csv", "pdf"],
-        help="export puzzle as 'csv' or 'pdf' file",
+        help=f"Puzzle size >={config.min_puzzle_size} and <={config.max_puzzle_size}",
     )
     parser.add_argument(
         "-o",
         "--output",
         type=pathlib.Path,
-        help="output path for '-e', '--export' flag",
+        help="Output path for saved puzzle. Specify export type by appending "
+        "'.pdf' or '.csv' to your path (defaults to PDF)",
     )
 
     # capture all cli arguments and make sure words were provided
@@ -94,9 +89,9 @@ def main(
     # create a new puzzle object from provided arguments
     puzzle = WordSearch(words, level=args.level, size=args.size)
     # show the result
-    if args.export:
-        fexport = puzzle.save(path=args.output, format=args.export.upper())
-        print(f"Puzzle saved: {fexport}")
+    if args.output:
+        foutput = puzzle.save(path=args.output)
+        print(f"Puzzle saved: {foutput}")
     else:
         print(puzzle)
 

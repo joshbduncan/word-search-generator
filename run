@@ -18,9 +18,16 @@ function linting {
     # lint app using black and flake8
     echo "🧾 linting $app..."
     source venv/bin/activate
-    isort src
-    black src
-    flake8 src
+    isort src tests
+    black src tests
+    flake8 src tests
+}
+
+function typing {
+    # test app using pytest
+    echo "🧾 type checking $app..."
+    source venv/bin/activate
+    mypy src tests
 }
 
 function tests {
@@ -30,11 +37,11 @@ function tests {
     pytest -vv --cov-report term-missing
 }
 
-function typing {
-    # test app using pytest
-    echo "🧾 type checking $app..."
+function tox {
+    # run full tox testing
+    echo "🧾 running tox on $app..."
     source venv/bin/activate
-    mypy src
+    tox
 }
 
 function upload {
