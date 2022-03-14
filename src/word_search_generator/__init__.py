@@ -9,7 +9,7 @@
 """
 
 __app_name__ = "word-search"
-__version__ = "1.1.0"
+__version__ = "1.1.1"
 
 from pathlib import Path
 from typing import Optional, Union
@@ -150,13 +150,31 @@ class WordSearch:
 
         return self.puzzle
 
-    def show_solution(self):
-        """Show the current puzzle solution."""
+    def show(self, solution: bool = False):
+        """Show the current puzzle 'prettified' with or without the solution.
+
+        Args:
+            solution (bool, optional): Highlight the hidden words. Defaults to False.
+        """
+        if solution:
+            header = utils.make_header(self.puzzle, "PUZZLE SOLUTION")
+            output_puzzle = utils.highlight_solution(
+                self.puzzle, solution=self.solution
+            )
+        else:
+            header = utils.make_header(self.puzzle, "WORD SEARCH")
+            output_puzzle = self.puzzle
+
         print(
             f"""
-** WORD SEARCH SOLUTION **
+{header}
+{utils.stringify(output_puzzle)}
 
-{utils.stringify(self.solution)}"""
+Find these words: {utils.get_word_list_str(self.key)}
+
+* Words can go {utils.get_level_dirs_str(self.level)}.
+
+Answer Key: {utils.get_answer_key_str(self.key)}"""
         )
 
     def save(self, path: Union[str, Path]) -> str:
@@ -239,9 +257,9 @@ class WordSearch:
         return f"{self.__class__.__name__}('{self.words}')"
 
     def __str__(self):
+        header = utils.make_header(self.puzzle, "WORD SEARCH")
         return f"""
-** WORD SEARCH PUZZLE **
-
+{header}
 {utils.stringify(self.puzzle)}
 
 Find these words: {utils.get_word_list_str(self.key)}

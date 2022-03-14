@@ -1,4 +1,5 @@
 black==21.12b0
+colorama==0.4.4
 flake8==4.0.1
 fpdf2==2.5.0
 isort==5.10.1
