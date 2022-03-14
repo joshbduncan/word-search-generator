@@ -1,8 +1,13 @@
 import random
 import string
+from typing import Optional
+
+from colorama import Style, init
 
 from word_search_generator import config
 from word_search_generator.types import Key, Puzzle
+
+init()
 
 
 def cleanup_input(words: str) -> set[str]:
@@ -44,21 +49,63 @@ def contains_punctuation(word):
     return any([True if c in string.punctuation else False for c in word])
 
 
-def stringify(puzzle: Puzzle, tabs: bool = False) -> str:
-    """Convert nested lists into a string separated by either spaces or tabs.
+def highlight_solution(
+    puzzle: Puzzle,
+    solution: Optional[Puzzle] = None,
+) -> Puzzle:
+    """Convert puzzle array of nested lists into a string.
 
     Args:
         puzzle (Puzzle): he current puzzle state.
-        tabs (bool, optional): Use tabs between characters. Defaults to False.
+        solution (Optional[Puzzle], optional): If a solution is provided
+        it will be highlighted in the output. Defaults to None.
 
     Returns:
-        [str]: The current puzzle as a string.
+        str: The current puzzle as a string.
     """
-    string = ""
-    spacer = "\t" if tabs else " "
+    output = []
+    for r, line in enumerate(puzzle):
+        line_chars = []
+        # check to see if character if part of a puzzle word
+        for c, char in enumerate(line):
+            if solution and solution[r][c] == "•":
+                line_chars.append(f"{Style.DIM}{char}{Style.RESET_ALL}")
+            else:
+                line_chars.append(f"{char}")
+        output.append(line_chars)
+    return output
+
+
+def make_header(puzzle: Puzzle, text: str) -> str:
+    """Generate a header that fits the current puzzle.
+
+    Args:
+        puzzle (Puzzle): The current puzzle state.
+        text (str): The text to include in the header.
+
+    Returns:
+        str: Formatted header.
+    """
+    hr = "-" * (len(puzzle) * 2 - 1)
+    padding = " " * ((len(hr) - len(text)) // 2)
+    return f"""{hr}
+{padding}{text}{padding}
+{hr}"""
+
+
+def stringify(puzzle: Puzzle) -> str:
+    """Convert puzzle array of nested lists into a string.
+
+    Args:
+        puzzle (Puzzle): The current puzzle state.
+
+    Returns:
+        str: The current puzzle as a string.
+    """
+    output = []
     for line in puzzle:
-        string += spacer.join(line) + "\n"
-    return string.strip("\n")
+        output.append(" ".join(line))
+    return "\n".join(output)
 
 
 def replace_right(

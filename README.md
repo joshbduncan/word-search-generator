@@ -29,11 +29,12 @@ from word_search_generator import WordSearch
 puzzle = WordSearch("dog, cat, pig, horse, donkey, turtle, goat, sheep")
 ```
 
-👀 Wanna see it? `print(puzzle)`
+👀 Wanna see it? `print(puzzle)` or `puzzle.show()`
 
 ```
-** WORD SEARCH PUZZLE **
-
+-------------------
+    WORD SEARCH
+-------------------
 B T Z L K J C G E H
 X O N D G S W X M B
 W H P V O E H Q D N
@@ -68,11 +69,12 @@ Puzzle words can be provided as a string variable or directly as above. Words ca
  "CAT": {"start": (4, 8), "direction": "S"}}
 ```
 
-or show just the hidden words `puzzle.show_solution()`.
+or show just the hidden words `puzzle.show(solution=True)`.
 
 ```
-** WORD SEARCH SOLUTION **
-
+-----------------------
+       SOLUTION        
+-----------------------
 • • • • • • • C D H P •
 • • • • • • • A O O I •
 • • • • • D • T N R G •
@@ -90,8 +92,9 @@ or show just the hidden words `puzzle.show_solution()`.
 🍰 Too easy? Up the difficulty level with `puzzle.level = 3`.
 
 ```
-** WORD SEARCH PUZZLE **
-
+-----------------------
+      WORD SEARCH
+-----------------------
 P X Y F L S O C Z R G R
 H M S G O A T Y N T J N
 G E C R S H U B O K X Y
@@ -149,8 +152,9 @@ The difficulty level controls whether words can go forward or backward, the card
 By default, the puzzle (characters) size is determined by the amount of words provided and the difficulty level. Need a puzzle an exact size, override the default with `puzzle.size = x` (30 >= integer >= 10). All puzzles are square so size` will be the width and height.
 
 ```
-** WORD SEARCH PUZZLE **
-
+-----------------------
+      WORD SEARCH
+-----------------------
 T M Y T U R T L E T O A
 Y B V D L S A J X C K G
 J Z K A T B N K U N R L

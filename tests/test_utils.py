@@ -23,3 +23,9 @@ def test_invalid_cleanup_input():
 def test_invalid_input_too_short():
     with pytest.raises(ValueError):
         utils.cleanup_input("a")
+
+
+def test_stringify():
+    inp = [["a"], ["b"], ["c"]]
+    output = "a\nb\nc"
+    assert utils.stringify(inp) == output

@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2022-03-04
+### Added
+- `WordSearch.show()` method
+    - Allows you to show the puzzle (just like print(WordSearch)=> __str__).
+    - Enables a better "solution" view using colorama "dim" with `WordSearch.show(solution=True)`.
+- Required install of [colorama](https://pypi.org/project/colorama/).
+
+### Changes
+- Cleaned up some functions to work better with the new `.show()` method.
+
+### Removed
+- `WordSearch.show_solution()` method was replaced by the `WordSearch.show(solution=True)`.
+
 ## [1.1.0] - 2022-03-04
 ### Added
 - New/cleaned-up testing.
