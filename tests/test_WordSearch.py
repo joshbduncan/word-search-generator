@@ -153,8 +153,7 @@ def test_puzzle_repr():
 
 def test_puzzle_str():
     puzzle = WordSearch(WORDS)
-    puzzle_str = f"""
-{utils.make_header(puzzle.puzzle, "WORD SEARCH")}
+    puzzle_str = f"""{utils.make_header(puzzle.puzzle, "WORD SEARCH")}
 {utils.stringify(puzzle.puzzle)}
 
 Find these words: {utils.get_word_list_str(puzzle.key)}
@@ -167,8 +166,7 @@ Answer Key: {utils.get_answer_key_str(puzzle.key)}"""
 
 def test_puzzle_str_output(capsys):
     puzzle = WordSearch(WORDS)
-    puzzle_str = f"""
-{utils.make_header(puzzle.puzzle, "WORD SEARCH")}
+    puzzle_str = f"""{utils.make_header(puzzle.puzzle, "WORD SEARCH")}
 {utils.stringify(puzzle.puzzle)}
 
 Find these words: {utils.get_word_list_str(puzzle.key)}
@@ -184,8 +182,7 @@ Answer Key: {utils.get_answer_key_str(puzzle.key)}
 
 def test_puzzle_show_output(capsys):
     puzzle = WordSearch(WORDS)
-    puzzle_str = f"""
-{utils.make_header(puzzle.puzzle, "WORD SEARCH")}
+    puzzle_str = f"""{utils.make_header(puzzle.puzzle, "WORD SEARCH")}
 {utils.stringify(puzzle.puzzle)}
 
 Find these words: {utils.get_word_list_str(puzzle.key)}
@@ -202,8 +199,7 @@ Answer Key: {utils.get_answer_key_str(puzzle.key)}
 def test_puzzle_show_solution_output(capsys):
     puzzle = WordSearch(WORDS)
     output_puzzle = utils.highlight_solution(puzzle.puzzle, solution=puzzle.solution)
-    solution_str = f"""
-{utils.make_header(puzzle.puzzle, "PUZZLE SOLUTION")}
+    solution_str = f"""{utils.make_header(puzzle.puzzle, "PUZZLE SOLUTION")}
 {utils.stringify(output_puzzle)}
 
 Find these words: {utils.get_word_list_str(puzzle.key)}

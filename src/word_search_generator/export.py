@@ -52,7 +52,8 @@ def write_csv_file(
     """
     try:
         with open(path, "w") as f:
-            print("** WORD SEARCH **\n", file=f)
+            header = utils.make_header(puzzle, "WORD SEARCH")
+            print(header, file=f)
             for row in puzzle:
                 print(",".join(row), file=f)
             print(f'\n"Find these words: {utils.get_word_list_str(key)}"', file=f)

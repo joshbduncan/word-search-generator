@@ -9,7 +9,7 @@
 """
 
 __app_name__ = "word-search"
-__version__ = "1.1.1"
+__version__ = "1.1.2"
 
 from pathlib import Path
 from typing import Optional, Union
@@ -166,8 +166,7 @@ class WordSearch:
             output_puzzle = self.puzzle
 
         print(
-            f"""
-{header}
+            f"""{header}
 {utils.stringify(output_puzzle)}
 
 Find these words: {utils.get_word_list_str(self.key)}
@@ -258,8 +257,7 @@ Answer Key: {utils.get_answer_key_str(self.key)}"""
 
     def __str__(self):
         header = utils.make_header(self.puzzle, "WORD SEARCH")
-        return f"""
-{header}
+        return f"""{header}
 {utils.stringify(self.puzzle)}
 
 Find these words: {utils.get_word_list_str(self.key)}
