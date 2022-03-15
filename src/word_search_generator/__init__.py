@@ -11,6 +11,7 @@
 __app_name__ = "word-search"
 __version__ = "1.1.2"
 
+import json
 from pathlib import Path
 from typing import Optional, Union
 
@@ -55,6 +56,13 @@ class WordSearch:
     def key(self) -> Key:
         """The current puzzle answer key."""
         return self._key
+
+    @property
+    def json(self) -> str:
+        """The current puzzle and answer key as json."""
+        return json.dumps(
+            {"puzzle": self.puzzle, "words": list(self.words), "key": self.key}
+        )
 
     @property
     def level(self) -> int:
