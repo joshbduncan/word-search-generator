@@ -3,6 +3,7 @@ from typing import Optional, TypedDict
 
 class KeyInfo(TypedDict):
     start: tuple[int, int]
+    end: tuple[int, int]
     direction: str
 
 
