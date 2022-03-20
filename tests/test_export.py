@@ -16,8 +16,9 @@ def generate_test_key(length: int):
     for i in range(length):
         word = utils.get_random_words(1)
         start = (random.randint(0, 9), random.randint(0, 9))
+        end = (random.randint(0, 9), random.randint(0, 9))
         direction = random.choice(list(config.dir_moves))
-        key[word] = {"start": start, "direction": direction}
+        key[word] = {"start": start, "end": end, "direction": direction}
     return key
 
 
