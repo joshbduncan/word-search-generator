@@ -5,7 +5,7 @@ from typing import Optional
 from colorama import Style, init
 
 from word_search_generator import config
-from word_search_generator.types import Key, KeyInfo, Puzzle
+from word_search_generator.types import Key, KeyJson, Puzzle
 
 init()
 
@@ -155,31 +155,26 @@ def get_word_list_str(key: Key) -> str:
     return ", ".join([k for k in sorted(key.keys())])
 
 
-def convert_answer_key_to_one_based(key: Key) -> Key:
-    converted_key: dict[str, KeyInfo] = {}
-    for k in sorted(key.keys()):
-        direction = key[k]["direction"]
-        start = key[k]["start"]
-        end = key[k]["end"]
-        adjusted_start = (start[0] + 1, start[1] + 1)
-        adjusted_end = (end[0] + 1, end[1] + 1)
-        converted_key[k] = {
-            "start": adjusted_start,
-            "end": adjusted_end,
-            "direction": direction,
-        }
-    return converted_key
-
-
 def get_answer_key_str(key: Key) -> str:
     """Return a easy to read answer key for display/export."""
-    key_one_based = convert_answer_key_to_one_based(key)
     keys = []
-    for k in sorted(key_one_based.keys()):
-        direction = key_one_based[k]["direction"]
-        start: tuple[int, int] = key_one_based[k]["start"]
+    for k in sorted(key.keys()):
+        direction = key[k]["direction"]
+        start: tuple[int, int] = key[k]["start"]
         keys.append(f"{k} {direction} @ {start}")
     return ", ".join(keys)
+
+
+def get_answer_key_json(key: Key) -> KeyJson:
+    """Return..."""
+    json_key: KeyJson = {}
+    for k in sorted(key.keys()):
+        json_key[k] = {
+            "direction": key[k]["direction"],
+            "start_row": key[k]["start"][0],
+            "start_col": key[k]["start"][1],
+        }
+    return json_key
 
 
 def get_random_words(n: int) -> str:

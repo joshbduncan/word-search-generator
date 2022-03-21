@@ -54,17 +54,17 @@ class WordSearch:
 
     @property
     def key(self) -> Key:
-        """The current puzzle answer key."""
+        """The current puzzle answer key (1-based)."""
         return self._key
 
     @property
     def json(self) -> str:
-        """The current puzzle and answer key (1-based) as json."""
+        """The current puzzle, words, and answer key json."""
         return json.dumps(
             {
                 "puzzle": self.puzzle,
                 "words": list(self.words),
-                "key": utils.convert_answer_key_to_one_based(self.key),
+                "key": utils.get_answer_key_json(self.key),
             }
         )
 
