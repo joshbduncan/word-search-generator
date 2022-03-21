@@ -123,7 +123,10 @@ def fill_words(words: set[str], level: int, size: int) -> tuple[Puzzle, Key]:
                     puzzle_solution[coords[i][0]][coords[i][1]] = char
                 # update placement info for word
                 # increase row and col by one so they are 1-based
-                key[word] = {"start": coords[0], "end": coords[-1], "direction": d}
+                key[word] = {
+                    "start": (coords[0][0] + 1, coords[0][1] + 1),
+                    "direction": d,
+                }
                 # go to next word
                 break
             # if there was no fit at starting coordinates try again
