@@ -29,3 +29,11 @@ def test_stringify():
     inp = [["a"], ["b"], ["c"]]
     output = "a\nb\nc"
     assert utils.stringify(inp) == output
+
+
+def test_palindromes():
+    assert utils.is_palindrome("level")
+
+
+def test_word_within_word():
+    assert utils.word_contains_word({"rain", "sun", "clouds"}, "")

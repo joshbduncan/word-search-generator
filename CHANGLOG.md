@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Changes
+- any input words that are palindromes are removed
+- add_words() methods now check old and new together to make sure no single words is a subset of another word
+
 ## [1.1.2] - 2022-03-14
 ### Changes
 - Removed extra newline from output.

@@ -211,3 +211,8 @@ Answer Key: {utils.get_answer_key_str(puzzle.key)}
     puzzle.show(solution=True)
     captured = capsys.readouterr()
     assert captured.out == solution_str
+
+
+def test_input_including_palindrome():
+    puzzle = WordSearch(WORDS + ", level")
+    assert len(puzzle.words) == 8
