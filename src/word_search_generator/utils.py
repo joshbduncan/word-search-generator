@@ -5,7 +5,7 @@ from typing import Optional
 from colorama import Style, init
 
 from word_search_generator import config
-from word_search_generator.types import Key, KeyInfo, KeyInfoJson, KeyJson, Puzzle
+from word_search_generator.types import Key, KeyJson, Puzzle
 
 init()
 
