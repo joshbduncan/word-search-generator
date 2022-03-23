@@ -210,9 +210,11 @@ Answer Key: {utils.get_answer_key_str(self.key)}"""
         Returns:
             set[str]: An updated set of words.
         """
-        self.words.update(utils.cleanup_input(words))
+        # self.words.update(utils.cleanup_input(words))
+        old_words = ", ".join(self.words)
+        combined_words = old_words + "," + words
+        self.words = utils.cleanup_input(combined_words)
         self._reset_puzzle()
-
         return self.words
 
     def remove_words(self, words: str) -> set[str]:

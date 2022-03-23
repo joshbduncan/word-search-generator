@@ -6,6 +6,8 @@ from typing import Optional
 from word_search_generator import config
 from word_search_generator.types import Fit, Fits, Key, KeyInfo, Puzzle
 
+ALPHABET = list(string.ascii_uppercase)
+
 
 def calc_puzzle_size(words: set[str], level: int, size: Optional[int] = None) -> int:
     """Calculate the puzzle grid size.
@@ -172,14 +174,13 @@ def fill_blanks(puzzle_solution: Puzzle) -> Puzzle:
         Puzzle: A complete word search puzzle.
     """
     puzzle = copy.deepcopy(puzzle_solution)
-    alphabet = list(string.ascii_uppercase)
     # iterate over the entire puzzle
     for row in range(len(puzzle)):
         for col in range(len(puzzle[0])):
             # if the current spot is empty fill with random character
             if puzzle[row][col] == "•":
                 while True:
-                    random_char = random.choice(alphabet)
+                    random_char = random.choice(ALPHABET)
                     if no_matching_neighbors(puzzle, random_char, (row, col)):
                         puzzle[row][col] = random_char
                         break

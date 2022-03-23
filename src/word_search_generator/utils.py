@@ -36,7 +36,12 @@ def cleanup_input(words: str) -> set[str]:
     word_set: set[str] = set()
     while word_list and len(word_set) <= config.max_puzzle_words:
         word = word_list.pop(0)
-        if len(word) > 1 and not contains_punctuation(word):
+        if (
+            len(word) > 1
+            and not contains_punctuation(word)
+            and not is_palindrome(word)
+            and not word_contains_word(word_set, word.upper())
+        ):
             word_set.add(word.upper())
     # if no words were left raise exception
     if not word_set:
@@ -47,6 +52,31 @@ def cleanup_input(words: str) -> set[str]:
 def contains_punctuation(word):
     """Check to see if puncuation is present in the provided string."""
     return any([True if c in string.punctuation else False for c in word])
+
+
+def is_palindrome(word: str) -> bool:
+    """Check is a word in a palindrome."""
+    return word == word[::-1]
+
+
+def word_contains_word(words: set[str], word: str) -> bool:
+    """Make sure `test_word` cannot be found in any word
+    in `words`, going forward or backword.
+    Args:
+        words (str): Current puzzle word list.
+        word (str): Word to check for.
+    Returns:
+        bool: If word was found contained in any word in words.
+    """
+    for test_word in words:
+        if (
+            word in test_word.upper()
+            or word[::-1] in test_word.upper()
+            or test_word.upper() in word
+            or test_word.upper()[::-1] in word
+        ):
+            return True
+    return False
 
 
 def highlight_solution(
@@ -421,7 +451,6 @@ WORD_LIST = [
     "experience",
     "expert",
     "explain",
-    "eye",
     "face",
     "fact",
     "factor",
@@ -594,7 +623,6 @@ WORD_LIST = [
     "less",
     "let",
     "letter",
-    "level",
     "lie",
     "life",
     "light",
