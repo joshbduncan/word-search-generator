@@ -58,7 +58,7 @@ def capture_all_paths_from_position(
     radius = max([len(word) for word in words])
     # track each part (front/end) of the search radius for each direction
     # [N, S], [SW, NE] [W, E], [NW, SE]
-    paths: list[list[str]] = [["", ""]] * 4
+    paths: list[list[str]] = [["", ""], ["", ""], ["", ""], ["", ""]]
     # follow each direction and capture all characters in that path
     for i, (direction, (rmove, cmove)) in enumerate(config.dir_moves.items()):
         row, col = position
@@ -71,10 +71,13 @@ def capture_all_paths_from_position(
                 break
         # add the captured string of characters to the correct
         # spot in the paths lists, and reverse if needed
+        # print(direction, string)
         if direction in ["N", "NW", "W", "SW"]:
-            paths[i % 4][0] = string[::-1]
+            paths[i % 4][0] = string[::-1][:-1]
         else:
-            paths[i % 4][1] = string
+            paths[i % 4][1] = string[1:]
+        # print(f"{paths=}")
+    # print(f"{position=}: {paths=}")
     return paths
 
 
@@ -96,15 +99,41 @@ def check_for_dupes_at_position(
     # follow each direction and capture all characters in that path
     paths = capture_all_paths_from_position(puzzle, position, words)
     # grab all possible paths before and after adding `char`
-    paths_before_char = ["•".join(path) for path in paths]
-    paths_after_char = [char.join(path) for path in paths]
+
+    start_ct = change_ct = 0
+    for word in words:
+        for path in paths:
+            start_path = "•".join(path)
+            # print(f"checking {word} and {word[::-1]} vs {start_path}")
+            change_path = char.join(path)
+            # print(f"checking {word} and {word[::-1]} vs {change_path}")
+            if word in start_path:
+                start_ct += 1
+                change_ct += 1
+                # print(f"found {word} in {start_path}")
+            if word[::-1] in start_path:
+                start_ct += 1
+                change_ct += 1
+                # print(f"found {word[::-1]} in {start_path}")
+            if word in change_path:
+                change_ct += 1
+                # print(f"found {word} in {change_path}")
+            if word[::-1] in change_path:
+                change_ct += 1
+                # print(f"found {word[::-1]} in {change_path}")
+
+    # paths_before_char = ["•".join(path) for path in paths]
+    # paths_after_char = [char.join(path) for path in paths]
     # count total words in search radius before and after adding `char`
-    start_ct = sum([1 for word in words if word in paths_before_char])
-    change_ct = sum([1 for word in words if word in paths_after_char])
+    # start_ct = sum([1 for word in words if word in paths_before_char])
+    # change_ct = sum([1 for word in words if word in paths_after_char])
+    # print(f"{start_ct=}")
+    # print(f"{change_ct=}")
     # if more words are present after adding `char` then a duplicate
     # was created by adding `char` and we don't want that
     if start_ct == change_ct:
         return True
+    # print("Oh crap it happend")
     return False
 
 
@@ -228,11 +257,13 @@ def fill_words(words: set[str], level: int, size: int) -> tuple[Puzzle, Key]:
             else:
                 # if there was no fit at starting coordinates try again
                 tries += 1
+            for r in puzzle:
+                print(" ".join(r))
     return (puzzle, key)
 
 
 def no_matching_neighbors(puzzle: Puzzle, char: str, position: tuple[int, int]) -> bool:
-    """Ensure no neighboring cells have same character to limit the
+    """Ensure no neighboring cells have save character to limit the
     very small chance of a duplicate word.
 
     Args:

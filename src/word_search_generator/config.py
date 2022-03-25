@@ -16,17 +16,6 @@ dir_moves = {
     "NW": (-1, -1),
 }
 
-dir_opposites = {
-    "N": "S",
-    "NE": "SW",
-    "E": "W",
-    "SE": "NW",
-    "S": "N",
-    "SW": "NE",
-    "W": "E",
-    "NW": "SE",
-}
-
 level_dirs = {
     1: ("E", "S"),
     2: ("NE", "E", "SE", "S"),
