@@ -220,7 +220,7 @@ def test_input_including_palindrome():
 
 
 def test_for_empty_spaces():
-    for i in range(100):
+    for _ in range(100):
         words = get_random_words(10)
         p = WordSearch(words, level=3)
         flat = [item for sublist in p.puzzle for item in sublist]
