@@ -4,6 +4,7 @@ import pytest
 
 from word_search_generator import WordSearch, config, utils
 from word_search_generator.types import Key, Puzzle
+from word_search_generator.utils import get_random_words
 
 WORDS = "dog, cat, pig, horse, donkey, turtle, goat, sheep"
 
@@ -216,3 +217,11 @@ Answer Key: {utils.get_answer_key_str(puzzle.key)}
 def test_input_including_palindrome():
     puzzle = WordSearch(WORDS + ", level")
     assert len(puzzle.words) == 8
+
+
+def test_for_empty_spaces():
+    for _ in range(100):
+        words = get_random_words(10)
+        p = WordSearch(words, level=3)
+        flat = [item for sublist in p.puzzle for item in sublist]
+        assert "•" not in flat

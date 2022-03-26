@@ -145,7 +145,7 @@ class WordSearch:
         self._solution, self._key = generate.fill_words(
             self.words, self.level, self.size
         )
-        self._puzzle = generate.fill_blanks(self._solution)
+        self._puzzle = generate.fill_blanks(self.solution, list(self.key.keys()))
         self._size = len(self._puzzle[0])
 
         return self.puzzle
