@@ -1,8 +1,7 @@
 import os
-from pathlib import Path
 import random
-from pyparsing import Word
 import uuid
+from pathlib import Path
 
 import pytest
 from PyPDF2 import PdfFileReader

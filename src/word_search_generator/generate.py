@@ -1,7 +1,6 @@
 import copy
 import random
 import string
-from collections import defaultdict
 from typing import Optional
 
 from word_search_generator import config

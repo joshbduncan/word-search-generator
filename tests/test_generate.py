@@ -2,7 +2,6 @@ from word_search_generator.generate import check_for_dupes_at_position
 
 
 def test_dupe_at_position_1():
-    words = {"CAT", "BAT", "RAT", "HAT", "MAT", "DONKEY"}
     placed_words = ["BAT", "CAT", "RAT"]
     puzzle = [
         ["B", "•", "•", "•", "R"],
@@ -17,7 +16,6 @@ def test_dupe_at_position_1():
 
 
 def test_dupe_at_position_2():
-    words = {"CAT", "BAT", "RAT", "HAT", "MAT", "DONKEY"}
     placed_words = ["BAT", "CAT", "RAT"]
     puzzle = [
         ["B", "•", "•", "•", "R"],
