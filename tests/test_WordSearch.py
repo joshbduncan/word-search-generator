@@ -15,7 +15,7 @@ def check_key(key: Key, puzzle: Puzzle) -> bool:
         row, col = info["start"]
         rmove, cmove = config.dir_moves[info["direction"]]
         for char in word:
-            if puzzle[row - 1][col - 1] != char:
+            if puzzle[row][col] != char:
                 return False
             row += rmove
             col += cmove
