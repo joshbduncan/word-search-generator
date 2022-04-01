@@ -5,7 +5,7 @@ from typing import Optional
 from colorama import Style, init
 
 from word_search_generator import config
-from word_search_generator.types import Key, Puzzle
+from word_search_generator.types import Key, KeyJson, Puzzle
 
 init()
 
@@ -160,10 +160,21 @@ def get_answer_key_str(key: Key) -> str:
     keys = []
     for k in sorted(key.keys()):
         direction = key[k]["direction"]
-        raw_coords: tuple[int, int] = key[k]["start"]
-        coords = (raw_coords[0] + 1, raw_coords[1] + 1)
-        keys.append(f"{k} {direction} @ {coords}")
+        start: tuple[int, int] = key[k]["start"]
+        keys.append(f"{k} {direction} @ {start}")
     return ", ".join(keys)
+
+
+def get_answer_key_json(key: Key) -> KeyJson:
+    """Return..."""
+    json_key: KeyJson = {}
+    for k in sorted(key.keys()):
+        json_key[k] = {
+            "direction": key[k]["direction"],
+            "start_row": key[k]["start"][0],
+            "start_col": key[k]["start"][1],
+        }
+    return json_key
 
 
 def get_random_words(n: int) -> str:

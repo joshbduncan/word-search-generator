@@ -88,6 +88,8 @@ def test_bad_puzzle_size_type():
 
 def test_puzzle_key():
     puzzle = WordSearch(WORDS)
+    for r in puzzle.puzzle:
+        print(" ".join(r))
     assert check_key(puzzle.key, puzzle.puzzle)
 
 
