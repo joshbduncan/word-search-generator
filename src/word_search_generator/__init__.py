@@ -9,7 +9,7 @@
 """
 
 __app_name__ = "word-search"
-__version__ = "1.1.2"
+__version__ = "1.2.1"
 
 import json
 from pathlib import Path

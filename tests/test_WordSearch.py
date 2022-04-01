@@ -1,3 +1,4 @@
+import json
 import pathlib
 
 import pytest
@@ -214,6 +215,21 @@ Answer Key: {utils.get_answer_key_str(puzzle.key)}
     puzzle.show(solution=True)
     captured = capsys.readouterr()
     assert captured.out == solution_str
+
+
+def test_json_output_property_for_puzzle():
+    words = get_random_words(10)
+    p = WordSearch(words, level=3)
+    assert json.loads(p.json)["puzzle"] == p.puzzle
+
+
+def test_json_output_property_for_key():
+    words = get_random_words(10)
+    p = WordSearch(words, level=3)
+    json_key = json.loads(p.json)["key"]
+    for word, info in json_key.items():
+        pos = (info["start_row"], info["start_col"])
+        assert pos == p.key[word]["start"]
 
 
 def test_input_including_palindrome():

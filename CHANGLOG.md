@@ -4,13 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.2.1] - 2022-04-01
 ### Added
-- New code to make sure no duplicated exists in the puzzle (was waaaayyyyyy harder than I thought)
+- New generator code to make sure no duplicated exists in the puzzle
+    - Generator checks during word insertion and random character fill-in stages
+- JSON output property for @robguttman solver https://github.com/robguttman/word-search-solver
+- Testing for new generator and export functions
 
 ### Changes
 - any input words that are palindromes are removed
-- add_words() method now checks old and new together to make sure no single words is a subset of another word
+- add_words() method now checks old and new words together to make sure no single word is a subset of another word
 
 ## [1.1.2] - 2022-03-14
 ### Changes
@@ -169,4 +172,3 @@ if args.export and args.path is None:
 
 ## [1.0.0] - 2021-08-13
 - First official release!
-
