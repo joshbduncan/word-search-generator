@@ -1,4 +1,4 @@
-black==21.12b0
+black==22.3.0
 colorama==0.4.4
 flake8==4.0.1
 fpdf2==2.5.0
