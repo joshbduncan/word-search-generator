@@ -281,7 +281,7 @@ $ cat words.txt | word-search
 This really came in handy for those kid's food menus. I was able to take a folder full of .txt documents with themed words and generate dozens of level 1 Word Search Puzzles at exactly 15 characters in size super fast...
 
 ```bash
-$ for f in tests/word*.txt; do word-search "$(cat $f)" -l 1 -s 15 -e pdf -o $f.pdf; done
+$ for f in tests/word*.txt; do word-search "$(cat $f)" -l 1 -s 15 -o $f.pdf; done
 Puzzle saved: ~/.../puzzles/words-theme01.txt
 ...
 Puzzle saved: ~/.../puzzles/words-theme99.txt
