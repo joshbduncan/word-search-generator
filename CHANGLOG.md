@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Changes
+- Export csv no uses the builtin csv module
+- Removed colorama, now using ascii escape codes for solution highlighting
+    - Updated requirements.txt and setup.cfg
+- Updated __repr__ to include `level` and `size`
+
 ## [1.2.1] - 2022-04-01
 ### Added
 - New generator code to make sure no duplicated exists in the puzzle
@@ -12,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Testing for new generator and export functions
 
 ### Changes
-- any input words that are palindromes are removed
+- Any input words that are palindromes are removed
 - add_words() method now checks old and new words together to make sure no single word is a subset of another word
 
 ## [1.1.2] - 2022-03-14

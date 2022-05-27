@@ -1,13 +1,8 @@
 import random
 import string
-from typing import Optional
-
-from colorama import Style, init
 
 from word_search_generator import config
 from word_search_generator.types import Key, KeyJson, Puzzle
-
-init()
 
 
 def cleanup_input(words: str) -> set[str]:
@@ -79,27 +74,23 @@ def word_contains_word(words: set[str], word: str) -> bool:
     return False
 
 
-def highlight_solution(
-    puzzle: Puzzle,
-    solution: Optional[Puzzle] = None,
-) -> Puzzle:
+def highlight_solution(puzzle: Puzzle, solution: Puzzle) -> Puzzle:
     """Convert puzzle array of nested lists into a string.
 
     Args:
-        puzzle (Puzzle): he current puzzle state.
-        solution (Optional[Puzzle], optional): If a solution is provided
-        it will be highlighted in the output. Defaults to None.
+        puzzle (Puzzle): The current puzzle state.
+        solution (Puzzle): The current puzzle solition.
 
     Returns:
-        str: The current puzzle as a string.
+        str: The current puzzle as a string with higilighting.
     """
     output = []
     for r, line in enumerate(puzzle):
         line_chars = []
         # check to see if character if part of a puzzle word
         for c, char in enumerate(line):
-            if solution and solution[r][c] == "•":
-                line_chars.append(f"{Style.DIM}{char}{Style.RESET_ALL}")
+            if solution[r][c] != "•":
+                line_chars.append(f"\u001b[1m\u001b[31m{char}\u001b[0m")
             else:
                 line_chars.append(f"{char}")
         output.append(line_chars)
@@ -145,6 +136,28 @@ def replace_right(
     return replacement.join(string.rsplit(target, replacements))
 
 
+def format_puzzle_for_show(
+    puzzle: Puzzle,
+    key: Key,
+    level: int,
+    solution: Puzzle,
+    show_solution: bool = False,
+    header: str = "WORD SEARCH",
+) -> str:
+    header = make_header(puzzle, header)
+    # highlight solution if provided
+    if show_solution:
+        puzzle = highlight_solution(puzzle, solution=solution)
+
+    return f"""{header}
+{stringify(puzzle)}
+
+Find these words: {get_word_list_str(key)}
+* Words can go {get_level_dirs_str(level)}.
+
+Answer Key: {get_answer_key_str(key)}"""
+
+
 def get_level_dirs_str(level: int) -> str:
     """Return all pozzible directions for specified level."""
     return replace_right(", ".join(config.level_dirs[level]), ", ", ", and ")
@@ -155,13 +168,19 @@ def get_word_list_str(key: Key) -> str:
     return ", ".join([k for k in sorted(key.keys())])
 
 
-def get_answer_key_str(key: Key) -> str:
+def get_answer_key_list(key: Key) -> list[str]:
     """Return a easy to read answer key for display/export."""
     keys = []
     for k in sorted(key.keys()):
         direction = key[k]["direction"]
         start: tuple[int, int] = key[k]["start"]
         keys.append(f"{k} {direction} @ {start}")
+    return keys
+
+
+def get_answer_key_str(key: Key) -> str:
+    """Return a easy to read answer key for display."""
+    keys = get_answer_key_list(key)
     return ", ".join(keys)
 
 

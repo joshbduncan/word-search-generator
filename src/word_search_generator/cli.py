@@ -101,7 +101,7 @@ def main(
         foutput = puzzle.save(path=args.output)
         print(f"Puzzle saved: {foutput}")
     else:
-        print(puzzle)
+        puzzle.show()
 
     return 0
 

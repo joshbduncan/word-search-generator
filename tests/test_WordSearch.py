@@ -152,69 +152,58 @@ def test_puzzle_solution():
 
 def test_puzzle_repr():
     puzzle = WordSearch(WORDS)
-    assert repr(puzzle) == f"WordSearch('{puzzle.words}')"
+    words_str = ",".join(puzzle.words)
+    repr_str = (
+        f"{puzzle.__class__.__name__}('{words_str}', {puzzle.level}, {puzzle.size})"
+    )
+    assert repr(puzzle) == repr_str
 
 
 def test_puzzle_str():
     puzzle = WordSearch(WORDS)
-    puzzle_str = f"""{utils.make_header(puzzle.puzzle, "WORD SEARCH")}
-{utils.stringify(puzzle.puzzle)}
-
-Find these words: {utils.get_word_list_str(puzzle.key)}
-
-* Words can go {utils.get_level_dirs_str(puzzle.level)}.
-
-Answer Key: {utils.get_answer_key_str(puzzle.key)}"""
-    assert str(puzzle) == str(puzzle_str)
+    puzzle_str = utils.format_puzzle_for_show(
+        puzzle.puzzle, puzzle.key, puzzle.level, puzzle.solution
+    )
+    assert str(puzzle) == puzzle_str
 
 
 def test_puzzle_str_output(capsys):
     puzzle = WordSearch(WORDS)
-    puzzle_str = f"""{utils.make_header(puzzle.puzzle, "WORD SEARCH")}
-{utils.stringify(puzzle.puzzle)}
-
-Find these words: {utils.get_word_list_str(puzzle.key)}
-
-* Words can go {utils.get_level_dirs_str(puzzle.level)}.
-
-Answer Key: {utils.get_answer_key_str(puzzle.key)}
-"""
+    print(
+        utils.format_puzzle_for_show(
+            puzzle.puzzle, puzzle.key, puzzle.level, puzzle.solution
+        )
+    )
+    capture1 = capsys.readouterr()
     print(puzzle)
-    captured = capsys.readouterr()
-    assert captured.out == puzzle_str
+    capture2 = capsys.readouterr()
+    assert capture1.out == capture2.out
 
 
 def test_puzzle_show_output(capsys):
     puzzle = WordSearch(WORDS)
-    puzzle_str = f"""{utils.make_header(puzzle.puzzle, "WORD SEARCH")}
-{utils.stringify(puzzle.puzzle)}
-
-Find these words: {utils.get_word_list_str(puzzle.key)}
-
-* Words can go {utils.get_level_dirs_str(puzzle.level)}.
-
-Answer Key: {utils.get_answer_key_str(puzzle.key)}
-"""
+    print(
+        utils.format_puzzle_for_show(
+            puzzle.puzzle, puzzle.key, puzzle.level, puzzle.solution
+        )
+    )
+    capture1 = capsys.readouterr()
     puzzle.show()
-    captured = capsys.readouterr()
-    assert captured.out == puzzle_str
+    capture2 = capsys.readouterr()
+    assert capture1.out == capture2.out
 
 
 def test_puzzle_show_solution_output(capsys):
     puzzle = WordSearch(WORDS)
-    output_puzzle = utils.highlight_solution(puzzle.puzzle, solution=puzzle.solution)
-    solution_str = f"""{utils.make_header(puzzle.puzzle, "PUZZLE SOLUTION")}
-{utils.stringify(output_puzzle)}
-
-Find these words: {utils.get_word_list_str(puzzle.key)}
-
-* Words can go {utils.get_level_dirs_str(puzzle.level)}.
-
-Answer Key: {utils.get_answer_key_str(puzzle.key)}
-"""
-    puzzle.show(solution=True)
-    captured = capsys.readouterr()
-    assert captured.out == solution_str
+    print(
+        utils.format_puzzle_for_show(
+            puzzle.puzzle, puzzle.key, puzzle.level, puzzle.solution, True
+        )
+    )
+    capture1 = capsys.readouterr()
+    puzzle.show(True)
+    capture2 = capsys.readouterr()
+    assert capture1.out == capture2.out
 
 
 def test_json_output_property_for_puzzle():

@@ -1,3 +1,4 @@
+import csv
 from pathlib import Path
 from typing import Union
 
@@ -50,17 +51,21 @@ def write_csv_file(
     Returns:
         Path: Final save path.
     """
-    try:
-        with open(path, "w") as f:
-            header = utils.make_header(puzzle, "WORD SEARCH")
-            print(header, file=f)
-            for row in puzzle:
-                print(",".join(row), file=f)
-            print(f'\n"Find these words: {utils.get_word_list_str(key)}"', file=f)
-            print(f'"* Words can go {utils.get_level_dirs_str(level)}."', file=f)
-            print(f'\n"Answer Key: {utils.get_answer_key_str(key)}"', file=f)
-    except OSError:
-        raise OSError(f"File could not be saved to '{path}'.")
+
+    with open(path, mode="w") as f:
+        f_writer = csv.writer(
+            f, delimiter=",", quotechar='"', quoting=csv.QUOTE_MINIMAL
+        )
+        f_writer.writerow(["WORD SEARCH"])
+        for row in puzzle:
+            f_writer.writerow(row)
+        f_writer.writerow([""])
+        f_writer.writerow(["Word List:"])
+        f_writer.writerow([k for k in sorted(key.keys())])
+        f_writer.writerow([f"* Words can go {utils.get_level_dirs_str(level)}."])
+        f_writer.writerow([""])
+        f_writer.writerow(["Answer Key:"])
+        f_writer.writerow(utils.get_answer_key_list(key))
     return path.absolute()
 
 

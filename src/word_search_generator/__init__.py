@@ -166,26 +166,12 @@ class WordSearch:
         """Show the current puzzle 'prettified' with or without the solution.
 
         Args:
-            solution (bool, optional): Highlight the hidden words. Defaults to False.
+            solution (bool, optional): Highlight the puzzle solution. Defaults to False.
         """
-        if solution:
-            header = utils.make_header(self.puzzle, "PUZZLE SOLUTION")
-            output_puzzle = utils.highlight_solution(
-                self.puzzle, solution=self.solution
-            )
-        else:
-            header = utils.make_header(self.puzzle, "WORD SEARCH")
-            output_puzzle = self.puzzle
-
         print(
-            f"""{header}
-{utils.stringify(output_puzzle)}
-
-Find these words: {utils.get_word_list_str(self.key)}
-
-* Words can go {utils.get_level_dirs_str(self.level)}.
-
-Answer Key: {utils.get_answer_key_str(self.key)}"""
+            utils.format_puzzle_for_show(
+                self.puzzle, self.key, self.level, self.solution, solution
+            )
         )
 
     def save(self, path: Union[str, Path]) -> str:
@@ -267,15 +253,10 @@ Answer Key: {utils.get_answer_key_str(self.key)}"""
             self.generate()
 
     def __repr__(self):
-        return f"{self.__class__.__name__}('{self.words}')"
+        words_str = ",".join(self.words)
+        return f"{self.__class__.__name__}('{words_str}', {self.level}, {self.size})"
 
     def __str__(self):
-        header = utils.make_header(self.puzzle, "WORD SEARCH")
-        return f"""{header}
-{utils.stringify(self.puzzle)}
-
-Find these words: {utils.get_word_list_str(self.key)}
-
-* Words can go {utils.get_level_dirs_str(self.level)}.
-
-Answer Key: {utils.get_answer_key_str(self.key)}"""
+        return utils.format_puzzle_for_show(
+            self.puzzle, self.key, self.level, self.solution
+        )
