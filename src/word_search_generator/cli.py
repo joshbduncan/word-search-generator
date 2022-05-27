@@ -78,6 +78,12 @@ def main(
         help=f"Puzzle size >={config.min_puzzle_size} and <={config.max_puzzle_size}",
     )
     parser.add_argument(
+        "-c",
+        "--cheat",
+        action=argparse.BooleanOptionalAction,
+        help="Highlight all hidden puzzle words.",
+    )
+    parser.add_argument(
         "-o",
         "--output",
         type=pathlib.Path,
@@ -94,6 +100,9 @@ def main(
     else:
         words = ",".join(args.words)
 
+    # check to see if solution should be highlighted
+    cheat = True if args.cheat else False
+
     # create a new puzzle object from provided arguments
     puzzle = WordSearch(words, level=args.level, size=args.size)
     # show the result
@@ -101,7 +110,7 @@ def main(
         foutput = puzzle.save(path=args.output)
         print(f"Puzzle saved: {foutput}")
     else:
-        puzzle.show()
+        puzzle.show(solution=cheat)
 
     return 0
 
