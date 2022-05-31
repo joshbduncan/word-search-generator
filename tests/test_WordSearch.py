@@ -152,11 +152,7 @@ def test_puzzle_solution():
 
 def test_puzzle_repr():
     puzzle = WordSearch(WORDS)
-    words_str = ",".join(puzzle.words)
-    repr_str = (
-        f"{puzzle.__class__.__name__}('{words_str}', {puzzle.level}, {puzzle.size})"
-    )
-    assert repr(puzzle) == repr_str
+    assert eval(repr(puzzle)) == puzzle
 
 
 def test_puzzle_str():

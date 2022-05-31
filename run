@@ -14,19 +14,14 @@ function build {
     fi
 }
 
-function linting {
+function cleanup {
     # lint app using black and flake8
     echo "🧾 linting $app..."
     source venv/bin/activate
     isort src tests
     black src tests
     flake8 src tests
-}
-
-function typing {
-    # test app using pytest
     echo "🧾 type checking $app..."
-    source venv/bin/activate
     mypy src tests
 }
 
@@ -35,13 +30,6 @@ function tests {
     echo "🧾 testing $app..."
     source venv/bin/activate
     pytest -vv --cov-report term-missing
-}
-
-function tox {
-    # run full tox testing
-    echo "🧾 running tox on $app..."
-    source venv/bin/activate
-    tox
 }
 
 function upload {

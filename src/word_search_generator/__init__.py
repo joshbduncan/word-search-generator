@@ -252,6 +252,14 @@ class WordSearch:
             self._key = {}
             self.generate()
 
+    def __eq__(self, __o: object) -> bool:
+        if isinstance(__o, WordSearch):
+            words = self.words == __o.words
+            level = self.level == __o.level
+            size = self.size == __o.size
+            return all([words, level, size])
+        return False
+
     def __repr__(self):
         words_str = ",".join(self.words)
         return f"{self.__class__.__name__}('{words_str}', {self.level}, {self.size})"

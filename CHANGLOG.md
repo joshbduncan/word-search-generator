@@ -6,7 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
-- New -c, --cheat options for cli
+- -c, --cheat options for cli to show puzzle solution
+- --version flag added to cli
+- __eq__ magic method for checking if puzzles are the same (mostly for testing __repr__)
 
 ### Changes
 - Export csv no uses the builtin csv module

@@ -3,7 +3,7 @@ import pathlib
 import sys
 from typing import Optional, Sequence
 
-from word_search_generator import WordSearch, __app_name__, config, utils
+from word_search_generator import WordSearch, __app_name__, __version__, config, utils
 
 
 class RandomAction(argparse.Action):
@@ -43,8 +43,8 @@ def main(
     """
     # setup argparse to capture cli arguments
     parser = argparse.ArgumentParser(
-        description="Generate Word Search Puzzles!",
-        epilog="Copyright 2021 Josh Duncan (joshd.xyz)",
+        description=f"Generate Word Search Puzzles! (Version {__version__})",
+        epilog="Copyright 2022 Josh Duncan (joshd.xyz)",
         prog=prog,
     )
     # define all possible arguments
@@ -89,6 +89,10 @@ def main(
         type=pathlib.Path,
         help="Output path for saved puzzle. Specify export type by appending "
         "'.pdf' or '.csv' to your path (defaults to PDF)",
+    )
+
+    parser.add_argument(
+        "--version", action="version", version=f"%(prog)s {__version__}"
     )
 
     # capture all cli arguments and make sure words were provided
