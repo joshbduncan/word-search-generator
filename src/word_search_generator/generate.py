@@ -1,12 +1,37 @@
 import copy
 import random
 import string
+from functools import partial, wraps
 from typing import Optional
 
 from word_search_generator import config
 from word_search_generator.types import Fit, Fits, Key, KeyInfo, Puzzle
 
 ALPHABET = list(string.ascii_uppercase)
+
+
+class WordFitError(Exception):
+    pass
+
+
+def retry(func=None, *, times=config.max_fit_tries):
+    """Retry `func` `times` times. Hat tip to Bob Belderbos (Twitter @bbelderbos)"""
+    if func is None:
+        return partial(retry, times=times)
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        attempt = 0
+        while attempt < times:
+            try:
+                return func(*args, **kwargs)
+            except Exception:
+                attempt += 1
+                # print(f"Exception {func}: {e} (attempt: {attempt})")
+        # print(f"{kwargs['word']} attempted {attempt} times with no success")
+        return (kwargs["puzzle"], kwargs["key"])
+
+    return wrapper
 
 
 def out_of_bounds(width: int, height: int, position: tuple[int, int]) -> bool:
@@ -193,6 +218,7 @@ def fill_words(words: set[str], level: int, size: int) -> tuple[Puzzle, Key]:
     Returns:
         tuple[Puzzle, Key]: Current puzzle and puzzle answer key.
     """
+
     # calculate the puzzle size and setup a new empty puzzle
     size = calc_puzzle_size(words, level, size)
     puzzle = [["•"] * size for _ in range(size)]
@@ -200,45 +226,44 @@ def fill_words(words: set[str], level: int, size: int) -> tuple[Puzzle, Key]:
 
     # try to place each word on the puzzle
     for word in words:
-        # print(f"{word=}")
-        # for r in puzzle:
-        #     print(" ".join(r))
-        # track how many times a word has been tried to speed execution
-        tries = 0
-        # try to find a fit in the puzzle for the current word
-        while tries < config.max_fit_tries:
-            # pick a random row and column to try
-            row = int(random.randint(0, size - 1))
-            col = int(random.randint(0, size - 1))
-            # try and find a directional fit using the starting coordinates
-            fit = find_a_fit(puzzle, word, (row, col), level)
-            work_puzzle = copy.deepcopy(puzzle)
-            if fit:
-                # print(f"{fit=}")
-                d, coords = fit
-                # add word letters to a temp work puzzle at the
-                # fit coordinates make sure no duplicates are created
-                for i, char in enumerate(word):
-                    check_row = coords[i][0]
-                    check_col = coords[i][1]
-                    dupes = check_for_dupes_at_position(
-                        work_puzzle, char, (check_row, check_col), list(key.keys())
-                    )
-                    # print(f"point {(check_row, check_col)} is {dupes}")
-                    if dupes:
-                        work_puzzle[check_row][check_col] = char
-                    else:
-                        work_puzzle = copy.deepcopy(puzzle)
-                        break
-            if work_puzzle != puzzle:
-                puzzle = copy.deepcopy(work_puzzle)
-                # update placement info for word
-                key[word] = {"start": (row, col), "direction": d}
-                # go to next word
-                break
+        puzzle, key = try_to_fit_word(
+            word=word, puzzle=puzzle, key=key, level=level, size=size
+        )
+    return (puzzle, key)
+
+
+@retry(times=config.max_fit_tries)
+def try_to_fit_word(
+    word: str, puzzle: Puzzle, key: Key, level: int, size: int
+) -> tuple[Puzzle, Key]:
+    """Try to fit `word` at randomized coordinates `times` times."""
+
+    # pick a random row and column to try
+    row = int(random.randint(0, size - 1))
+    col = int(random.randint(0, size - 1))
+    # try and find a directional fit using the starting coordinates
+    fit = find_a_fit(puzzle, word, (row, col), level)
+    work_puzzle = copy.deepcopy(puzzle)
+    if fit:
+        d, coords = fit
+        # add word letters to a temp work puzzle at the
+        # fit coordinates make sure no duplicates are created
+        for i, char in enumerate(word):
+            check_row = coords[i][0]
+            check_col = coords[i][1]
+            if check_for_dupes_at_position(
+                work_puzzle, char, (check_row, check_col), list(key.keys())
+            ):
+                work_puzzle[check_row][check_col] = char
             else:
-                # if there was no fit at starting coordinates try again
-                tries += 1
+                work_puzzle = copy.deepcopy(puzzle)
+                break
+    if work_puzzle == puzzle:
+        raise WordFitError
+    else:
+        puzzle = copy.deepcopy(work_puzzle)
+        # update placement info for word
+        key[word] = {"start": (row, col), "direction": d}
     return (puzzle, key)
 
 

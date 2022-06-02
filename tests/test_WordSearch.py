@@ -155,6 +155,18 @@ def test_puzzle_repr():
     assert eval(repr(puzzle)) == puzzle
 
 
+def test_puzzle_equal():
+    puzzle1 = WordSearch(WORDS, size=10)
+    puzzle2 = WordSearch(WORDS, size=15)
+    assert puzzle1 != puzzle2
+
+
+def test_puzzle_non_equal():
+    puzzle1 = WordSearch(WORDS, size=10)
+    puzzle2 = ""
+    assert puzzle1 != puzzle2
+
+
 def test_puzzle_str():
     puzzle = WordSearch(WORDS)
     puzzle_str = utils.format_puzzle_for_show(

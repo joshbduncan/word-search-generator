@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed colorama, now using ascii escape codes for solution highlighting
     - Updated requirements.txt and setup.cfg
 - Updated __repr__ to include `level` and `size`
+- Rewrote the word fitting function to use a @retry wrapper
+    - Hat tip to Bob Belderbos, Twitter @bbelderbos (https://twitter.com/bbelderbos/status/1532347393009668098?s=20&t=1IOt6a8RGEohzkNKpTBrxg)
 
 ## [1.2.1] - 2022-04-01
 ### Added
