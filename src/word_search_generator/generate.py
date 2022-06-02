@@ -1,7 +1,6 @@
 import copy
 import random
 import string
-from functools import partial, wraps
 from typing import Optional
 
 from word_search_generator import config
@@ -14,21 +13,16 @@ class WordFitError(Exception):
     pass
 
 
-def retry(func=None, *, times=config.max_fit_tries):
-    """Retry `func` `times` times. Hat tip to Bob Belderbos (Twitter @bbelderbos)"""
-    if func is None:
-        return partial(retry, times=times)
+def retry(func):
+    """Retry fitting word into puzzle. Hat tip to Bob Belderbos @bbelderbos"""
 
-    @wraps(func)
     def wrapper(*args, **kwargs):
         attempt = 0
-        while attempt < times:
+        while attempt < config.max_fit_tries:
             try:
                 return func(*args, **kwargs)
             except Exception:
                 attempt += 1
-                # print(f"Exception {func}: {e} (attempt: {attempt})")
-        # print(f"{kwargs['word']} attempted {attempt} times with no success")
         return (kwargs["puzzle"], kwargs["key"])
 
     return wrapper
@@ -232,13 +226,11 @@ def fill_words(words: set[str], level: int, size: int) -> tuple[Puzzle, Key]:
     return (puzzle, key)
 
 
-@retry(times=config.max_fit_tries)
+@retry
 def try_to_fit_word(
     word: str, puzzle: Puzzle, key: Key, level: int, size: int
 ) -> tuple[Puzzle, Key]:
     """Try to fit `word` at randomized coordinates `times` times."""
-
-    # pick a random row and column to try
     row = int(random.randint(0, size - 1))
     col = int(random.randint(0, size - 1))
     # try and find a directional fit using the starting coordinates
