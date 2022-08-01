@@ -8,9 +8,9 @@ Word-Search-Generator is a Python module for generating fun [Word Search Puzzles
 
 Like most of my programming endeavors, Word-Search-Generator was born out of necessity. I needed an easy way to generate a bunch of word search puzzles for kid's food menus at the day job.
 
-🤦‍♂️ Does the world need this? Probably not.  
-⏰ Did I spend way too much time on it? Yep!  
-✅ Does it come in handy? Heck yeah!  
+🤦‍♂️ Does the world need this? Probably not.
+⏰ Did I spend way too much time on it? Yep!
+✅ Does it come in handy? Heck yeah!
 👍 Did I have fun making it? Absofreakinglutly!
 
 ## Installation
@@ -73,7 +73,7 @@ or show just the hidden words `puzzle.show(solution=True)`.
 
 ```
 -----------------------
-       SOLUTION        
+       SOLUTION
 -----------------------
 • • • • • • • C D H P •
 • • • • • • • A O O I •
@@ -149,7 +149,7 @@ The difficulty level controls whether words can go forward or backward, the card
 
 ### Puzzle Size
 
-By default, the puzzle (characters) size is determined by the amount of words provided and the difficulty level. Need a puzzle an exact size, override the default with `puzzle.size = x` (30 >= integer >= 10). All puzzles are square so size` will be the width and height.
+By default, the puzzle (characters) size is determined by the amount of words provided and the difficulty level. Need a puzzle an exact size, override the default with `puzzle.size = x` (25 >= integer >= 10). All puzzles are square so size` will be the width and height.
 
 ```
 -----------------------

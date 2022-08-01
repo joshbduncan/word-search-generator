@@ -3,7 +3,7 @@ import pathlib
 import sys
 from typing import Optional, Sequence
 
-from word_search_generator import WordSearch, __app_name__, config, utils
+from word_search_generator import WordSearch, __app_name__, __version__, config, utils
 
 
 class RandomAction(argparse.Action):
@@ -43,8 +43,8 @@ def main(
     """
     # setup argparse to capture cli arguments
     parser = argparse.ArgumentParser(
-        description="Generate Word Search Puzzles!",
-        epilog="Copyright 2021 Josh Duncan (joshd.xyz)",
+        description=f"Generate Word Search Puzzles! (Version {__version__})",
+        epilog="Copyright 2022 Josh Duncan (joshd.xyz)",
         prog=prog,
     )
     # define all possible arguments
@@ -78,11 +78,21 @@ def main(
         help=f"Puzzle size >={config.min_puzzle_size} and <={config.max_puzzle_size}",
     )
     parser.add_argument(
+        "-c",
+        "--cheat",
+        action=argparse.BooleanOptionalAction,
+        help="Highlight all hidden puzzle words.",
+    )
+    parser.add_argument(
         "-o",
         "--output",
         type=pathlib.Path,
         help="Output path for saved puzzle. Specify export type by appending "
         "'.pdf' or '.csv' to your path (defaults to PDF)",
+    )
+
+    parser.add_argument(
+        "--version", action="version", version=f"%(prog)s {__version__}"
     )
 
     # capture all cli arguments and make sure words were provided
@@ -94,6 +104,9 @@ def main(
     else:
         words = ",".join(args.words)
 
+    # check to see if solution should be highlighted
+    cheat = True if args.cheat else False
+
     # create a new puzzle object from provided arguments
     puzzle = WordSearch(words, level=args.level, size=args.size)
     # show the result
@@ -101,7 +114,7 @@ def main(
         foutput = puzzle.save(path=args.output)
         print(f"Puzzle saved: {foutput}")
     else:
-        print(puzzle)
+        puzzle.show(solution=cheat)
 
     return 0
 

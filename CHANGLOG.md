@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0]
+### Added
+- -c, --cheat options for cli to show puzzle solution
+- --version flag added to cli
+- __eq__ magic method for checking if puzzles are the same (mostly for testing __repr__)
+
+### Changed
+- Export csv no uses the builtin csv module
+- Removed colorama, now using ascii escape codes for solution highlighting
+    - Updated requirements.txt and setup.cfg
+- Updated __repr__ to include `level` and `size`
+- Rewrote the word fitting function to use a @retry wrapper
+    - Hat tip to Bob Belderbos, Twitter @bbelderbos (https://twitter.com/bbelderbos/status/1532347393009668098?s=20&t=1IOt6a8RGEohzkNKpTBrxg)
+- Fixed max_puzzle_size spec in README. Was incorrectly listed as 30 when it is actually 25. Hat tip to [dt215git](https://github.com/dt215git) for the [heads-up](https://github.com/joshbduncan/word-search-generator/issues/12)
+
 ## [1.2.1] - 2022-04-01
 ### Added
 - New generator code to make sure no duplicated exists in the puzzle
@@ -11,12 +26,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - JSON output property for @robguttman solver https://github.com/robguttman/word-search-solver
 - Testing for new generator and export functions
 
-### Changes
-- any input words that are palindromes are removed
+### Changed
+- Any input words that are palindromes are removed
 - add_words() method now checks old and new words together to make sure no single word is a subset of another word
 
 ## [1.1.2] - 2022-03-14
-### Changes
+### Changed
 - Removed extra newline from output.
 
 ## [1.1.1] - 2022-03-14
@@ -26,7 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Enables a better "solution" view using colorama "dim" with `WordSearch.show(solution=True)`.
 - Required install of [colorama](https://pypi.org/project/colorama/).
 
-### Changes
+### Changed
 - Cleaned up some functions to work better with the new `.show()` method.
 
 ### Removed
@@ -37,7 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New/cleaned-up testing.
 - More type hints.
 
-### Changes
+### Changed
 - Tests were cleaned up and changed a bunch to pass on windows.
 - Updated minimum version and testing version to Python 3.10.
 - WordSearch.save() method now determines CSV or PDF export type from file name. Default to PDF is no extension if provided.
