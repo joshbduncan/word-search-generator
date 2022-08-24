@@ -203,16 +203,16 @@ puzzle.replace_words("replace, current, words, with, new, words")
 
 ## Saving Puzzles
 
-Word-Search-Generator can save puzzles as PDF and CSV files.
+Word-Search-Generator can save puzzles as PDF and CSV files. The file format for which each puzzle is saved is derived from the file extension in the provided path name. Defaults to PDF is no file extension if provided.
 
-💾 Save a PDF to a specific directory with default filename.
+💾 Save as a PDF.
 
 ```python
 puzzle.save(path="~/Desktop/puzzle.pdf")
 "~/Desktop/puzzle.pdf"
 ```
 
-💾 Save a CSV with to the current directory with a specific filename.
+💾 Save as a CSV.
 
 ```python
 puzzle.save(path="puzzle.csv")
@@ -249,7 +249,7 @@ options:
   -o OUTPUT, --output OUTPUT
                         Output path for saved puzzle. Specify export type by appending '.pdf' or '.csv' to your path (defaults to PDF)
 
-Copyright 2021 Josh Duncan (joshd.xyz)
+Copyright 2021 Josh Duncan (joshbduncan.com)
 ```
 
 💻 Generate a puzzle.
@@ -281,10 +281,10 @@ $ cat words.txt | word-search
 This really came in handy for those kid's food menus. I was able to take a folder full of .txt documents with themed words and generate dozens of level 1 Word Search Puzzles at exactly 15 characters in size super fast...
 
 ```bash
-$ for f in tests/word*.txt; do word-search "$(cat $f)" -l 1 -s 15 -o $f.pdf; done
-Puzzle saved: ~/.../puzzles/words-theme01.txt
+$ for f in tools/sample_word_lists/word*.txt; do word-search "$(cat $f)" -l 1 -s 15 -o $f.pdf; done
+Puzzle saved: ~/.../words-5.txt.pdf
 ...
-Puzzle saved: ~/.../puzzles/words-theme99.txt
+Puzzle saved: ~/.../words-50.txt.pdf
 ```
 
 ## Resources

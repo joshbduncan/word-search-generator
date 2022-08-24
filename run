@@ -6,7 +6,7 @@ app=$(basename $cdir)
 function build {
     # build the app for pypi
     source venv/bin/activate
-    if linting && typing && tests; then
+    if cleanup && tests; then
         echo "⚙️ building $app..."
         python -m build
     else

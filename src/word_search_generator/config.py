@@ -24,7 +24,7 @@ level_dirs = {
 
 # pdf export settings
 pdf_author = "Josh Duncan"
-pdf_creator = "word-search @ joshd.xyz"
+pdf_creator = "word-search @ joshbduncan.com"
 pdf_title = "Word Search Puzzle"
 pdf_title_font_size = 18
 pdf_font_size = 12

@@ -25,7 +25,7 @@ class WordSearch:
     def __init__(
         self, words: str, level: Optional[int] = None, size: Optional[int] = None
     ):
-        """Initializa a Word Search puzzle.
+        """Initialize a Word Search puzzle.
 
         Args:
             words (str): words (str): A string of words separated by spaces, commas,

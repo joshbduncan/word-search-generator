@@ -44,7 +44,7 @@ def main(
     # setup argparse to capture cli arguments
     parser = argparse.ArgumentParser(
         description=f"Generate Word Search Puzzles! (Version {__version__})",
-        epilog="Copyright 2022 Josh Duncan (joshd.xyz)",
+        epilog="Copyright 2022 Josh Duncan (joshbduncan.com)",
         prog=prog,
     )
     # define all possible arguments
