@@ -79,10 +79,10 @@ def highlight_solution(puzzle: Puzzle, solution: Puzzle) -> Puzzle:
 
     Args:
         puzzle (Puzzle): The current puzzle state.
-        solution (Puzzle): The current puzzle solition.
+        solution (Puzzle): The current puzzle solution.
 
     Returns:
-        str: The current puzzle as a string with higilighting.
+        str: The current puzzle as a string with highlighting.
     """
     output = []
     for r, line in enumerate(puzzle):
