@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Added
+- You can now export the puzzle solution along with the puzzle using the `save()` method. Just specify `solution=True` after the path.
+    - If you are exporting a PDF then a second page will be added with the puzzled words highlighted in red (just like the `show(solution=True)` method)
+    - If you are exporting to CSV the puzzle solution will be included at the bottom of the csv below the answer key.
+
+### Changed
+- `save()` method now accepts the `solution` argument.
+- -c, --cheat cli option now works with the -o, --output option to include the puzzle solution within the output file (csv or pdf)
+- To clean things up a bit, `export_pdf_file()` and `export_csv_file()` now accept a WordSearch object as the main argument.
+
 ## [1.3.0]
 ### Added
 - -c, --cheat options for cli to show puzzle solution

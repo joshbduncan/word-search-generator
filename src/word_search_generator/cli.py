@@ -80,8 +80,8 @@ def main(
     parser.add_argument(
         "-c",
         "--cheat",
-        action=argparse.BooleanOptionalAction,
-        help="Highlight all hidden puzzle words.",
+        action="store_true",
+        help="Show the puzzle solution or include it within the `-o, --output` file.",
     )
     parser.add_argument(
         "-o",
@@ -90,7 +90,6 @@ def main(
         help="Output path for saved puzzle. Specify export type by appending "
         "'.pdf' or '.csv' to your path (defaults to PDF)",
     )
-
     parser.add_argument(
         "--version", action="version", version=f"%(prog)s {__version__}"
     )
@@ -104,17 +103,14 @@ def main(
     else:
         words = ",".join(args.words)
 
-    # check to see if solution should be highlighted
-    cheat = True if args.cheat else False
-
     # create a new puzzle object from provided arguments
     puzzle = WordSearch(words, level=args.level, size=args.size)
     # show the result
     if args.output:
-        foutput = puzzle.save(path=args.output)
+        foutput = puzzle.save(path=args.output, solution=args.cheat)
         print(f"Puzzle saved: {foutput}")
     else:
-        puzzle.show(solution=cheat)
+        puzzle.show(solution=args.cheat)
 
     return 0
 

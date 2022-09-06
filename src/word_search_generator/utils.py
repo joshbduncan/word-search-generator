@@ -89,7 +89,7 @@ def highlight_solution(puzzle: Puzzle, solution: Puzzle) -> Puzzle:
         line_chars = []
         # check to see if character if part of a puzzle word
         for c, char in enumerate(line):
-            if solution[r][c] != "•":
+            if solution[r][c]:
                 line_chars.append(f"\u001b[1m\u001b[31m{char}\u001b[0m")
             else:
                 line_chars.append(f"{char}")
