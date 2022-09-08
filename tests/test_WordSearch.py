@@ -146,7 +146,7 @@ def test_puzzle_solution():
     print(puzzle.solution)
     puzzle_chars = set([char for line in puzzle.solution for char in line])
     key_chars = set([char for word in puzzle.key for char in word])
-    key_chars.add("•")
+    key_chars.add("")
     assert puzzle_chars == key_chars
 
 
@@ -239,4 +239,4 @@ def test_for_empty_spaces():
         words = get_random_words(10)
         p = WordSearch(words, level=3)
         flat = [item for sublist in p.puzzle for item in sublist]
-        assert "•" not in flat
+        assert p.size * p.size == len(flat)

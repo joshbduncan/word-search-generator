@@ -89,19 +89,19 @@ def capture_all_paths_from_position(
     # follow each direction and capture all characters in that path
     for i, (direction, (rmove, cmove)) in enumerate(config.dir_moves.items()):
         row, col = position
-        string = ""
+        chars: list[str] = []
         for _ in range(radius):
-            string += puzzle[row][col]
+            chars.append(puzzle[row][col])
             row += rmove
             col += cmove
             if out_of_bounds(puzzle_size, puzzle_size, (row, col)):
                 break
-        # add the captured string of characters to the correct
-        # spot in the paths lists, and reverse if needed
+            # add the captured string of characters to the correct
+            # spot in the paths lists, and reverse if needed
         if direction in ["N", "NW", "W", "SW"]:
-            paths[i % 4][0] = string[1:][::-1]
+            paths[i % 4][0] = "".join(chars[1:][::-1])
         else:
-            paths[i % 4][1] = string[1:]
+            paths[i % 4][1] = "".join(chars[1:])
     return paths
 
 
@@ -161,7 +161,7 @@ def test_a_fit(
     for char in word:
         rmove, cmove = config.dir_moves[direction]
         # if the current puzzle space is empty or if letters match
-        if puzzle[row][col] == "•" or puzzle[row][col] == char:
+        if puzzle[row][col] == "" or puzzle[row][col] == char:
             coordinates.append((row, col))
         else:
             return []
@@ -215,7 +215,7 @@ def fill_words(words: set[str], level: int, size: int) -> tuple[Puzzle, Key]:
 
     # calculate the puzzle size and setup a new empty puzzle
     size = calc_puzzle_size(words, level, size)
-    puzzle = [["•"] * size for _ in range(size)]
+    puzzle = [[""] * size for _ in range(size)]
     key: dict[str, KeyInfo] = {}
 
     # try to place each word on the puzzle
@@ -305,7 +305,7 @@ def fill_blanks(puzzle: Puzzle, placed_words: list[str]) -> Puzzle:
     for row in range(len(work_puzzle)):
         for col in range(len(work_puzzle[0])):
             # if the current spot is empty fill with random character
-            if work_puzzle[row][col] == "•":
+            if work_puzzle[row][col] == "":
                 while True:
                     random_char = random.choice(ALPHABET)
                     if no_matching_neighbors(work_puzzle, random_char, (row, col)):

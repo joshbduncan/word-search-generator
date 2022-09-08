@@ -31,6 +31,26 @@ def test_export_pdf_puzzles(tmp_path):
     assert pages == {1}
 
 
+def test_export_pdf_puzzle_with_solution(tmp_path):
+    """Make sure a puzzle exported with the solution is 2 pages."""
+    sizes = [s for s in range(config.min_puzzle_size, config.max_puzzle_size)]
+    puzzles = []
+    pages = set()
+    for size in sizes:
+        words = utils.get_random_words(
+            random.randint(config.min_puzzle_words, config.max_puzzle_words)
+        )
+        level = random.randint(1, 3)
+        puzzle = WordSearch(words, level=level, size=size)
+        path = Path.joinpath(tmp_path, f"{uuid.uuid4()}.pdf")
+        puzzle.save(path, solution=True)
+        puzzles.append(path)
+    for p in puzzles:
+        pdf = PdfFileReader(open(p, "rb"))
+        pages.add(pdf.getNumPages())
+    assert pages == {2}
+
+
 def test_export_overwrite_file_error(tmp_path):
     """Try to export a puzzle with the name of a file that is already present."""
     path = Path.joinpath(tmp_path, "test.pdf")

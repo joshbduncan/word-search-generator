@@ -174,11 +174,13 @@ class WordSearch:
             )
         )
 
-    def save(self, path: Union[str, Path]) -> str:
+    def save(self, path: Union[str, Path], solution: bool = False) -> str:
         """Save the current puzzle to a file.
 
         Args:
-            path (Union[str, Path]): A file save path.
+            path (Union[str, Path]): A file save path
+            solution (bool, optional): Include solution with the saved file.
+                                       Defaults to False.
 
         Returns:
             str: Final save path of the file.
@@ -192,9 +194,9 @@ class WordSearch:
         path = export.validate_path(path)
         # write the file
         if ftype == "csv":
-            saved_file = export.write_csv_file(path, self.puzzle, self.key, self.level)
+            saved_file = export.write_csv_file(path, self, solution)
         else:
-            saved_file = export.write_pdf_file(path, self.puzzle, self.key, self.level)
+            saved_file = export.write_pdf_file(path, self, solution)
         # return saved file path
         return str(saved_file)
 
