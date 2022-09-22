@@ -64,6 +64,14 @@ def main(
         help="Generate {n} random words to include in the puzzle",
     )
     parser.add_argument(
+        "-x",
+        "--hidden",
+        type=str,
+        # nargs="*",
+        default="",
+        help="Hidden bonus words",
+    )
+    parser.add_argument(
         "-l",
         "--level",
         type=int,
@@ -104,7 +112,9 @@ def main(
         words = ",".join(args.words)
 
     # create a new puzzle object from provided arguments
-    puzzle = WordSearch(words, level=args.level, size=args.size)
+    puzzle = WordSearch(
+        words, level=args.level, size=args.size, hidden_words=args.hidden
+    )
     # show the result
     if args.output:
         foutput = puzzle.save(path=args.output, solution=args.cheat)

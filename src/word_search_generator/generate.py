@@ -200,7 +200,9 @@ def find_a_fit(puzzle: Puzzle, word: str, position: tuple[int, int], level: int)
     return random_direction
 
 
-def fill_words(words: set[str], level: int, size: int) -> tuple[Puzzle, Key]:
+def fill_words(
+    words: set[str], level: int, size: int, hidden_words: set[str]
+) -> tuple[Puzzle, Key, Puzzle]:
     """Fill `puzzle` with the supplied `words`.
     Some words will be skipped if they don't fit.
 
@@ -210,7 +212,8 @@ def fill_words(words: set[str], level: int, size: int) -> tuple[Puzzle, Key]:
         size (int, optional): Final puzzle grid size.
 
     Returns:
-        tuple[Puzzle, Key]: Current puzzle and puzzle answer key.
+        tuple[Puzzle, Key, Puzzle]: Current puzzle and puzzle answer key
+         and solution without hidden words.
     """
 
     # calculate the puzzle size and setup a new empty puzzle
@@ -223,7 +226,15 @@ def fill_words(words: set[str], level: int, size: int) -> tuple[Puzzle, Key]:
         puzzle, key = try_to_fit_word(
             word=word, puzzle=puzzle, key=key, level=level, size=size
         )
-    return (puzzle, key)
+    # place the hidden words
+    # always at level=3 for the hidden words
+    cleartext_solution = copy.deepcopy(puzzle)
+    for word in hidden_words:
+        puzzle, key = try_to_fit_word(
+            word=word, puzzle=puzzle, key=key, level=3, size=size
+        )
+        key[word]["hidden"] = True
+    return (puzzle, key, cleartext_solution)
 
 
 @retry
@@ -255,7 +266,7 @@ def try_to_fit_word(
     else:
         puzzle = copy.deepcopy(work_puzzle)
         # update placement info for word
-        key[word] = {"start": (row, col), "direction": d}
+        key[word] = {"start": (row, col), "direction": d, "hidden": False}
     return (puzzle, key)
 
 
@@ -295,7 +306,7 @@ def fill_blanks(puzzle: Puzzle, placed_words: list[str]) -> Puzzle:
 
     Args:
         puzzle (Puzzle): Current puzzle state.
-        words (set[str]): Puzzle word list.
+        placed_words (set[str]): Puzzle word list.
 
     Returns:
         Puzzle: A complete word search puzzle.

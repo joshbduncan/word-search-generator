@@ -155,7 +155,9 @@ def format_puzzle_for_show(
 Find these words: {get_word_list_str(key)}
 * Words can go {get_level_dirs_str(level)}.
 
-Answer Key: {get_answer_key_str(key)}"""
+Answer Key: {get_answer_key_str(key, False)}
+
+Hidden Words: {get_answer_key_str(key, True)}"""
 
 
 def get_level_dirs_str(level: int) -> str:
@@ -164,23 +166,26 @@ def get_level_dirs_str(level: int) -> str:
 
 
 def get_word_list_str(key: Key) -> str:
-    """Return all placed puzzle words as a list."""
-    return ", ".join([k for k in sorted(key.keys())])
+    """Return all placed puzzle words as a list.
+
+    Excludes hidden words by definition"""
+    return ", ".join([k for k in sorted(key.keys()) if not key[k]["hidden"]])
 
 
-def get_answer_key_list(key: Key) -> list[str]:
+def get_answer_key_list(key: Key, hidden: bool = False) -> list[str]:
     """Return a easy to read answer key for display/export."""
     keys = []
     for k in sorted(key.keys()):
         direction = key[k]["direction"]
         start: tuple[int, int] = key[k]["start"]
-        keys.append(f"{k} {direction} @ {start}")
+        if key[k]["hidden"] == hidden or hidden is None:
+            keys.append(f"{k} {direction} @ {start}")
     return keys
 
 
-def get_answer_key_str(key: Key) -> str:
+def get_answer_key_str(key: Key, hidden: bool = False) -> str:
     """Return a easy to read answer key for display."""
-    keys = get_answer_key_list(key)
+    keys = get_answer_key_list(key, hidden)
     return ", ".join(keys)
 
 
@@ -192,6 +197,7 @@ def get_answer_key_json(key: Key) -> KeyJson:
             "direction": key[k]["direction"],
             "start_row": key[k]["start"][0],
             "start_col": key[k]["start"][1],
+            "hidden": key[k]["hidden"],
         }
     return json_key
 

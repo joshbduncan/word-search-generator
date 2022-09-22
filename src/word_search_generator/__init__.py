@@ -23,7 +23,11 @@ class WordSearch:
     """This class represents a WordSearch object."""
 
     def __init__(
-        self, words: str, level: Optional[int] = None, size: Optional[int] = None
+        self,
+        words: str,
+        level: Optional[int] = None,
+        size: Optional[int] = None,
+        hidden_words: str = "",
     ):
         """Initialize a Word Search puzzle.
 
@@ -33,12 +37,19 @@ class WordSearch:
             level (Optional[int], optional): Difficulty level. Defaults to None.
             size (Optional[int], optional): Puzzle size. Defaults to None.
         """
+        self._clear_solution: Puzzle = []
         self.words = utils.cleanup_input(words)
         self._key: Key = {}
         self._level: int = 1
         self._puzzle: Puzzle = []
         self._size: int = 0
         self._solution: Puzzle = []
+        self.hidden_words = set()
+        if hidden_words:
+            print(hidden_words)
+            self.hidden_words = (
+                utils.cleanup_input(hidden_words) - self.words
+            )  # words can't be hidden and visible
         # generate puzzle
         self.generate(level, size)
 
@@ -154,8 +165,8 @@ class WordSearch:
         if size:
             self.size = size
 
-        self._solution, self._key = generate.fill_words(
-            self.words, self.level, self.size
+        self._solution, self._key, self._clear_solution = generate.fill_words(
+            self.words, self.level, self.size, self.hidden_words
         )
         self._puzzle = generate.fill_blanks(self.solution, list(self.key.keys()))
         self._size = len(self._puzzle[0])
@@ -170,7 +181,7 @@ class WordSearch:
         """
         print(
             utils.format_puzzle_for_show(
-                self.puzzle, self.key, self.level, self.solution, solution
+                self.puzzle, self.key, self.level, self._clear_solution, solution
             )
         )
 
