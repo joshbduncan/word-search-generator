@@ -20,6 +20,7 @@ level_dirs = {
     1: ("E", "S"),
     2: ("NE", "E", "SE", "S"),
     3: ("N", "NE", "E", "SE", "S", "SW", "W", "NW"),
+    4: ("N", "NE", "SE", "SW", "W", "NW"),  # hidden words
 }
 
 # pdf export settings

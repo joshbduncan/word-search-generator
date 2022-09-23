@@ -231,7 +231,7 @@ def fill_words(
     cleartext_solution = copy.deepcopy(puzzle)
     for word in hidden_words:
         puzzle, key = try_to_fit_word(
-            word=word, puzzle=puzzle, key=key, level=3, size=size
+            word=word, puzzle=puzzle, key=key, level=4, size=size
         )
         key[word]["hidden"] = True
     return (puzzle, key, cleartext_solution)
