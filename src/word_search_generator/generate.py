@@ -202,7 +202,7 @@ def find_a_fit(puzzle: Puzzle, word: str, position: tuple[int, int], level: int)
 
 def fill_words(
     words: set[str], level: int, size: int, hidden_words: set[str]
-) -> tuple[Puzzle, Key, Puzzle]:
+) -> tuple[Puzzle, Key]:
     """Fill `puzzle` with the supplied `words`.
     Some words will be skipped if they don't fit.
 
@@ -210,10 +210,10 @@ def fill_words(
         words (set[str]): Words to be placed in the puzzle.
         level (int): Puzzle difficulty level.
         size (int, optional): Final puzzle grid size.
+        hidden_words (set[str]): Hidden words to be placed in the puzzle.
 
     Returns:
-        tuple[Puzzle, Key, Puzzle]: Current puzzle and puzzle answer key
-         and solution without hidden words.
+        tuple[Puzzle, Key]: Current puzzle and puzzle answer key.
     """
 
     # calculate the puzzle size and setup a new empty puzzle
@@ -226,20 +226,17 @@ def fill_words(
         puzzle, key = try_to_fit_word(
             word=word, puzzle=puzzle, key=key, level=level, size=size
         )
-    # place the hidden words
-    # always at level=3 for the hidden words
-    cleartext_solution = copy.deepcopy(puzzle)
+    # try to place each hidden word on the puzzle
     for word in hidden_words:
         puzzle, key = try_to_fit_word(
-            word=word, puzzle=puzzle, key=key, level=4, size=size
+            word=word, puzzle=puzzle, key=key, level=level, size=size, hidden=True
         )
-        key[word]["hidden"] = True
-    return (puzzle, key, cleartext_solution)
+    return (puzzle, key)
 
 
 @retry
 def try_to_fit_word(
-    word: str, puzzle: Puzzle, key: Key, level: int, size: int
+    word: str, puzzle: Puzzle, key: Key, level: int, size: int, hidden: bool = False
 ) -> tuple[Puzzle, Key]:
     """Try to fit `word` at randomized coordinates `times` times."""
     row = int(random.randint(0, size - 1))
@@ -266,7 +263,7 @@ def try_to_fit_word(
     else:
         puzzle = copy.deepcopy(work_puzzle)
         # update placement info for word
-        key[word] = {"start": (row, col), "direction": d, "hidden": False}
+        key[word] = {"start": (row, col), "direction": d, "hidden": hidden}
     return (puzzle, key)
 
 

@@ -155,37 +155,35 @@ def format_puzzle_for_show(
 Find these words: {get_word_list_str(key)}
 * Words can go {get_level_dirs_str(level)}.
 
-Answer Key: {get_answer_key_str(key, False)}
-
-Hidden Words: {get_answer_key_str(key, True)}"""
+Answer Key: {get_answer_key_str(key)}"""
 
 
 def get_level_dirs_str(level: int) -> str:
-    """Return all pozzible directions for specified level."""
+    """Return all possible directions for specified level."""
     return replace_right(", ".join(config.level_dirs[level]), ", ", ", and ")
 
 
 def get_word_list_str(key: Key) -> str:
-    """Return all placed puzzle words as a list.
-
-    Excludes hidden words by definition"""
+    """Return all placed puzzle words as a list (excluding hidden words)."""
     return ", ".join([k for k in sorted(key.keys()) if not key[k]["hidden"]])
 
 
-def get_answer_key_list(key: Key, hidden: bool = False) -> list[str]:
+def get_answer_key_list(key: Key) -> list[str]:
     """Return a easy to read answer key for display/export."""
     keys = []
     for k in sorted(key.keys()):
         direction = key[k]["direction"]
         start: tuple[int, int] = key[k]["start"]
-        if key[k]["hidden"] == hidden or hidden is None:
-            keys.append(f"{k} {direction} @ {start}")
+        # add '[HIDDEN]' flag if word is hidden
+        if key[k]["hidden"]:
+            k = f"{k} [HIDDEN]"
+        keys.append(f"{k} {direction} @ {start}")
     return keys
 
 
-def get_answer_key_str(key: Key, hidden: bool = False) -> str:
+def get_answer_key_str(key: Key) -> str:
     """Return a easy to read answer key for display."""
-    keys = get_answer_key_list(key, hidden)
+    keys = get_answer_key_list(key)
     return ", ".join(keys)
 
 

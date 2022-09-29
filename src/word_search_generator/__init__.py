@@ -37,7 +37,6 @@ class WordSearch:
             level (Optional[int], optional): Difficulty level. Defaults to None.
             size (Optional[int], optional): Puzzle size. Defaults to None.
         """
-        self._clear_solution: Puzzle = []
         self.words = utils.cleanup_input(words)
         self._key: Key = {}
         self._level: int = 1
@@ -46,10 +45,7 @@ class WordSearch:
         self._solution: Puzzle = []
         self.hidden_words = set()
         if hidden_words:
-            print(hidden_words)
-            self.hidden_words = (
-                utils.cleanup_input(hidden_words) - self.words
-            )  # words can't be hidden and visible
+            self.hidden_words = utils.cleanup_input(hidden_words) - self.words
         # generate puzzle
         self.generate(level, size)
 
@@ -74,7 +70,7 @@ class WordSearch:
         return json.dumps(
             {
                 "puzzle": self.puzzle,
-                "words": list(self.words),
+                "words": list(self.words.union(self.hidden_words)),
                 "key": utils.get_answer_key_json(self.key),
             }
         )
@@ -165,7 +161,7 @@ class WordSearch:
         if size:
             self.size = size
 
-        self._solution, self._key, self._clear_solution = generate.fill_words(
+        self._solution, self._key = generate.fill_words(
             self.words, self.level, self.size, self.hidden_words
         )
         self._puzzle = generate.fill_blanks(self.solution, list(self.key.keys()))
@@ -181,7 +177,7 @@ class WordSearch:
         """
         print(
             utils.format_puzzle_for_show(
-                self.puzzle, self.key, self.level, self._clear_solution, solution
+                self.puzzle, self.key, self.level, self.solution, solution
             )
         )
 

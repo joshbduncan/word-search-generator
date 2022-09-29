@@ -67,7 +67,6 @@ def main(
         "-x",
         "--hidden",
         type=str,
-        # nargs="*",
         default="",
         help="Hidden bonus words",
     )
