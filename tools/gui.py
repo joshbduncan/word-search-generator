@@ -75,7 +75,7 @@ layout = [  [   sg.Text('Word Search Generator',size=('45','1'))],
 		]  # identify the multiline via key option
 
 # Create the Window
-window = sg.Window('Test', layout).Finalize()
+window = sg.Window('Word Search Generator', layout).Finalize()
 #window.Maximize()
 # Event Loop to process "events" and get the "values" of the inputs
 while True:
