@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Added
+- Test for csv output with solution
+
+### Changed
+- Removed the tty input from the cli as it's confusing for most users.
+- Cleaned up cli testing of exit codes
+
+### Fixed
+- [CLI with empty stdin causes error](https://github.com/joshbduncan/word-search-generator/issues/19)
+
 ## [1.4.0] - 2022-09-09
 ### Added
 - You can now export the puzzle solution along with the puzzle using the `save()` method. Just specify `solution=True` after the path.
