@@ -10,7 +10,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Removed the tty input from the cli as it's confusing for most users.
-- Cleaned up cli testing of exit codes
 
 ### Fixed
 - [CLI with empty stdin causes error](https://github.com/joshbduncan/word-search-generator/issues/19)

@@ -1,100 +1,78 @@
+import os
 import pathlib
-import subprocess
 
-test_words = "some test words"
+
+def get_exit_status(exit_code):
+    if os.name == "nt":
+        # On Windows, os.WEXITSTATUS() doesn't work and os.system() returns
+        # the argument to exit() directly.
+        return exit_code
+    else:
+        # On Unix, os.WEXITSTATUS() must be used to extract the exit status
+        # from the result of os.system().
+        if os.WIFEXITED(exit_code):
+            return os.WEXITSTATUS(exit_code)
+        else:
+            return -1
 
 
 def test_entrypoint():
-    result = subprocess.run(
-        ["word-search", "--help"],
-        stdout=subprocess.DEVNULL,
-    )
-    assert result.returncode == 0
+    result = os.system("word-search --help")
+    assert get_exit_status(result) == 0
 
 
 def test_no_words_provided():
-    result = subprocess.run(
-        ["word-search"],
-        stdout=subprocess.DEVNULL,
-    )
-    assert result.returncode == 1
+    result = os.system("word-search")
+    assert get_exit_status(result) == 1
 
 
 def test_just_words():
-    result = subprocess.run(["word-search", test_words])
-    print(result)
-    assert result.returncode == 0
+    result = os.system("word-search some test words")
+    assert get_exit_status(result) == 0
 
 
 def test_stdin():
-    result = subprocess.run(
-        ["echo", test_words, "word-search"],
-        stdout=subprocess.DEVNULL,
-    )
-    assert result.returncode == 0
+    result = os.system("echo computer robot soda | word-search")
+    assert get_exit_status(result) == 0
 
 
 def test_export_pdf(tmp_path):
     tmp_path = pathlib.Path.joinpath(tmp_path, "test.pdf")
-    result = subprocess.run(
-        ["word-search", test_words, "-o", tmp_path],
-        stdout=subprocess.DEVNULL,
-    )
-    assert result.returncode == 0 and tmp_path.exists()
+    result = os.system(f"word-search some test words -o {tmp_path}")
+    assert get_exit_status(result) == 0 and tmp_path.exists()
 
 
 def test_export_csv(tmp_path):
     tmp_path = pathlib.Path.joinpath(tmp_path, "test.csv")
-    result = subprocess.run(
-        ["word-search", test_words, "-o", tmp_path],
-        stdout=subprocess.DEVNULL,
-    )
-    assert result.returncode == 0 and tmp_path.exists()
+    result = os.system(f"word-search some test words -o {tmp_path}")
+    assert get_exit_status(result) == 0 and tmp_path.exists()
 
 
 def test_random_word_valid_input():
-    result = subprocess.run(
-        ["word-search", "-r", "20"],
-        stdout=subprocess.DEVNULL,
-    )
-    assert result.returncode == 0
+    result = os.system("word-search -r 20")
+    assert get_exit_status(result) == 0
 
 
 def test_random_word_invalid_input():
-    result = subprocess.run(
-        ["word-search", "-r", "100"],
-        stdout=subprocess.DEVNULL,
-    )
-    assert result.returncode == 2
+    result = os.system("word-search -r 100")
+    assert get_exit_status(result) == 2
 
 
 def test_size_valid_input():
-    result = subprocess.run(
-        ["word-search", test_words, "-s", "20"],
-        stdout=subprocess.DEVNULL,
-    )
-    assert result.returncode == 0
+    result = os.system("word-search some test words -s 20")
+    assert get_exit_status(result) == 0
 
 
 def test_size_invalid_input():
-    result = subprocess.run(
-        ["word-search", test_words, "-s", "100"],
-        stdout=subprocess.DEVNULL,
-    )
-    assert result.returncode == 2
+    result = os.system("word-search some test words -s 100")
+    assert get_exit_status(result) == 2
 
 
 def test_dunder_main_entry_point():
-    result = subprocess.run(
-        ["python", "-m", "word_search_generator.__main__", test_words],
-        stdout=subprocess.DEVNULL,
-    )
-    assert result.returncode == 0
+    result = os.system("python -m word_search_generator.__main__ some test words")
+    assert get_exit_status(result) == 0
 
 
 def test_cli_import_entry_point():
-    result = subprocess.run(
-        ["python", "-m", "word_search_generator", test_words],
-        stdout=subprocess.DEVNULL,
-    )
-    assert result.returncode == 0
+    result = os.system("python -m word_search_generator.cli some test words")
+    assert get_exit_status(result) == 0
