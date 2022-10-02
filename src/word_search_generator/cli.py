@@ -65,7 +65,7 @@ def main(
     )
     parser.add_argument(
         "-x",
-        "--hidden",
+        "--secret",
         type=str,
         default="",
         help="Hidden bonus words",
@@ -112,7 +112,7 @@ def main(
 
     # create a new puzzle object from provided arguments
     puzzle = WordSearch(
-        words, level=args.level, size=args.size, hidden_words=args.hidden
+        words, level=args.level, size=args.size, secret_words=args.secret
     )
     # show the result
     if args.output:

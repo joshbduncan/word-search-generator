@@ -27,7 +27,7 @@ class WordSearch:
         words: str,
         level: Optional[int] = None,
         size: Optional[int] = None,
-        hidden_words: str = "",
+        secret_words: str = "",
     ):
         """Initialize a Word Search puzzle.
 
@@ -43,9 +43,9 @@ class WordSearch:
         self._puzzle: Puzzle = []
         self._size: int = 0
         self._solution: Puzzle = []
-        self.hidden_words = set()
-        if hidden_words:
-            self.hidden_words = utils.cleanup_input(hidden_words) - self.words
+        self.secret_words = set()
+        if secret_words:
+            self.secret_words = utils.cleanup_input(secret_words) - self.words
         # generate puzzle
         self.generate(level, size)
 
@@ -70,7 +70,7 @@ class WordSearch:
         return json.dumps(
             {
                 "puzzle": self.puzzle,
-                "words": list(self.words.union(self.hidden_words)),
+                "words": list(self.words.union(self.secret_words)),
                 "key": utils.get_answer_key_json(self.key),
             }
         )
@@ -162,7 +162,7 @@ class WordSearch:
             self.size = size
 
         self._solution, self._key = generate.fill_words(
-            self.words, self.level, self.size, self.hidden_words
+            self.words, self.level, self.size, self.secret_words
         )
         self._puzzle = generate.fill_blanks(self.solution, list(self.key.keys()))
         self._size = len(self._puzzle[0])

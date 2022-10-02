@@ -226,7 +226,7 @@ def fill_words(
         puzzle, key = try_to_fit_word(
             word=word, puzzle=puzzle, key=key, level=level, size=size
         )
-    # try to place each hidden word on the puzzle
+    # try to place each secret word on the puzzle
     for word in hidden_words:
         puzzle, key = try_to_fit_word(
             word=word, puzzle=puzzle, key=key, level=level, size=size, hidden=True
@@ -263,7 +263,7 @@ def try_to_fit_word(
     else:
         puzzle = copy.deepcopy(work_puzzle)
         # update placement info for word
-        key[word] = {"start": (row, col), "direction": d, "hidden": hidden}
+        key[word] = {"start": (row, col), "direction": d, "secret": hidden}
     return (puzzle, key)
 
 

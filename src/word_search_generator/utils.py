@@ -164,8 +164,8 @@ def get_level_dirs_str(level: int) -> str:
 
 
 def get_word_list_str(key: Key) -> str:
-    """Return all placed puzzle words as a list (excluding hidden words)."""
-    return ", ".join([k for k in sorted(key.keys()) if not key[k]["hidden"]])
+    """Return all placed puzzle words as a list (excluding secret words)."""
+    return ", ".join([k for k in sorted(key.keys()) if not key[k]["secret"]])
 
 
 def get_answer_key_list(key: Key) -> list[str]:
@@ -174,8 +174,8 @@ def get_answer_key_list(key: Key) -> list[str]:
     for k in sorted(key.keys()):
         direction = key[k]["direction"]
         start: tuple[int, int] = key[k]["start"]
-        # add '[HIDDEN]' flag if word is hidden
-        if key[k]["hidden"]:
+        # add '[HIDDEN]' flag if word is secret
+        if key[k]["secret"]:
             k = f"{k} [HIDDEN]"
         keys.append(f"{k} {direction} @ {start}")
     return keys
@@ -195,7 +195,7 @@ def get_answer_key_json(key: Key) -> KeyJson:
             "direction": key[k]["direction"],
             "start_row": key[k]["start"][0],
             "start_col": key[k]["start"][1],
-            "hidden": key[k]["hidden"],
+            "secret": key[k]["secret"],
         }
     return json_key
 
