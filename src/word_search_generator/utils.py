@@ -1,8 +1,10 @@
 import random
 import string
+from typing import Iterable
 
 from word_search_generator import config
-from word_search_generator.types import Key, KeyJson, Puzzle
+from word_search_generator.config import Direction
+from word_search_generator.types import DirectionSet, Key, KeyJson, Position, Puzzle
 
 
 def cleanup_input(words: str) -> set[str]:
@@ -74,6 +76,47 @@ def word_contains_word(words: set[str], word: str) -> bool:
     return False
 
 
+def validate_direction_iterable(
+    d: Iterable[str | tuple[int, int] | Direction]
+) -> DirectionSet:
+    """Validates that all the directions in d are found as keys to
+    config.dir_moves and therefore are valid directions."""
+    o = set()
+    for direction in d:
+        if isinstance(direction, Direction):
+            o.add(direction)
+            continue
+        elif isinstance(direction, tuple):
+            o.add(config.Direction(direction))
+            continue
+        try:
+            o.add(config.Direction[direction.upper().strip()])
+        except KeyError:
+            raise ValueError(f"'{direction}' is not a valid direction.")
+    return o
+
+
+def validate_level(d) -> DirectionSet:
+    """Given a d, try to turn it into a list of valid moves."""
+    if isinstance(d, int):  # traditional numeric level
+        try:
+            return validate_direction_iterable(config.level_dirs[d])
+        except KeyError:
+            raise ValueError(
+                f"{d} is not a valid difficulty number"
+                + f"[{', '.join([str(i) for i in config.level_dirs.keys()])}]"
+            )
+    if isinstance(d, str):  # comma-delimited list
+        return validate_direction_iterable(d.split(","))
+    if isinstance(d, Iterable):  # probably used by external code
+        return validate_direction_iterable(d)
+    raise TypeError(f"{type(d)} given, not str, int, or Iterable[str]\n{d}")
+
+
+def direction_set_repr(ds: DirectionSet) -> str:
+    return ("'" + ",".join(d.name for d in ds) + "'") if ds else "None"
+
+
 def highlight_solution(puzzle: Puzzle, solution: Puzzle) -> Puzzle:
     """Convert puzzle array of nested lists into a string.
 
@@ -139,7 +182,7 @@ def replace_right(
 def format_puzzle_for_show(
     puzzle: Puzzle,
     key: Key,
-    level: int,
+    level: DirectionSet,
     solution: Puzzle,
     show_solution: bool = False,
     header: str = "WORD SEARCH",
@@ -158,9 +201,9 @@ Find these words: {get_word_list_str(key)}
 Answer Key: {get_answer_key_str(key)}"""
 
 
-def get_level_dirs_str(level: int) -> str:
+def get_level_dirs_str(level: DirectionSet) -> str:
     """Return all possible directions for specified level."""
-    return replace_right(", ".join(config.level_dirs[level]), ", ", ", and ")
+    return replace_right(", ".join(d.name for d in level), ", ", ", and ")
 
 
 def get_word_list_str(key: Key) -> str:
@@ -173,11 +216,11 @@ def get_answer_key_list(key: Key) -> list[str]:
     keys = []
     for k in sorted(key.keys()):
         direction = key[k]["direction"]
-        start: tuple[int, int] = key[k]["start"]
-        # add '[HIDDEN]' flag if word is secret
+        start: Position = key[k]["start"]
+        # add '[SECRET]' flag if word is secret
         if key[k]["secret"]:
-            k = f"{k} [HIDDEN]"
-        keys.append(f"{k} {direction} @ {start}")
+            k = f"{k.lower()} [SECRET]"
+        keys.append(f"{k} {direction} @ {start.xy_str}")
     return keys
 
 

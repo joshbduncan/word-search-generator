@@ -31,6 +31,11 @@ def test_just_words():
     assert get_exit_status(result) == 0
 
 
+def test_with_secret_words():
+    result = os.system("word-search -r 10 -x 'fhqwhgads,dewlap'")
+    assert get_exit_status(result) == 0
+
+
 def test_stdin():
     result = os.system("echo computer robot soda | word-search")
     assert get_exit_status(result) == 0

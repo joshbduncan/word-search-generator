@@ -71,6 +71,13 @@ def main(
         help="Hidden bonus words",
     )
     parser.add_argument(
+        "-w",
+        "--secret-difficulty",
+        type=int,
+        choices=[2, 3, 4, 7],
+        help="Difficulty level of secret words, if different than normal words.",
+    )
+    parser.add_argument(
         "-l",
         "--level",
         type=int,
@@ -112,7 +119,11 @@ def main(
 
     # create a new puzzle object from provided arguments
     puzzle = WordSearch(
-        words, level=args.level, size=args.size, secret_words=args.secret
+        words,
+        level=args.level,
+        size=args.size,
+        secret_words=args.secret,
+        secret_level=args.secret_difficulty,
     )
     # show the result
     if args.output:

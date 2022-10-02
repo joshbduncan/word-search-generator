@@ -1,10 +1,20 @@
 import copy
 import random
 import string
-from typing import Optional
+from math import log2
+from typing import Optional, Sized
 
 from word_search_generator import config
-from word_search_generator.types import Fit, Fits, Key, KeyInfo, Puzzle
+from word_search_generator.types import (
+    DirectionSet,
+    Fit,
+    Fits,
+    Key,
+    KeyInfo,
+    Position,
+    Puzzle,
+    Wordlist,
+)
 
 ALPHABET = list(string.ascii_uppercase)
 
@@ -45,7 +55,7 @@ def out_of_bounds(width: int, height: int, position: tuple[int, int]) -> bool:
     return False
 
 
-def calc_puzzle_size(words: set[str], level: int, size: Optional[int] = None) -> int:
+def calc_puzzle_size(words: Wordlist, level: Sized, size: Optional[int] = None) -> int:
     """Calculate the puzzle grid size.
 
     Based on longest word, word count, and level.
@@ -60,9 +70,11 @@ def calc_puzzle_size(words: set[str], level: int, size: Optional[int] = None) ->
     """
     if not size:
         longest = max(10, len(max(words, key=len)))
-        # calculate multipler for larger word lists so that most have room to fit
+        # calculate multiplier for larger word lists so that most have room to fit
         multiplier = len(words) / 15 if len(words) > 15 else 1
-        size = int(longest + level * 2 * multiplier)
+        # level lengths in config.py are nice multiples of 2
+        l_size = log2(len(level)) if level else 1  # protect against log(0) in tests
+        size = round(longest + l_size * 2 * multiplier)
     return size
 
 
@@ -87,18 +99,20 @@ def capture_all_paths_from_position(
     # [N, S], [SW, NE] [W, E], [NW, SE]
     paths: list[list[str]] = [["", ""], ["", ""], ["", ""], ["", ""]]
     # follow each direction and capture all characters in that path
-    for i, (direction, (rmove, cmove)) in enumerate(config.dir_moves.items()):
+    for i, (direction_letter, direction_coord) in enumerate(
+        config.Direction.__members__.items()
+    ):
         row, col = position
         chars: list[str] = []
         for _ in range(radius):
             chars.append(puzzle[row][col])
-            row += rmove
-            col += cmove
+            row += direction_coord.r_move
+            col += direction_coord.c_move
             if out_of_bounds(puzzle_size, puzzle_size, (row, col)):
                 break
             # add the captured string of characters to the correct
             # spot in the paths lists, and reverse if needed
-        if direction in ["N", "NW", "W", "SW"]:
+        if direction_letter in ["N", "NW", "W", "SW"]:
             paths[i % 4][0] = "".join(chars[1:][::-1])
         else:
             paths[i % 4][1] = "".join(chars[1:])
@@ -141,7 +155,7 @@ def check_for_dupes_at_position(
 
 
 def test_a_fit(
-    puzzle: Puzzle, word: str, position: tuple[int, int], direction: str
+    puzzle: Puzzle, word: str, position: Position, direction: config.Direction
 ) -> list[tuple[int, int]]:
     """Test if word fits in the puzzle at the specified
     coordinates heading in the specified direction.
@@ -150,7 +164,7 @@ def test_a_fit(
         puzzle (Puzzle): Current puzzle state.
         word (str): Word to try and fit in the puzzle.
         position (tuple[int, int]): Word (row, column) start position.
-        direction (str): Direction word is heading.
+        direction (Direction): Direction word is heading.
 
     Returns:
         list[tuple[int, int]]: Coordinates for each letter of the word.
@@ -159,41 +173,41 @@ def test_a_fit(
     row, col = position
     # iterate over each letter in the word
     for char in word:
-        rmove, cmove = config.dir_moves[direction]
         # if the current puzzle space is empty or if letters match
         if puzzle[row][col] == "" or puzzle[row][col] == char:
             coordinates.append((row, col))
         else:
             return []
         # adjust the coordinates along the word path for direction
-        row += rmove
-        col += cmove
+        row += direction.r_move
+        col += direction.c_move
         # if new coordinates are off of puzzle cancel fit test
         if row < 0 or col < 0 or row > len(puzzle) - 1 or col > len(puzzle[0]) - 1:
             return []
     return coordinates
 
 
-def find_a_fit(puzzle: Puzzle, word: str, position: tuple[int, int], level: int) -> Fit:
+def find_a_fit(
+    puzzle: Puzzle, word: str, position: Position, level: DirectionSet
+) -> Fit:
     """Look for a fit for `word` in the current puzzle.
 
     Args:
         puzzle (Puzzle): Current puzzle state.
         word (str): Word to try and fit in the puzzle.
         position (tuple[int, int]): Word (row, column) start position.
-        level (int): Puzzle difficulty level.
+        level (DirectionSet): Puzzle difficulty level.
 
     Returns:
         Fit: A random position where the word fits in the puzzle.
     """
     fits: Fits = {}
     random_direction = None
-    row, col = position
     # check all directions for level
-    for d in config.level_dirs[level]:
-        coords = test_a_fit(puzzle, word, (row, col), d)
+    for d in level:
+        coords = test_a_fit(puzzle, word, position, d)
         if coords:
-            fits[d] = coords
+            fits[config.Direction(d).name] = coords
     # if the word fits, pick a random fit for placement
     if fits:
         random_direction = random.choice(list(fits.items()))
@@ -201,69 +215,89 @@ def find_a_fit(puzzle: Puzzle, word: str, position: tuple[int, int], level: int)
 
 
 def fill_words(
-    words: set[str], level: int, size: int, hidden_words: set[str]
+    words: Wordlist,
+    possible_directions: DirectionSet,
+    size: int,
+    secret_words: Wordlist,
+    secret_directions: Optional[DirectionSet] = None,
 ) -> tuple[Puzzle, Key]:
     """Fill `puzzle` with the supplied `words`.
     Some words will be skipped if they don't fit.
 
     Args:
         words (set[str]): Words to be placed in the puzzle.
-        level (int): Puzzle difficulty level.
+        possible_directions (DirectionSet): Allowed directions for word placement.
         size (int, optional): Final puzzle grid size.
-        hidden_words (set[str]): Hidden words to be placed in the puzzle.
+        secret_words (set[str]): Hidden words to be placed in the puzzle.
+        secret_directions (DirectionSet, optional): Allowed directions for secret word
+            placement, if different from those allowed for normal words.
 
     Returns:
         tuple[Puzzle, Key]: Current puzzle and puzzle answer key.
     """
 
     # calculate the puzzle size and setup a new empty puzzle
-    size = calc_puzzle_size(words, level, size)
+    if not secret_directions:
+        secret_directions = possible_directions
+    size = calc_puzzle_size(words, possible_directions, size)
     puzzle = [[""] * size for _ in range(size)]
     key: dict[str, KeyInfo] = {}
 
     # try to place each word on the puzzle
     for word in words:
         puzzle, key = try_to_fit_word(
-            word=word, puzzle=puzzle, key=key, level=level, size=size
+            word=word, puzzle=puzzle, key=key, level=possible_directions, size=size
         )
     # try to place each secret word on the puzzle
-    for word in hidden_words:
+    # "real" words are given priority; this is always done after those have been placed
+    for word in secret_words:
         puzzle, key = try_to_fit_word(
-            word=word, puzzle=puzzle, key=key, level=level, size=size, hidden=True
+            word=word,
+            puzzle=puzzle,
+            key=key,
+            level=secret_directions,
+            size=size,
+            secret=True,
         )
     return (puzzle, key)
 
 
 @retry
 def try_to_fit_word(
-    word: str, puzzle: Puzzle, key: Key, level: int, size: int, hidden: bool = False
+    word: str,
+    puzzle: Puzzle,
+    key: Key,
+    level: DirectionSet,
+    size: int,
+    secret: bool = False,
 ) -> tuple[Puzzle, Key]:
-    """Try to fit `word` at randomized coordinates `times` times."""
-    row = int(random.randint(0, size - 1))
-    col = int(random.randint(0, size - 1))
+    """Try to fit `word` at randomized coordinates.
+    @retry wrapper controls the number of attempts"""
+    pos = Position(random.randint(0, size - 1), random.randint(0, size - 1))
     # try and find a directional fit using the starting coordinates
-    fit = find_a_fit(puzzle, word, (row, col), level)
+    fit = find_a_fit(puzzle, word, pos, level)
     work_puzzle = copy.deepcopy(puzzle)
-    if fit:
-        d, coords = fit
-        # add word letters to a temp work puzzle at the
-        # fit coordinates make sure no duplicates are created
-        for i, char in enumerate(word):
-            check_row = coords[i][0]
-            check_col = coords[i][1]
-            if check_for_dupes_at_position(
-                work_puzzle, char, (check_row, check_col), list(key.keys())
-            ):
-                work_puzzle[check_row][check_col] = char
-            else:
-                work_puzzle = copy.deepcopy(puzzle)
-                break
+    if not fit:
+        raise WordFitError
+    d, coords = fit
+    # add word letters to a temp work puzzle at the
+    # fit coordinates make sure no duplicates are created
+    for i, char in enumerate(word):
+        check_row = coords[i][0]
+        check_col = coords[i][1]
+        if check_for_dupes_at_position(
+            work_puzzle, char, (check_row, check_col), list(key.keys())
+        ):
+            work_puzzle[check_row][check_col] = char
+        else:
+            work_puzzle = copy.deepcopy(puzzle)
+            break
+
     if work_puzzle == puzzle:
         raise WordFitError
-    else:
-        puzzle = copy.deepcopy(work_puzzle)
-        # update placement info for word
-        key[word] = {"start": (row, col), "direction": d, "secret": hidden}
+    puzzle = copy.deepcopy(work_puzzle)
+    # update placement info for word
+    key[word] = {"start": pos, "direction": d, "secret": secret}
     return (puzzle, key)
 
 
@@ -273,7 +307,7 @@ def no_matching_neighbors(puzzle: Puzzle, char: str, position: tuple[int, int]) 
 
     Args:
         puzzle (Puzzle): Current puzzle state.
-        char (str): Random "fill-in" characer to check against neighbors.
+        char (str): Random "fill-in" character to check against neighbors.
         position (tuple[int, int]): Word (row, column) start position.
 
     Returns:
@@ -281,9 +315,9 @@ def no_matching_neighbors(puzzle: Puzzle, char: str, position: tuple[int, int]) 
     """
     row, col = position
     # check all 8 possible neighbors
-    for d in config.dir_moves:
-        test_row = row + config.dir_moves[d][0]
-        test_col = col + config.dir_moves[d][1]
+    for d in config.Direction:
+        test_row = row + d.value[0]
+        test_col = col + d.value[1]
         # if test coordinates are off puzzle skip
         if (
             test_row < 0
@@ -292,7 +326,7 @@ def no_matching_neighbors(puzzle: Puzzle, char: str, position: tuple[int, int]) 
             or test_col > len(puzzle[0]) - 1
         ):
             continue
-        # if this neighbor matchs try another character
+        # if this neighbor matches try another character
         if char == puzzle[test_row][test_col]:
             return False
     return True

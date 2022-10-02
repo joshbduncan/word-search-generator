@@ -4,6 +4,7 @@ import pathlib
 import pytest
 
 from word_search_generator import WordSearch, config, utils
+from word_search_generator.config import Direction
 from word_search_generator.types import Key, Puzzle
 from word_search_generator.utils import get_random_words
 
@@ -14,12 +15,12 @@ def check_key(key: Key, puzzle: Puzzle) -> bool:
     """Test the puzzle key against the current puzzle state."""
     for word, info in key.items():
         row, col = info["start"]
-        rmove, cmove = config.dir_moves[info["direction"]]
+        d = config.Direction[info["direction"]]
         for char in word:
             if puzzle[row][col] != char:
                 return False
-            row += rmove
-            col += cmove
+            row += d.r_move
+            col += d.c_move
     return True
 
 
@@ -42,7 +43,7 @@ def test_junky_input_cleanup():
 def test_generate_with_level_option():
     puzzle = WordSearch(WORDS)
     puzzle.generate(level=2)
-    assert puzzle.level == 2
+    assert puzzle.valid_directions == utils.validate_level(config.level_dirs[2])
 
 
 def test_generate_with_size_option():
@@ -54,19 +55,38 @@ def test_generate_with_size_option():
 def test_set_puzzle_level():
     puzzle = WordSearch(WORDS)
     puzzle.level = 3
-    assert puzzle.level == 3
+    assert puzzle.valid_directions == utils.validate_level(config.level_dirs[3])
+
+
+def test_set_secret_level():
+    puzzle = WordSearch(WORDS)
+    puzzle.secret_directions = 4  # type: ignore
+    assert puzzle.secret_directions == utils.validate_level(4)  # type: ignore
 
 
 def test_bad_puzzle_level_value():
     puzzle = WordSearch(WORDS)
     with pytest.raises(ValueError):
-        puzzle.level = 7
+        puzzle.level = 757
 
 
 def test_bad_puzzle_level_type():
     puzzle = WordSearch(WORDS)
     with pytest.raises(TypeError):
         puzzle.level = "A"  # type: ignore
+
+
+def test_garbage_puzzle_level_type():
+    puzzle = WordSearch(WORDS)
+    with pytest.raises(TypeError):
+        puzzle.level = 17.76  # type: ignore
+
+
+def test_manual_level_control():
+    puzzle = WordSearch(WORDS)
+    tst_dirs = [Direction.E, Direction.SW, (-1, 0)]
+    puzzle.valid_directions = tst_dirs  # type: ignore
+    assert puzzle.valid_directions == utils.validate_level(tst_dirs)
 
 
 def test_set_puzzle_size():
@@ -170,7 +190,7 @@ def test_puzzle_non_equal():
 def test_puzzle_str():
     puzzle = WordSearch(WORDS)
     puzzle_str = utils.format_puzzle_for_show(
-        puzzle.puzzle, puzzle.key, puzzle.level, puzzle.solution
+        puzzle.puzzle, puzzle.key, puzzle.valid_directions, puzzle.solution
     )
     assert str(puzzle) == puzzle_str
 
@@ -179,7 +199,7 @@ def test_puzzle_str_output(capsys):
     puzzle = WordSearch(WORDS)
     print(
         utils.format_puzzle_for_show(
-            puzzle.puzzle, puzzle.key, puzzle.level, puzzle.solution
+            puzzle.puzzle, puzzle.key, puzzle.valid_directions, puzzle.solution
         )
     )
     capture1 = capsys.readouterr()
@@ -192,7 +212,7 @@ def test_puzzle_show_output(capsys):
     puzzle = WordSearch(WORDS)
     print(
         utils.format_puzzle_for_show(
-            puzzle.puzzle, puzzle.key, puzzle.level, puzzle.solution
+            puzzle.puzzle, puzzle.key, puzzle.valid_directions, puzzle.solution
         )
     )
     capture1 = capsys.readouterr()
@@ -205,7 +225,7 @@ def test_puzzle_show_solution_output(capsys):
     puzzle = WordSearch(WORDS)
     print(
         utils.format_puzzle_for_show(
-            puzzle.puzzle, puzzle.key, puzzle.level, puzzle.solution, True
+            puzzle.puzzle, puzzle.key, puzzle.valid_directions, puzzle.solution, True
         )
     )
     capture1 = capsys.readouterr()
@@ -240,3 +260,14 @@ def test_for_empty_spaces():
         p = WordSearch(words, level=3)
         flat = [item for sublist in p.puzzle for item in sublist]
         assert p.size * p.size == len(flat)
+
+
+def test_puzzle_with_secret_words():
+    puzzle = WordSearch(WORDS, secret_words=WORDS + ", dewlap")
+    assert puzzle.secret_words == {"DEWLAP"}  # should all be ignored due to overlap
+
+
+def test_clearing_secret_directions():
+    puzzle = WordSearch(WORDS, secret_level=1)
+    puzzle.secret_directions = set()
+    assert puzzle.secret_directions is None

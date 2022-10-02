@@ -57,7 +57,9 @@ def write_csv_file(path: Path, puzzle: WordSearch, solution: bool = False) -> Pa
         f_writer.writerow([""])
         f_writer.writerow(["Word List:"])
         f_writer.writerow([k for k in sorted(puzzle.key.keys())])
-        f_writer.writerow([f"* Words can go {utils.get_level_dirs_str(puzzle.level)}."])
+        f_writer.writerow(
+            [f"* Words can go {utils.get_level_dirs_str(puzzle.valid_directions)}."]
+        )
         f_writer.writerow([""])
         f_writer.writerow(["Answer Key:"])
         f_writer.writerow(utils.get_answer_key_list(puzzle.key))
@@ -153,7 +155,7 @@ def draw_puzzle_page(pdf: FPDF, puzzle: WordSearch, solution: bool = False) -> F
     pdf.set_font("Helvetica", "BU", size=info_font_size)
     pdf.cell(
         pdf.epw,
-        txt=f"Find words going {utils.get_level_dirs_str(puzzle.level)}:",
+        txt=f"Find words going {utils.get_level_dirs_str(puzzle.valid_directions)}:",
         align="C",
         ln=2,
     )
