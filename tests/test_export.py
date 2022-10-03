@@ -1,5 +1,6 @@
 import os
 import random
+import re
 import uuid
 from pathlib import Path
 
@@ -82,3 +83,21 @@ def test_export_csv_os_error():
     puzzle = WordSearch(WORDS)
     with pytest.raises(OSError):
         puzzle.save("/test.csv")
+
+
+def test_csv_export_without_solution(tmp_path):
+    puzzle = WordSearch(WORDS)
+    path = Path.joinpath(tmp_path, "test.csv")
+    puzzle.save(path, solution=False)
+    with open(path, "r") as f:
+        data = f.read()
+    assert not re.findall("\nSOLUTION\n", data)
+
+
+def test_csv_export_with_solution(tmp_path):
+    puzzle = WordSearch(WORDS)
+    path = Path.joinpath(tmp_path, "test.csv")
+    puzzle.save(path, solution=True)
+    with open(path, "r") as f:
+        data = f.read()
+    assert re.findall("\nSOLUTION\n", data)

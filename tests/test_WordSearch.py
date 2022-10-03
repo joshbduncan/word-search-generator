@@ -24,6 +24,11 @@ def check_key(key: Key, puzzle: Puzzle) -> bool:
     return True
 
 
+def test_empty_object():
+    puzzle = WordSearch()
+    assert len(puzzle.words) == 0
+
+
 def test_input_cleanup():
     puzzle = WordSearch(WORDS)
     assert len(puzzle.words) == 8
@@ -128,10 +133,37 @@ def test_add_words():
     assert "test".upper() in puzzle.words
 
 
+def test_add_regular_words_replacing_secret_word():
+    puzzle = WordSearch(WORDS)
+    puzzle.add_words("test", True)
+    puzzle.add_words("test")
+    assert "test".upper() not in puzzle.secret_words and "test".upper() in puzzle.words
+
+
+def test_add_secret_words():
+    puzzle = WordSearch(WORDS)
+    puzzle.add_words("test", True)
+    assert "test".upper() in puzzle.secret_words
+
+
+def test_add_secret_words_replacing_regular_word():
+    puzzle = WordSearch(WORDS)
+    puzzle.add_words("test")
+    puzzle.add_words("test", True)
+    assert "test".upper() not in puzzle.words and "test".upper() in puzzle.secret_words
+
+
 def test_remove_words():
     puzzle = WordSearch(WORDS)
     puzzle.remove_words("test")
     assert "test".upper() not in puzzle.words
+
+
+def test_remove_words_from_secret_words():
+    puzzle = WordSearch(WORDS)
+    puzzle.add_words("test", True)
+    puzzle.remove_words("test")
+    assert "test".upper() not in puzzle.words.union(puzzle.secret_words)
 
 
 def test_replace_words():
@@ -209,6 +241,14 @@ def test_puzzle_show_output(capsys):
     assert capture1.out == capture2.out
 
 
+def test_puzzle_show_output_for_empty_object(capsys):
+    p = WordSearch()
+    p.show()
+    capture = capsys.readouterr()
+
+    assert capture.out == capture.err == ""
+
+
 def test_puzzle_show_solution_output(capsys):
     puzzle = WordSearch(WORDS)
     print(
@@ -235,6 +275,11 @@ def test_json_output_property_for_key():
     for word, info in json_key.items():
         pos = (info["start_row"], info["start_col"])
         assert pos == p.key[word]["start"]
+
+
+def test_json_output_property_for_empty_object():
+    p = WordSearch()
+    assert p.json == json.dumps({})
 
 
 def test_input_including_palindrome():
