@@ -47,6 +47,7 @@ def write_csv_file(path: Path, puzzle: WordSearch, solution: bool = False) -> Pa
         Path: Final save path.
     """
 
+    word_list = utils.get_word_list_list(puzzle.key)
     with open(path, mode="w") as f:
         f_writer = csv.writer(
             f, delimiter=",", quotechar='"', quoting=csv.QUOTE_MINIMAL
@@ -56,7 +57,13 @@ def write_csv_file(path: Path, puzzle: WordSearch, solution: bool = False) -> Pa
             f_writer.writerow(row)
         f_writer.writerow([""])
         f_writer.writerow(["Word List:"])
-        f_writer.writerow([k for k in sorted(puzzle.key.keys())])
+        f_writer.writerow(
+            word_list
+            if word_list
+            else [
+                "<ALL SECRET WORDS>",
+            ]
+        )
         f_writer.writerow(
             [f"* Words can go {utils.get_level_dirs_str(puzzle.valid_directions)}."]
         )
@@ -162,12 +169,13 @@ def draw_puzzle_page(pdf: FPDF, puzzle: WordSearch, solution: bool = False) -> F
     pdf.ln(0.125)
 
     # write word list
+    word_list = utils.get_word_list_str(puzzle.key)
     pdf.set_font("Helvetica", "B", size=info_font_size)
     pdf.set_font_size(info_font_size)
     pdf.multi_cell(
         pdf.epw,
         info_font_size / 72 * 1.125,
-        utils.get_word_list_str(puzzle.key),
+        word_list if word_list else "<ALL SECRET WORDS>",
         align="C",
         ln=2,
     )

@@ -21,11 +21,6 @@ def test_entrypoint():
     assert get_exit_status(result) == 0
 
 
-def test_no_words_provided():
-    result = os.system("word-search")
-    assert get_exit_status(result) == 1
-
-
 def test_just_words():
     result = os.system("word-search some test words")
     assert get_exit_status(result) == 0

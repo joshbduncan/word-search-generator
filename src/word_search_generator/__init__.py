@@ -24,7 +24,7 @@ class WordSearch:
 
     def __init__(
         self,
-        words: str,
+        words: str | None = None,
         level=None,
         size: int | None = None,
         secret_words: str | None = None,
@@ -38,7 +38,7 @@ class WordSearch:
             level (Optional[int], optional): Difficulty level. Defaults to None.
             size (Optional[int], optional): Puzzle size. Defaults to None.
         """
-        self.words = utils.cleanup_input(words)
+        self.words = utils.cleanup_input(words) if words else set()
         self.secret_words = (
             utils.cleanup_input(secret_words) - self.words if secret_words else set()
         )
@@ -47,11 +47,12 @@ class WordSearch:
         self._valid_directions: DirectionSet = utils.validate_level(1)
         self._secret_directions: DirectionSet | None = None
         self._puzzle: Puzzle = []
-        self._size: int = 0
+        self._size: int = size if size else 0
         self._solution: Puzzle = []
 
         # generate puzzle
-        self.generate(level, size, secret_level)
+        if words:
+            self._generate()
 
     @property
     def puzzle(self) -> Puzzle:
@@ -71,13 +72,16 @@ class WordSearch:
     @property
     def json(self) -> str:
         """The current puzzle, words, and answer key json."""
-        return json.dumps(
-            {
-                "puzzle": self.puzzle,
-                "words": list(self.words.union(self.secret_words)),
-                "key": utils.get_answer_key_json(self.key),
-            }
-        )
+        if self._puzzle:
+            return json.dumps(
+                {
+                    "puzzle": self.puzzle,
+                    "words": list(self.words.union(self.secret_words)),
+                    "key": utils.get_answer_key_json(self.key),
+                }
+            )
+        else:
+            return json.dumps({})
 
     @property
     def valid_directions(self) -> DirectionSet:
@@ -147,27 +151,7 @@ class WordSearch:
         self._size = 0
         self._reset_puzzle()
 
-    def generate(
-        self, level=None, size: int | None = None, secret_level=None
-    ) -> Puzzle:
-        """_summary_
-
-        Args:
-            level (Optional[int], optional): Difficulty level. Defaults to None.
-            size (Optional[int], optional): Puzzle size. Defaults to None.
-            secret_level: Difficulty of secret words.  Defaults to equal normal
-                level difficulty.
-
-        Returns:
-            Puzzle: A newly generated puzzle.
-        """
-        if level:
-            self.valid_directions = utils.validate_level(level)
-        if size:
-            self.size = size
-        if secret_level:
-            self.secret_directions = utils.validate_level(secret_level)
-
+    def _generate(self) -> Puzzle:
         self._solution, self._key = generate.fill_words(
             self.words,
             self.valid_directions,
@@ -249,7 +233,7 @@ class WordSearch:
             self._puzzle = []
             self._solution = []
             self._key = {}
-            self.generate()
+            self._generate()
 
     def __eq__(self, __o: object) -> bool:
         if isinstance(__o, WordSearch):

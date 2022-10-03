@@ -40,18 +40,6 @@ def test_junky_input_cleanup():
     assert len(junk_puzzle.words) == 4
 
 
-def test_generate_with_level_option():
-    puzzle = WordSearch(WORDS)
-    puzzle.generate(level=2)
-    assert puzzle.valid_directions == utils.validate_level(config.level_dirs[2])
-
-
-def test_generate_with_size_option():
-    puzzle = WordSearch(WORDS)
-    puzzle.generate(size=22)
-    assert puzzle.size == 22
-
-
 def test_set_puzzle_level():
     puzzle = WordSearch(WORDS)
     puzzle.level = 3
@@ -177,13 +165,13 @@ def test_puzzle_repr():
 
 def test_puzzle_equal():
     puzzle1 = WordSearch(WORDS, size=10)
-    puzzle2 = WordSearch(WORDS, size=15)
-    assert puzzle1 != puzzle2
+    puzzle2 = WordSearch(WORDS, size=10)
+    assert puzzle1 == puzzle2
 
 
 def test_puzzle_non_equal():
     puzzle1 = WordSearch(WORDS, size=10)
-    puzzle2 = ""
+    puzzle2 = WordSearch(WORDS, size=15)
     assert puzzle1 != puzzle2
 
 

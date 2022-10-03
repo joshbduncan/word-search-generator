@@ -239,7 +239,7 @@ def fill_words(
     # calculate the puzzle size and setup a new empty puzzle
     if not secret_directions:
         secret_directions = possible_directions
-    size = calc_puzzle_size(words, possible_directions, size)
+    size = calc_puzzle_size(words.union(secret_words), possible_directions, size)
     puzzle = [[""] * size for _ in range(size)]
     key: dict[str, KeyInfo] = {}
 

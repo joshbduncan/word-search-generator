@@ -188,6 +188,7 @@ def format_puzzle_for_show(
     header: str = "WORD SEARCH",
 ) -> str:
     header = make_header(puzzle, header)
+    word_list = get_word_list_str(key)
     # highlight solution if provided
     if show_solution:
         puzzle = highlight_solution(puzzle, solution=solution)
@@ -195,7 +196,7 @@ def format_puzzle_for_show(
     return f"""{header}
 {stringify(puzzle)}
 
-Find these words: {get_word_list_str(key)}
+Find these words: {word_list if word_list else '<ALL SECRET WORDS>'}
 * Words can go {get_level_dirs_str(level)}.
 
 Answer Key: {get_answer_key_str(key)}"""
@@ -208,7 +209,12 @@ def get_level_dirs_str(level: DirectionSet) -> str:
 
 def get_word_list_str(key: Key) -> str:
     """Return all placed puzzle words as a list (excluding secret words)."""
-    return ", ".join([k for k in sorted(key.keys()) if not key[k]["secret"]])
+    return ", ".join(get_word_list_list(key))
+
+
+def get_word_list_list(key: Key) -> list[str]:
+    """Return all placed puzzle words as a list (excluding secret words)."""
+    return [k for k in sorted(key.keys()) if not key[k]["secret"]]
 
 
 def get_answer_key_list(key: Key) -> list[str]:
@@ -219,7 +225,7 @@ def get_answer_key_list(key: Key) -> list[str]:
         start: Position = key[k]["start"]
         # add '[SECRET]' flag if word is secret
         if key[k]["secret"]:
-            k = f"{k.lower()} [SECRET]"
+            k = f"{k} [SECRET]"
         keys.append(f"{k} {direction} @ {start.xy_str}")
     return keys
 
