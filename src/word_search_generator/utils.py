@@ -100,7 +100,7 @@ def validate_level(d) -> DirectionSet:
     """Given a d, try to turn it into a list of valid moves."""
     if isinstance(d, int):  # traditional numeric level
         try:
-            return validate_direction_iterable(config.level_dirs[d])
+            return config.level_dirs[d]
         except KeyError:
             raise ValueError(
                 f"{d} is not a valid difficulty number"

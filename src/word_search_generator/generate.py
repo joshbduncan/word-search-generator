@@ -316,8 +316,8 @@ def no_matching_neighbors(puzzle: Puzzle, char: str, position: tuple[int, int]) 
     row, col = position
     # check all 8 possible neighbors
     for d in config.Direction:
-        test_row = row + d.value[0]
-        test_col = col + d.value[1]
+        test_row = row + d.r_move
+        test_col = col + d.c_move
         # if test coordinates are off puzzle skip
         if (
             test_row < 0
