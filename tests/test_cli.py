@@ -27,7 +27,7 @@ def test_just_words():
 
 
 def test_with_secret_words():
-    result = os.system("word-search -r 10 -x 'fhqwhgads,dewlap'")
+    result = os.system("word-search -r 10 -x fhqwhgads,dewlap")
     assert get_exit_status(result) == 0
 
 
