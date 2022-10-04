@@ -1,9 +1,9 @@
 import argparse
 import pathlib
 import sys
-from typing import Optional, Sequence
+from typing import Sequence
 
-from word_search_generator import WordSearch, __app_name__, __version__, config, utils
+from word_search_generator import WordSearch, config, utils
 
 
 class RandomAction(argparse.Action):
@@ -29,21 +29,24 @@ class SizeAction(argparse.Action):
 
 
 def main(
-    argv: Optional[Sequence[str]] = None, prog: Optional[str] = __app_name__
+    argv: Sequence[str] | None = None,
+    prog: str | None = None,
+    version: str | None = None,
 ) -> int:
     """Word Search Generator CLI.
 
     Args:
-        argv (Optional[Sequence[str]], optional): Command line arguments.
-        Defaults to None.
-        prog (Optional[str], optional): Program name. Defaults to __app_name__.
+        argv (Sequence[str] | None, optional): Command line arguments. Defaults to None.
+        prog (str | None, optional): Program name. Defaults to None.
+        version (str | None, optional): Program version. Defaults to None.
 
     Returns:
         int: Exit status.
     """
+
     # setup argparse to capture cli arguments
     parser = argparse.ArgumentParser(
-        description=f"Generate Word Search Puzzles! (Version {__version__})",
+        description="Generate Word Search Puzzles!",
         epilog="Copyright 2022 Josh Duncan (joshbduncan.com)",
         prog=prog,
     )
@@ -54,14 +57,14 @@ def main(
         type=str,
         nargs="*",
         default=sys.stdin,
-        help="Words to include in the puzzle",
+        help="Words to include in the puzzle (default: stdin).",
     )
     group.add_argument(
         "-r",
         "--random",
         type=int,
         action=RandomAction,
-        help="Generate {n} random words to include in the puzzle",
+        help="Generate {n} random words to include in the puzzle.",
     )
     parser.add_argument(
         "-x",
@@ -102,20 +105,29 @@ def main(
         "--output",
         type=pathlib.Path,
         help="Output path for saved puzzle. Specify export type by appending "
-        "'.pdf' or '.csv' to your path (defaults to PDF)",
+        "'.pdf' or '.csv' to your path (default: %(default)s)",
     )
-    parser.add_argument(
-        "--version", action="version", version=f"%(prog)s {__version__}"
-    )
+    parser.add_argument("--version", action="version", version=f"%(prog)s {version}")
 
     # capture all cli arguments and make sure words were provided
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
+    words = ""
     # check if random words were requested
     if args.random:
         words = utils.get_random_words(args.random)
     else:
-        words = ",".join(args.words)
+        if isinstance(args.words, list):
+            words = ",".join(args.words)
+        elif not sys.stdin.isatty():
+            # disable interactive tty which can be confusing
+            # but still process words were piped in from the shell
+            words = args.words.read().rstrip()
+
+    # if not words were found exit the script
+    if not words:
+        print("No words provided. Learn more with the '-h' flag.", file=sys.stderr)
+        return 1
 
     # create a new puzzle object from provided arguments
     puzzle = WordSearch(

@@ -34,6 +34,21 @@ def test_export_pdf_puzzles(tmp_path):
 
 def test_export_pdf_puzzle_with_solution(tmp_path):
     """Make sure a puzzle exported with the solution is 2 pages."""
+    puzzle = WordSearch(WORDS)
+    path = Path.joinpath(tmp_path, f"{uuid.uuid4()}.csv")
+    puzzle.save(path, solution=True)
+    found = False
+    with open(path, "r") as fp:
+        lines = fp.readlines()
+        for row in lines:
+            if row.find("SOLUTION") == 0:
+                found = True
+                break
+    assert found
+
+
+def test_export_csv_puzzle_with_solution(tmp_path):
+    """Make sure a puzzle exported with the solution is 2 pages."""
     sizes = [s for s in range(config.min_puzzle_size, config.max_puzzle_size)]
     puzzles = []
     pages = set()
