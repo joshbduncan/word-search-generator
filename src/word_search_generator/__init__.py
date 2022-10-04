@@ -13,7 +13,7 @@ __version__ = "1.4.0"
 
 import json
 from pathlib import Path
-from typing import Iterable, Union
+from typing import Iterable, Optional, Union
 
 from word_search_generator import config, export, generate, utils
 from word_search_generator.types import DirectionSet, Key, Puzzle
@@ -24,10 +24,10 @@ class WordSearch:
 
     def __init__(
         self,
-        words: str | None = None,
+        words: Optional[str] = None,
         level=None,
-        size: int | None = None,
-        secret_words: str | None = None,
+        size: Optional[int] = None,
+        secret_words: Optional[str] = None,
         secret_level=None,
     ):
         """Initialize a Word Search puzzle.
@@ -45,7 +45,7 @@ class WordSearch:
         self._key: Key = {}
         # default to level 1 (E S) difficulty
         self._valid_directions: DirectionSet = utils.validate_level(1)
-        self._secret_directions: DirectionSet | None = None
+        self._secret_directions: Optional[DirectionSet] = None
         self._puzzle: Puzzle = []
         self._size: int = size if size else 0
         self._solution: Puzzle = []
