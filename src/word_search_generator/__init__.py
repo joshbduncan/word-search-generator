@@ -51,7 +51,7 @@ class WordSearch:
         self._solution: Puzzle = []
 
         # generate puzzle
-        if words:
+        if words or secret_words:
             self._generate()
 
     @property
