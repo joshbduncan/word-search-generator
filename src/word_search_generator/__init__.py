@@ -25,27 +25,41 @@ class WordSearch:
     def __init__(
         self,
         words: Optional[str] = None,
-        level=None,
+        level: Optional[int | str] = None,
         size: Optional[int] = None,
         secret_words: Optional[str] = None,
-        secret_level=None,
+        secret_level: Optional[int | str] = None,
     ):
         """Initialize a Word Search puzzle.
 
         Args:
-            words (str): words (str): A string of words separated by spaces, commas,
-                or new lines and limited to 30 word max. Will be trimmed if more.
-            level (Optional[int], optional): Difficulty level. Defaults to None.
+            words (Optional[str], optional): A string of words separated by spaces,
+                commas, or new lines. Will be trimmed if more. Defaults to None.
+            level (Optional[int  |  str], optional): Difficulty level or potential
+                word directions. Defaults to 1.
             size (Optional[int], optional): Puzzle size. Defaults to None.
+            secret_words (Optional[str], optional): A string of words separated by
+                spaces, commas, or new lines. Words will be 'secret' meaning they
+                will not be included in the word list. Defaults to None.
+            secret_level (Optional[int  |  str], optional): Difficulty level or
+                potential word directions for 'secret' words. Defaults to None.
         """
+
         self.words = utils.cleanup_input(words) if words else set()
         self.secret_words = (
             utils.cleanup_input(secret_words) - self.words if secret_words else set()
         )
         self._key: Key = {}
-        # default to level 1 (E S) difficulty
-        self._valid_directions: DirectionSet = utils.validate_level(1)
-        self._secret_directions: Optional[DirectionSet] = None
+
+        # determine valid directions
+        self._valid_directions: DirectionSet = (
+            utils.validate_level(level) if level else utils.validate_level(1)
+        )
+        self._secret_directions: Optional[DirectionSet] = (
+            utils.validate_level(secret_level) if secret_level else None
+        )
+
+        # setup puzzle
         self._puzzle: Puzzle = []
         self._size: int = size if size else 0
         self._solution: Puzzle = []
