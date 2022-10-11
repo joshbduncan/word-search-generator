@@ -111,7 +111,6 @@ def main(
 
     # capture all cli arguments and make sure words were provided
     args = parser.parse_args(argv)
-    print(args)
 
     words = ""
     # check if random words were requested

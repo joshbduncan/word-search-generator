@@ -76,3 +76,8 @@ def test_dunder_main_entry_point():
 def test_cli_import_entry_point():
     result = os.system("python -m word_search_generator.cli some test words")
     assert get_exit_status(result) == 0
+
+
+def test_no_words_provided():
+    result = os.system("word-search -l 2")
+    assert get_exit_status(result) == 1

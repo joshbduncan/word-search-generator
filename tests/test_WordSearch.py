@@ -4,7 +4,7 @@ import pathlib
 import pytest
 
 from word_search_generator import WordSearch, config, utils
-from word_search_generator.config import Direction
+from word_search_generator.config import Direction, level_dirs
 from word_search_generator.types import Key, Puzzle
 from word_search_generator.utils import get_random_words
 
@@ -201,6 +201,12 @@ def test_puzzle_equal():
     assert puzzle1 == puzzle2
 
 
+def test_puzzle_invalid_equality():
+    puzzle1 = WordSearch(WORDS, size=10)
+    puzzle2 = ["testing"]
+    assert puzzle1 != puzzle2
+
+
 def test_puzzle_non_equal():
     puzzle1 = WordSearch(WORDS, size=10)
     puzzle2 = WordSearch(WORDS, size=15)
@@ -304,3 +310,9 @@ def test_clearing_secret_directions():
     puzzle = WordSearch(WORDS, secret_level=1)
     puzzle.secret_directions = set()
     assert puzzle.secret_directions is None
+
+
+def test_get_level():
+    puzzle = WordSearch(WORDS)
+    puzzle.level = 2
+    assert puzzle.level == level_dirs[2]
