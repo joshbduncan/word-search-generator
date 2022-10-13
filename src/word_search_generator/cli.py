@@ -62,21 +62,28 @@ def main(argv: Sequence[str] | None = None) -> int:
         "--secret",
         type=str,
         default="",
-        help="Hidden bonus words",
+        help="Secret bonus words no included in the word list.",
     )
-    parser.add_argument(
-        "-w",
-        "--secret-difficulty",
-        type=int,
-        choices=[2, 3, 4, 7],
-        help="Difficulty level of secret words, if different than normal words.",
-    )
-    parser.add_argument(
+    group_difficulty = parser.add_mutually_exclusive_group()
+    # keeping `-l, --level`` for backwards compatibility
+    group_difficulty.add_argument(
         "-l",
         "--level",
         type=int,
         choices=[1, 2, 3],
-        help="Difficulty level (1) beginner, (2) intermediate, (3) expert",
+        help="Difficulty level (1) beginner, (2) intermediate, (3) expert.",
+    )
+    # new implementation of -l, --level allowing for more flexibility
+    group_difficulty.add_argument(
+        "-d",
+        "--difficulty",
+        help="Difficulty level or directions puzzle words can go \
+            (N, NE, E, SE, S, SW, W, NW).",
+    )
+    parser.add_argument(
+        "-xd",
+        "--secret-difficulty",
+        help="Difficulty level, or directions secret puzzle words can go.",
     )
     parser.add_argument(
         "-s",
@@ -96,15 +103,16 @@ def main(argv: Sequence[str] | None = None) -> int:
         "--output",
         type=pathlib.Path,
         help="Output path for saved puzzle. Specify export type by appending "
-        "'.pdf' or '.csv' to your path (default: %(default)s)",
+        "'.pdf' or '.csv' to your path (default: PDF).",
     )
     parser.add_argument(
         "--version", action="version", version=f"%(prog)s {__version__}"
     )
     args = parser.parse_args(argv)
+    print(args)
 
+    # process puzzle words
     words = ""
-    # check if random words were requested
     if args.random:
         words = utils.get_random_words(args.random)
     else:
@@ -123,11 +131,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     # create a new puzzle object from provided arguments
     puzzle = WordSearch(
         words,
-        level=args.level,
+        level=args.level if args.level else args.difficulty,
         size=args.size,
         secret_words=args.secret,
         secret_level=args.secret_difficulty,
     )
+
     # show the result
     if args.output:
         foutput = puzzle.save(path=args.output, solution=args.cheat)

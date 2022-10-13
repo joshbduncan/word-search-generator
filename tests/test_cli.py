@@ -81,3 +81,23 @@ def test_cli_import_entry_point():
 def test_no_words_provided():
     result = os.system("word-search -l 2")
     assert get_exit_status(result) == 1
+
+
+def test_level_difficulty_argument():
+    result = os.system("word-search -r 5 -l 2")
+    assert get_exit_status(result) == 0
+
+
+def test_custom_difficulty_argument():
+    result = os.system("word-search -r 5 -d N,W")
+    assert get_exit_status(result) == 0
+
+
+def test_invalid_difficulty_argument():
+    result = os.system("word-search -r 5 -d NNW")
+    assert get_exit_status(result) == 1
+
+
+def test_custom_difficulty_level_as_string():
+    result = os.system("word-search -r 5 -d 3")
+    assert get_exit_status(result) == 0

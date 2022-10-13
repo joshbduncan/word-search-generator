@@ -315,4 +315,4 @@ def test_clearing_secret_directions():
 def test_get_level():
     puzzle = WordSearch(WORDS)
     puzzle.level = 2
-    assert puzzle.level == level_dirs[2]
+    assert puzzle.level == level_dirs[2]  # type: ignore
