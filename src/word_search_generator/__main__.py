@@ -1,10 +1,6 @@
-from word_search_generator import __app_name__, __version__, cli
+import sys
 
-
-def main():
-    cli.main(prog=__app_name__, version=__version__)
-
+from word_search_generator.cli import main
 
 if __name__ == "__main__":
-    """WordSearch CLI access point."""
-    main()
+    sys.exit(main())
