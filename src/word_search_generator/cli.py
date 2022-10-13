@@ -3,7 +3,7 @@ import pathlib
 import sys
 from typing import Sequence
 
-from word_search_generator import WordSearch, config, utils
+from word_search_generator import WordSearch, __app_name__, __version__, config, utils
 
 
 class RandomAction(argparse.Action):
@@ -28,29 +28,20 @@ class SizeAction(argparse.Action):
         setattr(namespace, self.dest, values)
 
 
-def main(
-    argv: Sequence[str] | None = None,
-    prog: str | None = None,
-    version: str | None = None,
-) -> int:
+def main(argv: Sequence[str] | None = None) -> int:
     """Word Search Generator CLI.
 
     Args:
         argv (Sequence[str] | None, optional): Command line arguments. Defaults to None.
-        prog (str | None, optional): Program name. Defaults to None.
-        version (str | None, optional): Program version. Defaults to None.
 
     Returns:
         int: Exit status.
     """
-
-    # setup argparse to capture cli arguments
     parser = argparse.ArgumentParser(
         description="Generate Word Search Puzzles!",
         epilog="Copyright 2022 Josh Duncan (joshbduncan.com)",
-        prog=prog,
+        prog=__app_name__,
     )
-    # define all possible arguments
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
         "words",
@@ -93,9 +84,9 @@ def main(
         help="Output path for saved puzzle. Specify export type by appending "
         "'.pdf' or '.csv' to your path (default: %(default)s)",
     )
-    parser.add_argument("--version", action="version", version=f"%(prog)s {version}")
-
-    # capture all cli arguments and make sure words were provided
+    parser.add_argument(
+        "--version", action="version", version=f"%(prog)s {__version__}"
+    )
     args = parser.parse_args(argv)
 
     words = ""
