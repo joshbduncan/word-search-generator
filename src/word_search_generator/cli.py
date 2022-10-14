@@ -83,7 +83,7 @@ Directions are to be provided as a comma-separated list.""",
     )
     parser.add_argument(
         "-x",
-        "--secret",
+        "--secret-words",
         type=str,
         default="",
         help="Secret bonus words not included in the word list.",
@@ -144,7 +144,7 @@ Directions are to be provided as a comma-separated list.""",
             words = args.words.read().rstrip()
 
     # if not words were found exit the script
-    if not words:
+    if not words and not args.secret_words:
         print("No words provided. Learn more with the '-h' flag.", file=sys.stderr)
         return 1
 
@@ -153,7 +153,7 @@ Directions are to be provided as a comma-separated list.""",
         words,
         level=args.difficulty,
         size=args.size,
-        secret_words=args.secret,
+        secret_words=args.secret_words,
         secret_level=args.secret_difficulty,
     )
 
