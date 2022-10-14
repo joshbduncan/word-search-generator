@@ -98,6 +98,11 @@ def test_invalid_difficulty_argument():
     assert get_exit_status(result) == 1
 
 
+def test_invalid_argparse_difficulty_argument():
+    result = os.system("word-search -r 5 -d 1,N")
+    assert get_exit_status(result) == 2
+
+
 def test_custom_difficulty_level_as_string():
     result = os.system("word-search -r 5 -d 3")
     assert get_exit_status(result) == 0

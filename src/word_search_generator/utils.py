@@ -99,26 +99,18 @@ def validate_direction_iterable(
 def validate_level(d) -> DirectionSet:
     """Given a d, try to turn it into a list of valid moves."""
     if isinstance(d, int):  # traditional numeric level
-        return validate_level_int(d)
+        try:
+            return config.level_dirs[d]
+        except KeyError:
+            raise ValueError(
+                f"{d} is not a valid difficulty number"
+                + f"[{', '.join([str(i) for i in config.level_dirs.keys()])}]"
+            )
     if isinstance(d, str):  # comma-delimited list
-        # check if the provided string is actually a level int
-        if d.isnumeric():
-            return validate_level_int(d)
-        else:
-            return validate_direction_iterable(d.split(","))
+        return validate_direction_iterable(d.split(","))
     if isinstance(d, Iterable):  # probably used by external code
         return validate_direction_iterable(d)
     raise TypeError(f"{type(d)} given, not str, int, or Iterable[str]\n{d}")
-
-
-def validate_level_int(n) -> DirectionSet:
-    try:
-        return config.level_dirs[int(n)]
-    except KeyError:
-        raise ValueError(
-            f"{n} is not a valid difficulty number"
-            + f"[{', '.join([str(i) for i in config.level_dirs.keys()])}]"
-        )
 
 
 def direction_set_repr(ds: DirectionSet) -> str:

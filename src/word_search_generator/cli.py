@@ -17,6 +17,24 @@ class RandomAction(argparse.Action):
         setattr(namespace, self.dest, values)
 
 
+class DifficultyAction(argparse.Action):
+    """Validate difficulty level integers or directional strings."""
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        if values.isnumeric():
+            setattr(namespace, self.dest, int(values))
+        else:
+            for d in values.split(","):
+                if d.strip().isnumeric():
+                    parser.error(
+                        f"{option_string} must be \
+either numeric levels \
+({', '.join([str(i) for i in config.level_dirs.keys()])}) or accepted \
+cardinal directions ({', '.join([d.name for d in config.Direction])})."
+                    )
+            setattr(namespace, self.dest, values)
+
+
 class SizeAction(argparse.Action):
     """Restrict argparse `-s`, `--size` inputs."""
 
@@ -38,9 +56,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         int: Exit status.
     """
     parser = argparse.ArgumentParser(
-        description="Generate Word Search Puzzles!",
+        description=f"""Generate Word Search Puzzles! \
+
+
+Valid Levels: {', '.join([str(i) for i in config.level_dirs.keys()])}
+Valid Directions: {', '.join([d.name for d in config.Direction])}""",
         epilog="Copyright 2022 Josh Duncan (joshbduncan.com)",
         prog=__app_name__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
@@ -64,26 +87,23 @@ def main(argv: Sequence[str] | None = None) -> int:
         default="",
         help="Secret bonus words no included in the word list.",
     )
-    group_difficulty = parser.add_mutually_exclusive_group()
-    # keeping `-l, --level`` for backwards compatibility
-    group_difficulty.add_argument(
-        "-l",
-        "--level",
-        type=int,
-        choices=[1, 2, 3],
-        help="Difficulty level (1) beginner, (2) intermediate, (3) expert.",
-    )
     # new implementation of -l, --level allowing for more flexibility
-    group_difficulty.add_argument(
+    # keeping -l, --level for backwards compatibility
+    parser.add_argument(
         "-d",
         "--difficulty",
-        help="Difficulty level or directions puzzle words can go \
-            (N, NE, E, SE, S, SW, W, NW).",
+        "-l",
+        "--level",
+        action=DifficultyAction,
+        help="Difficulty level (numeric) or cardinal directions \
+            puzzle words can go. See valid arguments above",
     )
     parser.add_argument(
         "-xd",
         "--secret-difficulty",
-        help="Difficulty level, or directions secret puzzle words can go.",
+        action=DifficultyAction,
+        help="Difficulty level (numeric) or cardinal directions \
+            secret puzzle words can go. See valid arguments above",
     )
     parser.add_argument(
         "-s",
@@ -131,7 +151,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     # create a new puzzle object from provided arguments
     puzzle = WordSearch(
         words,
-        level=args.level if args.level else args.difficulty,
+        level=args.difficulty,
         size=args.size,
         secret_words=args.secret,
         secret_level=args.secret_difficulty,

@@ -1,7 +1,6 @@
 import pytest
 
 from word_search_generator import utils
-from word_search_generator.config import level_dirs
 
 
 def test_valid_cleanup_input_with_spaces():
@@ -38,8 +37,3 @@ def test_palindromes():
 
 def test_word_within_word():
     assert utils.word_contains_word({"rain", "sun", "clouds"}, "")
-
-
-def test_difficulty_level_provided_as_string():
-    d = utils.validate_level("2")
-    assert d == level_dirs[2]
