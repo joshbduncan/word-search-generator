@@ -129,7 +129,6 @@ Valid Directions: {', '.join([d.name for d in config.Direction])}""",
         "--version", action="version", version=f"%(prog)s {__version__}"
     )
     args = parser.parse_args(argv)
-    print(args)
 
     # process puzzle words
     words = ""
