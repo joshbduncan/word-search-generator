@@ -29,113 +29,129 @@ from word_search_generator import WordSearch
 puzzle = WordSearch("dog, cat, pig, horse, donkey, turtle, goat, sheep")
 ```
 
-👀 Wanna see it? `print(puzzle)` or `puzzle.show()`
+👀 Wanna see it?
 
-```
+```pycon
+>>> puzzle.show()  # or print(puzzle)
 -----------------------
       WORD SEARCH
 -----------------------
-T L Q D O N K E Y K M P
-Z X R C V E J R S A H S
-C Y V I T I O Q U X C D
-A E P Z V C W J K D H P
-T V G O A T H R E O O A
-X Q P H S C I C S G R F
-U J I N I H S U H K S O
-F H G O Z J O A E D E I
-B Z S H S E D H E I X R
-H V P L U X Y B P Z U W
-M W B G Q T U R T L E T
-H X O U B M H S X W Q B
+Z T G H X Z D B A G S E
+X U S O M W O Z E B H L
+B R Y R P G N T W F E R
+J T G S K X K R V G E T
+D L N E T D E F Q O P U
+N E V O L C Y X V L Z L
+C O A P R Q S Q B S W V
+A T G E F C A T N H J D
+E Z O J X Z U B D V B R
+S Q A M G P I G Q C G Y
+X V T R J E F W I E R N
+D O G Y H R S B V L S O
 
 Find these words: CAT, DOG, DONKEY, GOAT, HORSE, PIG, SHEEP, TURTLE
-* Words can go E, and S.
+* Words can go S, and E.
 
-Answer Key: CAT S @ (2, 0), DOG S @ (3, 9), DONKEY E @ (0, 3), GOAT E @ (4, 2), HORSE S @ (3, 10), PIG S @ (5, 2), SHEEP S @ (5, 8), TURTLE E @ (10, 5)
+Answer Key: CAT E @ (6, 8), DOG E @ (1, 12), DONKEY S @ (7, 1), GOAT S @ (3, 8), HORSE S @ (4, 1), PIG E @ (6, 10), SHEEP S @ (11, 1), TURTLE S @ (2, 1)
 ```
 
-ℹ️ The output answer key uses a 1-based index as that's more familiar with non-programmers. First number is the row, second is the column. Directions are cardinal from first letter to last. The stored `puzzle.key` is 0-based.
+ℹ️ The answer key uses 1-based indexing and a familiar (x, y) coordinate system. Directions are cardinal from first letter to last. \* Please note that all key values inside of the api are 0-based.
 
-Puzzle words can be provided as a string variable or directly as above. Words can be separated by spaces, commas, or new lines and Word-Search-Generator will sort them out for you.
-
-🤷‍♂️ Can't find all of the words? Try, `puzzle.key`...
+🤷‍♂️ Can't find all of the words? You can view the answer key or or highlight the hidden words in the output with `puzzle.show(solution=True)` 🔦.
 
 ```python
-{"TURTLE": {"start": (7, 3), "direction": "E"},
- "PIG": {"start": (3, 3), "direction": "SE"},
- "HORSE": {"start": (7, 2), "direction": "NE"},
- "GOAT": {"start": (4, 10), "direction": "S"},
- "DOG": {"start": (2, 4), "direction": "SE"},
- "DONKEY": {"start": (8, 1), "direction": "E"},
- "SHEEP": {"start": (10, 5), "direction": "E"},
- "CAT": {"start": (4, 8), "direction": "S"}}
+>>> puzzle.key
+{'SHEEP': {'start': Position(row=0, column=10), 'direction': 'S', 'secret': False},
+ 'DONKEY': {'start': Position(row=0, column=6), 'direction': 'S', 'secret': False},
+ 'PIG': {'start': Position(row=9, column=5), 'direction': 'E', 'secret': False},
+ 'CAT': {'start': Position(row=7, column=5), 'direction': 'E', 'secret': False},
+ 'GOAT': {'start': Position(row=7, column=2), 'direction': 'S', 'secret': False},
+ 'DOG': {'start': Position(row=11, column=0), 'direction': 'E', 'secret': False},
+ 'TURTLE': {'start': Position(row=0, column=1), 'direction': 'S', 'secret': False},
+ 'HORSE': {'start': Position(row=0, column=3), 'direction': 'S', 'secret': False}}
 ```
 
-or show just the hidden words `puzzle.show(solution=True)`.
+🍰 Too easy? Up the difficulty level.
 
-```
+```pycon
+>>> puzzle.level = 3
+>>> puzzle.show()
 -----------------------
       WORD SEARCH
 -----------------------
-• • • D O N K E Y • • •
-• • • • • • • • • • • •
-C • • • • • • • • • • •
-A • • • • • • • • D H •
-T • G O A T • • • O O •
-• • P • • • • • S G R •
-• • I • • • • • H • S •
-• • G • • • • • E • E •
-• • • • • • • • E • • •
-• • • • • • • • P • • •
-• • • • • T U R T L E •
-• • • • • • • • • • • •
+W H Q Z M N M B P L F W
+K Y K P D O L V A I N I
+R X V E I C J C Z L M A
+E Z H J O G F B J I G V
+L F D Y E K N O D Y X F
+E T I U Z O M T A C I E
+D Q G M L B P E E H S X
+I X W O H O R S E N C D
+C M U R A K M Y C P I N
+W P Y I C T C X O Y A K
+Q D O G R N V E P F V C
+Z F A C B E L T R U T A
 
 Find these words: CAT, DOG, DONKEY, GOAT, HORSE, PIG, SHEEP, TURTLE
-* Words can go E, and S.
+* Words can go N, SW, NW, SE, E, NE, W, and S.
 
-Answer Key: CAT S @ (2, 0), DOG S @ (3, 9), DONKEY E @ (0, 3), GOAT E @ (4, 2), HORSE S @ (3, 10), PIG S @ (5, 2), SHEEP S @ (5, 8), TURTLE E @ (10, 5)
+Answer Key: CAT W @ (10, 6), DOG E @ (2, 11), DONKEY W @ (9, 5), GOAT SE @ (3, 7), HORSE E @ (5, 8), PIG SE @ (4, 2), SHEEP W @ (11, 7), TURTLE W @ (11, 12)
 ```
 
-🍰 Too easy? Up the difficulty level with `puzzle.level = 3`.
+ℹ️ You'll find preset numeric levels listed in [config.py](/src/word_search_generator/config.py), each with specific cardinal directions that words can travel.
 
-```
+You can also specify custom cardinal directions for your puzzle (e.g. N, NE, E, SE, S, SW, W, NW).
+
+```pycon
+>>> puzzle.directions = "NW,SW"
+>>> puzzle.show()
 -----------------------
       WORD SEARCH
 -----------------------
-J V W N B Y E K N O D U
-G E B D F N H O R S E H
-M I C K G Y F I D C P D
-V H W A V H M Y O B G I
-G O A T T C F U A S H K
-X H U W K V O Y G V B O
-G B Q A M Z X W O Z Y N
-T M D P C A S B D E W E
-L Y I E R W X G I P U C
-C H U E C N Q C J L W O
-F S X H G I V I P F A N
-B J D S F M E L T R U T
+O I Y O T F J F M R L R
+K W R D C W E N G S H V
+N P S W M K I S U M D P
+E F A L O D T Z R O H D
+X H Q P G U B U G O O B
+J R C E R A S L H N H P
+Q Y I T V H Z Y K Q I C
+R W L T E P T E S G X F
+A E A E A Q Y A R A L O
+J H P Y C O P W C Y B D
+A V I E L R G X U J G A
+W C X H D I N V K L W Y
 
 Find these words: CAT, DOG, DONKEY, GOAT, HORSE, PIG, SHEEP, TURTLE
-* Words can go N, NE, E, SE, S, SW, W, and NW.
+* Words can go SW, and NW.
 
-Answer Key: CAT SE @ (2, 2), DOG N @ (7, 8), DONKEY W @ (0, 10), GOAT E @ (4, 0), HORSE E @ (1, 6), PIG W @ (8, 9), SHEEP N @ (11, 3), TURTLE W @ (11, 11)
+Answer Key: CAT NW @ (9, 10), DOG SW @ (11, 3), DONKEY SW @ (12, 4), GOAT NW @ (7, 11), HORSE NW @ (11, 6), PIG SW @ (12, 6), SHEEP SW @ (7, 6), TURTLE SW @ (7, 4)
 ```
 
-😓 Too hard? Go the easy route with `puzzle.level = 1`.
+😓 Too hard? Go the easy route with `puzzle.level = 1` or `puzzle.directions = "E"`.
 
 ## Settings
 
-Word-Search-Generator offers two main options for puzzle generation, `level` and `size`.
+Word-Search-Generator offers a few options for puzzle generation.
 
-```python
-# Set the difficulty level to 2
-puzzle.level = 2
+```pycon
+>>> help(WordSearch.__init__)
+Help on function __init__ in module word_search_generator:
 
-# Set the puzzle size to 25
-puzzle.size = 25
+__init__(self, words: Optional[str] = None, level: Union[int, str, NoneType] = None, size: Optional[int] = None, secret_words: Optional[str] = None, secret_level: Union[int, str, NoneType] = None)
+    Initialize a Word Search puzzle.
+
+    Args:
+        words (Optional[str], optional): A string of words separated by spaces,
+            commas, or new lines. Will be trimmed if more. Defaults to None.
+        level (Optional[int  |  str], optional): Difficulty level or potential
+            word directions. Defaults to 1.
+        size (Optional[int], optional): Puzzle size. Defaults to None.
+        secret_words (Optional[str], optional): A string of words separated by
+            spaces, commas, or new lines. Words will be 'secret' meaning they
+            will not be included in the word list. Defaults to None.
+        secret_level (Optional[int  |  str], optional): Difficulty level or
+            potential word directions for 'secret' words. Defaults to None.
 ```
-
-It's easy to define options when creating a puzzle too...
 
 ```python
 words = "dog, cat, pig, horse, donkey, turtle, goat, sheep"
@@ -144,64 +160,15 @@ puzzle = WordSearch(words, level=3, size=25)
 
 ⚠️ Anytime puzzle settings are adjusted, an entirely new puzzle will be generated!
 
-### Difficulty Level
+### Words
 
-The difficulty level controls whether words can go forward or backward, the cardinal direction they can go, and the size of the puzzle (unless `size` is explicitly set). Difficulty level defaults to 2.
-
--   **Level 1 (Easy)**: Words can go forward in directions EAST (E), or SOUTH (S). Puzzle size is small by default.
--   **Level 2 (Intermediate)**: Words can go forward in directions NORTHEAST (NE), EAST (E), SOUTHEAST (SE), or (S). Puzzle size is medium by default.
--   **Level 3 (Expert)**: Words can go forward and backward in directions NORTH (N), NORTHEAST (NE), EAST (E), SOUTHEAST (SE),
-    SOUTH (S), SOUTHWEST (SW), WEST (W), or NORTHWEST (NW). Puzzle size is large by default.
-
-### Puzzle Size
-
-By default, the puzzle (characters) size is determined by the amount of words provided and the difficulty level. Need a puzzle an exact size, override the default with `puzzle.size = x` (25 >= integer >= 10). All puzzles are square so size will be the width and height.
+A word search puzzle wouldn't be much without words... Puzzle words can be provided at time of creation or added after the fact. Words can be separated by spaces, commas, or new lines and Word-Search-Generator will sort them out for you.
 
 ```python
-puzzle.size = 30
-ValueError: Puzzle size must be >= 10 and <= 25
-puzzle.size = 20
-puzzle.show()
+puzzle = WordSearch("some random words to hide")  # separated by a space
 ```
 
-Puzzles are limited to 25 characters wide so that everything fits nicely on a US Letter or A4 sized sheet of paper.
-
-```
----------------------------------------
-              WORD SEARCH
----------------------------------------
-T K U D Q X Z W J N K F N W C J K A M R
-H A M H R O S C M E H G C K D R I L B O
-I N S L X I D I V Z P N Q B S Q X P N V
-Q U Z M V M P N P A C W X L F T S B X J
-E V W H O R S E R L I E N R V W A Z S Q
-N A K P M N F D F W U O F E F G T C F D
-J X W N H B O K X P J I M A H L M Q W L
-R Q S R E Z Y N C Q C N E I Z X Y C S N
-M T H M V I S H E E P H F H J N D W B M
-P B U F S M B Y O L I U B E R W Q I D K
-J Z Y E J U X E C V E H C L M U P M W G
-S N X M T F T K R I N G W T D C E H V N
-B V Z N O K H N H V Z B P R V N L G M O
-R M G E L B P O X U R T M U P Y A D I U
-Y V T O I Q I D Z G A N S T K E M F E P
-U D M K E V B H R O E Q O N M Z V Q B Y
-R Q C N U R J V G S L J M R X F B R T J
-Z F G L D W U R Z Y P W U O A H O X P Q
-R O U P S T I O H Q S M X F S K P Z C D
-D M K J M P E R X W G Z A V N F X B T J
-
-Find these words: CAT, DOG, DONKEY, GOAT, HORSE, PIG, SHEEP, TURTLE
-* Words can go N, NE, E, SE, S, SW, W, and NW.
-
-Answer Key: CAT NW @ (5, 17), DOG NE @ (19, 0), DONKEY N @ (14, 7), GOAT NE @ (16, 8), HORSE E @ (4, 3), PIG NW @ (14, 19), SHEEP E @ (8, 6), TURTLE N @ (14, 13)
-```
-
-⚠️ All provided words may not fit a specified puzzle size!
-
-## Editing Puzzle Words
-
-Word-Search-Generator makes it easy to edit the words in the current puzzle.
+#### Editing Current Puzzle Words
 
 🤦‍♂️ Leave out a word?
 
@@ -215,13 +182,96 @@ puzzle.add_words("new, words, to, add")
 puzzle.remove_words("words, to, delete")
 ```
 
-🗑 Wanna replace all words?
+♻️ Replace all of the words?
 
 ```python
 puzzle.replace_words("replace, current, words, with, new, words")
 ```
 
 ⚠️ When words are added, removed, or replaced, an entirely new puzzle will be generated!
+
+### Level
+
+Word-Search-Generator offers some preset difficulty levels. Some levels only allow for words to be placed left-to-right and others allow for right-to-left. You can find all of the preset numeric levels listed in [config.py](/src/word_search_generator/config.py).
+
+```python
+puzzle.level = 2
+```
+
+⚠️ Preset levels were the introduced in the first implementation of Word-Search-Generator for ease-of-use but have since been quasi-rolled in to the directions property. They will continue to be supported for backward compatibility.
+
+### Size
+
+By default, the puzzle size (in characters) is determined by the amount of words provided and the difficulty level. Need a puzzle an exact size, override the default by setting `puzzle.size`. All puzzles are square so size will be the width and height.
+
+```pycon
+>>> puzzle.size = 30
+ValueError: Puzzle size must be >= 10 and <= 25
+>>> puzzle.size = 20
+```
+
+ℹ️ Puzzles are limited to 25 characters wide so that everything fits nicely on a US Letter or A4 sized sheet of paper.
+
+⚠️ All provided words may not fit a specified puzzle size!
+
+### Secret Words
+
+Word-Search-Generator accepts "secret" bonus that can up the difficulty of your puzzle. Secret words are not included in the word list and can have their own level or directions.
+
+```pycon
+>>> puzzle = WordSearch("dog, cat, pig", level=1, secret_words="secret, boo")
+puzzle.show()
+-----------------------
+      WORD SEARCH
+-----------------------
+A U C Q X L H G C L K P
+V K J A M D Y I N V S A
+U M U Y J B O O M J N X
+H D O Z F H Y Z B G S G
+R U M A P D O G N U E P
+B O P H B I C F J T C I
+T J G K R V Y N X Q R G
+S F U J P U K L I B E B
+P H S K B F Y J Q C T X
+G T L E P C N G U A K F
+S H K H L D J I S T E O
+P F P N Q C T D Q A K R
+
+Find these words: CAT, DOG, PIG
+* Words can go E, and S.
+
+Answer Key: *BOO E @ (6, 3), CAT S @ (10, 9), DOG E @ (6, 5), PIG S @ (12, 5), *SECRET S @ (11, 4)
+```
+
+ℹ️ Secret words **ARE** included in the puzzle key (denoted by a '\*').
+
+Secret words can also have their own level or set of directions.
+
+```pycon
+>>> puzzle.secret_directions="N,W"
+-----------------------
+      WORD SEARCH
+-----------------------
+X J G P N C R Q O J C O
+G S F M G A N P M V Z Y
+N H P D F T E T B N C Q
+O C G T K Y D F U Y P Y
+O K U E B T L C R S M T
+B J X R D A R D O G Q J
+Y N T C T K Z S R W Z E
+B C D E P I P I G M U C
+M W F S H C Z J D W N G
+J Q X Y U N F V I V H V
+S T N P Z C A O N B I Y
+W A D H E W S B K A R K
+
+Find these words: CAT, DOG, PIG
+* Words can go E, and S.
+
+Answer Key: *BOO N @ (1, 6), CAT S @ (6, 1), DOG E @ (8, 6), PIG E @ (7, 8), *SECRET N @ (4, 9)
+```
+
+⚠️ You may have noticed above that the secret directions are not included in the puzzle directions unless they overlap with the valid directions for the regular puzzle words. I told you it ups the difficulty level 📈.
 
 ## Saving Puzzles
 
@@ -243,10 +293,12 @@ puzzle.save(path="puzzle.csv")
 
 ℹ️ Using the Word-Search-Generator [CLI Integration](#cli-integration) and [redirections](https://www.gnu.org/software/bash/manual/html_node/Redirections.html) in your terminal you can also save the puzzle to a text file.
 
-    $ word-search dog, cat, pig, horse -k > puzzle.txt
+```bash
+$ word-search dog, cat, pig, horse -k > puzzle.txt
+```
 
 📁 **View Sample Files:**
-[Word-Search PDF](https://github.com/joshbduncan/word-search-generator/blob/main/files/puzzle.pdf), [Word-Search CSV](https://github.com/joshbduncan/word-search-generator/blob/main/files/puzzle.csv), [Word-Search TXT](https://github.com/joshbduncan/word-search-generator/blob/main/files/puzzle.txt)
+[Word-Search PDF](/files/puzzle.pdf), [Word-Search CSV](/files/puzzle.csv), [Word-Search TXT](/files/puzzle.txt)
 
 ## CLI Integration
 
@@ -254,24 +306,39 @@ Word-Search-Generator works in your terminal too! 🙌
 
 ```
 $ word-search -h
-usage: word-search [-h] [-r RANDOM] [-l {1,2,3}] [-s SIZE] [-c] [-o OUTPUT] [--version] [words ...]
+usage: word-search [-h] [-r RANDOM] [-x SECRET_WORDS] [-d DIFFICULTY]
+                   [-xd SECRET_DIFFICULTY] [-s SIZE] [-c] [-o OUTPUT]
+                   [--version]
+                   [words ...]
 
-Generate Word Search Puzzles! (Version 1.3.0)
+Generate Word Search Puzzles!
+
+Valid Levels: 1, 2, 3, 4, 8, 7
+Valid Directions: N, NE, E, SE, S, SW, W, NW
+* Directions are to be provided as a comma-separated list.
 
 positional arguments:
-  words                 Words to include in the puzzle
+  words                 Words to include in the puzzle (default: stdin).
 
 options:
   -h, --help            show this help message and exit
   -r RANDOM, --random RANDOM
-                        Generate {n} random words to include in the puzzle
-  -l {1,2,3}, --level {1,2,3}
-                        Difficulty level (1) beginner, (2) intermediate, (3) expert
+                        Generate {n} random words to include in the puzzle.
+  -x SECRET_WORDS, --secret-words SECRET_WORDS
+                        Secret bonus words not included in the word list.
+  -d DIFFICULTY, --difficulty DIFFICULTY, -l DIFFICULTY, --level DIFFICULTY
+                        Difficulty level (numeric) or cardinal directions
+                        puzzle words can go. See valid arguments above.
+  -xd SECRET_DIFFICULTY, --secret-difficulty SECRET_DIFFICULTY
+                        Difficulty level (numeric) or cardinal directions
+                        secret puzzle words can go. See valid arguments above.
   -s SIZE, --size SIZE  Puzzle size >=10 and <=25
-  -c, --cheat           Show the puzzle solution or include it within the `-o, --output` file.
+  -c, --cheat           Show the puzzle solution or include it within the `-o,
+                        --output` file.
   -o OUTPUT, --output OUTPUT
-                        Output path for saved puzzle. Specify export type by appending '.pdf' or '.csv' to your path
-                        (defaults to PDF)
+                        Output path for saved puzzle. Specify export type by
+                        appending '.pdf' or '.csv' to your path (default:
+                        PDF).
   --version             show program's version number and exit
 
 Copyright 2022 Josh Duncan (joshbduncan.com)
@@ -279,33 +346,38 @@ Copyright 2022 Josh Duncan (joshbduncan.com)
 
 💻 Generate a puzzle.
 
-    $ word-search works, in, the, terminal, too
-
+```
+$ word-search works, from, the, cli, too
+```
 💻 Generate a puzzle **20 characters wide** with **difficulty level 1**.
 
-    $ word-search works, in, the, terminal, too -l 1 -s 20
-
+```
+$ word-search works, from, the, cli, too -l 1 -s 20
+```
 💻 Generate a puzzle with **10 random dictionary words**.
 
-    $ word-search -r 10
-
+```
+$ word-search -r 10
+```
 💻 Generate a puzzle and **save as a csv**.
 
-    $ word-search works, in, the, terminal, too -o puzzle.csv
-
+```
+$ word-search works, from, the, cli, too -o puzzle.csv
+```
 💻 Generate a puzzle and **save as a pdf** with the solution puzzle included.
 
-    $ word-search works, in, the, terminal, too -o ~/Desktop/puzzle.pdf -c
-
+```
+$ word-search works, from, the, cli, too -o ~/Desktop/puzzle.pdf -c
+```
 ℹ️ You can also use words from a file...
 
-```bash
+```
 $ cat words.txt | word-search
 ```
 
 This really came in handy for those kid's food menus. I was able to take a folder full of .txt documents with themed words and generate dozens of level 1 Word Search Puzzles at exactly 15 characters in size super fast...
 
-```bash
+```
 $ for f in tools/sample_word_lists/word*.txt; do word-search "$(cat $f)" -l 1 -s 15 -o $f.pdf; done
 Puzzle saved: ~/.../words-5.txt.pdf
 ...
@@ -317,3 +389,8 @@ Puzzle saved: ~/.../words-50.txt.pdf
 - [PyPi](https://pypi.python.org/pypi/word-search-generator)
 - [PyFPDF/fpdf2: Simple PDF generation for Python](https://github.com/PyFPDF/fpdf2)
 - [Word search - Wikipedia](https://en.wikipedia.org/wiki/Word_search)
+
+
+# Contributors
+
+- Chris J.M. [@duck57](https://github.com/duck57)

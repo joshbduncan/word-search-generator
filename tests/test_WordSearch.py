@@ -48,7 +48,7 @@ def test_junky_input_cleanup():
 def test_set_puzzle_level():
     puzzle = WordSearch(WORDS)
     puzzle.level = 3
-    assert puzzle.valid_directions == utils.validate_level(config.level_dirs[3])
+    assert puzzle.directions == utils.validate_level(config.level_dirs[3])
 
 
 def test_set_secret_level():
@@ -78,8 +78,8 @@ def test_garbage_puzzle_level_type():
 def test_manual_level_control():
     puzzle = WordSearch(WORDS)
     tst_dirs = [Direction.E, Direction.SW, (-1, 0)]
-    puzzle.valid_directions = tst_dirs  # type: ignore
-    assert puzzle.valid_directions == utils.validate_level(tst_dirs)
+    puzzle.directions = tst_dirs  # type: ignore
+    assert puzzle.directions == utils.validate_level(tst_dirs)
 
 
 def test_set_puzzle_size():
@@ -172,6 +172,12 @@ def test_replace_words():
     assert len(puzzle.words) == 4
 
 
+def test_replace_secret_words():
+    puzzle = WordSearch(WORDS, secret_words="secret, blind, nope")
+    puzzle.replace_words("hidden", True)
+    assert len(puzzle.secret_words) == 1
+
+
 def test_reset_puzzle_size():
     puzzle = WordSearch(WORDS)
     prev_size = puzzle.size
@@ -216,7 +222,7 @@ def test_puzzle_non_equal():
 def test_puzzle_str():
     puzzle = WordSearch(WORDS)
     puzzle_str = utils.format_puzzle_for_show(
-        puzzle.puzzle, puzzle.key, puzzle.valid_directions, puzzle.solution
+        puzzle.puzzle, puzzle.key, puzzle.directions, puzzle.solution
     )
     assert str(puzzle) == puzzle_str
 
@@ -225,7 +231,7 @@ def test_puzzle_str_output(capsys):
     puzzle = WordSearch(WORDS)
     print(
         utils.format_puzzle_for_show(
-            puzzle.puzzle, puzzle.key, puzzle.valid_directions, puzzle.solution
+            puzzle.puzzle, puzzle.key, puzzle.directions, puzzle.solution
         )
     )
     capture1 = capsys.readouterr()
@@ -238,7 +244,7 @@ def test_puzzle_show_output(capsys):
     puzzle = WordSearch(WORDS)
     print(
         utils.format_puzzle_for_show(
-            puzzle.puzzle, puzzle.key, puzzle.valid_directions, puzzle.solution
+            puzzle.puzzle, puzzle.key, puzzle.directions, puzzle.solution
         )
     )
     capture1 = capsys.readouterr()
@@ -259,7 +265,7 @@ def test_puzzle_show_solution_output(capsys):
     puzzle = WordSearch(WORDS)
     print(
         utils.format_puzzle_for_show(
-            puzzle.puzzle, puzzle.key, puzzle.valid_directions, puzzle.solution, True
+            puzzle.puzzle, puzzle.key, puzzle.directions, puzzle.solution, True
         )
     )
     capture1 = capsys.readouterr()

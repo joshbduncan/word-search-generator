@@ -7,12 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Test for csv output with solution
+- Secret Words (contributed by Chris J.M. [duck57](https://github.com/duck57))
+    - The WordSearch object can now accept a list of secret bonus words
+        - are included in the puzzle but not listed in the word list
+        - are included in the answer key and tagged with an `*` like '\*word'.
+        - A puzzle can consist of only secret words
+        - Implemented in the CLI as -x, --secret-words
+    - Introduced the Direction class
+        - Allows for specifying either a preset numeric level or accepted cardinal direction for puzzle words.
+        - Implemented in the CLI as -d, --difficulty
+    - Testing for all new secret word features and accompanying functionality
+    - Updated README with new features
 
 ### Changed
 - Removed the tty input from the cli as it's confusing for most users.
+- CLI flag -l, --level was combined with -d, --difficulty (for backward compatibility)
+- Lots of types refactoring by contributed by [duck57](https://github.com/duck57)
+- clean up __main__ call to cli
 
 ### Fixed
 - [CLI with empty stdin causes error](https://github.com/joshbduncan/word-search-generator/issues/19)
+- Corrected key coordinates to 1-based.
 
 ## [1.4.0] - 2022-09-09
 ### Added

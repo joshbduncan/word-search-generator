@@ -8,7 +8,7 @@ from fpdf import FPDF
 
 from word_search_generator import config, utils
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from word_search_generator import WordSearch
 
 
@@ -65,7 +65,7 @@ def write_csv_file(path: Path, puzzle: WordSearch, solution: bool = False) -> Pa
             ]
         )
         f_writer.writerow(
-            [f"* Words can go {utils.get_level_dirs_str(puzzle.valid_directions)}."]
+            [f"* Words can go {utils.get_level_dirs_str(puzzle.directions)}."]
         )
         f_writer.writerow([""])
         f_writer.writerow(["Answer Key:"])
@@ -162,7 +162,7 @@ def draw_puzzle_page(pdf: FPDF, puzzle: WordSearch, solution: bool = False) -> F
     pdf.set_font("Helvetica", "BU", size=info_font_size)
     pdf.cell(
         pdf.epw,
-        txt=f"Find words going {utils.get_level_dirs_str(puzzle.valid_directions)}:",
+        txt=f"Find words going {utils.get_level_dirs_str(puzzle.directions)}:",
         align="C",
         ln=2,
     )

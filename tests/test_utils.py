@@ -37,3 +37,8 @@ def test_palindromes():
 
 def test_word_within_word():
     assert utils.word_contains_word({"rain", "sun", "clouds"}, "")
+
+
+def test_invalid_level_direction_type():
+    with pytest.raises(TypeError):
+        utils.validate_level(None)

@@ -61,7 +61,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 Valid Levels: {', '.join([str(i) for i in config.level_dirs.keys()])}
 Valid Directions: {', '.join([d.name for d in config.Direction])}
-Directions are to be provided as a comma-separated list.""",
+* Directions are to be provided as a comma-separated list.""",
         epilog="Copyright 2022 Josh Duncan (joshbduncan.com)",
         prog=__app_name__,
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -137,7 +137,8 @@ Directions are to be provided as a comma-separated list.""",
         words = utils.get_random_words(args.random)
     else:
         if isinstance(args.words, list):
-            words = ",".join(args.words)
+            # needed when words were provided as "command, then, space"
+            words = ",".join([word.replace(",", "") for word in args.words])
         elif not sys.stdin.isatty():
             # disable interactive tty which can be confusing
             # but still process words were piped in from the shell

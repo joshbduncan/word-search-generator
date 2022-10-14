@@ -235,7 +235,6 @@ def fill_words(
     Returns:
         tuple[Puzzle, Key]: Current puzzle and puzzle answer key.
     """
-
     # calculate the puzzle size and setup a new empty puzzle
     if not secret_directions:
         secret_directions = possible_directions

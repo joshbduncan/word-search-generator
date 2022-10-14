@@ -47,7 +47,7 @@ def cleanup_input(words: str) -> set[str]:
 
 
 def contains_punctuation(word):
-    """Check to see if puncuation is present in the provided string."""
+    """Check to see if punctuation is present in the provided string."""
     return any([True if c in string.punctuation else False for c in word])
 
 
@@ -58,7 +58,7 @@ def is_palindrome(word: str) -> bool:
 
 def word_contains_word(words: set[str], word: str) -> bool:
     """Make sure `test_word` cannot be found in any word
-    in `words`, going forward or backword.
+    in `words`, going forward or backward.
     Args:
         words (str): Current puzzle word list.
         word (str): Word to check for.
@@ -223,9 +223,9 @@ def get_answer_key_list(key: Key) -> list[str]:
     for k in sorted(key.keys()):
         direction = key[k]["direction"]
         start: Position = key[k]["start"]
-        # add '[SECRET]' flag if word is secret
+        # add '*' flag if word is secret
         if key[k]["secret"]:
-            k = f"{k} [SECRET]"
+            k = f"*{k}"
         keys.append(f"{k} {direction} @ {start.xy_str}")
     return keys
 
