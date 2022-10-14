@@ -60,7 +60,8 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 
 Valid Levels: {', '.join([str(i) for i in config.level_dirs.keys()])}
-Valid Directions: {', '.join([d.name for d in config.Direction])}""",
+Valid Directions: {', '.join([d.name for d in config.Direction])}
+Directions are to be provided as a comma-separated list.""",
         epilog="Copyright 2022 Josh Duncan (joshbduncan.com)",
         prog=__app_name__,
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -85,7 +86,7 @@ Valid Directions: {', '.join([d.name for d in config.Direction])}""",
         "--secret",
         type=str,
         default="",
-        help="Secret bonus words no included in the word list.",
+        help="Secret bonus words not included in the word list.",
     )
     # new implementation of -l, --level allowing for more flexibility
     # keeping -l, --level for backwards compatibility
@@ -96,14 +97,14 @@ Valid Directions: {', '.join([d.name for d in config.Direction])}""",
         "--level",
         action=DifficultyAction,
         help="Difficulty level (numeric) or cardinal directions \
-            puzzle words can go. See valid arguments above",
+            puzzle words can go. See valid arguments above.",
     )
     parser.add_argument(
         "-xd",
         "--secret-difficulty",
         action=DifficultyAction,
         help="Difficulty level (numeric) or cardinal directions \
-            secret puzzle words can go. See valid arguments above",
+            secret puzzle words can go. See valid arguments above.",
     )
     parser.add_argument(
         "-s",
