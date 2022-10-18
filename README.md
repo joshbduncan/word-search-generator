@@ -206,7 +206,7 @@ By default, the puzzle size (in characters) is determined by the amount of words
 
 ```pycon
 >>> puzzle.size = 30
-ValueError: Puzzle size must be >= 10 and <= 25
+ValueError: Puzzle size must be >= 5 and <= 25
 >>> puzzle.size = 20
 ```
 
@@ -332,7 +332,7 @@ options:
   -xd SECRET_DIFFICULTY, --secret-difficulty SECRET_DIFFICULTY
                         Difficulty level (numeric) or cardinal directions
                         secret puzzle words can go. See valid arguments above.
-  -s SIZE, --size SIZE  Puzzle size >=10 and <=25
+  -s SIZE, --size SIZE  Puzzle size >=5 and <=25
   -c, --cheat           Show the puzzle solution or include it within the `-o,
                         --output` file.
   -o OUTPUT, --output OUTPUT

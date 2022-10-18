@@ -322,3 +322,31 @@ def test_get_level():
     puzzle = WordSearch(WORDS)
     puzzle.level = 2
     assert puzzle.level == level_dirs[2]  # type: ignore
+
+
+def test_add_words_with_resize():
+    puzzle = WordSearch(WORDS)
+    puzzle.size = 5
+    puzzle.add_words("test", reset_size=True)
+    assert puzzle.size != 5
+
+
+def test_add_secret_words_with_resize():
+    puzzle = WordSearch(WORDS)
+    puzzle.size = 5
+    puzzle.add_words("test", True, reset_size=True)
+    assert puzzle.size != 5
+
+
+def test_remove_words_with_resize():
+    puzzle = WordSearch(WORDS)
+    puzzle.size = 5
+    puzzle.remove_words("test", reset_size=True)
+    assert puzzle.size != 5
+
+
+def test_replace_words_with_resize():
+    puzzle = WordSearch(WORDS)
+    puzzle.size = 5
+    puzzle.replace_words("set, of replaced, words", reset_size=True)
+    assert puzzle.size != 5

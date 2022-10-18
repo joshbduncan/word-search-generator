@@ -194,7 +194,6 @@ class WordSearch:
         generate.calc_puzzle_size(self)
         generate.fill_words(self)
         generate.fill_blanks(self)
-        # self._size = len(self._puzzle)
 
     def show(self, solution: bool = False) -> None:
         """Show the current puzzle with or without the solution.
@@ -239,13 +238,17 @@ class WordSearch:
         # return saved file path
         return str(saved_file)
 
-    def add_words(self, words: str, secret: bool = False) -> None:
-        """Add words to the current puzzle.
+    def add_words(
+        self, words: str, secret: bool = False, reset_size: bool = False
+    ) -> None:
+        """Add words to the puzzle.
 
         Args:
             words (str): Words to add.
             secret (bool, optional): Should the new words be added
             to the secret word list. Defaults to False.
+            reset_size (bool, optional): Reset the puzzle
+            size based on the updated words. Defaults to False.
         """
         words_to_add = utils.cleanup_input(words)
         if secret:
@@ -254,28 +257,38 @@ class WordSearch:
         else:
             self._secret_words = self.secret_words - words_to_add
             self._words.update(words_to_add)
+        if reset_size:
+            self.reset_size()
         self._reset_puzzle()
 
-    def remove_words(self, words: str) -> None:
-        """Remove words from the current puzzle.
+    def remove_words(self, words: str, reset_size: bool = False) -> None:
+        """Remove words from the puzzle.
 
         Args:
             words (str): Words to remove. Words will be removed
             from the puzzle regardless of the list they are a
             part of (`words` or `secret_words`).
+            reset_size (bool, optional): Reset the puzzle
+            size based on the updated words. Defaults to False.
         """
         words_to_remove = utils.cleanup_input(words)
         self._words = self.words - words_to_remove
         self._secret_words = self.secret_words - words_to_remove
+        if reset_size:
+            self.reset_size()
         self._reset_puzzle()
 
-    def replace_words(self, words: str, secret: bool = False) -> None:
-        """Replace words to the current puzzle.
+    def replace_words(
+        self, words: str, secret: bool = False, reset_size: bool = False
+    ) -> None:
+        """Replace words in the puzzle.
 
         Args:
             words (str): Words to add.
-            secret (bool, optional): Should the new words be added
+            secret (bool, optional): Ass the new words be added
             to the secret word list. Defaults to False.
+            reset_size (bool, optional): Reset the puzzle
+            size based on the updated words. Defaults to False.
         """
         words_to_add = utils.cleanup_input(words)
         if secret:
@@ -284,6 +297,8 @@ class WordSearch:
         else:
             self._secret_words = self.secret_words - words_to_add
             self._words = words_to_add
+        if reset_size:
+            self.reset_size()
         self._reset_puzzle()
 
     def _reset_puzzle(self):
