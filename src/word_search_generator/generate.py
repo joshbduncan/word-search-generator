@@ -1,20 +1,16 @@
+from __future__ import annotations
+
 import copy
 import random
 import string
 from math import log2
-from typing import Optional, Sized
+from typing import TYPE_CHECKING
 
 from word_search_generator import config
-from word_search_generator.types import (
-    DirectionSet,
-    Fit,
-    Fits,
-    Key,
-    KeyInfo,
-    Position,
-    Puzzle,
-    Wordlist,
-)
+from word_search_generator.types import Fit, Fits, Position, Puzzle
+
+if TYPE_CHECKING:  # pragma: no cover
+    from word_search_generator import WordSearch
 
 ALPHABET = list(string.ascii_uppercase)
 
@@ -33,66 +29,39 @@ def retry(func):
                 return func(*args, **kwargs)
             except Exception:
                 attempt += 1
-        return (kwargs["puzzle"], kwargs["key"])
+        return
 
     return wrapper
 
 
-def out_of_bounds(width: int, height: int, position: tuple[int, int]) -> bool:
-    """Check to make sure `position` is still on the current puzzle.
-
-    Args:
-        width (int): Puzzle board width.
-        height (int): Puzzle board height.
-        position (tuple[int, int]): Position to check.
-
-    Returns:
-        bool: If `position` is on the board.
-    """
+def out_of_bounds(puzzle: WordSearch, position: tuple[int, int]) -> bool:
+    """Validate `position` is within the current puzzle bounds."""
+    width = height = puzzle.size
     row, col = position
     if row < 0 or col < 0 or row > height - 1 or col > width - 1:
         return True
     return False
 
 
-def calc_puzzle_size(words: Wordlist, level: Sized, size: Optional[int] = None) -> int:
-    """Calculate the puzzle grid size.
-
-    Based on longest word, word count, and level.
-
-    Args:
-        words (set[str]): Words to be placed in the puzzle.
-        level (int): Puzzle difficulty level.
-        size (Optional[int], optional): Puzzle size.
-
-    Returns:
-        int: Puzzle grid size.
-    """
-    if not size:
+def calc_puzzle_size(puzzle: WordSearch) -> None:
+    """Calculate the puzzle grid size."""
+    words = puzzle.words.union(puzzle.secret_words)
+    if not puzzle.size:
         longest = max(10, len(max(words, key=len)))
         # calculate multiplier for larger word lists so that most have room to fit
         multiplier = len(words) / 15 if len(words) > 15 else 1
         # level lengths in config.py are nice multiples of 2
-        l_size = log2(len(level)) if level else 1  # protect against log(0) in tests
-        size = round(longest + l_size * 2 * multiplier)
-    return size
+        l_size = (
+            log2(len(puzzle.level)) if puzzle.level else 1
+        )  # protect against log(0) in tests
+        puzzle.size = round(longest + l_size * 2 * multiplier)
 
 
 def capture_all_paths_from_position(
-    puzzle: Puzzle, position: tuple[int, int], placed_words: list[str]
+    puzzle: WordSearch, position: tuple[int, int]
 ) -> list[list[str]]:
-    """Capture all directional strings based on length of longest word.
-
-    Args:
-        puzzle (Puzzle): Current puzzle state.
-        position (tuple[int, int]): Current position on the board.
-        placed_words (list[str]): Current words placed in puzzle.
-
-    Returns:
-        list[list[str]]: Left and right parts of the search string
-        for each direction.
-    """
-    puzzle_size = len(puzzle)
+    """Capture strings from `position` in each direction."""
+    placed_words = list(puzzle.key.keys())
     # calculate how large of a search radius to check (length of each path)
     radius = max([len(word) for word in placed_words]) if placed_words else 0
     # track each part (start/end) of the search radius for each direction
@@ -105,11 +74,11 @@ def capture_all_paths_from_position(
         row, col = position
         chars: list[str] = []
         for _ in range(radius):
-            chars.append(puzzle[row][col])
+            if out_of_bounds(puzzle, (row, col)):
+                break
+            chars.append(puzzle.solution[row][col])
             row += direction_coord.r_move
             col += direction_coord.c_move
-            if out_of_bounds(puzzle_size, puzzle_size, (row, col)):
-                break
             # add the captured string of characters to the correct
             # spot in the paths lists, and reverse if needed
         if direction_letter in ["N", "NW", "W", "SW"]:
@@ -119,25 +88,12 @@ def capture_all_paths_from_position(
     return paths
 
 
-def check_for_dupes_at_position(
-    puzzle: Puzzle, char: str, position: tuple[int, int], placed_words: list[str]
-) -> bool:
+def no_duped_words(puzzle: WordSearch, char: str, position: tuple[int, int]) -> bool:
     """Make sure that adding `char` at `position` will not create a
-    duplicate of any word already placed in the puzzle.
-
-    Args:
-        puzzle (Puzzle): Current puzzle state.
-        char (str): Character to check in `position`.
-        position (tuple[int, int]): Position in the puzzle to check.
-        placed_words (set[str]): Current words placed in the puzzle.
-
-    Returns:
-        bool: If `char` is valid at `pos`.
-    """
-    # follow each direction and capture all characters in that path
-    paths = capture_all_paths_from_position(puzzle, position, placed_words)
+    duplicate of any word already placed in the puzzle."""
+    paths = capture_all_paths_from_position(puzzle, position)
     before_ct = after_ct = 0
-    for word in placed_words:
+    for word in list(puzzle.key.keys()):
         for path in paths:
             before = "•".join(path)
             after = char.join(path)
@@ -155,26 +111,16 @@ def check_for_dupes_at_position(
 
 
 def test_a_fit(
-    puzzle: Puzzle, word: str, position: Position, direction: config.Direction
+    puzzle: WordSearch, word: str, position: Position, direction: config.Direction
 ) -> list[tuple[int, int]]:
     """Test if word fits in the puzzle at the specified
-    coordinates heading in the specified direction.
-
-    Args:
-        puzzle (Puzzle): Current puzzle state.
-        word (str): Word to try and fit in the puzzle.
-        position (tuple[int, int]): Word (row, column) start position.
-        direction (Direction): Direction word is heading.
-
-    Returns:
-        list[tuple[int, int]]: Coordinates for each letter of the word.
-    """
+    coordinates heading in the specified direction."""
     coordinates = []
     row, col = position
     # iterate over each letter in the word
     for char in word:
         # if the current puzzle space is empty or if letters match
-        if puzzle[row][col] == "" or puzzle[row][col] == char:
+        if puzzle.solution[row][col] == "" or puzzle.solution[row][col] == char:
             coordinates.append((row, col))
         else:
             return []
@@ -182,29 +128,17 @@ def test_a_fit(
         row += direction.r_move
         col += direction.c_move
         # if new coordinates are off of puzzle cancel fit test
-        if row < 0 or col < 0 or row > len(puzzle) - 1 or col > len(puzzle[0]) - 1:
+        if out_of_bounds(puzzle, (row, col)):
             return []
     return coordinates
 
 
-def find_a_fit(
-    puzzle: Puzzle, word: str, position: Position, level: DirectionSet
-) -> Fit:
-    """Look for a fit for `word` in the current puzzle.
-
-    Args:
-        puzzle (Puzzle): Current puzzle state.
-        word (str): Word to try and fit in the puzzle.
-        position (tuple[int, int]): Word (row, column) start position.
-        level (DirectionSet): Puzzle difficulty level.
-
-    Returns:
-        Fit: A random position where the word fits in the puzzle.
-    """
+def find_a_fit(puzzle: WordSearch, word: str, position: Position) -> Fit:
+    """Look for random place in the puzzle where `word` fits."""
     fits: Fits = {}
     random_direction = None
     # check all directions for level
-    for d in level:
+    for d in puzzle.directions:
         coords = test_a_fit(puzzle, word, position, d)
         if coords:
             fits[config.Direction(d).name] = coords
@@ -214,68 +148,43 @@ def find_a_fit(
     return random_direction
 
 
-def fill_words(
-    words: Wordlist,
-    possible_directions: DirectionSet,
-    size: int,
-    secret_words: Wordlist,
-    secret_directions: Optional[DirectionSet] = None,
-) -> tuple[Puzzle, Key]:
+def fill_words(puzzle) -> None:
     """Fill `puzzle` with the supplied `words`.
-    Some words will be skipped if they don't fit.
-
-    Args:
-        words (set[str]): Words to be placed in the puzzle.
-        possible_directions (DirectionSet): Allowed directions for word placement.
-        size (int, optional): Final puzzle grid size.
-        secret_words (set[str]): Hidden words to be placed in the puzzle.
-        secret_directions (DirectionSet, optional): Allowed directions for secret word
-            placement, if different from those allowed for normal words.
-
-    Returns:
-        tuple[Puzzle, Key]: Current puzzle and puzzle answer key.
-    """
-    # calculate the puzzle size and setup a new empty puzzle
-    if not secret_directions:
-        secret_directions = possible_directions
-    size = calc_puzzle_size(words.union(secret_words), possible_directions, size)
-    puzzle = [[""] * size for _ in range(size)]
-    key: dict[str, KeyInfo] = {}
+    Some words will be skipped if they don't fit."""
+    puzzle._solution = [[""] * puzzle.size for _ in range(puzzle.size)]
 
     # try to place each word on the puzzle
-    for word in words:
-        puzzle, key = try_to_fit_word(
-            word=word, puzzle=puzzle, key=key, level=possible_directions, size=size
+    for word in puzzle.words:
+        try_to_fit_word(
+            puzzle=puzzle,
+            word=word,
         )
     # try to place each secret word on the puzzle
-    # "real" words are given priority; this is always done after those have been placed
-    for word in secret_words:
-        puzzle, key = try_to_fit_word(
-            word=word,
-            puzzle=puzzle,
-            key=key,
-            level=secret_directions,
-            size=size,
-            secret=True,
-        )
-    return (puzzle, key)
+    # "real" words are given priority
+    # this is always done after those have been placed
+    if puzzle.secret_words:
+        for word in puzzle.secret_words:
+            try_to_fit_word(
+                puzzle=puzzle,
+                word=word,
+                secret=True,
+            )
 
 
 @retry
 def try_to_fit_word(
+    puzzle: WordSearch,
     word: str,
-    puzzle: Puzzle,
-    key: Key,
-    level: DirectionSet,
-    size: int,
     secret: bool = False,
-) -> tuple[Puzzle, Key]:
+) -> None:
     """Try to fit `word` at randomized coordinates.
     @retry wrapper controls the number of attempts"""
-    pos = Position(random.randint(0, size - 1), random.randint(0, size - 1))
+    pos = Position(
+        random.randint(0, puzzle.size - 1), random.randint(0, puzzle.size - 1)
+    )
     # try and find a directional fit using the starting coordinates
-    fit = find_a_fit(puzzle, word, pos, level)
-    work_puzzle = copy.deepcopy(puzzle)
+    fit = find_a_fit(puzzle, word, pos)
+    work_puzzle = copy.deepcopy(puzzle.solution)
     if not fit:
         raise WordFitError
     d, coords = fit
@@ -284,34 +193,21 @@ def try_to_fit_word(
     for i, char in enumerate(word):
         check_row = coords[i][0]
         check_col = coords[i][1]
-        if check_for_dupes_at_position(
-            work_puzzle, char, (check_row, check_col), list(key.keys())
-        ):
+        if no_duped_words(puzzle, char, (check_row, check_col)):
             work_puzzle[check_row][check_col] = char
         else:
-            work_puzzle = copy.deepcopy(puzzle)
+            work_puzzle = copy.deepcopy(puzzle.solution)
             break
-
-    if work_puzzle == puzzle:
+    if work_puzzle == puzzle.solution:
         raise WordFitError
-    puzzle = copy.deepcopy(work_puzzle)
+    puzzle._solution = copy.deepcopy(work_puzzle)
     # update placement info for word
-    key[word] = {"start": pos, "direction": d, "secret": secret}
-    return (puzzle, key)
+    puzzle._key[word] = {"start": pos, "direction": d, "secret": secret}
 
 
 def no_matching_neighbors(puzzle: Puzzle, char: str, position: tuple[int, int]) -> bool:
     """Ensure no neighboring cells have same character to limit the
-    very small chance of a duplicate word.
-
-    Args:
-        puzzle (Puzzle): Current puzzle state.
-        char (str): Random "fill-in" character to check against neighbors.
-        position (tuple[int, int]): Word (row, column) start position.
-
-    Returns:
-        bool: True is no neighbors match `char`.
-    """
+    very small chance of a duplicate word."""
     row, col = position
     # check all 8 possible neighbors
     for d in config.Direction:
@@ -331,28 +227,18 @@ def no_matching_neighbors(puzzle: Puzzle, char: str, position: tuple[int, int]) 
     return True
 
 
-def fill_blanks(puzzle: Puzzle, placed_words: list[str]) -> Puzzle:
-    """Fill empty puzzle spaces with random characters.
-
-    Args:
-        puzzle (Puzzle): Current puzzle state.
-        placed_words (set[str]): Puzzle word list.
-
-    Returns:
-        Puzzle: A complete word search puzzle.
-    """
-    work_puzzle = copy.deepcopy(puzzle)
+def fill_blanks(puzzle: WordSearch) -> None:
+    """Fill empty puzzle spaces with random characters."""
+    puzzle._puzzle = copy.deepcopy(puzzle.solution)
     # iterate over the entire puzzle
-    for row in range(len(work_puzzle)):
-        for col in range(len(work_puzzle[0])):
+    for row in range(len(puzzle._puzzle)):
+        for col in range(len(puzzle._puzzle[0])):
             # if the current spot is empty fill with random character
-            if work_puzzle[row][col] == "":
+            if puzzle._puzzle[row][col] == "":
                 while True:
                     random_char = random.choice(ALPHABET)
-                    if no_matching_neighbors(work_puzzle, random_char, (row, col)):
-                        if check_for_dupes_at_position(
-                            work_puzzle, random_char, (row, col), placed_words
-                        ):
-                            work_puzzle[row][col] = random_char
-                            break
-    return work_puzzle
+                    if no_matching_neighbors(
+                        puzzle._puzzle, random_char, (row, col)
+                    ) and no_duped_words(puzzle, random_char, (row, col)):
+                        puzzle._puzzle[row][col] = random_char
+                        break

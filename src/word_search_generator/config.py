@@ -1,7 +1,7 @@
 from enum import Enum, unique
 
 # puzzle settings
-min_puzzle_size = 10
+min_puzzle_size = 5
 max_puzzle_size = 25
 min_puzzle_words = 1
 max_puzzle_words = 30

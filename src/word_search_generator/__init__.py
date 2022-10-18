@@ -10,12 +10,13 @@
 __app_name__ = "word-search"
 __version__ = "1.4.0"
 
+
 import json
 from pathlib import Path
 from typing import Iterable, Optional, Union
 
-from word_search_generator import config, export, generate, utils
-from word_search_generator.types import DirectionSet, Key, Puzzle
+from . import config, export, generate, utils
+from .types import DirectionSet, Key, Puzzle
 
 
 class WordSearch:
@@ -44,27 +45,27 @@ class WordSearch:
                 potential word directions for 'secret' words. Defaults to None.
         """
 
+        # setup words
         self._words = utils.cleanup_input(words) if words else set()
         self._secret_words = (
             utils.cleanup_input(secret_words) - self._words if secret_words else set()
         )
-        self._key: Key = {}
 
         # determine valid directions
         self._directions: DirectionSet = (
             utils.validate_level(level) if level else utils.validate_level(2)
         )
         self._secret_directions: Optional[DirectionSet] = (
-            utils.validate_level(secret_level) if secret_level else None
+            utils.validate_level(secret_level) if secret_level else self.directions
         )
 
         # setup puzzle
         self._puzzle: Puzzle = []
-        self._size: int = size if size else 0
         self._solution: Puzzle = []
+        self._size: int = size if size else 0
+        self._key: Key = {}
 
-        # generate puzzle
-        if words or secret_words:
+        if self.words or self.secret_words:
             self._generate()
 
     @property
@@ -99,7 +100,7 @@ class WordSearch:
             return json.dumps(
                 {
                     "puzzle": self.puzzle,
-                    "words": list(self.words.union(self.secret_words)),
+                    "words": list(self.words),
                     "key": utils.get_answer_key_json(self.key),
                 }
             )
@@ -189,20 +190,13 @@ class WordSearch:
         self._size = 0
         self._reset_puzzle()
 
-    def _generate(self) -> Puzzle:
-        self._solution, self._key = generate.fill_words(
-            self.words,
-            self.directions,
-            self.size,
-            self.secret_words,
-            self.secret_directions,
-        )
-        self._puzzle = generate.fill_blanks(self.solution, list(self.key.keys()))
-        self._size = len(self._puzzle[0])
+    def _generate(self) -> None:
+        generate.calc_puzzle_size(self)
+        generate.fill_words(self)
+        generate.fill_blanks(self)
+        # self._size = len(self._puzzle)
 
-        return self.puzzle
-
-    def show(self, solution: bool = False):
+    def show(self, solution: bool = False) -> None:
         """Show the current puzzle with or without the solution.
 
         Args:
