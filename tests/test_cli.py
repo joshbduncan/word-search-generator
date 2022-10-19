@@ -54,7 +54,7 @@ def test_random_word_valid_input():
 
 
 def test_random_word_invalid_input():
-    result = os.system("word-search -r 100")
+    result = os.system("word-search -r 1000")
     assert get_exit_status(result) == 2
 
 

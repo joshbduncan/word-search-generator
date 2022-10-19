@@ -258,7 +258,15 @@ def test_puzzle_show_output_for_empty_object(capsys):
     p.show()
     capture = capsys.readouterr()
 
-    assert capture.out == capture.err == ""
+    assert capture.out == "Empty puzzle.\n"
+
+
+def test_puzzle_show_str_output_for_empty_object(capsys):
+    p = WordSearch()
+    print(p)
+    capture = capsys.readouterr()
+
+    assert capture.out == "Empty puzzle.\n"
 
 
 def test_puzzle_show_solution_output(capsys):

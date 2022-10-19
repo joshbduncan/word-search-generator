@@ -205,12 +205,12 @@ puzzle.level = 2
 By default, the puzzle size (in characters) is determined by the amount of words provided and the difficulty level. Need a puzzle an exact size, override the default by setting `puzzle.size`. All puzzles are square so size will be the width and height.
 
 ```pycon
->>> puzzle.size = 30
-ValueError: Puzzle size must be >= 5 and <= 25
+>>> puzzle.size = 55
+ValueError: Puzzle size must be >= 5 and <= 50
 >>> puzzle.size = 20
 ```
 
-ℹ️ Puzzles are limited to 25 characters wide so that everything fits nicely on a US Letter or A4 sized sheet of paper.
+ℹ️ Puzzles are limited to 50 characters wide so that everything fits nicely on a US Letter or A4 sized sheet of paper.
 
 ⚠️ All provided words may not fit a specified puzzle size!
 
@@ -306,10 +306,7 @@ Word-Search-Generator works in your terminal too! 🙌
 
 ```
 $ word-search -h
-usage: word-search [-h] [-r RANDOM] [-x SECRET_WORDS] [-d DIFFICULTY]
-                   [-xd SECRET_DIFFICULTY] [-s SIZE] [-c] [-o OUTPUT]
-                   [--version]
-                   [words ...]
+usage: word-search [-h] [-r RANDOM] [-x SECRET_WORDS] [-d DIFFICULTY] [-xd SECRET_DIFFICULTY] [-s SIZE] [-c] [-o OUTPUT] [--version] [words ...]
 
 Generate Word Search Puzzles!
 
@@ -327,18 +324,13 @@ options:
   -x SECRET_WORDS, --secret-words SECRET_WORDS
                         Secret bonus words not included in the word list.
   -d DIFFICULTY, --difficulty DIFFICULTY, -l DIFFICULTY, --level DIFFICULTY
-                        Difficulty level (numeric) or cardinal directions
-                        puzzle words can go. See valid arguments above.
+                        Difficulty level (numeric) or cardinal directions puzzle words can go. See valid arguments above.
   -xd SECRET_DIFFICULTY, --secret-difficulty SECRET_DIFFICULTY
-                        Difficulty level (numeric) or cardinal directions
-                        secret puzzle words can go. See valid arguments above.
-  -s SIZE, --size SIZE  Puzzle size >=5 and <=25
-  -c, --cheat           Show the puzzle solution or include it within the `-o,
-                        --output` file.
+                        Difficulty level (numeric) or cardinal directions secret puzzle words can go. See valid arguments above.
+  -s SIZE, --size SIZE  Puzzle size >=5 and <=50
+  -c, --cheat           Show the puzzle solution or include it within the `-o, --output` file.
   -o OUTPUT, --output OUTPUT
-                        Output path for saved puzzle. Specify export type by
-                        appending '.pdf' or '.csv' to your path (default:
-                        PDF).
+                        Output path for saved puzzle. Specify export type by appending '.pdf' or '.csv' to your path (default: PDF).
   --version             show program's version number and exit
 
 Copyright 2022 Josh Duncan (joshbduncan.com)

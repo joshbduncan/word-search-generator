@@ -3,6 +3,7 @@ from __future__ import annotations
 import copy
 import random
 import string
+import sys
 from math import log2
 from typing import TYPE_CHECKING
 
@@ -46,8 +47,11 @@ def out_of_bounds(puzzle: WordSearch, position: tuple[int, int]) -> bool:
 def calc_puzzle_size(puzzle: WordSearch) -> None:
     """Calculate the puzzle grid size."""
     words = puzzle.words.union(puzzle.secret_words)
+    longest_word_length = len(max(words, key=len))
+    shortest_word_length = len(min(words, key=len))
+    # TODO: Make sure puzzle is big enough to hold the shortest word
     if not puzzle.size:
-        longest = max(10, len(max(words, key=len)))
+        longest = max(10, longest_word_length)
         # calculate multiplier for larger word lists so that most have room to fit
         multiplier = len(words) / 15 if len(words) > 15 else 1
         # level lengths in config.py are nice multiples of 2
@@ -55,6 +59,13 @@ def calc_puzzle_size(puzzle: WordSearch) -> None:
             log2(len(puzzle.level)) if puzzle.level else 1
         )  # protect against log(0) in tests
         puzzle.size = round(longest + l_size * 2 * multiplier)
+    else:
+        if puzzle.size < shortest_word_length:
+            print(
+                "Puzzle sized adjust to fit word with the shortest length.",
+                file=sys.stderr,
+            )
+            puzzle.size = shortest_word_length + 1
 
 
 def capture_all_paths_from_position(

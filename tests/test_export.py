@@ -32,8 +32,7 @@ def test_export_pdf_puzzles(tmp_path):
     assert pages == {1}
 
 
-def test_export_pdf_puzzle_with_solution(tmp_path):
-    """Make sure a puzzle exported with the solution is 2 pages."""
+def test_export_csv_puzzle_with_solution(tmp_path):
     puzzle = WordSearch(WORDS)
     path = Path.joinpath(tmp_path, f"{uuid.uuid4()}.csv")
     puzzle.save(path, solution=True)
@@ -47,8 +46,8 @@ def test_export_pdf_puzzle_with_solution(tmp_path):
     assert found
 
 
-def test_export_csv_puzzle_with_solution(tmp_path):
-    """Make sure a puzzle exported with the solution is 2 pages."""
+def test_export_pdf_puzzle_with_solution(tmp_path):
+    """Make sure a pdf puzzle exported with the solution is 2 pages."""
     sizes = [s for s in range(config.min_puzzle_size, config.max_puzzle_size)]
     puzzles = []
     pages = set()

@@ -91,3 +91,8 @@ def test_no_dupe_at_position():
     ]
     check = no_duped_words(puzzle, "Z", (1, 3))
     assert check is True
+
+
+def test_puzzle_size_less_than_shortest_word_length():
+    p = WordSearch("DONKEY", size=5)
+    assert p.size == 7

@@ -133,16 +133,20 @@ def draw_puzzle_page(pdf: FPDF, puzzle: WordSearch, solution: bool = False) -> F
 
     # insert the title
     title = "WORD SEARCH" if not solution else "WORD SEARCH (SOLUTION)"
-    pdf.set_font("Helvetica", "B", config.pdf_title_font_size)
+    pdf.set_font("Helvetica", "B", config.pdf_font_size_XXL)
     pdf.cell(pdf.epw, 0.25, title, ln=2, align="C", center=True)
     pdf.ln(0.375)
 
     # calculate the puzzle size and letter font size
     pdf.set_left_margin(0.75)
-    gsize = 7 / len(puzzle.puzzle)
+    gsize = config.pdf_puzzle_width / len(puzzle.puzzle)
     gmargin = 0.6875 if gsize > 36 else 0.75
-    font_size = 72 * gsize * gmargin
-    info_font_size = font_size if font_size < 18 else 18
+    font_size = int(72 * gsize * gmargin)
+    # calculate flexible font size based on word count
+    # to ensure all words and the puzzle key fit on one page
+    info_font_size = config.pdf_font_size_XL - (
+        len(puzzle.words) - config.min_puzzle_words
+    ) * (6 / (config.max_puzzle_words - config.min_puzzle_words))
     pdf.set_font_size(font_size)
 
     # draw the puzzle
@@ -170,6 +174,7 @@ def draw_puzzle_page(pdf: FPDF, puzzle: WordSearch, solution: bool = False) -> F
 
     # write word list
     word_list = utils.get_word_list_str(puzzle.key)
+    print(f"{len(word_list)=}")
     pdf.set_font("Helvetica", "B", size=info_font_size)
     pdf.set_font_size(info_font_size)
     pdf.multi_cell(
@@ -187,7 +192,7 @@ def draw_puzzle_page(pdf: FPDF, puzzle: WordSearch, solution: bool = False) -> F
     with pdf.rotation(angle=180, x=pdf.epw / 2, y=pdf.eph / 2):
         pdf.set_xy(pdf.epw - pdf.epw, 0)
         pdf.set_margin(0.25)
-        pdf.set_font("Helvetica", size=config.pdf_key_font_size)
+        pdf.set_font("Helvetica", size=config.pdf_font_size_S)
         pdf.write(txt="Answer Key: " + utils.get_answer_key_str(puzzle.key))
 
     return pdf

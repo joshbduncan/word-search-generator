@@ -50,6 +50,7 @@ class WordSearch:
         self._secret_words = (
             utils.cleanup_input(secret_words) - self._words if secret_words else set()
         )
+        # TODO: Check max puzzle words should include both regular and secret words
 
         # determine valid directions
         self._directions: DirectionSet = (
@@ -193,7 +194,8 @@ class WordSearch:
     def _generate(self) -> None:
         generate.calc_puzzle_size(self)
         generate.fill_words(self)
-        generate.fill_blanks(self)
+        if self.key:
+            generate.fill_blanks(self)
 
     def show(self, solution: bool = False) -> None:
         """Show the current puzzle with or without the solution.
@@ -201,7 +203,7 @@ class WordSearch:
         Args:
             solution (bool, optional): Highlight the puzzle solution. Defaults to False.
         """
-        if self._puzzle:
+        if self.key:
             print(
                 utils.format_puzzle_for_show(
                     self.puzzle,
@@ -211,6 +213,8 @@ class WordSearch:
                     solution,
                 )
             )
+        else:
+            print("Empty puzzle.")
 
     def save(self, path: Union[str, Path], solution: bool = False) -> str:
         """Save the current puzzle to a file.
@@ -331,6 +335,12 @@ class WordSearch:
         )
 
     def __str__(self):
-        return utils.format_puzzle_for_show(
-            self.puzzle, self.key, self.directions, self.solution
-        )
+        if self.key:
+            return utils.format_puzzle_for_show(
+                self.puzzle,
+                self.key,
+                self.directions,
+                self.solution,
+            )
+        else:
+            return "Empty puzzle."
