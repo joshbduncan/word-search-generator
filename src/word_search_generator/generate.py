@@ -6,8 +6,8 @@ import string
 from math import log2
 from typing import TYPE_CHECKING
 
-from word_search_generator import config
-from word_search_generator.types import Fit, Fits, Position, Puzzle
+from word_search_generator.config import max_fit_tries
+from word_search_generator.types import Direction, Fit, Fits, Position, Puzzle
 
 if TYPE_CHECKING:  # pragma: no cover
     from word_search_generator import WordSearch
@@ -24,7 +24,7 @@ def retry(func):
 
     def wrapper(*args, **kwargs):
         attempt = 0
-        while attempt < config.max_fit_tries:
+        while attempt < max_fit_tries:
             try:
                 return func(*args, **kwargs)
             except Exception:
@@ -69,7 +69,7 @@ def capture_all_paths_from_position(
     paths: list[list[str]] = [["", ""], ["", ""], ["", ""], ["", ""]]
     # follow each direction and capture all characters in that path
     for i, (direction_letter, direction_coord) in enumerate(
-        config.Direction.__members__.items()
+        Direction.__members__.items()
     ):
         row, col = position
         chars: list[str] = []
@@ -111,7 +111,7 @@ def no_duped_words(puzzle: WordSearch, char: str, position: tuple[int, int]) -> 
 
 
 def test_a_fit(
-    puzzle: WordSearch, word: str, position: Position, direction: config.Direction
+    puzzle: WordSearch, word: str, position: Position, direction: Direction
 ) -> list[tuple[int, int]]:
     """Test if word fits in the puzzle at the specified
     coordinates heading in the specified direction."""
@@ -141,7 +141,7 @@ def find_a_fit(puzzle: WordSearch, word: str, position: Position) -> Fit:
     for d in puzzle.directions:
         coords = test_a_fit(puzzle, word, position, d)
         if coords:
-            fits[config.Direction(d).name] = coords
+            fits[Direction(d).name] = coords
     # if the word fits, pick a random fit for placement
     if fits:
         random_direction = random.choice(list(fits.items()))
@@ -210,7 +210,7 @@ def no_matching_neighbors(puzzle: Puzzle, char: str, position: tuple[int, int]) 
     very small chance of a duplicate word."""
     row, col = position
     # check all 8 possible neighbors
-    for d in config.Direction:
+    for d in Direction:
         test_row = row + d.r_move
         test_col = col + d.c_move
         # if test coordinates are off puzzle skip

@@ -3,8 +3,14 @@ import string
 from typing import Iterable
 
 from word_search_generator import config
-from word_search_generator.config import Direction
-from word_search_generator.types import DirectionSet, Key, KeyJson, Position, Puzzle
+from word_search_generator.types import (
+    Direction,
+    DirectionSet,
+    Key,
+    KeyJson,
+    Position,
+    Puzzle,
+)
 
 
 def cleanup_input(words: str) -> set[str]:
@@ -87,10 +93,10 @@ def validate_direction_iterable(
             o.add(direction)
             continue
         elif isinstance(direction, tuple):
-            o.add(config.Direction(direction))
+            o.add(Direction(direction))
             continue
         try:
-            o.add(config.Direction[direction.upper().strip()])
+            o.add(Direction[direction.upper().strip()])
         except KeyError:
             raise ValueError(f"'{direction}' is not a valid direction.")
     return o

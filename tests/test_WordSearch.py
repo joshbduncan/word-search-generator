@@ -4,8 +4,8 @@ import pathlib
 import pytest
 
 from word_search_generator import WordSearch, config, utils
-from word_search_generator.config import Direction, level_dirs
-from word_search_generator.types import Key, Puzzle
+from word_search_generator.config import level_dirs
+from word_search_generator.types import Direction, Key, Puzzle
 from word_search_generator.utils import get_random_words
 
 WORDS = "dog, cat, pig, horse, donkey, turtle, goat, sheep"
@@ -15,7 +15,7 @@ def check_key(key: Key, puzzle: Puzzle) -> bool:
     """Test the puzzle key against the current puzzle state."""
     for word, info in key.items():
         row, col = info["start"]
-        d = config.Direction[info["direction"]]
+        d = Direction[info["direction"]]
         for char in word:
             if puzzle[row][col] != char:
                 return False

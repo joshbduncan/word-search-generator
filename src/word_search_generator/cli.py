@@ -4,6 +4,7 @@ import sys
 from typing import Sequence
 
 from word_search_generator import WordSearch, __app_name__, __version__, config, utils
+from word_search_generator.types import Direction
 
 
 class RandomAction(argparse.Action):
@@ -30,7 +31,7 @@ class DifficultyAction(argparse.Action):
                         f"{option_string} must be \
 either numeric levels \
 ({', '.join([str(i) for i in config.level_dirs.keys()])}) or accepted \
-cardinal directions ({', '.join([d.name for d in config.Direction])})."
+cardinal directions ({', '.join([d.name for d in Direction])})."
                     )
             setattr(namespace, self.dest, values)
 
@@ -60,7 +61,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 
 Valid Levels: {', '.join([str(i) for i in config.level_dirs.keys()])}
-Valid Directions: {', '.join([d.name for d in config.Direction])}
+Valid Directions: {', '.join([d.name for d in Direction])}
 * Directions are to be provided as a comma-separated list.""",
         epilog="Copyright 2022 Josh Duncan (joshbduncan.com)",
         prog=__app_name__,
