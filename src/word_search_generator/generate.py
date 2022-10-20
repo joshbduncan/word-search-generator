@@ -5,10 +5,18 @@ import random
 import string
 import sys
 from math import log2
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional, Sized
 
 from word_search_generator.config import max_fit_tries
-from word_search_generator.types import Direction, Fit, Fits, Position, Puzzle
+from word_search_generator.types import (
+    Direction,
+    Fit,
+    Fits,
+    Position,
+    Puzzle,
+    Word,
+    Wordlist,
+)
 
 if TYPE_CHECKING:  # pragma: no cover
     from word_search_generator import WordSearch
@@ -44,28 +52,26 @@ def out_of_bounds(puzzle: WordSearch, position: tuple[int, int]) -> bool:
     return False
 
 
-def calc_puzzle_size(puzzle: WordSearch) -> None:
+def calc_puzzle_size(words: Wordlist, level: Sized, size: Optional[int] = None) -> int:
     """Calculate the puzzle grid size."""
-    words = puzzle.words.union(puzzle.secret_words)
-    longest_word_length = len(max(words, key=len))
-    shortest_word_length = len(min(words, key=len))
-    # TODO: Make sure puzzle is big enough to hold the shortest word
-    if not puzzle.size:
+    all_words = list(word.text for word in words)
+    longest_word_length = len(max(all_words, key=len))
+    shortest_word_length = len(min(all_words, key=len))
+    if not size:
         longest = max(10, longest_word_length)
         # calculate multiplier for larger word lists so that most have room to fit
-        multiplier = len(words) / 15 if len(words) > 15 else 1
+        multiplier = len(all_words) / 15 if len(all_words) > 15 else 1
         # level lengths in config.py are nice multiples of 2
-        l_size = (
-            log2(len(puzzle.level)) if puzzle.level else 1
-        )  # protect against log(0) in tests
-        puzzle.size = round(longest + l_size * 2 * multiplier)
+        l_size = log2(len(level)) if level else 1  # protect against log(0) in tests
+        size = round(longest + l_size * 2 * multiplier)
     else:
-        if puzzle.size < shortest_word_length:
+        if size < shortest_word_length:
             print(
                 "Puzzle sized adjust to fit word with the shortest length.",
                 file=sys.stderr,
             )
-            puzzle.size = shortest_word_length + 1
+            size = shortest_word_length + 1
+    return size
 
 
 def capture_all_paths_from_position(
@@ -159,13 +165,13 @@ def find_a_fit(puzzle: WordSearch, word: str, position: Position) -> Fit:
     return random_direction
 
 
-def fill_words(puzzle) -> None:
+def fill_words(puzzle: WordSearch) -> None:
     """Fill `puzzle` with the supplied `words`.
     Some words will be skipped if they don't fit."""
     puzzle._solution = [[""] * puzzle.size for _ in range(puzzle.size)]
 
     # try to place each word on the puzzle
-    for word in puzzle.words:
+    for word in puzzle.regular_words:
         try_to_fit_word(
             puzzle=puzzle,
             word=word,
@@ -173,20 +179,17 @@ def fill_words(puzzle) -> None:
     # try to place each secret word on the puzzle
     # "real" words are given priority
     # this is always done after those have been placed
-    if puzzle.secret_words:
-        for word in puzzle.secret_words:
-            try_to_fit_word(
-                puzzle=puzzle,
-                word=word,
-                secret=True,
-            )
+    for word in puzzle.secret_words:
+        try_to_fit_word(
+            puzzle=puzzle,
+            word=word,
+        )
 
 
 @retry
 def try_to_fit_word(
     puzzle: WordSearch,
-    word: str,
-    secret: bool = False,
+    word: Word,
 ) -> None:
     """Try to fit `word` at randomized coordinates.
     @retry wrapper controls the number of attempts"""
@@ -194,14 +197,14 @@ def try_to_fit_word(
         random.randint(0, puzzle.size - 1), random.randint(0, puzzle.size - 1)
     )
     # try and find a directional fit using the starting coordinates
-    fit = find_a_fit(puzzle, word, pos)
+    fit = find_a_fit(puzzle, word.text, pos)
     work_puzzle = copy.deepcopy(puzzle.solution)
     if not fit:
         raise WordFitError
     d, coords = fit
     # add word letters to a temp work puzzle at the
     # fit coordinates make sure no duplicates are created
-    for i, char in enumerate(word):
+    for i, char in enumerate(word.text):
         check_row = coords[i][0]
         check_col = coords[i][1]
         if no_duped_words(puzzle, char, (check_row, check_col)):
@@ -213,7 +216,9 @@ def try_to_fit_word(
         raise WordFitError
     puzzle._solution = copy.deepcopy(work_puzzle)
     # update placement info for word
-    puzzle._key[word] = {"start": pos, "direction": d, "secret": secret}
+    word._start_row = pos[0]
+    word._start_column = pos[1]
+    word.direction = Direction[d]
 
 
 def no_matching_neighbors(puzzle: Puzzle, char: str, position: tuple[int, int]) -> bool:

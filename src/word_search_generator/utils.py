@@ -9,16 +9,16 @@ from word_search_generator.types import (
     Direction,
     DirectionSet,
     Key,
-    KeyJson,
-    Position,
     Puzzle,
+    Word,
+    Wordlist,
 )
 
 if TYPE_CHECKING:  # pragma: no cover
     from word_search_generator import WordSearch
 
 
-def cleanup_input(words: str) -> set[str]:
+def cleanup_input(words: str, secret: bool = False) -> Wordlist:
     """Cleanup provided input string. Removing spaces
     one-letter words, and words with punctuation."""
     if not isinstance(words, str):
@@ -30,7 +30,7 @@ def cleanup_input(words: str) -> set[str]:
     # remove excess spaces and commas
     word_list = ",".join(words.split(" ")).split(",")
     # iterate through all words and pick first set that match criteria
-    word_set: set[str] = set()
+    word_set: Wordlist = set()
     while word_list and len(word_set) <= config.max_puzzle_words:
         word = word_list.pop(0)
         if (
@@ -39,7 +39,7 @@ def cleanup_input(words: str) -> set[str]:
             and not is_palindrome(word)
             and not word_contains_word(word_set, word.upper())
         ):
-            word_set.add(word.upper())
+            word_set.add(Word(word, secret=secret))
     # if no words were left raise exception
     if not word_set:
         raise ValueError("Use words longer than one-character and without punctuation.")
@@ -56,15 +56,15 @@ def is_palindrome(word: str) -> bool:
     return word == word[::-1]
 
 
-def word_contains_word(words: set[str], word: str) -> bool:
+def word_contains_word(words: Wordlist, word: str) -> bool:
     """Make sure `test_word` cannot be found in any word
     in `words`, going forward or backward."""
     for test_word in words:
         if (
-            word in test_word.upper()
-            or word[::-1] in test_word.upper()
-            or test_word.upper() in word
-            or test_word.upper()[::-1] in word
+            word in test_word.text.upper()
+            or word[::-1] in test_word.text.upper()
+            or test_word.text.upper() in word
+            or test_word.text.upper()[::-1] in word
         ):
             return True
     return False
@@ -161,7 +161,7 @@ def format_puzzle_for_show(puzzle: WordSearch, show_solution: bool = False) -> s
 Find these words: {word_list if word_list else '<ALL SECRET WORDS>'}
 * Words can go {get_level_dirs_str(puzzle.level)}.
 
-Answer Key: {get_answer_key_str(puzzle.key)}"""
+Answer Key: {get_answer_key_str(puzzle)}"""
 
 
 def get_level_dirs_str(level: DirectionSet) -> str:
@@ -179,36 +179,14 @@ def get_word_list_list(key: Key) -> list[str]:
     return [k for k in sorted(key.keys()) if not key[k]["secret"]]
 
 
-def get_answer_key_list(key: Key) -> list[str]:
+def get_answer_key_list(puzzle: WordSearch) -> list[str]:
     """Return a easy to read answer key for display/export."""
-    keys = []
-    for k in sorted(key.keys()):
-        direction = key[k]["direction"]
-        start: Position = key[k]["start"]
-        # add '*' flag if word is secret
-        if key[k]["secret"]:
-            k = f"*{k}"
-        keys.append(f"{k} {direction} @ {start.xy_str}")
-    return keys
+    return [word.key_string for word in sorted(puzzle.words, key=lambda w: w.text)]
 
 
-def get_answer_key_str(key: Key) -> str:
+def get_answer_key_str(puzzle: WordSearch) -> str:
     """Return a easy to read answer key for display."""
-    keys = get_answer_key_list(key)
-    return ", ".join(keys)
-
-
-def get_answer_key_json(key: Key) -> KeyJson:
-    """Return..."""
-    json_key: KeyJson = {}
-    for k in sorted(key.keys()):
-        json_key[k] = {
-            "direction": key[k]["direction"],
-            "start_row": key[k]["start"][0],
-            "start_col": key[k]["start"][1],
-            "secret": key[k]["secret"],
-        }
-    return json_key
+    return ", ".join(get_answer_key_list(puzzle))
 
 
 def get_random_words(n: int) -> str:

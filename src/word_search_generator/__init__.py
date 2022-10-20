@@ -13,10 +13,10 @@ __version__ = "1.4.0"
 
 import json
 from pathlib import Path
-from typing import Iterable, Optional, Union
+from typing import Any, Iterable, Optional, Union
 
 from . import config, export, generate, utils
-from .types import DirectionSet, Key, Puzzle
+from .types import DirectionSet, Puzzle, Wordlist
 
 
 class WordSearch:
@@ -50,7 +50,6 @@ class WordSearch:
         self._secret_words = (
             utils.cleanup_input(secret_words) - self._words if secret_words else set()
         )
-        # TODO: Check max puzzle words should include both regular and secret words
 
         # determine valid directions
         self._directions: DirectionSet = (
@@ -64,20 +63,35 @@ class WordSearch:
         self._puzzle: Puzzle = []
         self._solution: Puzzle = []
         self._size: int = size if size else 0
-        self._key: Key = {}
 
-        if self.words or self.secret_words:
+        if self._words or self._secret_words:
+            self._process_input(words, secret_words)
+            # TODO: Check max puzzle words should include both regular and secret words
+
+        if self.words:
+            self._size = generate.calc_puzzle_size(self._words, self._directions, size)
             self._generate()
 
     @property
-    def words(self) -> set[str]:
+    def words(self) -> Wordlist | set[Any]:
         """The current puzzle words."""
-        return self._words
+        if not self._words:
+            return set()
+        return {word for word in self._words if not word.secret}
 
     @property
-    def secret_words(self) -> set[str]:
+    def regular_words(self) -> Wordlist | set[Any]:
         """The current secret puzzle words."""
-        return self._secret_words
+        if not self._words:
+            return set()
+        return {word for word in self._words if not word.secret}
+
+    @property
+    def secret_words(self) -> Wordlist | set[Any]:
+        """The current secret puzzle words."""
+        if not self._words:
+            return set()
+        return {word for word in self._words if word.secret}
 
     @property
     def puzzle(self) -> Puzzle:
@@ -90,23 +104,26 @@ class WordSearch:
         return self._solution
 
     @property
-    def key(self) -> Key:
+    def key(self):  # -> Key:
         """The current puzzle answer key (1-based)."""
-        return self._key
+        return {word.text: word.key_info for word in self.words if word.direction}
 
     @property
     def json(self) -> str:
         """The current puzzle, words, and answer key in JSON."""
-        if self._puzzle:
-            return json.dumps(
-                {
-                    "puzzle": self.puzzle,
-                    "words": list(self.words),
-                    "key": utils.get_answer_key_json(self.key),
-                }
-            )
-        else:
+        if not self.key:
             return json.dumps({})
+        return json.dumps(
+            {
+                "puzzle": self.puzzle,
+                "words": [word.text for word in self.words],
+                "key": {
+                    word.text: word.key_info_json
+                    for word in self.words
+                    if word.direction
+                },
+            }
+        )
 
     @property
     def directions(self) -> DirectionSet:
@@ -182,8 +199,9 @@ class WordSearch:
                 f"Puzzle size must be >= {config.min_puzzle_size}"
                 + f" and <= {config.max_puzzle_size}"
             )
-        self._size = val
-        self._reset_puzzle()
+        if self._size != val:
+            self._size = val
+            self._reset_puzzle()
 
     def reset_size(self):
         """Reset the puzzle size to the default setting
@@ -192,10 +210,20 @@ class WordSearch:
         self._reset_puzzle()
 
     def _generate(self) -> None:
-        generate.calc_puzzle_size(self)
         generate.fill_words(self)
         if self.key:
             generate.fill_blanks(self)
+
+    def _process_input(
+        self, words: Optional[str] = None, secret_words: Optional[str] = None
+    ):
+        clean_words = utils.cleanup_input(words) if words else set()
+        clean_secret_words = (
+            utils.cleanup_input(secret_words, True) - clean_words
+            if secret_words
+            else set()
+        )
+        self._words = clean_words.union(clean_secret_words)
 
     def show(self, solution: bool = False) -> None:
         """Show the current puzzle with or without the solution.
@@ -319,10 +347,10 @@ class WordSearch:
 
     def __repr__(self):
         return (
-            f"{self.__class__.__name__}('{','.join(self.words)}', "  # ClassName & words
-            + f"{utils.direction_set_repr(self.directions)}, "  # directions
-            + f"{self.size}, '{','.join(self.secret_words)}',"  # size+secrets
-            + f"{utils.direction_set_repr(self.secret_directions)})"  # secret dirs
+            f"{self.__class__.__name__}('{[word.text for word in self.words]}', "
+            + f"{utils.direction_set_repr(self.directions)}, "
+            + f"{self.size}, '{','.join([word.text for word in self.secret_words])}',"
+            + f"{utils.direction_set_repr(self.secret_directions)})"
         )
 
     def __str__(self):
