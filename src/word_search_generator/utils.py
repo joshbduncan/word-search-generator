@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import random
 import string
-from typing import Iterable
+from typing import TYPE_CHECKING, Iterable
 
 from word_search_generator import config
 from word_search_generator.types import (
@@ -12,21 +14,13 @@ from word_search_generator.types import (
     Puzzle,
 )
 
+if TYPE_CHECKING:  # pragma: no cover
+    from word_search_generator import WordSearch
+
 
 def cleanup_input(words: str) -> set[str]:
     """Cleanup provided input string. Removing spaces
-    one-letter words, and words with punctuation.
-
-    Args:
-        words (str): String of words separated by commas, spaces, or new lines.
-
-    Raises:
-        TypeError: A string was not provided.
-        ValueError: No proper words were provided.
-
-    Returns:
-        set[str]: Words to be placed in the puzzle.
-    """
+    one-letter words, and words with punctuation."""
     if not isinstance(words, str):
         raise TypeError(
             "Words must be a string separated by spaces, commas, or new lines"
@@ -64,13 +58,7 @@ def is_palindrome(word: str) -> bool:
 
 def word_contains_word(words: set[str], word: str) -> bool:
     """Make sure `test_word` cannot be found in any word
-    in `words`, going forward or backward.
-    Args:
-        words (str): Current puzzle word list.
-        word (str): Word to check for.
-    Returns:
-        bool: If word was found contained in any word in words.
-    """
+    in `words`, going forward or backward."""
     for test_word in words:
         if (
             word in test_word.upper()
@@ -123,22 +111,14 @@ def direction_set_repr(ds: DirectionSet) -> str:
     return ("'" + ",".join(d.name for d in ds) + "'") if ds else "None"
 
 
-def highlight_solution(puzzle: Puzzle, solution: Puzzle) -> Puzzle:
-    """Convert puzzle array of nested lists into a string.
-
-    Args:
-        puzzle (Puzzle): The current puzzle state.
-        solution (Puzzle): The current puzzle solution.
-
-    Returns:
-        str: The current puzzle as a string with highlighting.
-    """
-    output = []
-    for r, line in enumerate(puzzle):
+def highlight_solution(puzzle: WordSearch) -> Puzzle:
+    """Add highlighting to puzzle solution."""
+    output: Puzzle = []
+    for r, line in enumerate(puzzle.puzzle):
         line_chars = []
-        # check to see if character if part of a puzzle word
+        # check to see if character if part of the solution
         for c, char in enumerate(line):
-            if solution[r][c]:
+            if puzzle.solution[r][c]:
                 line_chars.append(f"\u001b[1m\u001b[31m{char}\u001b[0m")
             else:
                 line_chars.append(f"{char}")
@@ -147,16 +127,8 @@ def highlight_solution(puzzle: Puzzle, solution: Puzzle) -> Puzzle:
 
 
 def make_header(puzzle: Puzzle, text: str) -> str:
-    """Generate a header that fits the current puzzle.
-
-    Args:
-        puzzle (Puzzle): The current puzzle state.
-        text (str): The text to include in the header.
-
-    Returns:
-        str: Formatted header.
-    """
-    hr = "-" * (len(puzzle) * 2 - 1)
+    """Generate a header that fits the current puzzle."""
+    hr = "-" * max(11, (len(puzzle) * 2 - 1))
     padding = " " * ((len(hr) - len(text)) // 2)
     return f"""{hr}
 {padding}{text}{padding}
@@ -164,14 +136,7 @@ def make_header(puzzle: Puzzle, text: str) -> str:
 
 
 def stringify(puzzle: Puzzle) -> str:
-    """Convert puzzle array of nested lists into a string.
-
-    Args:
-        puzzle (Puzzle): The current puzzle state.
-
-    Returns:
-        str: The current puzzle as a string.
-    """
+    """Convert puzzle array of nested lists into a string."""
     output = []
     for line in puzzle:
         output.append(" ".join(line))
@@ -185,27 +150,18 @@ def replace_right(
     return replacement.join(string.rsplit(target, replacements))
 
 
-def format_puzzle_for_show(
-    puzzle: Puzzle,
-    key: Key,
-    level: DirectionSet,
-    solution: Puzzle,
-    show_solution: bool = False,
-    header: str = "WORD SEARCH",
-) -> str:
-    header = make_header(puzzle, header)
-    word_list = get_word_list_str(key)
+def format_puzzle_for_show(puzzle: WordSearch, show_solution: bool = False) -> str:
+    header = make_header(puzzle.puzzle, "WORD SEARCH")
+    word_list = get_word_list_str(puzzle.key)
     # highlight solution if provided
-    if show_solution:
-        puzzle = highlight_solution(puzzle, solution=solution)
-
+    puzzle_list = highlight_solution(puzzle) if show_solution else puzzle.puzzle
     return f"""{header}
-{stringify(puzzle)}
+{stringify(puzzle_list)}
 
 Find these words: {word_list if word_list else '<ALL SECRET WORDS>'}
-* Words can go {get_level_dirs_str(level)}.
+* Words can go {get_level_dirs_str(puzzle.level)}.
 
-Answer Key: {get_answer_key_str(key)}"""
+Answer Key: {get_answer_key_str(puzzle.key)}"""
 
 
 def get_level_dirs_str(level: DirectionSet) -> str:

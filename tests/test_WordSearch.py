@@ -221,19 +221,13 @@ def test_puzzle_non_equal():
 
 def test_puzzle_str():
     puzzle = WordSearch(WORDS)
-    puzzle_str = utils.format_puzzle_for_show(
-        puzzle.puzzle, puzzle.key, puzzle.directions, puzzle.solution
-    )
+    puzzle_str = utils.format_puzzle_for_show(puzzle)
     assert str(puzzle) == puzzle_str
 
 
 def test_puzzle_str_output(capsys):
     puzzle = WordSearch(WORDS)
-    print(
-        utils.format_puzzle_for_show(
-            puzzle.puzzle, puzzle.key, puzzle.directions, puzzle.solution
-        )
-    )
+    print(utils.format_puzzle_for_show(puzzle))
     capture1 = capsys.readouterr()
     print(puzzle)
     capture2 = capsys.readouterr()
@@ -242,11 +236,7 @@ def test_puzzle_str_output(capsys):
 
 def test_puzzle_show_output(capsys):
     puzzle = WordSearch(WORDS)
-    print(
-        utils.format_puzzle_for_show(
-            puzzle.puzzle, puzzle.key, puzzle.directions, puzzle.solution
-        )
-    )
+    print(utils.format_puzzle_for_show(puzzle))
     capture1 = capsys.readouterr()
     puzzle.show()
     capture2 = capsys.readouterr()
@@ -271,11 +261,7 @@ def test_puzzle_show_str_output_for_empty_object(capsys):
 
 def test_puzzle_show_solution_output(capsys):
     puzzle = WordSearch(WORDS)
-    print(
-        utils.format_puzzle_for_show(
-            puzzle.puzzle, puzzle.key, puzzle.directions, puzzle.solution, True
-        )
-    )
+    print(utils.format_puzzle_for_show(puzzle, True))
     capture1 = capsys.readouterr()
     puzzle.show(True)
     capture2 = capsys.readouterr()

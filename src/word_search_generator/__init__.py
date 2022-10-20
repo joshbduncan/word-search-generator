@@ -204,15 +204,7 @@ class WordSearch:
             solution (bool, optional): Highlight the puzzle solution. Defaults to False.
         """
         if self.key:
-            print(
-                utils.format_puzzle_for_show(
-                    self.puzzle,
-                    self.key,
-                    self.directions,
-                    self.solution,
-                    solution,
-                )
-            )
+            print(utils.format_puzzle_for_show(self, solution))
         else:
             print("Empty puzzle.")
 
@@ -326,9 +318,8 @@ class WordSearch:
         return False
 
     def __repr__(self):
-        words_str = ",".join(self.words)
         return (
-            f"{self.__class__.__name__}('{words_str}', "  # ClassName & words
+            f"{self.__class__.__name__}('{','.join(self.words)}', "  # ClassName & words
             + f"{utils.direction_set_repr(self.directions)}, "  # directions
             + f"{self.size}, '{','.join(self.secret_words)}',"  # size+secrets
             + f"{utils.direction_set_repr(self.secret_directions)})"  # secret dirs
@@ -336,11 +327,6 @@ class WordSearch:
 
     def __str__(self):
         if self.key:
-            return utils.format_puzzle_for_show(
-                self.puzzle,
-                self.key,
-                self.directions,
-                self.solution,
-            )
+            return utils.format_puzzle_for_show(self)
         else:
             return "Empty puzzle."
