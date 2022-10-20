@@ -14,13 +14,13 @@ WORDS = "dog, cat, pig, horse, donkey, turtle, goat, sheep"
 def check_key(key: Key, puzzle: Puzzle) -> bool:
     """Test the puzzle key against the current puzzle state."""
     for word, info in key.items():
-        row, col = info["start"]
-        d = Direction[info["direction"]]
+        row, col = info["start"]  # type: ignore
+        d = info["direction"]  # type: ignore
         for char in word:
             if puzzle[row][col] != char:
                 return False
-            row += d.r_move
-            col += d.c_move
+            row += d.r_move  # type: ignore
+            col += d.c_move  # type: ignore
     return True
 
 
@@ -303,7 +303,7 @@ def test_for_empty_spaces():
 
 def test_puzzle_with_secret_words():
     puzzle = WordSearch(WORDS, secret_words=WORDS + ", dewlap")
-    assert puzzle.secret_words == {"DEWLAP"}  # should all be ignored due to overlap
+    assert len(puzzle.secret_words) == 1  # should all be ignored due to overlap
 
 
 def test_clearing_secret_directions():

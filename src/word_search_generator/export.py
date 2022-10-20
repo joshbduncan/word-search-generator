@@ -69,7 +69,7 @@ def write_csv_file(path: Path, puzzle: WordSearch, solution: bool = False) -> Pa
         )
         f_writer.writerow([""])
         f_writer.writerow(["Answer Key:"])
-        f_writer.writerow(utils.get_answer_key_list(puzzle))
+        f_writer.writerow(utils.get_answer_key_list(puzzle.words))
         if solution:
             f_writer.writerow([""])
             f_writer.writerow(["SOLUTION"])
@@ -174,7 +174,6 @@ def draw_puzzle_page(pdf: FPDF, puzzle: WordSearch, solution: bool = False) -> F
 
     # write word list
     word_list = utils.get_word_list_str(puzzle.key)
-    print(f"{len(word_list)=}")
     pdf.set_font("Helvetica", "B", size=info_font_size)
     pdf.set_font_size(info_font_size)
     pdf.multi_cell(
@@ -193,6 +192,6 @@ def draw_puzzle_page(pdf: FPDF, puzzle: WordSearch, solution: bool = False) -> F
         pdf.set_xy(pdf.epw - pdf.epw, 0)
         pdf.set_margin(0.25)
         pdf.set_font("Helvetica", size=config.pdf_font_size_S)
-        pdf.write(txt="Answer Key: " + utils.get_answer_key_str(puzzle))
+        pdf.write(txt="Answer Key: " + utils.get_answer_key_str(puzzle.placed_words))
 
     return pdf

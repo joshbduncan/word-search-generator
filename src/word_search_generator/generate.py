@@ -169,7 +169,6 @@ def fill_words(puzzle: WordSearch) -> None:
     """Fill `puzzle` with the supplied `words`.
     Some words will be skipped if they don't fit."""
     puzzle._solution = [[""] * puzzle.size for _ in range(puzzle.size)]
-
     # try to place each word on the puzzle
     for word in puzzle.regular_words:
         try_to_fit_word(

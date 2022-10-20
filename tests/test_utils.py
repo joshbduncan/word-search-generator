@@ -1,7 +1,7 @@
 import pytest
 
-from word_search_generator import utils
-from word_search_generator.types import KeyInfo, Position
+from word_search_generator import WordSearch, utils
+from word_search_generator.types import Word
 
 
 def test_valid_cleanup_input_with_spaces():
@@ -37,7 +37,10 @@ def test_palindromes():
 
 
 def test_word_within_word():
-    assert utils.word_contains_word({"rain", "sun", "clouds"}, "")
+    words = set()
+    for word in ["rain", "sun", "clouds"]:
+        words.add(Word(word))
+    assert utils.word_contains_word(words, "")
 
 
 def test_invalid_level_direction_type():
@@ -46,15 +49,6 @@ def test_invalid_level_direction_type():
 
 
 def test_answer_key_list():
-    key = {}
-    key["BAT"] = KeyInfo(
-        {"start": Position(row=0, column=0), "direction": "SE", "secret": False}
-    )
-    key["CAB"] = KeyInfo(
-        {"start": Position(row=4, column=2), "direction": "SE", "secret": False}
-    )
-    key["RAT"] = KeyInfo(
-        {"start": Position(row=0, column=4), "direction": "S", "secret": True}
-    )
-    key_as_list = utils.get_answer_key_list(key)
-    assert len(key_as_list) == len(key) and key_as_list[0].startswith("BAT")
+    p = WordSearch("bat cab rat")
+    key_as_list = utils.get_answer_key_list(p.regular_words)
+    assert len(key_as_list) == len(p.key) and key_as_list[0].startswith("BAT")

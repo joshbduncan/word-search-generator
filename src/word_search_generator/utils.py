@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import random
 import string
-from typing import TYPE_CHECKING, Iterable
+from typing import TYPE_CHECKING, Any, Iterable
 
 from word_search_generator import config
 from word_search_generator.types import (
@@ -161,7 +161,7 @@ def format_puzzle_for_show(puzzle: WordSearch, show_solution: bool = False) -> s
 Find these words: {word_list if word_list else '<ALL SECRET WORDS>'}
 * Words can go {get_level_dirs_str(puzzle.level)}.
 
-Answer Key: {get_answer_key_str(puzzle)}"""
+Answer Key: {get_answer_key_str(puzzle.placed_words)}"""
 
 
 def get_level_dirs_str(level: DirectionSet) -> str:
@@ -179,14 +179,18 @@ def get_word_list_list(key: Key) -> list[str]:
     return [k for k in sorted(key.keys()) if not key[k]["secret"]]
 
 
-def get_answer_key_list(puzzle: WordSearch) -> list[str]:
+def get_answer_key_list(words: Wordlist) -> list[Any]:
     """Return a easy to read answer key for display/export."""
-    return [word.key_string for word in sorted(puzzle.words, key=lambda w: w.text)]
+    keys = []
+    for w in sorted(words, key=lambda word: word.text):
+        keys.append(w.key_string)
+    return keys
 
 
-def get_answer_key_str(puzzle: WordSearch) -> str:
+def get_answer_key_str(words: Wordlist) -> str:
     """Return a easy to read answer key for display."""
-    return ", ".join(get_answer_key_list(puzzle))
+    keys = get_answer_key_list(words)
+    return ", ".join(keys)
 
 
 def get_random_words(n: int) -> str:

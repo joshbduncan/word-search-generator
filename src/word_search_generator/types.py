@@ -69,21 +69,26 @@ class Word:
 
     @property
     def start_row(self) -> int | None:
-        if self._start_row:
+        if isinstance(self._start_row, int):
             return self._start_row
         return None
 
     @property
     def start_column(self) -> int | None:
-        if self._start_column:
+        if isinstance(self._start_column, int):
             return self._start_column
         return None
 
     @property
     def position(self) -> Position | None:
-        if self.start_row and self.start_column:
+        if isinstance(self.start_row, int) and isinstance(self.start_column, int):
             return Position(self.start_row, self.start_column)
         return None
+
+    @position.setter
+    def position(self, val: Position):
+        self._start_row = val.row
+        self._start_column = val.column
 
     @property
     def position_xy(self) -> str | None:
@@ -94,9 +99,7 @@ class Word:
         return None
 
     @property
-    def key_info(self) -> KeyInfo | None:
-        if not self.direction:
-            return None
+    def key_info(self) -> KeyInfo:
         return {
             "start": self.position,
             "direction": self.direction,
@@ -104,22 +107,23 @@ class Word:
         }
 
     @property
-    def key_info_json(self) -> KeyInfoJson | None:
-        if not self.direction:
-            return None
+    def key_info_json(self) -> KeyInfoJson:
         return {
             "start_row": self.start_row,
             "start_col": self.start_column,
-            "direction": self.direction.name,
+            "direction": self.direction.name if self.direction else None,
             "secret": self.secret,
         }
 
     @property
     def key_string(self) -> str | None:
-        if not self.direction:
+        if not self.position:
             return None
-        return f"{'*' if self.secret else ''}{self.text} \
-            {self.direction.name} @ {self.position_xy}"
+        return (
+            f"{'*' if self.secret else ''}{self.text} "
+            + f"{self.direction.name if self.direction else self.direction}"
+            + f" @ {self.position_xy}"
+        )
 
     def __eq__(self, __o: object) -> bool:
         if not isinstance(__o, Word):
@@ -132,7 +136,8 @@ class Word:
     def __repr__(self):
         return (
             f"{self.__class__.__name__}('{self.text}', "
-            + f"{self.position}, "
+            + f"{self.start_row}, "
+            + f"{self.start_column}, "
             + f"{self.direction}, "
             + f"{self.secret})"
         )

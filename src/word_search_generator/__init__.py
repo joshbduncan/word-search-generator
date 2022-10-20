@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any, Iterable, Optional, Union
 
 from . import config, export, generate, utils
-from .types import DirectionSet, Puzzle, Wordlist
+from .types import DirectionSet, Key, Puzzle, Wordlist
 
 
 class WordSearch:
@@ -77,7 +77,14 @@ class WordSearch:
         """The current puzzle words."""
         if not self._words:
             return set()
-        return {word for word in self._words if not word.secret}
+        return {word for word in self._words}
+
+    @property
+    def placed_words(self) -> Wordlist | set[Any]:
+        """The current puzzle words."""
+        if not self._words:
+            return set()
+        return {word for word in self._words if word.position}
 
     @property
     def regular_words(self) -> Wordlist | set[Any]:
@@ -104,9 +111,9 @@ class WordSearch:
         return self._solution
 
     @property
-    def key(self):  # -> Key:
+    def key(self) -> Key:
         """The current puzzle answer key (1-based)."""
-        return {word.text: word.key_info for word in self.words if word.direction}
+        return {word.text: word.key_info for word in self.words if word.position}
 
     @property
     def json(self) -> str:
@@ -206,7 +213,7 @@ class WordSearch:
     def reset_size(self):
         """Reset the puzzle size to the default setting
         (based on longest word length and total words)."""
-        self._size = 0
+        self._size = generate.calc_puzzle_size(self._words, self._directions)
         self._reset_puzzle()
 
     def _generate(self) -> None:
@@ -347,7 +354,8 @@ class WordSearch:
 
     def __repr__(self):
         return (
-            f"{self.__class__.__name__}('{[word.text for word in self.words]}', "
+            f"{self.__class__.__name__}"
+            + f"('{','.join([word.text for word in self.regular_words])}', "
             + f"{utils.direction_set_repr(self.directions)}, "
             + f"{self.size}, '{','.join([word.text for word in self.secret_words])}',"
             + f"{utils.direction_set_repr(self.secret_directions)})"
