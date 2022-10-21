@@ -346,3 +346,27 @@ def test_replace_words_with_resize():
     puzzle.size = 5
     puzzle.replace_words("set, of replaced, words", reset_size=True)
     assert puzzle.size != 5
+
+
+def test_no_played_words():
+    p = WordSearch()
+    assert len(p.played_words) == 0
+
+
+def test_no_hidden_words():
+    p = WordSearch()
+    assert len(p.played_words) == 0
+
+
+def test_placed_hidden_words():
+    p = WordSearch("cat bat rat")
+    assert len(p.placed_hidden_words) == len(
+        {word for word in p.hidden_words if word.position}
+    )
+
+
+def test_placed_secret_words():
+    p = WordSearch("pig horse cow", secret_words="cat bat rat")
+    assert len(p.placed_secret_words) == len(
+        {word for word in p.secret_words if word.position}
+    )

@@ -14,10 +14,10 @@ WORDS = "dog, cat, pig, horse, donkey, turtle, goat, sheep"
 
 def test_export_pdf_puzzles(tmp_path):
     """Export a bunch of puzzles as PDF and make sure they are all 1-page."""
-    sizes = [s for s in range(config.min_puzzle_size, config.max_puzzle_size)]
     puzzles = []
     pages = set()
-    for size in sizes:
+    for _ in range(10):
+        size = random.choice(range(config.min_puzzle_size, config.max_puzzle_size))
         words = utils.get_random_words(
             random.randint(config.min_puzzle_words, config.max_puzzle_words)
         )
@@ -48,10 +48,10 @@ def test_export_csv_puzzle_with_solution(tmp_path):
 
 def test_export_pdf_puzzle_with_solution(tmp_path):
     """Make sure a pdf puzzle exported with the solution is 2 pages."""
-    sizes = [s for s in range(config.min_puzzle_size, config.max_puzzle_size)]
     puzzles = []
     pages = set()
-    for size in sizes:
+    for _ in range(10):
+        size = random.choice(range(config.min_puzzle_size, config.max_puzzle_size))
         words = utils.get_random_words(
             random.randint(config.min_puzzle_words, config.max_puzzle_words)
         )

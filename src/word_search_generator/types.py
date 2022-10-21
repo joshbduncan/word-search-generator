@@ -114,8 +114,6 @@ class Word:
 
     @property
     def key_string(self) -> str | None:
-        if not self.position:
-            return None
         return (
             f"{'*' if self.secret else ''}{self.text} "
             + f"{self.direction.name if self.direction else self.direction}"
@@ -131,13 +129,7 @@ class Word:
         return hash(self.text)
 
     def __repr__(self):
-        return (
-            f"{self.__class__.__name__}('{self.text}', "
-            + f"{self.start_row}, "
-            + f"{self.start_column}, "
-            + f"{self.direction}, "
-            + f"{self.secret})"
-        )
+        return f"{self.__class__.__name__}('{self.text}', " + f"{self.secret})"
 
     def __str__(self):
         return self.text

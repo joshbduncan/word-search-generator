@@ -74,22 +74,16 @@ class WordSearch:
     @property
     def words(self) -> Wordlist | set[Any]:
         """The current puzzle words."""
-        if not self._words:
-            return set()
         return {word for word in self._words}
 
     @property
     def played_words(self) -> Wordlist | set[Any]:
         """The current puzzle words."""
-        if not self._words:
-            return set()
         return {word for word in self._words if word.position}
 
     @property
     def hidden_words(self) -> Wordlist | set[Any]:
         """The current puzzle words."""
-        if not self._words:
-            return set()
         return {word for word in self._words if not word.secret}
 
     @property
@@ -100,8 +94,6 @@ class WordSearch:
     @property
     def secret_words(self) -> Wordlist | set[Any]:
         """The current secret puzzle words."""
-        if not self._words:
-            return set()
         return {word for word in self._words if word.secret}
 
     @property
