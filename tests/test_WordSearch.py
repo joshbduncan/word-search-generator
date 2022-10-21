@@ -5,7 +5,7 @@ import pytest
 
 from word_search_generator import WordSearch, config, utils
 from word_search_generator.config import level_dirs
-from word_search_generator.types import Direction, Key, Puzzle
+from word_search_generator.types import Direction, Key, Puzzle, Word
 from word_search_generator.utils import get_random_words
 
 WORDS = "dog, cat, pig, horse, donkey, turtle, goat, sheep"
@@ -130,27 +130,29 @@ def test_invalid_save_path():
 def test_add_words():
     puzzle = WordSearch(WORDS)
     puzzle.add_words("test")
-    assert "test".upper() in puzzle.words
+    assert Word("test") in puzzle.words
 
 
 def test_add_regular_words_replacing_secret_word():
     puzzle = WordSearch(WORDS)
     puzzle.add_words("test", True)
     puzzle.add_words("test")
-    assert "test".upper() not in puzzle.secret_words and "test".upper() in puzzle.words
+    assert Word("test") not in puzzle.secret_words and Word("test") in puzzle.words
 
 
 def test_add_secret_words():
     puzzle = WordSearch(WORDS)
     puzzle.add_words("test", True)
-    assert "test".upper() in puzzle.secret_words
+    assert Word("test") in puzzle.secret_words
 
 
 def test_add_secret_words_replacing_regular_word():
     puzzle = WordSearch(WORDS)
     puzzle.add_words("test")
     puzzle.add_words("test", True)
-    assert "test".upper() not in puzzle.words and "test".upper() in puzzle.secret_words
+    assert (
+        Word("test") not in puzzle.hidden_words and Word("test") in puzzle.secret_words
+    )
 
 
 def test_remove_words():

@@ -45,11 +45,19 @@ class WordSearch:
                 potential word directions for 'secret' words. Defaults to None.
         """
 
+        # setup puzzle
+        self._puzzle: Puzzle = []
+        self._solution: Puzzle = []
+        self._size: int = size if size else 0
+
         # setup words
-        self._words = utils.cleanup_input(words) if words else set()
-        self._secret_words = (
-            utils.cleanup_input(secret_words) - self._words if secret_words else set()
-        )
+        # TODO: Check max puzzle words should include both regular and secret words
+        self._words: Wordlist = set()
+        # in case of dupes, add secret words first so they are overwritten
+        if secret_words:
+            self._process_input(secret_words, "add", True)
+        if words:
+            self._process_input(words, "add")
 
         # determine valid directions
         self._directions: DirectionSet = (
@@ -58,15 +66,6 @@ class WordSearch:
         self._secret_directions: Optional[DirectionSet] = (
             utils.validate_level(secret_level) if secret_level else self.directions
         )
-
-        # setup puzzle
-        self._puzzle: Puzzle = []
-        self._solution: Puzzle = []
-        self._size: int = size if size else 0
-
-        if self._words or self._secret_words:
-            self._process_input(words, secret_words)
-            # TODO: Check max puzzle words should include both regular and secret words
 
         if self.words:
             self._size = generate.calc_puzzle_size(self._words, self._directions, size)
@@ -80,18 +79,23 @@ class WordSearch:
         return {word for word in self._words}
 
     @property
-    def placed_words(self) -> Wordlist | set[Any]:
+    def played_words(self) -> Wordlist | set[Any]:
         """The current puzzle words."""
         if not self._words:
             return set()
         return {word for word in self._words if word.position}
 
     @property
-    def regular_words(self) -> Wordlist | set[Any]:
-        """The current secret puzzle words."""
+    def hidden_words(self) -> Wordlist | set[Any]:
+        """The current puzzle words."""
         if not self._words:
             return set()
         return {word for word in self._words if not word.secret}
+
+    @property
+    def placed_hidden_words(self) -> Wordlist | set[Any]:
+        """The current puzzle words."""
+        return {word for word in self.hidden_words if word.position}
 
     @property
     def secret_words(self) -> Wordlist | set[Any]:
@@ -99,6 +103,11 @@ class WordSearch:
         if not self._words:
             return set()
         return {word for word in self._words if word.secret}
+
+    @property
+    def placed_secret_words(self) -> Wordlist | set[Any]:
+        """The current secret puzzle words."""
+        return {word for word in self.secret_words if word.position}
 
     @property
     def puzzle(self) -> Puzzle:
@@ -221,16 +230,21 @@ class WordSearch:
         if self.key:
             generate.fill_blanks(self)
 
-    def _process_input(
-        self, words: Optional[str] = None, secret_words: Optional[str] = None
-    ):
-        clean_words = utils.cleanup_input(words) if words else set()
-        clean_secret_words = (
-            utils.cleanup_input(secret_words, True) - clean_words
-            if secret_words
-            else set()
-        )
-        self._words = clean_words.union(clean_secret_words)
+    def _process_input(self, words: str, action: str = "add", secret: bool = False):
+        if secret:
+            clean_words = utils.cleanup_input(words, secret=True)
+        else:
+            clean_words = utils.cleanup_input(words)
+
+        if action == "add":
+            # remove all new words first so any updates are reflected in the word list
+            self._words.symmetric_difference_update(clean_words)
+            self._words.update(clean_words)
+        if action == "remove":
+            self._words.difference_update(clean_words)
+        if action == "replace":
+            self._words.clear()
+            self._words.update(clean_words)
 
     def show(self, solution: bool = False) -> None:
         """Show the current puzzle with or without the solution.
@@ -275,19 +289,13 @@ class WordSearch:
         """Add words to the puzzle.
 
         Args:
-            words (str): Words to add.
-            secret (bool, optional): Should the new words be added
-            to the secret word list. Defaults to False.
+            words (str): Words to remove.
+            secret (bool, optional): Should the new words
+            be secret. Defaults to False.
             reset_size (bool, optional): Reset the puzzle
             size based on the updated words. Defaults to False.
         """
-        words_to_add = utils.cleanup_input(words)
-        if secret:
-            self._words = self.words - words_to_add
-            self._secret_words.update(words_to_add)
-        else:
-            self._secret_words = self.secret_words - words_to_add
-            self._words.update(words_to_add)
+        self._process_input(words, "add", secret)
         if reset_size:
             self.reset_size()
         self._reset_puzzle()
@@ -296,15 +304,11 @@ class WordSearch:
         """Remove words from the puzzle.
 
         Args:
-            words (str): Words to remove. Words will be removed
-            from the puzzle regardless of the list they are a
-            part of (`words` or `secret_words`).
+            words (str): Words to remove.
             reset_size (bool, optional): Reset the puzzle
             size based on the updated words. Defaults to False.
         """
-        words_to_remove = utils.cleanup_input(words)
-        self._words = self.words - words_to_remove
-        self._secret_words = self.secret_words - words_to_remove
+        self._process_input(words, "remove")
         if reset_size:
             self.reset_size()
         self._reset_puzzle()
@@ -312,22 +316,16 @@ class WordSearch:
     def replace_words(
         self, words: str, secret: bool = False, reset_size: bool = False
     ) -> None:
-        """Replace words in the puzzle.
+        """Replace all words from the puzzle.
 
         Args:
             words (str): Words to add.
-            secret (bool, optional): Ass the new words be added
-            to the secret word list. Defaults to False.
+            secret (bool, optional): Should the new words
+            be secret. Defaults to False.
             reset_size (bool, optional): Reset the puzzle
             size based on the updated words. Defaults to False.
         """
-        words_to_add = utils.cleanup_input(words)
-        if secret:
-            self._words = self.words - words_to_add
-            self._secret_words = words_to_add
-        else:
-            self._secret_words = self.secret_words - words_to_add
-            self._words = words_to_add
+        self._process_input(words, "replace", secret)
         if reset_size:
             self.reset_size()
         self._reset_puzzle()
@@ -355,7 +353,7 @@ class WordSearch:
     def __repr__(self):
         return (
             f"{self.__class__.__name__}"
-            + f"('{','.join([word.text for word in self.regular_words])}', "
+            + f"('{','.join([word.text for word in self.hidden_words])}', "
             + f"{utils.direction_set_repr(self.directions)}, "
             + f"{self.size}, '{','.join([word.text for word in self.secret_words])}',"
             + f"{utils.direction_set_repr(self.secret_directions)})"

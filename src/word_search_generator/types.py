@@ -56,15 +56,12 @@ class Word:
     def __init__(
         self,
         text: str,
-        start_row: Optional[int] = None,
-        start_column: Optional[int] = None,
-        direction: Optional[Direction] = None,
         secret: bool = False,
     ):
         self.text = text.upper()
-        self._start_row: Optional[int] = start_row
-        self._start_column: Optional[int] = start_column
-        self.direction: Optional[Direction] = direction
+        self._start_row: Optional[int] = None
+        self._start_column: Optional[int] = None
+        self.direction: Optional[Direction] = None
         self.secret = secret
 
     @property
@@ -94,7 +91,7 @@ class Word:
     def position_xy(self) -> str | None:
         """Returns a string representation of self with 1-based indexing
         and a familiar (x, y) coordinate system"""
-        if self.start_row and self.start_column:
+        if isinstance(self.start_row, int) and isinstance(self.start_column, int):
             return f"({self.start_column + 1}, {self.start_row + 1})"
         return None
 
