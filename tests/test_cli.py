@@ -1,5 +1,6 @@
 import os
 import pathlib
+import subprocess
 
 
 def get_exit_status(exit_code):
@@ -48,12 +49,12 @@ def test_export_csv(tmp_path):
     assert get_exit_status(result) == 0 and tmp_path.exists()
 
 
-def test_random_word_valid_input():
+def test_random_words_valid_input():
     result = os.system("word-search -r 20")
     assert get_exit_status(result) == 0
 
 
-def test_random_word_invalid_input():
+def test_random_words_invalid_input():
     result = os.system("word-search -r 1000")
     assert get_exit_status(result) == 2
 
@@ -106,3 +107,23 @@ def test_invalid_argparse_difficulty_argument():
 def test_custom_difficulty_level_as_string():
     result = os.system("word-search -r 5 -d 3")
     assert get_exit_status(result) == 0
+
+
+def test_random_words_mutual_exclusivity():
+    result = os.system("word-search dog pig cat -r 5")
+    assert get_exit_status(result) == 2
+
+
+def test_random_secret_words_mutual_exclusivity():
+    result = os.system("word-search dog pig cat -rx 5 -x 'cow ant'")
+    assert get_exit_status(result) == 2
+
+
+def test_random_secret_words_valid_input(capsys):
+    output = subprocess.check_output("word-search -rx 5", shell=True)
+    assert "Find these words: <ALL SECRET WORDS>" in str(output)
+
+
+def test_random_secret_words_invalid_input():
+    result = os.system("word-search -rx 500")
+    assert get_exit_status(result) == 2

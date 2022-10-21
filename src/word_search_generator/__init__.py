@@ -76,7 +76,7 @@ class WordSearch:
         return {word for word in self._words}
 
     @property
-    def played_words(self) -> Wordlist | set[Any]:
+    def placed_words(self) -> Wordlist | set[Any]:
         """The current puzzle words."""
         return {word for word in self._words if word.position}
 

@@ -70,7 +70,7 @@ def capture_all_paths_from_position(
     puzzle: WordSearch, position: tuple[int, int]
 ) -> list[list[str]]:
     """Capture strings from `position` in each direction."""
-    placed_words = tuple(word.text for word in puzzle.played_words)
+    placed_words = tuple(word.text for word in puzzle.placed_words)
     # calculate how large of a search radius to check (length of each path)
     radius = max([len(word) for word in placed_words]) if placed_words else 0
     # track each part (start/end) of the search radius for each direction

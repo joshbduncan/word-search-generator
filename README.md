@@ -126,6 +126,15 @@ Find these words: CAT, DOG, DONKEY, GOAT, HORSE, PIG, SHEEP, TURTLE
 
 Answer Key: CAT NW @ (9, 10), DOG SW @ (11, 3), DONKEY SW @ (12, 4), GOAT NW @ (7, 11), HORSE NW @ (11, 6), PIG SW @ (12, 6), SHEEP SW @ (7, 6), TURTLE SW @ (7, 4)
 ```
+😱 Still too easy? Go expert mode. [Works in the CLI too](#expert-mode-cli)!
+
+```pycon
+> from word_search_generator import WordSearch
+> from word_search_generator.utils import get_random_words
+> puzzle = WordSearch(secret_words=get_random_words(10), level=3,)
+```
+
+ℹ️ You'll notice the `get_random_words()` function from the utils module used above. It generates {n} number of random words from a list of approximately 1000 American English dictionary words.
 
 😓 Too hard? Go the easy route with `puzzle.level = 1` or `puzzle.directions = "E"`.
 
@@ -306,7 +315,9 @@ Word-Search-Generator works in your terminal too! 🙌
 
 ```
 $ word-search -h
-usage: word-search [-h] [-r RANDOM] [-x SECRET_WORDS] [-d DIFFICULTY] [-xd SECRET_DIFFICULTY] [-s SIZE] [-c] [-o OUTPUT] [--version] [words ...]
+usage: word-search [-h] [-r RANDOM] [-x SECRET_WORDS | -rx RANDOM_SECRET_WORDS] [-d DIFFICULTY]
+                   [-xd SECRET_DIFFICULTY] [-s SIZE] [-c] [-o OUTPUT] [--version]
+                   [words ...]
 
 Generate Word Search Puzzles!
 
@@ -323,14 +334,19 @@ options:
                         Generate {n} random words to include in the puzzle.
   -x SECRET_WORDS, --secret-words SECRET_WORDS
                         Secret bonus words not included in the word list.
+  -rx RANDOM_SECRET_WORDS, --random-secret-words RANDOM_SECRET_WORDS
+                        Generate {n} random secret words to include in the puzzle.
   -d DIFFICULTY, --difficulty DIFFICULTY, -l DIFFICULTY, --level DIFFICULTY
-                        Difficulty level (numeric) or cardinal directions puzzle words can go. See valid arguments above.
+                        Difficulty level (numeric) or cardinal directions puzzle words can go. See valid arguments
+                        above.
   -xd SECRET_DIFFICULTY, --secret-difficulty SECRET_DIFFICULTY
-                        Difficulty level (numeric) or cardinal directions secret puzzle words can go. See valid arguments above.
+                        Difficulty level (numeric) or cardinal directions secret puzzle words can go. See valid
+                        arguments above.
   -s SIZE, --size SIZE  Puzzle size >=5 and <=50
   -c, --cheat           Show the puzzle solution or include it within the `-o, --output` file.
   -o OUTPUT, --output OUTPUT
-                        Output path for saved puzzle. Specify export type by appending '.pdf' or '.csv' to your path (default: PDF).
+                        Output path for saved puzzle. Specify export type by appending '.pdf' or '.csv' to your path
+                        (default: PDF).
   --version             show program's version number and exit
 
 Copyright 2022 Josh Duncan (joshbduncan.com)
@@ -374,6 +390,32 @@ $ for f in tools/sample_word_lists/word*.txt; do word-search "$(cat $f)" -l 1 -s
 Puzzle saved: ~/.../words-5.txt.pdf
 ...
 Puzzle saved: ~/.../words-50.txt.pdf
+```
+
+### Expert Mode CLI
+
+Really want to challenge yourself? Try this in the CLI. All words will be secret, just don't peek 🫣 at the key! Good luck!
+
+```
+$ word-search -rx 10 -l 3
+-------------------
+    WORD SEARCH
+-------------------
+M Y C K R E H T I E
+I D A E R I G D G Y
+N K H O K B N R S T
+D J A V F H I E H G
+G S R G T D H C B W
+P N P W Q T T E V F
+A V O T L U Y N M O
+U R N O C P N T A U
+G X C H K E A Q J R
+M I D U N I W R O H
+
+Find these words: <ALL SECRET WORDS>
+* Words can go W, SW, NW, SE, E, N, NE, and S.
+
+Answer Key: *ANYTHING N @ (7, 9), *EITHER W @ (10, 1), *FOUR S @ (10, 6), *GROWTH NE @ (1, 9), *HOT N @ (4, 9), *MIND S @ (1, 1), *PERFORMANCE None @ None, *PUT N @ (6, 8), *READ W @ (5, 2), *RECENT S @ (8, 3)
 ```
 
 ## Resources

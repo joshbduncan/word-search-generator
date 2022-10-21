@@ -346,14 +346,14 @@ def test_replace_words_with_resize():
     assert puzzle.size != 5
 
 
-def test_no_played_words():
+def test_no_placed_words():
     p = WordSearch()
-    assert len(p.played_words) == 0
+    assert len(p.placed_words) == 0
 
 
 def test_no_hidden_words():
     p = WordSearch()
-    assert len(p.played_words) == 0
+    assert len(p.placed_words) == 0
 
 
 def test_placed_hidden_words():

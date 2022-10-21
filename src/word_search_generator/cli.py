@@ -1,7 +1,7 @@
 import argparse
 import pathlib
 import sys
-from typing import Sequence
+from typing import Optional, Sequence
 
 from word_search_generator import WordSearch, __app_name__, __version__, config, utils
 from word_search_generator.types import Direction
@@ -47,7 +47,7 @@ class SizeAction(argparse.Action):
         setattr(namespace, self.dest, values)
 
 
-def main(argv: Sequence[str] | None = None) -> int:
+def main(argv: Optional[Sequence[str]] = None) -> int:
     """Word Search Generator CLI.
 
     Args:
@@ -82,12 +82,20 @@ Valid Directions: {', '.join([d.name for d in Direction])}
         action=RandomAction,
         help="Generate {n} random words to include in the puzzle.",
     )
-    parser.add_argument(
+    group2 = parser.add_mutually_exclusive_group()
+    group2.add_argument(
         "-x",
         "--secret-words",
         type=str,
         default="",
         help="Secret bonus words not included in the word list.",
+    )
+    group2.add_argument(
+        "-rx",
+        "--random-secret-words",
+        type=int,
+        action=RandomAction,
+        help="Generate {n} random secret words to include in the puzzle.",
     )
     # new implementation of -l, --level allowing for more flexibility
     # keeping -l, --level for backwards compatibility
@@ -145,8 +153,17 @@ Valid Directions: {', '.join([d.name for d in Direction])}
             # but still process words were piped in from the shell
             words = args.words.read().rstrip()
 
+    # process secret puzzle words
+    secret_words = (
+        args.secret_words
+        if args.secret_words
+        else utils.get_random_words(args.random_secret_words)
+        if args.random_secret_words
+        else ""
+    )
+
     # if not words were found exit the script
-    if not words and not args.secret_words:
+    if not words and not secret_words:
         print("No words provided. Learn more with the '-h' flag.", file=sys.stderr)
         return 1
 
@@ -155,7 +172,7 @@ Valid Directions: {', '.join([d.name for d in Direction])}
         words,
         level=args.difficulty,
         size=args.size,
-        secret_words=args.secret_words,
+        secret_words=secret_words if secret_words else None,
         secret_level=args.secret_difficulty,
     )
 
