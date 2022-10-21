@@ -33,8 +33,8 @@ class Direction(Enum):
 
 
 class Position(NamedTuple):
-    row: int
-    column: int
+    row: Optional[int]
+    column: Optional[int]
 
 
 class KeyInfo(TypedDict):
@@ -66,21 +66,15 @@ class Word:
 
     @property
     def start_row(self) -> int | None:
-        if isinstance(self._start_row, int):
-            return self._start_row
-        return None
+        return self._start_row
 
     @property
     def start_column(self) -> int | None:
-        if isinstance(self._start_column, int):
-            return self._start_column
-        return None
+        return self._start_column
 
     @property
-    def position(self) -> Position | None:
-        if isinstance(self.start_row, int) and isinstance(self.start_column, int):
-            return Position(self.start_row, self.start_column)
-        return None
+    def position(self) -> Position:
+        return Position(self.start_row, self.start_column)
 
     @position.setter
     def position(self, val: Position):

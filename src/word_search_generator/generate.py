@@ -8,15 +8,7 @@ from math import log2
 from typing import TYPE_CHECKING, Optional, Sized
 
 from word_search_generator.config import max_fit_tries
-from word_search_generator.types import (
-    Direction,
-    Fit,
-    Fits,
-    Position,
-    Puzzle,
-    Word,
-    Wordlist,
-)
+from word_search_generator.types import Direction, Fit, Fits, Puzzle, Word, Wordlist
 
 if TYPE_CHECKING:  # pragma: no cover
     from word_search_generator import WordSearch
@@ -128,7 +120,7 @@ def no_duped_words(puzzle: WordSearch, char: str, position: tuple[int, int]) -> 
 
 
 def test_a_fit(
-    puzzle: WordSearch, word: str, position: Position, direction: Direction
+    puzzle: WordSearch, word: str, position: tuple[int, int], direction: Direction
 ) -> list[tuple[int, int]]:
     """Test if word fits in the puzzle at the specified
     coordinates heading in the specified direction."""
@@ -150,7 +142,7 @@ def test_a_fit(
     return coordinates
 
 
-def find_a_fit(puzzle: WordSearch, word: str, position: Position) -> Fit:
+def find_a_fit(puzzle: WordSearch, word: str, position: tuple[int, int]) -> Fit:
     """Look for random place in the puzzle where `word` fits."""
     fits: Fits = {}
     random_direction = None
@@ -192,11 +184,10 @@ def try_to_fit_word(
 ) -> None:
     """Try to fit `word` at randomized coordinates.
     @retry wrapper controls the number of attempts"""
-    pos = Position(
-        random.randint(0, puzzle.size - 1), random.randint(0, puzzle.size - 1)
-    )
+    row = random.randint(0, puzzle.size - 1)
+    col = random.randint(0, puzzle.size - 1)
     # try and find a directional fit using the starting coordinates
-    fit = find_a_fit(puzzle, word.text, pos)
+    fit = find_a_fit(puzzle, word.text, (row, col))
     work_puzzle = copy.deepcopy(puzzle.solution)
     if not fit:
         raise WordFitError
@@ -215,8 +206,8 @@ def try_to_fit_word(
         raise WordFitError
     puzzle._solution = copy.deepcopy(work_puzzle)
     # update placement info for word
-    word._start_row = pos[0]
-    word._start_column = pos[1]
+    word._start_row = row
+    word._start_column = col
     word.direction = Direction[d]
 
 

@@ -51,7 +51,6 @@ class WordSearch:
         self._size: int = size if size else 0
 
         # setup words
-        # TODO: Check max puzzle words should include both regular and secret words
         self._words: Wordlist = set()
         # in case of dupes, add secret words first so they are overwritten
         if secret_words:

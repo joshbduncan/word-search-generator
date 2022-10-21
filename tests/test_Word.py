@@ -13,7 +13,7 @@ def test_empty_start_column():
 
 def test_empty_position():
     w = Word("test")
-    assert not w.position
+    assert w.position == Position(None, None)
 
 
 def test_empty_position_xy():

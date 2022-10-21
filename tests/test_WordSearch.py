@@ -17,7 +17,7 @@ def check_key(key: Key, puzzle: Puzzle) -> bool:
         row, col = info["start"]  # type: ignore
         d = info["direction"]  # type: ignore
         for char in word:
-            if puzzle[row][col] != char:
+            if puzzle[row][col] != char:  # type: ignore
                 return False
             row += d.r_move  # type: ignore
             col += d.c_move  # type: ignore
@@ -102,8 +102,6 @@ def test_bad_puzzle_size_type():
 
 def test_puzzle_key():
     puzzle = WordSearch(WORDS)
-    for r in puzzle.puzzle:
-        print(" ".join(r))
     assert check_key(puzzle.key, puzzle.puzzle)
 
 
