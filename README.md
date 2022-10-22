@@ -8,9 +8,9 @@ Word-Search-Generator is a Python module for generating fun [Word Search Puzzles
 
 Like most of my programming endeavors, Word-Search-Generator was born out of necessity. I needed an easy way to generate a bunch of word search puzzles for kid's food menus at the day job.
 
-🤦‍♂️ Does the world need this? Probably not.
-⏰ Did I spend way too much time on it? Yep!
-✅ Does it come in handy? Heck yeah!
+🤦‍♂️ Does the world need this? Probably not.  
+⏰ Did I spend way too much time on it? Yep!  
+✅ Does it come in handy? Heck yeah!  
 👍 Did I have fun making it? Absofreakinglutly!
 
 ## Installation
@@ -57,7 +57,7 @@ Answer Key: CAT E @ (6, 8), DOG E @ (1, 12), DONKEY S @ (7, 1), GOAT S @ (3, 8),
 
 ℹ️ The answer key uses 1-based indexing and a familiar (x, y) coordinate system. Directions are cardinal from first letter to last. \* Please note that all key values inside of the api are 0-based.
 
-🤷‍♂️ Can't find all of the words? You can view the answer key or or highlight the hidden words in the output with `puzzle.show(solution=True)` 🔦.
+🤷‍♂️ Can't find all of the words? You can view the answer key or highlight the hidden words in the output with `puzzle.show(solution=True)` 🔦.
 
 ```python
 >>> puzzle.key

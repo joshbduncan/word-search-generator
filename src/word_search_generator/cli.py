@@ -120,7 +120,7 @@ Valid Directions: {', '.join([d.name for d in Direction])}
         "--size",
         action=SizeAction,
         type=int,
-        help=f"Puzzle size >={config.min_puzzle_size} and <={config.max_puzzle_size}",
+        help=f"{config.min_puzzle_size} ≤ puzzle size ≤ {config.max_puzzle_size}",
     )
     parser.add_argument(
         "-c",
