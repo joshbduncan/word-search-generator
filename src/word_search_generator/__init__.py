@@ -8,7 +8,7 @@
 """
 
 __app_name__ = "word-search"
-__version__ = "1.4.0"
+__version__ = "2.0.0"
 
 
 import json
