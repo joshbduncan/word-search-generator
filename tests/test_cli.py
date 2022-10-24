@@ -1,4 +1,3 @@
-import pathlib
 import subprocess
 
 
@@ -23,14 +22,14 @@ def test_stdin():
 
 
 def test_export_pdf(tmp_path):
-    tmp_path = pathlib.Path.joinpath(tmp_path, "test.pdf")
-    result = subprocess.run(f"word-search some test words -o {tmp_path}", shell=True)
+    fp = tmp_path.joinpath("test.pdf")
+    result = subprocess.run(f'word-search some test words -o "{fp}"', shell=True)
     assert result.returncode == 0 and tmp_path.exists()
 
 
 def test_export_csv(tmp_path):
-    tmp_path = pathlib.Path.joinpath(tmp_path, "test.csv")
-    result = subprocess.run(f"word-search some test words -o {tmp_path}", shell=True)
+    fp = tmp_path.joinpath("test.csv")
+    result = subprocess.run(f'word-search some test words -o "{fp}"', shell=True)
     assert result.returncode == 0 and tmp_path.exists()
 
 
