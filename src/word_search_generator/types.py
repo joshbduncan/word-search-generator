@@ -1,5 +1,11 @@
+import sys
 from enum import Enum, unique
-from typing import NamedTuple, Optional, TypedDict
+from typing import Any, Dict, List, NamedTuple, Optional, Set, Tuple, Union
+
+if sys.version_info >= (3, 8):
+    from typing import TypedDict
+else:
+    from typing_extensions import TypedDict
 
 
 @unique
@@ -14,14 +20,14 @@ class Direction(Enum):
 
     # is there a better way to specify typing here?
     # without hints here, the linter gets upset with my definitions of r/c_move
-    N: tuple[int, int] = (-1, 0)
-    NE: tuple[int, int] = (-1, 1)
-    E: tuple[int, int] = (0, 1)
-    SE: tuple[int, int] = (1, 1)
-    S: tuple[int, int] = (1, 0)
-    SW: tuple[int, int] = (1, -1)
-    W: tuple[int, int] = (0, -1)
-    NW: tuple[int, int] = (-1, -1)
+    N: Tuple[int, int] = (-1, 0)
+    NE: Tuple[int, int] = (-1, 1)
+    E: Tuple[int, int] = (0, 1)
+    SE: Tuple[int, int] = (1, 1)
+    S: Tuple[int, int] = (1, 0)
+    SW: Tuple[int, int] = (1, -1)
+    W: Tuple[int, int] = (0, -1)
+    NW: Tuple[int, int] = (-1, -1)
 
     @property
     def r_move(self) -> int:
@@ -65,11 +71,11 @@ class Word:
         self.secret = secret
 
     @property
-    def start_row(self) -> int | None:
+    def start_row(self) -> Union[int, None]:
         return self._start_row
 
     @property
-    def start_column(self) -> int | None:
+    def start_column(self) -> Union[int, None]:
         return self._start_column
 
     @property
@@ -82,7 +88,7 @@ class Word:
         self._start_column = val.column
 
     @property
-    def position_xy(self) -> str | None:
+    def position_xy(self) -> Union[str, None]:
         """Returns a string representation of self with 1-based indexing
         and a familiar (x, y) coordinate system"""
         if isinstance(self.start_row, int) and isinstance(self.start_column, int):
@@ -107,7 +113,7 @@ class Word:
         }
 
     @property
-    def key_string(self) -> str | None:
+    def key_string(self) -> Union[str, None]:
         return (
             f"{'*' if self.secret else ''}{self.text} "
             + f"{self.direction.name if self.direction else self.direction}"
@@ -129,10 +135,10 @@ class Word:
         return self.text
 
 
-Puzzle = list[list[str]]
-Key = dict[str, KeyInfo]
-KeyJson = dict[str, KeyInfoJson]
-Fit = Optional[tuple[str, list[tuple[int, int]]]]
-Fits = dict[str, list[tuple[int, int]]]
-DirectionSet = set[Direction]
-Wordlist = set[Word]
+Puzzle = List[List[str]]
+Key = Dict[str, KeyInfo]
+KeyJson = Dict[str, KeyInfoJson]
+Fit = Optional[Tuple[str, List[Tuple[int, int]]]]
+Fits = Dict[str, List[Tuple[int, int]]]
+DirectionSet = Set[Direction]
+Wordlist = Union[Set[Word], Any]

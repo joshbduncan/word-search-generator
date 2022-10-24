@@ -13,7 +13,7 @@ __version__ = "1.4.0"
 
 import json
 from pathlib import Path
-from typing import Any, Iterable, Optional, Union
+from typing import Iterable, Optional, Union
 
 from . import config, export, generate, utils
 from .types import DirectionSet, Key, Puzzle, Wordlist
@@ -25,23 +25,23 @@ class WordSearch:
     def __init__(
         self,
         words: Optional[str] = None,
-        level: Optional[int | str] = None,
+        level: Optional[Union[int, str]] = None,
         size: Optional[int] = None,
         secret_words: Optional[str] = None,
-        secret_level: Optional[int | str] = None,
+        secret_level: Optional[Union[int, str]] = None,
     ):
         """Initialize a Word Search puzzle.
 
         Args:
             words (Optional[str], optional): A string of words separated by spaces,
                 commas, or new lines. Will be trimmed if more. Defaults to None.
-            level (Optional[int  |  str], optional): Difficulty level or potential
+            level (Optional[Union[int, str]], optional): Difficulty level or potential
                 word directions. Defaults to 2.
             size (Optional[int], optional): Puzzle size. Defaults to None.
             secret_words (Optional[str], optional): A string of words separated by
                 spaces, commas, or new lines. Words will be 'secret' meaning they
                 will not be included in the word list. Defaults to None.
-            secret_level (Optional[int  |  str], optional): Difficulty level or
+            secret_level (Optional[Union[int, str]], optional): Difficulty level or
                 potential word directions for 'secret' words. Defaults to None.
         """
 
@@ -71,32 +71,32 @@ class WordSearch:
             self._generate()
 
     @property
-    def words(self) -> Wordlist | set[Any]:
+    def words(self) -> Wordlist:
         """The current puzzle words."""
         return {word for word in self._words}
 
     @property
-    def placed_words(self) -> Wordlist | set[Any]:
+    def placed_words(self) -> Wordlist:
         """The current puzzle words."""
         return {word for word in self._words if word.position}
 
     @property
-    def hidden_words(self) -> Wordlist | set[Any]:
+    def hidden_words(self) -> Wordlist:
         """The current puzzle words."""
         return {word for word in self._words if not word.secret}
 
     @property
-    def placed_hidden_words(self) -> Wordlist | set[Any]:
+    def placed_hidden_words(self) -> Wordlist:
         """The current puzzle words."""
         return {word for word in self.hidden_words if word.position}
 
     @property
-    def secret_words(self) -> Wordlist | set[Any]:
+    def secret_words(self) -> Wordlist:
         """The current secret puzzle words."""
         return {word for word in self._words if word.secret}
 
     @property
-    def placed_secret_words(self) -> Wordlist | set[Any]:
+    def placed_secret_words(self) -> Wordlist:
         """The current secret puzzle words."""
         return {word for word in self.secret_words if word.position}
 
@@ -138,11 +138,11 @@ class WordSearch:
         return self._directions
 
     @directions.setter
-    def directions(self, val: int | str | Iterable[str]):
+    def directions(self, val: Union[int, str, Iterable[str]]):
         """Possible directions for puzzle words.
 
         Args:
-            val (int | str | Iterable[str]): Either a preset puzzle level (int),
+            val (Union[int, str, Iterable[str]]): Either a preset puzzle level (int),
             cardinal directions as a comma separated string, or an iterable
             of valid directions from the Direction object.
         """
@@ -168,11 +168,11 @@ class WordSearch:
         return self._secret_directions
 
     @secret_directions.setter
-    def secret_directions(self, val: int | str | Iterable[str]):
+    def secret_directions(self, val: Union[int, str, Iterable[str]]):
         """Possible directions for secret puzzle words.
 
         Args:
-            val (int | str | Iterable[str]): Either a preset puzzle level (int),
+            val (Union[int, str, Iterable[str]]): Either a preset puzzle level (int),
             valid cardinal directions as a comma separated string, or an iterable
             of valid cardinal directions.
         """

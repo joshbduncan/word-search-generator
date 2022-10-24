@@ -155,8 +155,9 @@ def test_add_secret_words_replacing_regular_word():
 
 def test_remove_words():
     puzzle = WordSearch(WORDS)
+    puzzle.add_words("test")
     puzzle.remove_words("test")
-    assert "test".upper() not in puzzle.words
+    assert Word("test") not in puzzle.words
 
 
 def test_remove_words_from_secret_words():

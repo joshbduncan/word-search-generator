@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import csv
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 
 from fpdf import FPDF
 
@@ -12,11 +12,11 @@ if TYPE_CHECKING:  # pragma: no cover
     from word_search_generator import WordSearch
 
 
-def validate_path(path: str | Path) -> Path:
+def validate_path(path: Union[str, Path]) -> Path:
     """Validate the save path.
 
     Args:
-        path (str | Path): Path to save location.
+        path (Union[str, Path]): Path to save location.
 
     Raises:
         FileExistsError: The output path already exists as a file.

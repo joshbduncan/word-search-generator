@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import random
 import string
-from typing import TYPE_CHECKING, Any, Iterable
+from typing import TYPE_CHECKING, Any, Iterable, List, Tuple
 
 from word_search_generator import config
 from word_search_generator.types import (
@@ -71,7 +71,7 @@ def word_contains_word(words: Wordlist, word: str) -> bool:
 
 
 def validate_direction_iterable(
-    d: Iterable[str | tuple[int, int] | Direction]
+    d: Iterable[str | Tuple[int, int] | Direction]
 ) -> DirectionSet:
     """Validates that all the directions in d are found as keys to
     config.dir_moves and therefore are valid directions."""
@@ -143,13 +143,6 @@ def stringify(puzzle: Puzzle) -> str:
     return "\n".join(output)
 
 
-def replace_right(
-    string: str, target: str, replacement: str, replacements: int = 1
-) -> str:
-    """Replace `target` with `replacement` from the right size of the string."""
-    return replacement.join(string.rsplit(target, replacements))
-
-
 def format_puzzle_for_show(puzzle: WordSearch, show_solution: bool = False) -> str:
     header = make_header(puzzle.puzzle, "WORD SEARCH")
     word_list = get_word_list_str(puzzle.key)
@@ -165,8 +158,10 @@ Answer Key: {get_answer_key_str(puzzle.placed_words)}"""
 
 
 def get_level_dirs_str(level: DirectionSet) -> str:
-    """Return all possible directions for specified level."""
-    return replace_right(", ".join(d.name for d in level), ", ", ", and ")
+    """Return possible directions for specified level as a string."""
+    level_dirs_str = [d.name for d in level]
+    level_dirs_str.insert(-1, "and")
+    return ", ".join(level_dirs_str)
 
 
 def get_word_list_str(key: Key) -> str:
@@ -174,12 +169,12 @@ def get_word_list_str(key: Key) -> str:
     return ", ".join(get_word_list_list(key))
 
 
-def get_word_list_list(key: Key) -> list[str]:
+def get_word_list_list(key: Key) -> List[str]:
     """Return all placed puzzle words as a list (excluding secret words)."""
     return [k for k in sorted(key.keys()) if not key[k]["secret"]]
 
 
-def get_answer_key_list(words: Wordlist) -> list[Any]:
+def get_answer_key_list(words: Wordlist) -> List[Any]:
     """Return a easy to read answer key for display/export."""
     keys = []
     for w in sorted(words, key=lambda word: word.text):

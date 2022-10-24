@@ -5,7 +5,7 @@ import random
 import string
 import sys
 from math import log2
-from typing import TYPE_CHECKING, Optional, Sized
+from typing import TYPE_CHECKING, List, Optional, Sized, Tuple
 
 from word_search_generator.config import max_fit_tries
 from word_search_generator.types import Direction, Fit, Fits, Puzzle, Word, Wordlist
@@ -35,7 +35,7 @@ def retry(func):
     return wrapper
 
 
-def out_of_bounds(puzzle: WordSearch, position: tuple[int, int]) -> bool:
+def out_of_bounds(puzzle: WordSearch, position: Tuple[int, int]) -> bool:
     """Validate `position` is within the current puzzle bounds."""
     width = height = puzzle.size
     row, col = position
@@ -67,21 +67,21 @@ def calc_puzzle_size(words: Wordlist, level: Sized, size: Optional[int] = None) 
 
 
 def capture_all_paths_from_position(
-    puzzle: WordSearch, position: tuple[int, int]
-) -> list[list[str]]:
+    puzzle: WordSearch, position: Tuple[int, int]
+) -> List[List[str]]:
     """Capture strings from `position` in each direction."""
     placed_words = tuple(word.text for word in puzzle.placed_words)
     # calculate how large of a search radius to check (length of each path)
     radius = max([len(word) for word in placed_words]) if placed_words else 0
     # track each part (start/end) of the search radius for each direction
     # [N, S], [SW, NE] [W, E], [NW, SE]
-    paths: list[list[str]] = [["", ""], ["", ""], ["", ""], ["", ""]]
+    paths: List[List[str]] = [["", ""], ["", ""], ["", ""], ["", ""]]
     # follow each direction and capture all characters in that path
     for i, (direction_letter, direction_coord) in enumerate(
         Direction.__members__.items()
     ):
         row, col = position
-        chars: list[str] = []
+        chars: List[str] = []
         for _ in range(radius):
             if out_of_bounds(puzzle, (row, col)):
                 break
@@ -97,7 +97,7 @@ def capture_all_paths_from_position(
     return paths
 
 
-def no_duped_words(puzzle: WordSearch, char: str, position: tuple[int, int]) -> bool:
+def no_duped_words(puzzle: WordSearch, char: str, position: Tuple[int, int]) -> bool:
     """Make sure that adding `char` at `position` will not create a
     duplicate of any word already placed in the puzzle."""
     paths = capture_all_paths_from_position(puzzle, position)
@@ -120,8 +120,8 @@ def no_duped_words(puzzle: WordSearch, char: str, position: tuple[int, int]) -> 
 
 
 def test_a_fit(
-    puzzle: WordSearch, word: str, position: tuple[int, int], direction: Direction
-) -> list[tuple[int, int]]:
+    puzzle: WordSearch, word: str, position: Tuple[int, int], direction: Direction
+) -> List[Tuple[int, int]]:
     """Test if word fits in the puzzle at the specified
     coordinates heading in the specified direction."""
     coordinates = []
@@ -142,7 +142,7 @@ def test_a_fit(
     return coordinates
 
 
-def find_a_fit(puzzle: WordSearch, word: str, position: tuple[int, int]) -> Fit:
+def find_a_fit(puzzle: WordSearch, word: str, position: Tuple[int, int]) -> Fit:
     """Look for random place in the puzzle where `word` fits."""
     fits: Fits = {}
     random_direction = None
@@ -211,7 +211,7 @@ def try_to_fit_word(
     word.direction = Direction[d]
 
 
-def no_matching_neighbors(puzzle: Puzzle, char: str, position: tuple[int, int]) -> bool:
+def no_matching_neighbors(puzzle: Puzzle, char: str, position: Tuple[int, int]) -> bool:
     """Ensure no neighboring cells have same character to limit the
     very small chance of a duplicate word."""
     row, col = position
