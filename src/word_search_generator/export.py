@@ -2,21 +2,21 @@ from __future__ import annotations
 
 import csv
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 
 from fpdf import FPDF
 
 from word_search_generator import config, utils
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from word_search_generator import WordSearch
 
 
-def validate_path(path: str | Path) -> Path:
+def validate_path(path: Union[str, Path]) -> Path:
     """Validate the save path.
 
     Args:
-        path (str | Path): Path to save location.
+        path (Union[str, Path]): Path to save location.
 
     Raises:
         FileExistsError: The output path already exists as a file.
@@ -47,6 +47,7 @@ def write_csv_file(path: Path, puzzle: WordSearch, solution: bool = False) -> Pa
         Path: Final save path.
     """
 
+    word_list = utils.get_word_list_list(puzzle.key)
     with open(path, mode="w") as f:
         f_writer = csv.writer(
             f, delimiter=",", quotechar='"', quoting=csv.QUOTE_MINIMAL
@@ -56,11 +57,19 @@ def write_csv_file(path: Path, puzzle: WordSearch, solution: bool = False) -> Pa
             f_writer.writerow(row)
         f_writer.writerow([""])
         f_writer.writerow(["Word List:"])
-        f_writer.writerow([k for k in sorted(puzzle.key.keys())])
-        f_writer.writerow([f"* Words can go {utils.get_level_dirs_str(puzzle.level)}."])
+        f_writer.writerow(
+            word_list
+            if word_list
+            else [
+                "<ALL SECRET WORDS>",
+            ]
+        )
+        f_writer.writerow(
+            [f"* Words can go {utils.get_level_dirs_str(puzzle.directions)}."]
+        )
         f_writer.writerow([""])
         f_writer.writerow(["Answer Key:"])
-        f_writer.writerow(utils.get_answer_key_list(puzzle.key))
+        f_writer.writerow(utils.get_answer_key_list(puzzle.placed_words))
         if solution:
             f_writer.writerow([""])
             f_writer.writerow(["SOLUTION"])
@@ -124,16 +133,20 @@ def draw_puzzle_page(pdf: FPDF, puzzle: WordSearch, solution: bool = False) -> F
 
     # insert the title
     title = "WORD SEARCH" if not solution else "WORD SEARCH (SOLUTION)"
-    pdf.set_font("Helvetica", "B", config.pdf_title_font_size)
+    pdf.set_font("Helvetica", "B", config.pdf_font_size_XXL)
     pdf.cell(pdf.epw, 0.25, title, ln=2, align="C", center=True)
     pdf.ln(0.375)
 
     # calculate the puzzle size and letter font size
     pdf.set_left_margin(0.75)
-    gsize = 7 / len(puzzle.puzzle)
+    gsize = config.pdf_puzzle_width / len(puzzle.puzzle)
     gmargin = 0.6875 if gsize > 36 else 0.75
-    font_size = 72 * gsize * gmargin
-    info_font_size = font_size if font_size < 18 else 18
+    font_size = int(72 * gsize * gmargin)
+    # calculate flexible font size based on word count
+    # to ensure all words and the puzzle key fit on one page
+    info_font_size = config.pdf_font_size_XL - (
+        len(puzzle.words) - config.min_puzzle_words
+    ) * (6 / (config.max_puzzle_words - config.min_puzzle_words))
     pdf.set_font_size(font_size)
 
     # draw the puzzle
@@ -153,19 +166,20 @@ def draw_puzzle_page(pdf: FPDF, puzzle: WordSearch, solution: bool = False) -> F
     pdf.set_font("Helvetica", "BU", size=info_font_size)
     pdf.cell(
         pdf.epw,
-        txt=f"Find words going {utils.get_level_dirs_str(puzzle.level)}:",
+        txt=f"Find words going {utils.get_level_dirs_str(puzzle.directions)}:",
         align="C",
         ln=2,
     )
     pdf.ln(0.125)
 
     # write word list
+    word_list = utils.get_word_list_str(puzzle.key)
     pdf.set_font("Helvetica", "B", size=info_font_size)
     pdf.set_font_size(info_font_size)
     pdf.multi_cell(
         pdf.epw,
         info_font_size / 72 * 1.125,
-        utils.get_word_list_str(puzzle.key),
+        word_list if word_list else "<ALL SECRET WORDS>",
         align="C",
         ln=2,
     )
@@ -177,7 +191,7 @@ def draw_puzzle_page(pdf: FPDF, puzzle: WordSearch, solution: bool = False) -> F
     with pdf.rotation(angle=180, x=pdf.epw / 2, y=pdf.eph / 2):
         pdf.set_xy(pdf.epw - pdf.epw, 0)
         pdf.set_margin(0.25)
-        pdf.set_font("Helvetica", size=config.pdf_key_font_size)
-        pdf.write(txt="Answer Key: " + utils.get_answer_key_str(puzzle.key))
+        pdf.set_font("Helvetica", size=config.pdf_font_size_S)
+        pdf.write(txt="Answer Key: " + utils.get_answer_key_str(puzzle.placed_words))
 
     return pdf

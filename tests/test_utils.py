@@ -1,6 +1,7 @@
 import pytest
 
-from word_search_generator import utils
+from word_search_generator import WordSearch, utils
+from word_search_generator.types import Word
 
 
 def test_valid_cleanup_input_with_spaces():
@@ -36,4 +37,18 @@ def test_palindromes():
 
 
 def test_word_within_word():
-    assert utils.word_contains_word({"rain", "sun", "clouds"}, "")
+    words = set()
+    for word in ["rain", "sun", "clouds"]:
+        words.add(Word(word))
+    assert utils.word_contains_word(words, "")
+
+
+def test_invalid_level_direction_type():
+    with pytest.raises(TypeError):
+        utils.validate_level(None)
+
+
+def test_answer_key_list():
+    p = WordSearch("bat cab rat")
+    key_as_list = utils.get_answer_key_list(p.hidden_words.union(p.secret_words))
+    assert len(key_as_list) == len(p.key) and key_as_list[0].startswith("BAT")

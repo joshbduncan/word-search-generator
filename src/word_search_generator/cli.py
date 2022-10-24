@@ -1,9 +1,10 @@
 import argparse
 import pathlib
 import sys
-from typing import Sequence
+from typing import Optional, Sequence
 
 from word_search_generator import WordSearch, __app_name__, __version__, config, utils
+from word_search_generator.types import Direction
 
 
 class RandomAction(argparse.Action):
@@ -17,6 +18,24 @@ class RandomAction(argparse.Action):
         setattr(namespace, self.dest, values)
 
 
+class DifficultyAction(argparse.Action):
+    """Validate difficulty level integers or directional strings."""
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        if values.isnumeric():
+            setattr(namespace, self.dest, int(values))
+        else:
+            for d in values.split(","):
+                if d.strip().isnumeric():
+                    parser.error(
+                        f"{option_string} must be \
+either numeric levels \
+({', '.join([str(i) for i in config.level_dirs.keys()])}) or accepted \
+cardinal directions ({', '.join([d.name for d in Direction])})."
+                    )
+            setattr(namespace, self.dest, values)
+
+
 class SizeAction(argparse.Action):
     """Restrict argparse `-s`, `--size` inputs."""
 
@@ -28,7 +47,7 @@ class SizeAction(argparse.Action):
         setattr(namespace, self.dest, values)
 
 
-def main(argv: Sequence[str] | None = None) -> int:
+def main(argv: Optional[Sequence[str]] = None) -> int:
     """Word Search Generator CLI.
 
     Args:
@@ -38,9 +57,15 @@ def main(argv: Sequence[str] | None = None) -> int:
         int: Exit status.
     """
     parser = argparse.ArgumentParser(
-        description="Generate Word Search Puzzles!",
+        description=f"""Generate Word Search Puzzles! \
+
+
+Valid Levels: {', '.join([str(i) for i in config.level_dirs.keys()])}
+Valid Directions: {', '.join([d.name for d in Direction])}
+* Directions are to be provided as a comma-separated list.""",
         epilog="Copyright 2022 Josh Duncan (joshbduncan.com)",
         prog=__app_name__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
@@ -57,19 +82,45 @@ def main(argv: Sequence[str] | None = None) -> int:
         action=RandomAction,
         help="Generate {n} random words to include in the puzzle.",
     )
+    group2 = parser.add_mutually_exclusive_group()
+    group2.add_argument(
+        "-x",
+        "--secret-words",
+        type=str,
+        default="",
+        help="Secret bonus words not included in the word list.",
+    )
+    group2.add_argument(
+        "-rx",
+        "--random-secret-words",
+        type=int,
+        action=RandomAction,
+        help="Generate {n} random secret words to include in the puzzle.",
+    )
+    # new implementation of -l, --level allowing for more flexibility
+    # keeping -l, --level for backwards compatibility
     parser.add_argument(
+        "-d",
+        "--difficulty",
         "-l",
         "--level",
-        type=int,
-        choices=[1, 2, 3],
-        help="Difficulty level (1) beginner, (2) intermediate, (3) expert",
+        action=DifficultyAction,
+        help="Difficulty level (numeric) or cardinal directions \
+            puzzle words can go. See valid arguments above.",
+    )
+    parser.add_argument(
+        "-xd",
+        "--secret-difficulty",
+        action=DifficultyAction,
+        help="Difficulty level (numeric) or cardinal directions \
+            secret puzzle words can go. See valid arguments above.",
     )
     parser.add_argument(
         "-s",
         "--size",
         action=SizeAction,
         type=int,
-        help=f"Puzzle size >={config.min_puzzle_size} and <={config.max_puzzle_size}",
+        help=f"{config.min_puzzle_size} <= puzzle size <= {config.max_puzzle_size}",
     )
     parser.add_argument(
         "-c",
@@ -82,32 +133,49 @@ def main(argv: Sequence[str] | None = None) -> int:
         "--output",
         type=pathlib.Path,
         help="Output path for saved puzzle. Specify export type by appending "
-        "'.pdf' or '.csv' to your path (default: %(default)s)",
+        "'.pdf' or '.csv' to your path (default: PDF).",
     )
     parser.add_argument(
         "--version", action="version", version=f"%(prog)s {__version__}"
     )
     args = parser.parse_args(argv)
 
+    # process puzzle words
     words = ""
-    # check if random words were requested
     if args.random:
         words = utils.get_random_words(args.random)
     else:
         if isinstance(args.words, list):
-            words = ",".join(args.words)
+            # needed when words were provided as "command, then, space"
+            words = ",".join([word.replace(",", "") for word in args.words])
         elif not sys.stdin.isatty():
             # disable interactive tty which can be confusing
             # but still process words were piped in from the shell
             words = args.words.read().rstrip()
 
+    # process secret puzzle words
+    secret_words = (
+        args.secret_words
+        if args.secret_words
+        else utils.get_random_words(args.random_secret_words)
+        if args.random_secret_words
+        else ""
+    )
+
     # if not words were found exit the script
-    if not words:
+    if not words and not secret_words:
         print("No words provided. Learn more with the '-h' flag.", file=sys.stderr)
         return 1
 
     # create a new puzzle object from provided arguments
-    puzzle = WordSearch(words, level=args.level, size=args.size)
+    puzzle = WordSearch(
+        words,
+        level=args.difficulty,
+        size=args.size,
+        secret_words=secret_words if secret_words else None,
+        secret_level=args.secret_difficulty,
+    )
+
     # show the result
     if args.output:
         foutput = puzzle.save(path=args.output, solution=args.cheat)

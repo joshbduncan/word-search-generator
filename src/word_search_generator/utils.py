@@ -1,24 +1,26 @@
+from __future__ import annotations
+
 import random
 import string
+from typing import TYPE_CHECKING, Any, Iterable, List, Tuple
 
 from word_search_generator import config
-from word_search_generator.types import Key, KeyJson, Puzzle
+from word_search_generator.types import (
+    Direction,
+    DirectionSet,
+    Key,
+    Puzzle,
+    Word,
+    Wordlist,
+)
+
+if TYPE_CHECKING:  # pragma: no cover
+    from word_search_generator import WordSearch
 
 
-def cleanup_input(words: str) -> set[str]:
+def cleanup_input(words: str, secret: bool = False) -> Wordlist:
     """Cleanup provided input string. Removing spaces
-    one-letter words, and words with punctuation.
-
-    Args:
-        words (str): String of words separated by commas, spaces, or new lines.
-
-    Raises:
-        TypeError: A string was not provided.
-        ValueError: No proper words were provided.
-
-    Returns:
-        set[str]: Words to be placed in the puzzle.
-    """
+    one-letter words, and words with punctuation."""
     if not isinstance(words, str):
         raise TypeError(
             "Words must be a string separated by spaces, commas, or new lines"
@@ -28,7 +30,7 @@ def cleanup_input(words: str) -> set[str]:
     # remove excess spaces and commas
     word_list = ",".join(words.split(" ")).split(",")
     # iterate through all words and pick first set that match criteria
-    word_set: set[str] = set()
+    word_set: Wordlist = set()
     while word_list and len(word_set) <= config.max_puzzle_words:
         word = word_list.pop(0)
         if (
@@ -37,7 +39,7 @@ def cleanup_input(words: str) -> set[str]:
             and not is_palindrome(word)
             and not word_contains_word(word_set, word.upper())
         ):
-            word_set.add(word.upper())
+            word_set.add(Word(word, secret=secret))
     # if no words were left raise exception
     if not word_set:
         raise ValueError("Use words longer than one-character and without punctuation.")
@@ -45,7 +47,7 @@ def cleanup_input(words: str) -> set[str]:
 
 
 def contains_punctuation(word):
-    """Check to see if puncuation is present in the provided string."""
+    """Check to see if punctuation is present in the provided string."""
     return any([True if c in string.punctuation else False for c in word])
 
 
@@ -54,42 +56,69 @@ def is_palindrome(word: str) -> bool:
     return word == word[::-1]
 
 
-def word_contains_word(words: set[str], word: str) -> bool:
+def word_contains_word(words: Wordlist, word: str) -> bool:
     """Make sure `test_word` cannot be found in any word
-    in `words`, going forward or backword.
-    Args:
-        words (str): Current puzzle word list.
-        word (str): Word to check for.
-    Returns:
-        bool: If word was found contained in any word in words.
-    """
+    in `words`, going forward or backward."""
     for test_word in words:
         if (
-            word in test_word.upper()
-            or word[::-1] in test_word.upper()
-            or test_word.upper() in word
-            or test_word.upper()[::-1] in word
+            word in test_word.text.upper()
+            or word[::-1] in test_word.text.upper()
+            or test_word.text.upper() in word
+            or test_word.text.upper()[::-1] in word
         ):
             return True
     return False
 
 
-def highlight_solution(puzzle: Puzzle, solution: Puzzle) -> Puzzle:
-    """Convert puzzle array of nested lists into a string.
+def validate_direction_iterable(
+    d: Iterable[str | Tuple[int, int] | Direction]
+) -> DirectionSet:
+    """Validates that all the directions in d are found as keys to
+    config.dir_moves and therefore are valid directions."""
+    o = set()
+    for direction in d:
+        if isinstance(direction, Direction):
+            o.add(direction)
+            continue
+        elif isinstance(direction, tuple):
+            o.add(Direction(direction))
+            continue
+        try:
+            o.add(Direction[direction.upper().strip()])
+        except KeyError:
+            raise ValueError(f"'{direction}' is not a valid direction.")
+    return o
 
-    Args:
-        puzzle (Puzzle): The current puzzle state.
-        solution (Puzzle): The current puzzle solution.
 
-    Returns:
-        str: The current puzzle as a string with highlighting.
-    """
-    output = []
-    for r, line in enumerate(puzzle):
+def validate_level(d) -> DirectionSet:
+    """Given a d, try to turn it into a list of valid moves."""
+    if isinstance(d, int):  # traditional numeric level
+        try:
+            return config.level_dirs[d]
+        except KeyError:
+            raise ValueError(
+                f"{d} is not a valid difficulty number"
+                + f"[{', '.join([str(i) for i in config.level_dirs.keys()])}]"
+            )
+    if isinstance(d, str):  # comma-delimited list
+        return validate_direction_iterable(d.split(","))
+    if isinstance(d, Iterable):  # probably used by external code
+        return validate_direction_iterable(d)
+    raise TypeError(f"{type(d)} given, not str, int, or Iterable[str]\n{d}")
+
+
+def direction_set_repr(ds: DirectionSet) -> str:
+    return ("'" + ",".join(d.name for d in ds) + "'") if ds else "None"
+
+
+def highlight_solution(puzzle: WordSearch) -> Puzzle:
+    """Add highlighting to puzzle solution."""
+    output: Puzzle = []
+    for r, line in enumerate(puzzle.puzzle):
         line_chars = []
-        # check to see if character if part of a puzzle word
+        # check to see if character if part of the solution
         for c, char in enumerate(line):
-            if solution[r][c]:
+            if puzzle.solution[r][c]:
                 line_chars.append(f"\u001b[1m\u001b[31m{char}\u001b[0m")
             else:
                 line_chars.append(f"{char}")
@@ -98,16 +127,8 @@ def highlight_solution(puzzle: Puzzle, solution: Puzzle) -> Puzzle:
 
 
 def make_header(puzzle: Puzzle, text: str) -> str:
-    """Generate a header that fits the current puzzle.
-
-    Args:
-        puzzle (Puzzle): The current puzzle state.
-        text (str): The text to include in the header.
-
-    Returns:
-        str: Formatted header.
-    """
-    hr = "-" * (len(puzzle) * 2 - 1)
+    """Generate a header that fits the current puzzle."""
+    hr = "-" * max(11, (len(puzzle) * 2 - 1))
     padding = " " * ((len(hr) - len(text)) // 2)
     return f"""{hr}
 {padding}{text}{padding}
@@ -115,85 +136,56 @@ def make_header(puzzle: Puzzle, text: str) -> str:
 
 
 def stringify(puzzle: Puzzle) -> str:
-    """Convert puzzle array of nested lists into a string.
-
-    Args:
-        puzzle (Puzzle): The current puzzle state.
-
-    Returns:
-        str: The current puzzle as a string.
-    """
+    """Convert puzzle array of nested lists into a string."""
     output = []
     for line in puzzle:
         output.append(" ".join(line))
     return "\n".join(output)
 
 
-def replace_right(
-    string: str, target: str, replacement: str, replacements: int = 1
-) -> str:
-    """Replace `target` with `replacement` from the right size of the string."""
-    return replacement.join(string.rsplit(target, replacements))
-
-
-def format_puzzle_for_show(
-    puzzle: Puzzle,
-    key: Key,
-    level: int,
-    solution: Puzzle,
-    show_solution: bool = False,
-    header: str = "WORD SEARCH",
-) -> str:
-    header = make_header(puzzle, header)
+def format_puzzle_for_show(puzzle: WordSearch, show_solution: bool = False) -> str:
+    header = make_header(puzzle.puzzle, "WORD SEARCH")
+    word_list = get_word_list_str(puzzle.key)
     # highlight solution if provided
-    if show_solution:
-        puzzle = highlight_solution(puzzle, solution=solution)
-
+    puzzle_list = highlight_solution(puzzle) if show_solution else puzzle.puzzle
     return f"""{header}
-{stringify(puzzle)}
+{stringify(puzzle_list)}
 
-Find these words: {get_word_list_str(key)}
-* Words can go {get_level_dirs_str(level)}.
+Find these words: {word_list if word_list else '<ALL SECRET WORDS>'}
+* Words can go {get_level_dirs_str(puzzle.level)}.
 
-Answer Key: {get_answer_key_str(key)}"""
+Answer Key: {get_answer_key_str(puzzle.placed_words)}"""
 
 
-def get_level_dirs_str(level: int) -> str:
-    """Return all pozzible directions for specified level."""
-    return replace_right(", ".join(config.level_dirs[level]), ", ", ", and ")
+def get_level_dirs_str(level: DirectionSet) -> str:
+    """Return possible directions for specified level as a string."""
+    level_dirs_str = [d.name for d in level]
+    level_dirs_str.insert(-1, "and")
+    return ", ".join(level_dirs_str)
 
 
 def get_word_list_str(key: Key) -> str:
-    """Return all placed puzzle words as a list."""
-    return ", ".join([k for k in sorted(key.keys())])
+    """Return all placed puzzle words as a list (excluding secret words)."""
+    return ", ".join(get_word_list_list(key))
 
 
-def get_answer_key_list(key: Key) -> list[str]:
+def get_word_list_list(key: Key) -> List[str]:
+    """Return all placed puzzle words as a list (excluding secret words)."""
+    return [k for k in sorted(key.keys()) if not key[k]["secret"]]
+
+
+def get_answer_key_list(words: Wordlist) -> List[Any]:
     """Return a easy to read answer key for display/export."""
     keys = []
-    for k in sorted(key.keys()):
-        direction = key[k]["direction"]
-        start: tuple[int, int] = key[k]["start"]
-        keys.append(f"{k} {direction} @ {start}")
+    for w in sorted(words, key=lambda word: word.text):
+        keys.append(w.key_string)
     return keys
 
 
-def get_answer_key_str(key: Key) -> str:
+def get_answer_key_str(words: Wordlist) -> str:
     """Return a easy to read answer key for display."""
-    keys = get_answer_key_list(key)
+    keys = get_answer_key_list(words)
     return ", ".join(keys)
-
-
-def get_answer_key_json(key: Key) -> KeyJson:
-    """Return..."""
-    json_key: KeyJson = {}
-    for k in sorted(key.keys()):
-        json_key[k] = {
-            "direction": key[k]["direction"],
-            "start_row": key[k]["start"][0],
-            "start_col": key[k]["start"][1],
-        }
-    return json_key
 
 
 def get_random_words(n: int) -> str:

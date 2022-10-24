@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
     Word Search
     -----------
@@ -11,36 +10,95 @@
 __app_name__ = "word-search"
 __version__ = "1.4.0"
 
+
 import json
 from pathlib import Path
-from typing import Optional, Union
+from typing import Iterable, Optional, Union
 
-from word_search_generator import config, export, generate, utils
-from word_search_generator.types import Key, Puzzle
+from . import config, export, generate, utils
+from .types import DirectionSet, Key, Puzzle, Wordlist
 
 
 class WordSearch:
     """This class represents a WordSearch object."""
 
     def __init__(
-        self, words: str, level: Optional[int] = None, size: Optional[int] = None
+        self,
+        words: Optional[str] = None,
+        level: Optional[Union[int, str]] = None,
+        size: Optional[int] = None,
+        secret_words: Optional[str] = None,
+        secret_level: Optional[Union[int, str]] = None,
     ):
         """Initialize a Word Search puzzle.
 
         Args:
-            words (str): words (str): A string of words separated by spaces, commas,
-            or new lines and limited to 30 word max. Will be trimmed if more.
-            level (Optional[int], optional): Difficulty level. Defaults to None.
+            words (Optional[str], optional): A string of words separated by spaces,
+                commas, or new lines. Will be trimmed if more. Defaults to None.
+            level (Optional[Union[int, str]], optional): Difficulty level or potential
+                word directions. Defaults to 2.
             size (Optional[int], optional): Puzzle size. Defaults to None.
+            secret_words (Optional[str], optional): A string of words separated by
+                spaces, commas, or new lines. Words will be 'secret' meaning they
+                will not be included in the word list. Defaults to None.
+            secret_level (Optional[Union[int, str]], optional): Difficulty level or
+                potential word directions for 'secret' words. Defaults to None.
         """
-        self.words = utils.cleanup_input(words)
-        self._key: Key = {}
-        self._level: int = 1
+
+        # setup puzzle
         self._puzzle: Puzzle = []
-        self._size: int = 0
         self._solution: Puzzle = []
-        # generate puzzle
-        self.generate(level, size)
+        self._size: int = size if size else 0
+
+        # setup words
+        self._words: Wordlist = set()
+        # in case of dupes, add secret words first so they are overwritten
+        if secret_words:
+            self._process_input(secret_words, "add", True)
+        if words:
+            self._process_input(words, "add")
+
+        # determine valid directions
+        self._directions: DirectionSet = (
+            utils.validate_level(level) if level else utils.validate_level(2)
+        )
+        self._secret_directions: Optional[DirectionSet] = (
+            utils.validate_level(secret_level) if secret_level else self.directions
+        )
+
+        if self.words:
+            self._size = generate.calc_puzzle_size(self._words, self._directions, size)
+            self._generate()
+
+    @property
+    def words(self) -> Wordlist:
+        """The current puzzle words."""
+        return {word for word in self._words}
+
+    @property
+    def placed_words(self) -> Wordlist:
+        """The current puzzle words."""
+        return {word for word in self._words if word.position}
+
+    @property
+    def hidden_words(self) -> Wordlist:
+        """The current puzzle words."""
+        return {word for word in self._words if not word.secret}
+
+    @property
+    def placed_hidden_words(self) -> Wordlist:
+        """The current puzzle words."""
+        return {word for word in self.hidden_words if word.position}
+
+    @property
+    def secret_words(self) -> Wordlist:
+        """The current secret puzzle words."""
+        return {word for word in self._words if word.secret}
+
+    @property
+    def placed_secret_words(self) -> Wordlist:
+        """The current secret puzzle words."""
+        return {word for word in self.secret_words if word.position}
 
     @property
     def puzzle(self) -> Puzzle:
@@ -49,69 +107,89 @@ class WordSearch:
 
     @property
     def solution(self) -> Puzzle:
-        """The solution to the current puzzle state."""
+        """Solution to the current puzzle state."""
         return self._solution
 
     @property
     def key(self) -> Key:
         """The current puzzle answer key (1-based)."""
-        return self._key
+        return {word.text: word.key_info for word in self.words if word.position}
 
     @property
     def json(self) -> str:
-        """The current puzzle, words, and answer key json."""
+        """The current puzzle, words, and answer key in JSON."""
+        if not self.key:
+            return json.dumps({})
         return json.dumps(
             {
                 "puzzle": self.puzzle,
-                "words": list(self.words),
-                "key": utils.get_answer_key_json(self.key),
+                "words": [word.text for word in self.words],
+                "key": {
+                    word.text: word.key_info_json
+                    for word in self.words
+                    if word.direction
+                },
             }
         )
 
     @property
-    def level(self) -> int:
-        """The difficulty level of the puzzle."""
-        return self._level
+    def directions(self) -> DirectionSet:
+        """Valid directions for puzzle words."""
+        return self._directions
 
-    @level.setter
-    def level(self, val: int):
-        """Set the difficulty level of the word search.
-
-        Level 1 (Easy): Words can go forward in directions
-        EAST (E), or SOUTH (S).
-        Puzzle size is small by default.
-
-        Level 2 (Intermediate): Words can go forward in directions
-        NORTHEAST (NE), EAST (E), SOUTHEAST (SE), or (S).
-        Puzzle size is medium by default.
-
-        Level 3 (Expert): Words can go forward and backwards in directions
-        NORTH (N), NORTHEAST (NE), EAST (E), SOUTHEAST (SE),
-        SOUTH (S), SOUTHWEST (SW), WEST (W), or NORTHWEST (NW).
-        Puzzle size is large by default.
+    @directions.setter
+    def directions(self, val: Union[int, str, Iterable[str]]):
+        """Possible directions for puzzle words.
 
         Args:
-            val (int): An integer of 1, 2, or 3.
-
-        Raises:
-            TypeError: Must be an integer.
-            ValueError: Must be 1, 2, or 3.
+            val (Union[int, str, Iterable[str]]): Either a preset puzzle level (int),
+            cardinal directions as a comma separated string, or an iterable
+            of valid directions from the Direction object.
         """
+        self._directions = utils.validate_level(val)
+        self._reset_puzzle()
+
+    def _set_level(self, val: int) -> None:
+        """Set valid puzzle directions to a predefined level set.
+        Here for backward compatibility."""
         if not isinstance(val, int):
             raise TypeError("Level must be an integer.")
-        if val not in [1, 2, 3]:
-            raise ValueError("Level must be 1, 2, or 3.")
-        self._level = val
+        self.directions = utils.validate_level(val)
+
+    def _get_level(self) -> DirectionSet:
+        """Return valid puzzle directions. Here for backward compatibility."""
+        return self.directions
+
+    level = property(_get_level, _set_level, None, "Numeric setter for the level.")
+
+    @property
+    def secret_directions(self):
+        """Valid directions for secret puzzle words."""
+        return self._secret_directions
+
+    @secret_directions.setter
+    def secret_directions(self, val: Union[int, str, Iterable[str]]):
+        """Possible directions for secret puzzle words.
+
+        Args:
+            val (Union[int, str, Iterable[str]]): Either a preset puzzle level (int),
+            valid cardinal directions as a comma separated string, or an iterable
+            of valid cardinal directions.
+        """
+        if val:
+            self._secret_directions = utils.validate_level(val)
+        else:
+            self._secret_directions = None
         self._reset_puzzle()
 
     @property
     def size(self) -> int:
-        """The size of the word search puzzle."""
+        """Size (in characters) of the word search puzzle."""
         return self._size
 
     @size.setter
     def size(self, val: int):
-        """Set the size the puzzle. All puzzles are square.
+        """Set the puzzle size. All puzzles are square.
 
         Args:
             val (int): Size in grid squares (characters).
@@ -128,51 +206,47 @@ class WordSearch:
                 f"Puzzle size must be >= {config.min_puzzle_size}"
                 + f" and <= {config.max_puzzle_size}"
             )
-        self._size = val
-        self._reset_puzzle()
+        if self._size != val:
+            self._size = val
+            self._reset_puzzle()
 
     def reset_size(self):
-        """Reset the size to the default setting
+        """Reset the puzzle size to the default setting
         (based on longest word length and total words)."""
-        self._size = 0
+        self._size = generate.calc_puzzle_size(self._words, self._directions)
         self._reset_puzzle()
 
-    def generate(
-        self, level: Optional[int] = None, size: Optional[int] = None
-    ) -> Puzzle:
-        """_summary_
+    def _generate(self) -> None:
+        generate.fill_words(self)
+        if self.key:
+            generate.fill_blanks(self)
 
-        Args:
-            level (Optional[int], optional): Difficulty level. Defaults to None.
-            size (Optional[int], optional): Puzzle size. Defaults to None.
+    def _process_input(self, words: str, action: str = "add", secret: bool = False):
+        if secret:
+            clean_words = utils.cleanup_input(words, secret=True)
+        else:
+            clean_words = utils.cleanup_input(words)
 
-        Returns:
-            Puzzle: A newly generated puzzle.
-        """
-        if level:
-            self.level = level
-        if size:
-            self.size = size
+        if action == "add":
+            # remove all new words first so any updates are reflected in the word list
+            self._words.symmetric_difference_update(clean_words)
+            self._words.update(clean_words)
+        if action == "remove":
+            self._words.difference_update(clean_words)
+        if action == "replace":
+            self._words.clear()
+            self._words.update(clean_words)
 
-        self._solution, self._key = generate.fill_words(
-            self.words, self.level, self.size
-        )
-        self._puzzle = generate.fill_blanks(self.solution, list(self.key.keys()))
-        self._size = len(self._puzzle[0])
-
-        return self.puzzle
-
-    def show(self, solution: bool = False):
-        """Show the current puzzle 'prettified' with or without the solution.
+    def show(self, solution: bool = False) -> None:
+        """Show the current puzzle with or without the solution.
 
         Args:
             solution (bool, optional): Highlight the puzzle solution. Defaults to False.
         """
-        print(
-            utils.format_puzzle_for_show(
-                self.puzzle, self.key, self.level, self.solution, solution
-            )
-        )
+        if self.key:
+            print(utils.format_puzzle_for_show(self, solution))
+        else:
+            print("Empty puzzle.")
 
     def save(self, path: Union[str, Path], solution: bool = False) -> str:
         """Save the current puzzle to a file.
@@ -200,73 +274,84 @@ class WordSearch:
         # return saved file path
         return str(saved_file)
 
-    def add_words(self, words: str) -> set[str]:
-        """Add new words to the puzzle.
+    def add_words(
+        self, words: str, secret: bool = False, reset_size: bool = False
+    ) -> None:
+        """Add words to the puzzle.
 
         Args:
-            words (str): A string of words separated by
-            spaces, commas, or new lines.
-
-        Returns:
-            set[str]: An updated set of words.
+            words (str): Words to remove.
+            secret (bool, optional): Should the new words
+            be secret. Defaults to False.
+            reset_size (bool, optional): Reset the puzzle
+            size based on the updated words. Defaults to False.
         """
-        # self.words.update(utils.cleanup_input(words))
-        old_words = ", ".join(self.words)
-        combined_words = old_words + "," + words
-        self.words = utils.cleanup_input(combined_words)
+        self._process_input(words, "add", secret)
+        if reset_size:
+            self.reset_size()
         self._reset_puzzle()
-        return self.words
 
-    def remove_words(self, words: str) -> set[str]:
+    def remove_words(self, words: str, reset_size: bool = False) -> None:
         """Remove words from the puzzle.
 
         Args:
-            words (str): A string of words separated by
-            spaces, commas, or new lines.
-
-        Returns:
-            set[str]: An updated set of words.
+            words (str): Words to remove.
+            reset_size (bool, optional): Reset the puzzle
+            size based on the updated words. Defaults to False.
         """
-        removals = utils.cleanup_input(words)
-        self.words = self.words - removals
+        self._process_input(words, "remove")
+        if reset_size:
+            self.reset_size()
         self._reset_puzzle()
-        return self.words
 
-    def replace_words(self, words: str):
-        """Replace all words in the puzzle.
+    def replace_words(
+        self, words: str, secret: bool = False, reset_size: bool = False
+    ) -> None:
+        """Replace all words from the puzzle.
 
         Args:
-            words (str): A string of words separated by
-            spaces, commas, or new lines.
-
-        Returns:
-            [type]: An updated set of words.
+            words (str): Words to add.
+            secret (bool, optional): Should the new words
+            be secret. Defaults to False.
+            reset_size (bool, optional): Reset the puzzle
+            size based on the updated words. Defaults to False.
         """
-        self.words = utils.cleanup_input(words)
+        self._process_input(words, "replace", secret)
+        if reset_size:
+            self.reset_size()
         self._reset_puzzle()
-        return self.words
 
     def _reset_puzzle(self):
-        """Reset the puzzle after changes to attributes."""
-        if self._puzzle:
-            self._puzzle = []
-            self._solution = []
-            self._key = {}
-            self.generate()
+        """Reset and regenerate the puzzle."""
+        self._puzzle = []
+        self._solution = []
+        self._key = {}
+        self._generate()
 
     def __eq__(self, __o: object) -> bool:
         if isinstance(__o, WordSearch):
-            words = self.words == __o.words
-            level = self.level == __o.level
-            size = self.size == __o.size
-            return all([words, level, size])
+            return all(
+                (
+                    self.words == __o.words,
+                    self.directions == __o.directions,
+                    self.size == __o.size,
+                    self.secret_words == __o.secret_words,
+                    self.secret_directions == __o.secret_directions,
+                )
+            )
         return False
 
     def __repr__(self):
-        words_str = ",".join(self.words)
-        return f"{self.__class__.__name__}('{words_str}', {self.level}, {self.size})"
+        return (
+            f"{self.__class__.__name__}"
+            + f"('{','.join([word.text for word in self.hidden_words])}', "
+            + f"{utils.direction_set_repr(self.directions)}, "
+            + f"{self.size}, '{','.join([word.text for word in self.secret_words])}',"
+            + f"{utils.direction_set_repr(self.secret_directions)})"
+        )
 
     def __str__(self):
-        return utils.format_puzzle_for_show(
-            self.puzzle, self.key, self.level, self.solution
-        )
+        if self.key:
+            return utils.format_puzzle_for_show(self)
+        else:
+            return "Empty puzzle."

@@ -7,12 +7,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Test for csv output with solution
+- Secret Words (contributed by Chris J.M. [duck57](https://github.com/duck57))
+    - The WordSearch object can now accept a list of secret bonus words
+        - are included in the puzzle but not listed in the word list
+        - are included in the answer key and tagged with an `*` like '\*word'.
+        - A puzzle can consist of only secret words
+        - Implemented in the CLI as -x, --secret-words
+    - Introduced the Direction class
+        - Allows for specifying either a preset numeric level or accepted cardinal direction for puzzle words.
+        - Implemented in the CLI as -d, --difficulty
+    - Testing for all new secret word features and accompanying functionality
+    - Updated README with new features
+- New `-rx, --random-secret-words` CLI argument
+
 
 ### Changed
+- Most all supplemental function now work the base WordSearch object, reducing the of arguments needing to be passed around, and also reducing memory usage
+- Puzzle config settings
+    - min_puzzle_size == 5
+    - max_puzzle_size == 50
+    - max_puzzle_words == 100
+- PDF generator updated to work with larger puzzles and word lists
 - Removed the tty input from the cli as it's confusing for most users.
+- CLI flag -l, --level was combined with -d, --difficulty (for backward compatibility)
+- Lots of types refactoring by contributed by [duck57](https://github.com/duck57)
+- clean up __main__ call to cli
+- Word class
+    - `WordSearch.words` property is now a set of `Word` objects
+        - Allows unused words to be kept around in case they fit in re-generated version o the puzzle.
+    - Allows easier tracking of all words properties
+    - Allows easier access to words of different types
+        - `WordSearch.words` == all available puzzle words
+        - `WordSearch.placed_words` == all words placed in the puzzle (no matter of word type)
+        - `WordSearch.hidden_words` == all available "regular" words
+        - `WordSearch.placed_hidden_words` == all "regular" words placed in the puzzle
+        - `WordSearch.secret_words` == all available "secret" words
+        - `WordSearch.placed_secret_words` == all "secret" words placed in the puzzle
+
 
 ### Fixed
 - [CLI with empty stdin causes error](https://github.com/joshbduncan/word-search-generator/issues/19)
+- Corrected key coordinates to 1-based.
 
 ## [1.4.0] - 2022-09-09
 ### Added
