@@ -8,7 +8,7 @@
 """
 
 __app_name__ = "word-search"
-__version__ = "2.0.0"
+__version__ = "2.0.1"
 
 
 import json
@@ -78,7 +78,7 @@ class WordSearch:
     @property
     def placed_words(self) -> Wordlist:
         """The current puzzle words."""
-        return {word for word in self._words if word.position}
+        return {word for word in self._words if word.direction}
 
     @property
     def hidden_words(self) -> Wordlist:
@@ -88,7 +88,7 @@ class WordSearch:
     @property
     def placed_hidden_words(self) -> Wordlist:
         """The current puzzle words."""
-        return {word for word in self.hidden_words if word.position}
+        return {word for word in self.hidden_words if word.direction}
 
     @property
     def secret_words(self) -> Wordlist:
@@ -98,7 +98,7 @@ class WordSearch:
     @property
     def placed_secret_words(self) -> Wordlist:
         """The current secret puzzle words."""
-        return {word for word in self.secret_words if word.position}
+        return {word for word in self.secret_words if word.direction}
 
     @property
     def puzzle(self) -> Puzzle:
@@ -113,7 +113,7 @@ class WordSearch:
     @property
     def key(self) -> Key:
         """The current puzzle answer key (1-based)."""
-        return {word.text: word.key_info for word in self.words if word.position}
+        return {word.text: word.key_info for word in self.placed_words}
 
     @property
     def json(self) -> str:
@@ -123,7 +123,7 @@ class WordSearch:
         return json.dumps(
             {
                 "puzzle": self.puzzle,
-                "words": [word.text for word in self.words],
+                "words": [word.text for word in self.placed_words],
                 "key": {
                     word.text: word.key_info_json
                     for word in self.words

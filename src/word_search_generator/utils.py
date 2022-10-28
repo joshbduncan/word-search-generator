@@ -148,13 +148,16 @@ def format_puzzle_for_show(puzzle: WordSearch, show_solution: bool = False) -> s
     word_list = get_word_list_str(puzzle.key)
     # highlight solution if provided
     puzzle_list = highlight_solution(puzzle) if show_solution else puzzle.puzzle
+    answer_key_intro = (
+        "Answer Key (*= Secret Words)" if puzzle.placed_secret_words else "Answer Key"
+    )
     return f"""{header}
 {stringify(puzzle_list)}
 
 Find these words: {word_list if word_list else '<ALL SECRET WORDS>'}
 * Words can go {get_level_dirs_str(puzzle.level)}.
 
-Answer Key: {get_answer_key_str(puzzle.placed_words)}"""
+{answer_key_intro}: {get_answer_key_str(puzzle.placed_words)}"""
 
 
 def get_level_dirs_str(level: DirectionSet) -> str:

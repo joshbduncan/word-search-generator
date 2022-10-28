@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.1] - 2022-10-28
+## Added
+- All puzzle output (stdout, csv, pdf) all indicate that '*' before a word in the key mean that word is secret (not listed in the word list) (e.g. 'Puzzle Key (*= Secret Words): ...').
+    - Only shows if secret words are actuall present.
+
+### Fixed
+- Answer Key and .placed_... properties were showing all words and not only words placed in the puzzle.
+- JSON method returns correct word list.
+
 ## [2.0.0] - 2022-10-24
 ### Added
 - Test for csv output with solution

@@ -360,12 +360,12 @@ def test_no_hidden_words():
 def test_placed_hidden_words():
     p = WordSearch("cat bat rat")
     assert len(p.placed_hidden_words) == len(
-        {word for word in p.hidden_words if word.position}
+        {word for word in p.hidden_words if word.direction}
     )
 
 
 def test_placed_secret_words():
     p = WordSearch("pig horse cow", secret_words="cat bat rat")
     assert len(p.placed_secret_words) == len(
-        {word for word in p.secret_words if word.position}
+        {word for word in p.secret_words if word.direction}
     )
