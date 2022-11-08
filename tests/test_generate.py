@@ -1,6 +1,7 @@
 from word_search_generator import WordSearch
 from word_search_generator.generate import no_duped_words
 from word_search_generator.types import Position
+from word_search_generator.utils import get_random_words
 
 
 def test_dupe_at_position_1():
@@ -96,3 +97,15 @@ def test_no_dupe_at_position():
 def test_puzzle_size_less_than_shortest_word_length():
     p = WordSearch("DONKEY", size=5)
     assert p.size == 7
+
+
+def test_only_placed_words_in_key():
+    w = get_random_words(100)
+    p = WordSearch(w, size=5)
+    assert all(word.direction for word in p.placed_words)
+
+
+def test_too_many_supplied_words():
+    w = get_random_words(100)
+    p = WordSearch(w, size=5)
+    assert len(p.words) != len(p.placed_words)
