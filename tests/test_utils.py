@@ -1,7 +1,7 @@
 import pytest
 
 from word_search_generator import WordSearch, utils
-from word_search_generator.types import Word
+from word_search_generator.word import Word
 
 
 def test_valid_cleanup_input_with_spaces():

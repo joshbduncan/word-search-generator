@@ -1,21 +1,85 @@
 from __future__ import annotations
 
+import copy
 import random
 import string
-from typing import TYPE_CHECKING, Any, Iterable, List, Tuple
+import sys
+from math import log2
+from typing import TYPE_CHECKING, Any, Iterable, List, Optional, Sized, Tuple
 
-from word_search_generator import config
-from word_search_generator.types import (
-    Direction,
-    DirectionSet,
-    Key,
-    Puzzle,
-    Word,
-    Wordlist,
-)
+from . import config
+from .word import Direction, Word
 
 if TYPE_CHECKING:  # pragma: no cover
-    from word_search_generator import WordSearch
+    from . import DirectionSet, Key, WordSearch
+    from .puzzle import PuzzleGrid
+    from .word import Wordlist
+
+
+def calc_puzzle_size(words: Wordlist, level: Sized, size: Optional[int] = None) -> int:
+    """Calculate the puzzle grid size."""
+    all_words = list(word.text for word in words)
+    longest_word_length = len(max(all_words, key=len))
+    shortest_word_length = len(min(all_words, key=len))
+    if not size:
+        longest = max(10, longest_word_length)
+        # calculate multiplier for larger word lists so that most have room to fit
+        multiplier = len(all_words) / 15 if len(all_words) > 15 else 1
+        # level lengths in config.py are nice multiples of 2
+        l_size = log2(len(level)) if level else 1  # protect against log(0) in tests
+        size = round(longest + l_size * 2 * multiplier)
+    else:
+        if size < shortest_word_length:
+            print(
+                "Puzzle sized adjust to fit word with the shortest length.",
+                file=sys.stderr,
+            )
+            size = shortest_word_length + 1
+    return size
+
+
+def build_puzzle(size: int, char: str) -> PuzzleGrid:
+    return [[char] * size for _ in range(size)]
+
+
+def out_of_bounds(size: int, position: Tuple[int, int]) -> bool:
+    """Validate `position` is within the current puzzle bounds."""
+    width = height = size
+    row, col = position
+    if row < 0 or col < 0 or row > height - 1 or col > width - 1:
+        return True
+    return False
+
+
+def find_bounding_box(grid: List[List[str]]) -> Tuple[int, int, int, int]:
+    """Find the ACTIVE area bounding box of the supplied grid."""
+    size = len(grid)
+    # find the top and bottom edges
+    top_edge = 0
+    for i in range(size):
+        if grid[i].count(config.ACTIVE):
+            top_edge = i
+            break
+    rows_reversed = grid[::-1]
+    bottom_edge = 0
+    for i in range(size):
+        if rows_reversed[i].count(config.ACTIVE):
+            bottom_edge = size - i
+            break
+    # find the left and right edges
+    cols = list(zip(*grid))
+    left_edge = 0
+    for i in range(size):
+        if cols[i].count(config.ACTIVE):
+            left_edge = i
+            break
+    right_edge = 0
+    cols_reversed = cols[::-1]
+    for i in range(size):
+        if cols_reversed[i].count(config.ACTIVE):
+            right_edge = size - i
+            break
+    return (top_edge, left_edge, right_edge, bottom_edge)
 
 
 def cleanup_input(words: str, secret: bool = False) -> Wordlist:
@@ -111,31 +175,34 @@ def direction_set_repr(ds: DirectionSet) -> str:
     return ("'" + ",".join(d.name for d in ds) + "'") if ds else "None"
 
 
-def highlight_solution(puzzle: WordSearch) -> Puzzle:
+def highlight_solution(ws: WordSearch) -> PuzzleGrid:
     """Add highlighting to puzzle solution."""
-    output: Puzzle = []
-    for r, line in enumerate(puzzle.puzzle):
-        line_chars = []
-        # check to see if character if part of the solution
-        for c, char in enumerate(line):
-            if puzzle.solution[r][c]:
-                line_chars.append(f"\u001b[1m\u001b[31m{char}\u001b[0m")
-            else:
-                line_chars.append(f"{char}")
-        output.append(line_chars)
+    output: PuzzleGrid = copy.deepcopy(ws.puzzle.puzzle)
+    for word in ws.placed_words:
+        if (
+            word.start_column is not None
+            and word.start_row is not None
+            and word.direction
+        ):  # FIXME: only here for mypy
+            x = word.start_column
+            y = word.start_row
+            for char in word.text:
+                output[y][x] = f"\u001b[1m\u001b[31m{char}\u001b[0m"
+                x += word.direction.c_move
+                y += word.direction.r_move
     return output
 
 
-def make_header(puzzle: Puzzle, text: str) -> str:
-    """Generate a header that fits the current puzzle."""
-    hr = "-" * max(11, (len(puzzle) * 2 - 1))
+def make_header(size: int, text: str) -> str:
+    """Generate a header that fits the current puzzle size."""
+    hr = "-" * max(11, (size * 2 - 1))
     padding = " " * ((len(hr) - len(text)) // 2)
     return f"""{hr}
 {padding}{text}{padding}
 {hr}"""
 
 
-def stringify(puzzle: Puzzle) -> str:
+def stringify(puzzle: PuzzleGrid) -> str:
     """Convert puzzle array of nested lists into a string."""
     output = []
     for line in puzzle:
@@ -143,21 +210,21 @@ def stringify(puzzle: Puzzle) -> str:
     return "\n".join(output)
 
 
-def format_puzzle_for_show(puzzle: WordSearch, show_solution: bool = False) -> str:
-    header = make_header(puzzle.puzzle, "WORD SEARCH")
-    word_list = get_word_list_str(puzzle.key)
+def format_puzzle_for_show(ws: WordSearch, show_solution: bool = False) -> str:
+    header = make_header(ws.size, "WORD SEARCH")
+    word_list = get_word_list_str(ws.key)
     # highlight solution if provided
-    puzzle_list = highlight_solution(puzzle) if show_solution else puzzle.puzzle
+    puzzle_list = highlight_solution(ws) if show_solution else ws.puzzle.puzzle
     answer_key_intro = (
-        "Answer Key (*= Secret Words)" if puzzle.placed_secret_words else "Answer Key"
+        "Answer Key (*= Secret Words)" if ws.placed_secret_words else "Answer Key"
     )
     return f"""{header}
 {stringify(puzzle_list)}
 
 Find these words: {word_list if word_list else '<ALL SECRET WORDS>'}
-* Words can go {get_level_dirs_str(puzzle.level)}.
+* Words can go {get_level_dirs_str(ws.level)}.
 
-{answer_key_intro}: {get_answer_key_str(puzzle.placed_words)}"""
+{answer_key_intro}: {get_answer_key_str(ws.placed_words)}"""
 
 
 def get_level_dirs_str(level: DirectionSet) -> str:

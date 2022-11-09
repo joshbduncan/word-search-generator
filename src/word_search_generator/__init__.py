@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """
     Word Search
     -----------
@@ -13,10 +15,15 @@ __version__ = "2.0.1"
 
 import json
 from pathlib import Path
-from typing import Iterable, Optional, Union
+from typing import Dict, Iterable, Optional, Set, Union
 
 from . import config, export, generate, utils
-from .types import DirectionSet, Key, Puzzle, Wordlist
+from .puzzle import Puzzle
+from .word import Direction, KeyInfo, KeyInfoJson, Wordlist
+
+DirectionSet = Set[Direction]
+Key = Dict[str, KeyInfo]
+KeyJson = Dict[str, KeyInfoJson]
 
 
 class WordSearch:
@@ -46,9 +53,7 @@ class WordSearch:
         """
 
         # setup puzzle
-        self._puzzle: Puzzle = []
-        self._solution: Puzzle = []
-        self._size: int = size if size else 0
+        self._puzzle: Puzzle = Puzzle()
 
         # setup words
         self._words: Wordlist = set()
@@ -67,7 +72,7 @@ class WordSearch:
         )
 
         if self.words:
-            self._size = generate.calc_puzzle_size(self._words, self._directions, size)
+            self.size = utils.calc_puzzle_size(self._words, self._directions, size)
             self._generate()
 
     @property
@@ -102,13 +107,13 @@ class WordSearch:
 
     @property
     def puzzle(self) -> Puzzle:
-        """The current puzzle state."""
+        """The current puzzle."""
         return self._puzzle
 
     @property
-    def solution(self) -> Puzzle:
+    def solution(self) -> None:
         """Solution to the current puzzle state."""
-        return self._solution
+        self.show(solution=True)
 
     @property
     def key(self) -> Key:
@@ -122,7 +127,7 @@ class WordSearch:
             return json.dumps({})
         return json.dumps(
             {
-                "puzzle": self.puzzle,
+                "puzzle": self.puzzle.puzzle,
                 "words": [word.text for word in self.placed_words],
                 "key": {
                     word.text: word.key_info_json
@@ -185,7 +190,7 @@ class WordSearch:
     @property
     def size(self) -> int:
         """Size (in characters) of the word search puzzle."""
-        return self._size
+        return self._puzzle._size
 
     @size.setter
     def size(self, val: int):
@@ -206,14 +211,14 @@ class WordSearch:
                 f"Puzzle size must be >= {config.min_puzzle_size}"
                 + f" and <= {config.max_puzzle_size}"
             )
-        if self._size != val:
-            self._size = val
+        if self.size != val:
+            self._puzzle._size = val
             self._reset_puzzle()
 
     def reset_size(self):
         """Reset the puzzle size to the default setting
         (based on longest word length and total words)."""
-        self._size = generate.calc_puzzle_size(self._words, self._directions)
+        self.size = utils.calc_puzzle_size(self._words, self._directions)
         self._reset_puzzle()
 
     def _generate(self) -> None:
@@ -268,7 +273,7 @@ class WordSearch:
         path = export.validate_path(path)
         # write the file
         if ftype == "csv":
-            saved_file = export.write_csv_file(path, self, solution)
+            saved_file = export.write_csv_file(path, self)
         else:
             saved_file = export.write_pdf_file(path, self, solution)
         # return saved file path
@@ -323,8 +328,7 @@ class WordSearch:
 
     def _reset_puzzle(self):
         """Reset and regenerate the puzzle."""
-        self._puzzle = []
-        self._solution = []
+        self._puzzle._reset_puzzle()
         self._key = {}
         self._generate()
 
@@ -346,7 +350,8 @@ class WordSearch:
             f"{self.__class__.__name__}"
             + f"('{','.join([word.text for word in self.hidden_words])}', "
             + f"{utils.direction_set_repr(self.directions)}, "
-            + f"{self.size}, '{','.join([word.text for word in self.secret_words])}',"
+            + f"{self.size}, "
+            + f"'{','.join([word.text for word in self.secret_words])}',"
             + f"{utils.direction_set_repr(self.secret_directions)})"
         )
 

@@ -3,15 +3,16 @@ import pathlib
 
 import pytest
 
-from word_search_generator import WordSearch, config, utils
+from word_search_generator import Key, WordSearch, config, utils
 from word_search_generator.config import level_dirs
-from word_search_generator.types import Direction, Key, Puzzle, Word
+from word_search_generator.puzzle import PuzzleGrid
 from word_search_generator.utils import get_random_words
+from word_search_generator.word import Direction, Word
 
 WORDS = "dog, cat, pig, horse, donkey, turtle, goat, sheep"
 
 
-def check_key(key: Key, puzzle: Puzzle) -> bool:
+def check_key(key: Key, puzzle: PuzzleGrid) -> bool:
     """Test the puzzle key against the current puzzle state."""
     for word, info in key.items():
         row, col = info["start"]  # type: ignore
@@ -25,13 +26,13 @@ def check_key(key: Key, puzzle: Puzzle) -> bool:
 
 
 def test_empty_object():
-    puzzle = WordSearch()
-    assert len(puzzle.words) == 0
+    ws = WordSearch()
+    assert len(ws.words) == 0
 
 
 def test_input_cleanup():
-    puzzle = WordSearch(WORDS)
-    assert len(puzzle.words) == 8
+    ws = WordSearch(WORDS)
+    assert len(ws.words) == 8
 
 
 def test_junky_input_cleanup():
@@ -41,205 +42,193 @@ def test_junky_input_cleanup():
     junk,,,,,,   , ,i
 
     words,"""
-    junk_puzzle = WordSearch(junky_words)
-    assert len(junk_puzzle.words) == 4
+    junk_ws = WordSearch(junky_words)
+    assert len(junk_ws.words) == 4
 
 
 def test_set_puzzle_level():
-    puzzle = WordSearch(WORDS)
-    puzzle.level = 3
-    assert puzzle.directions == utils.validate_level(config.level_dirs[3])
+    ws = WordSearch(WORDS)
+    ws.level = 3
+    assert ws.directions == utils.validate_level(config.level_dirs[3])
 
 
 def test_set_secret_level():
-    puzzle = WordSearch(WORDS)
-    puzzle.secret_directions = 4  # type: ignore
-    assert puzzle.secret_directions == utils.validate_level(4)  # type: ignore
+    ws = WordSearch(WORDS)
+    ws.secret_directions = 4  # type: ignore
+    assert ws.secret_directions == utils.validate_level(4)  # type: ignore
 
 
 def test_bad_puzzle_level_value():
-    puzzle = WordSearch(WORDS)
+    ws = WordSearch(WORDS)
     with pytest.raises(ValueError):
-        puzzle.level = 757
+        ws.level = 757
 
 
 def test_bad_puzzle_level_type():
-    puzzle = WordSearch(WORDS)
+    ws = WordSearch(WORDS)
     with pytest.raises(TypeError):
-        puzzle.level = "A"  # type: ignore
+        ws.level = "A"  # type: ignore
 
 
 def test_garbage_puzzle_level_type():
-    puzzle = WordSearch(WORDS)
+    ws = WordSearch(WORDS)
     with pytest.raises(TypeError):
-        puzzle.level = 17.76  # type: ignore
+        ws.level = 17.76  # type: ignore
 
 
 def test_manual_level_control():
-    puzzle = WordSearch(WORDS)
+    ws = WordSearch(WORDS)
     tst_dirs = [Direction.E, Direction.SW, (-1, 0)]
-    puzzle.directions = tst_dirs  # type: ignore
-    assert puzzle.directions == utils.validate_level(tst_dirs)
+    ws.directions = tst_dirs  # type: ignore
+    assert ws.directions == utils.validate_level(tst_dirs)
 
 
 def test_set_puzzle_size():
-    puzzle = WordSearch(WORDS)
-    puzzle.size = 15
-    assert len(puzzle.puzzle) == 15
+    ws = WordSearch(WORDS)
+    ws.size = 15
+    assert len(ws.puzzle.puzzle) == 15
 
 
 def test_bad_puzzle_size_value():
-    puzzle = WordSearch(WORDS)
+    ws = WordSearch(WORDS)
     with pytest.raises(ValueError):
-        puzzle.size = 1
+        ws.size = 1
 
 
 def test_bad_puzzle_size_type():
-    puzzle = WordSearch(WORDS)
+    ws = WordSearch(WORDS)
     with pytest.raises(TypeError):
-        puzzle.size = "A"  # type: ignore
+        ws.size = "A"  # type: ignore
 
 
 def test_puzzle_key():
-    puzzle = WordSearch(WORDS)
-    assert check_key(puzzle.key, puzzle.puzzle)
+    ws = WordSearch(WORDS)
+    assert check_key(ws.key, ws.puzzle.puzzle)
 
 
 def test_export_pdf(tmp_path):
-    puzzle = WordSearch(WORDS)
+    ws = WordSearch(WORDS)
     tmp_path = pathlib.Path.joinpath(tmp_path, "test.pdf")
-    puzzle.save(tmp_path)
+    ws.save(tmp_path)
     assert tmp_path.exists()
 
 
 def test_export_csv(tmp_path):
-    puzzle = WordSearch(WORDS)
+    ws = WordSearch(WORDS)
     tmp_path = pathlib.Path.joinpath(tmp_path, "test.csv")
-    puzzle.save(tmp_path)
+    ws.save(tmp_path)
     assert tmp_path.exists()
 
 
 def test_invalid_save_path():
-    puzzle = WordSearch(WORDS)
+    ws = WordSearch(WORDS)
     with pytest.raises(OSError):
-        puzzle.save("~/some/random/dir/that/doesnt/exists")
+        ws.save("~/some/random/dir/that/doesnt/exists")
 
 
 def test_add_words():
-    puzzle = WordSearch(WORDS)
-    puzzle.add_words("test")
-    assert Word("test") in puzzle.words
+    ws = WordSearch(WORDS)
+    ws.add_words("test")
+    assert Word("test") in ws.words
 
 
 def test_add_regular_words_replacing_secret_word():
-    puzzle = WordSearch(WORDS)
-    puzzle.add_words("test", True)
-    puzzle.add_words("test")
-    assert Word("test") not in puzzle.secret_words and Word("test") in puzzle.words
+    ws = WordSearch(WORDS)
+    ws.add_words("test", True)
+    ws.add_words("test")
+    assert Word("test") not in ws.secret_words and Word("test") in ws.words
 
 
 def test_add_secret_words():
-    puzzle = WordSearch(WORDS)
-    puzzle.add_words("test", True)
-    assert Word("test") in puzzle.secret_words
+    ws = WordSearch(WORDS)
+    ws.add_words("test", True)
+    assert Word("test") in ws.secret_words
 
 
 def test_add_secret_words_replacing_regular_word():
-    puzzle = WordSearch(WORDS)
-    puzzle.add_words("test")
-    puzzle.add_words("test", True)
-    assert (
-        Word("test") not in puzzle.hidden_words and Word("test") in puzzle.secret_words
-    )
+    ws = WordSearch(WORDS)
+    ws.add_words("test")
+    ws.add_words("test", True)
+    assert Word("test") not in ws.hidden_words and Word("test") in ws.secret_words
 
 
 def test_remove_words():
-    puzzle = WordSearch(WORDS)
-    puzzle.add_words("test")
-    puzzle.remove_words("test")
-    assert Word("test") not in puzzle.words
+    ws = WordSearch(WORDS)
+    ws.add_words("test")
+    ws.remove_words("test")
+    assert Word("test") not in ws.words
 
 
 def test_remove_words_from_secret_words():
-    puzzle = WordSearch(WORDS)
-    puzzle.add_words("test", True)
-    puzzle.remove_words("test")
-    assert "test".upper() not in puzzle.words.union(puzzle.secret_words)
+    ws = WordSearch(WORDS)
+    ws.add_words("test", True)
+    ws.remove_words("test")
+    assert "test".upper() not in ws.words.union(ws.secret_words)
 
 
 def test_replace_words():
-    puzzle = WordSearch(WORDS)
-    puzzle.replace_words("set, of replaced, words")
-    assert len(puzzle.words) == 4
+    ws = WordSearch(WORDS)
+    ws.replace_words("set, of replaced, words")
+    assert len(ws.words) == 4
 
 
 def test_replace_secret_words():
-    puzzle = WordSearch(WORDS, secret_words="secret, blind, nope")
-    puzzle.replace_words("hidden", True)
-    assert len(puzzle.secret_words) == 1
+    ws = WordSearch(WORDS, secret_words="secret, blind, nope")
+    ws.replace_words("hidden", True)
+    assert len(ws.secret_words) == 1
 
 
 def test_reset_puzzle_size():
-    puzzle = WordSearch(WORDS)
-    prev_size = puzzle.size
-    puzzle.size = 25
-    puzzle.reset_size()
-    assert puzzle.size == prev_size
-
-
-def test_puzzle_solution():
-    # need to check for overlaps
-    puzzle = WordSearch(WORDS)
-    print(puzzle.solution)
-    puzzle_chars = set([char for line in puzzle.solution for char in line])
-    key_chars = set([char for word in puzzle.key for char in word])
-    key_chars.add("")
-    assert puzzle_chars == key_chars
+    ws = WordSearch(WORDS)
+    prev_size = ws.size
+    ws.size = 25
+    ws.reset_size()
+    assert ws.size == prev_size
 
 
 def test_puzzle_repr():
-    puzzle = WordSearch(WORDS)
-    assert eval(repr(puzzle)) == puzzle
+    ws = WordSearch(WORDS)
+    assert eval(repr(ws)) == ws
 
 
 def test_puzzle_equal():
-    puzzle1 = WordSearch(WORDS, size=10)
-    puzzle2 = WordSearch(WORDS, size=10)
-    assert puzzle1 == puzzle2
+    ws1 = WordSearch(WORDS, size=10)
+    ws2 = WordSearch(WORDS, size=10)
+    assert ws1 == ws2
 
 
 def test_puzzle_invalid_equality():
-    puzzle1 = WordSearch(WORDS, size=10)
-    puzzle2 = ["testing"]
-    assert puzzle1 != puzzle2
+    ws1 = WordSearch(WORDS, size=10)
+    ws2 = ["testing"]
+    assert ws1 != ws2
 
 
 def test_puzzle_non_equal():
-    puzzle1 = WordSearch(WORDS, size=10)
-    puzzle2 = WordSearch(WORDS, size=15)
-    assert puzzle1 != puzzle2
+    ws1 = WordSearch(WORDS, size=10)
+    ws2 = WordSearch(WORDS, size=15)
+    assert ws1 != ws2
 
 
 def test_puzzle_str():
-    puzzle = WordSearch(WORDS)
-    puzzle_str = utils.format_puzzle_for_show(puzzle)
-    assert str(puzzle) == puzzle_str
+    ws = WordSearch(WORDS)
+    puzzle_str = utils.format_puzzle_for_show(ws)
+    assert str(ws) == puzzle_str
 
 
 def test_puzzle_str_output(capsys):
-    puzzle = WordSearch(WORDS)
-    print(utils.format_puzzle_for_show(puzzle))
+    ws = WordSearch(WORDS)
+    print(utils.format_puzzle_for_show(ws))
     capture1 = capsys.readouterr()
-    print(puzzle)
+    print(ws)
     capture2 = capsys.readouterr()
     assert capture1.out == capture2.out
 
 
 def test_puzzle_show_output(capsys):
-    puzzle = WordSearch(WORDS)
-    print(utils.format_puzzle_for_show(puzzle))
+    ws = WordSearch(WORDS)
+    print(utils.format_puzzle_for_show(ws))
     capture1 = capsys.readouterr()
-    puzzle.show()
+    ws.show()
     capture2 = capsys.readouterr()
     assert capture1.out == capture2.out
 
@@ -261,18 +250,18 @@ def test_puzzle_show_str_output_for_empty_object(capsys):
 
 
 def test_puzzle_show_solution_output(capsys):
-    puzzle = WordSearch(WORDS)
-    print(utils.format_puzzle_for_show(puzzle, True))
+    ws = WordSearch(WORDS)
+    print(utils.format_puzzle_for_show(ws, True))
     capture1 = capsys.readouterr()
-    puzzle.show(True)
+    ws.show(True)
     capture2 = capsys.readouterr()
     assert capture1.out == capture2.out
 
 
 def test_json_output_property_for_puzzle():
     words = get_random_words(10)
-    p = WordSearch(words, level=3)
-    assert json.loads(p.json)["puzzle"] == p.puzzle
+    ws = WordSearch(words, level=3)
+    assert json.loads(ws.json)["puzzle"] == ws.puzzle.puzzle
 
 
 def test_json_output_property_for_key():
@@ -290,61 +279,61 @@ def test_json_output_property_for_empty_object():
 
 
 def test_input_including_palindrome():
-    puzzle = WordSearch(WORDS + ", level")
-    assert len(puzzle.words) == 8
+    ws = WordSearch(WORDS + ", level")
+    assert len(ws.words) == 8
 
 
 def test_for_empty_spaces():
     for _ in range(100):
         words = get_random_words(10)
-        p = WordSearch(words, level=3)
-        flat = [item for sublist in p.puzzle for item in sublist]
-        assert p.size * p.size == len(flat)
+        ws = WordSearch(words, level=3)
+        flat = [item for sublist in ws.puzzle.puzzle for item in sublist]
+        assert ws.size * ws.size == len(flat)
 
 
 def test_puzzle_with_secret_words():
-    puzzle = WordSearch(WORDS, secret_words=WORDS + ", dewlap")
-    assert len(puzzle.secret_words) == 1  # should all be ignored due to overlap
+    ws = WordSearch(WORDS, secret_words=WORDS + ", dewlap")
+    assert len(ws.secret_words) == 1  # should all be ignored due to overlap
 
 
 def test_clearing_secret_directions():
-    puzzle = WordSearch(WORDS, secret_level=1)
-    puzzle.secret_directions = set()
-    assert puzzle.secret_directions is None
+    ws = WordSearch(WORDS, secret_level=1)
+    ws.secret_directions = set()
+    assert ws.secret_directions is None
 
 
 def test_get_level():
-    puzzle = WordSearch(WORDS)
-    puzzle.level = 2
-    assert puzzle.level == level_dirs[2]  # type: ignore
+    ws = WordSearch(WORDS)
+    ws.level = 2
+    assert ws.level == level_dirs[2]  # type: ignore
 
 
 def test_add_words_with_resize():
-    puzzle = WordSearch(WORDS)
-    puzzle.size = 5
-    puzzle.add_words("test", reset_size=True)
-    assert puzzle.size != 5
+    ws = WordSearch(WORDS)
+    ws.size = 5
+    ws.add_words("test", reset_size=True)
+    assert ws.size != 5
 
 
 def test_add_secret_words_with_resize():
-    puzzle = WordSearch(WORDS)
-    puzzle.size = 5
-    puzzle.add_words("test", True, reset_size=True)
-    assert puzzle.size != 5
+    ws = WordSearch(WORDS)
+    ws.size = 5
+    ws.add_words("test", True, reset_size=True)
+    assert ws.size != 5
 
 
 def test_remove_words_with_resize():
-    puzzle = WordSearch(WORDS)
-    puzzle.size = 5
-    puzzle.remove_words("test", reset_size=True)
-    assert puzzle.size != 5
+    ws = WordSearch(WORDS)
+    ws.size = 5
+    ws.remove_words("test", reset_size=True)
+    assert ws.size != 5
 
 
 def test_replace_words_with_resize():
-    puzzle = WordSearch(WORDS)
-    puzzle.size = 5
-    puzzle.replace_words("set, of replaced, words", reset_size=True)
-    assert puzzle.size != 5
+    ws = WordSearch(WORDS)
+    ws.size = 5
+    ws.replace_words("set, of replaced, words", reset_size=True)
+    assert ws.size != 5
 
 
 def test_no_placed_words():

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import sys
 from enum import Enum, unique
 from typing import Any, Dict, List, NamedTuple, Optional, Set, Tuple, Union
@@ -6,6 +8,10 @@ if sys.version_info >= (3, 8):
     from typing import TypedDict
 else:
     from typing_extensions import TypedDict
+
+
+Fit = Optional[Tuple[str, List[Tuple[int, int]]]]
+Fits = Dict[str, List[Tuple[int, int]]]
 
 
 @unique
@@ -63,29 +69,22 @@ class Word:
         self,
         text: str,
         secret: bool = False,
-    ):
+    ) -> None:
         self.text = text.upper()
-        self._start_row: Optional[int] = None
-        self._start_column: Optional[int] = None
+        self.start_row: Optional[int] = None
+        self.start_column: Optional[int] = None
+        self.coordinates: List[Tuple[int, int]] = []
         self.direction: Optional[Direction] = None
         self.secret = secret
-
-    @property
-    def start_row(self) -> Union[int, None]:
-        return self._start_row
-
-    @property
-    def start_column(self) -> Union[int, None]:
-        return self._start_column
 
     @property
     def position(self) -> Position:
         return Position(self.start_row, self.start_column)
 
     @position.setter
-    def position(self, val: Position):
-        self._start_row = val.row
-        self._start_column = val.column
+    def position(self, val: Position) -> None:
+        self.start_row = val.row
+        self.start_column = val.column
 
     @property
     def position_xy(self) -> Union[str, None]:
@@ -128,17 +127,11 @@ class Word:
     def __hash__(self) -> int:
         return hash(self.text)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.__class__.__name__}('{self.text}', " + f"{self.secret})"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.text
 
 
-Puzzle = List[List[str]]
-Key = Dict[str, KeyInfo]
-KeyJson = Dict[str, KeyInfoJson]
-Fit = Optional[Tuple[str, List[Tuple[int, int]]]]
-Fits = Dict[str, List[Tuple[int, int]]]
-DirectionSet = Set[Direction]
 Wordlist = Union[Set[Word], Any]

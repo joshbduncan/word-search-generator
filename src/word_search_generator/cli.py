@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 import argparse
 import pathlib
 import sys
 from typing import Optional, Sequence
 
-from word_search_generator import WordSearch, __app_name__, __version__, config, utils
-from word_search_generator.types import Direction
+from . import WordSearch, __app_name__, __version__, config, utils
+from .word import Direction
 
 
 class RandomAction(argparse.Action):
