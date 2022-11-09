@@ -201,24 +201,31 @@ def make_header(size: int, text: str) -> str:
 {hr}"""
 
 
-def stringify(puzzle: Puzzle) -> str:
+def stringify(puzzle: Puzzle, bbox: Optional[Tuple[int, int, int, int]] = None) -> str:
     """Convert puzzle array of nested lists into a string."""
+    if not bbox:
+        bbox = (0, 0, len(puzzle[0]), len(puzzle))
+    top_edge, left_edge, right_edge, bottom_edge = bbox
     output = []
-    for line in puzzle:
-        output.append(" ".join([c if c else " " for c in line]))
+    for line in puzzle[top_edge:bottom_edge]:
+        output.append(" ".join([c if c else " " for c in line[left_edge:right_edge]]))
     return "\n".join(output)
 
 
 def format_puzzle_for_show(ws: WordSearch, show_solution: bool = False) -> str:
-    header = make_header(ws.size, "WORD SEARCH")
     word_list = get_word_list_str(ws.key)
     # highlight solution if provided
     puzzle_list = highlight_solution(ws) if show_solution else ws.puzzle
+    # calculate bounding box -> (top_edge, left_edge, right_edge, bottom_edge)
+    bbox = find_bounding_box(ws.mask) if ws.masked else None
+    # calculate header length based on cropped puzzle size to account for masks
+    header_width = bbox[2] - bbox[1] if bbox else ws.size
+    header = make_header(header_width, "WORD SEARCH")
     answer_key_intro = (
         "Answer Key (*= Secret Words)" if ws.placed_secret_words else "Answer Key"
     )
     return f"""{header}
-{stringify(puzzle_list)}
+{stringify(puzzle_list, bbox)}
 
 Find these words: {word_list if word_list else '<ALL SECRET WORDS>'}
 * Words can go {get_level_dirs_str(ws.level)}.

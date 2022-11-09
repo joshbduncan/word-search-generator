@@ -81,7 +81,7 @@ class Mask:
 
     def transpose(self) -> None:
         """Interchange each row with the corresponding column of the mask."""
-        self.mask = list(zip(*self.mask))
+        self.mask = list(map(list, zip(*self.mask)))
 
     def reset_points(self) -> None:
         """Remove all coordinate point from the mask."""

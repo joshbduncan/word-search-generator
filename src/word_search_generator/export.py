@@ -51,7 +51,7 @@ def write_csv_file(path: Path, ws: WordSearch) -> Path:
             f, delimiter=",", quotechar='"', quoting=csv.QUOTE_MINIMAL
         )
         f_writer.writerow(["WORD SEARCH"])
-        for row in ws.puzzle:
+        for row in ws.cropped_puzzle:
             f_writer.writerow(row)
         f_writer.writerow([""])
         f_writer.writerow(["Word List:"])
@@ -135,7 +135,7 @@ def draw_puzzle_page(pdf: FPDF, ws: WordSearch, solution: bool = False) -> FPDF:
 
     # calculate the puzzle size and letter font size
     pdf.set_left_margin(0.75)
-    gsize = config.pdf_puzzle_width / ws.size
+    gsize = config.pdf_puzzle_width / len(ws.cropped_puzzle[0])
     gmargin = 0.6875 if gsize > 36 else 0.75
     font_size = int(72 * gsize * gmargin)
     # calculate flexible font size based on word count
@@ -151,7 +151,7 @@ def draw_puzzle_page(pdf: FPDF, ws: WordSearch, solution: bool = False) -> FPDF:
         for coords in [word.coordinates for word in ws.placed_words]
         for coord in coords
     }  # mypy: ignore
-    for r, row in enumerate(ws.puzzle):
+    for r, row in enumerate(ws.cropped_puzzle):
         for c, char in enumerate(row):
             # draw a border around correct letters if solution was requested
             if solution and (r, c) in placed_words_coordinates:
