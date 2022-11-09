@@ -12,6 +12,8 @@ from __future__ import annotations
 __app_name__ = "word-search"
 __version__ = "2.0.1"
 
+# TODO: test for p = WordSearch(size=15)
+
 
 import json
 from pathlib import Path
@@ -56,7 +58,7 @@ class WordSearch:
 
         # setup puzzle
         self._puzzle: Puzzle = []
-        self._size: int = size if size else 0
+        self._size: int = 0
         self._masks: List[Any] = []
         self._mask: Puzzle = []
 
@@ -77,11 +79,10 @@ class WordSearch:
         )
 
         if size:
+            self.size = size
+        if self.words:
             self.size = utils.calc_puzzle_size(self._words, self._directions, size)
-        elif not size and self.words:
-            self.size = utils.calc_puzzle_size(self._words, self._directions, 0)
-
-        self._generate()
+            self._generate()
 
     @property
     def words(self) -> Wordlist:
@@ -236,7 +237,8 @@ class WordSearch:
             )
         if self.size != val:
             self._size = val
-            self._reset_puzzle()
+            self._reapply_masks()
+            self._generate()
 
     def reset_size(self):
         """Reset the puzzle size to the default setting
@@ -248,7 +250,6 @@ class WordSearch:
         """Apply a singular mask object to the puzzle."""
         if not isinstance(mask, Mask):
             raise TypeError("Please provide a Mask object.")
-        self._reset_puzzle(False)
         if mask.puzzle_size != self.size:
             mask.generate(self.size)
         # TODO: check that mask fits within the bounds of the puzzle
@@ -271,7 +272,7 @@ class WordSearch:
         if mask not in self.masks:
             self.masks.append(mask)
         # fill in the puzzle
-        self._fill_puzzle()
+        self._generate()
 
     def _reapply_masks(self) -> None:
         """Reapply all current masks to the puzzle."""
@@ -374,7 +375,7 @@ class WordSearch:
         self._process_input(words, "add", secret)
         if reset_size:
             self.reset_size()
-        self._reset_puzzle()
+        self._generate()
 
     def remove_words(self, words: str, reset_size: bool = False) -> None:
         """Remove words from the puzzle.
@@ -387,7 +388,7 @@ class WordSearch:
         self._process_input(words, "remove")
         if reset_size:
             self.reset_size()
-        self._reset_puzzle()
+        self._generate()
 
     def replace_words(
         self, words: str, secret: bool = False, reset_size: bool = False
@@ -404,12 +405,12 @@ class WordSearch:
         self._process_input(words, "replace", secret)
         if reset_size:
             self.reset_size()
-        self._reset_puzzle()
+        self._generate()
 
     def _reset_puzzle(self, fill_words: bool = True):
         """Reset and regenerate the puzzle."""
         self._generate(fill_words)
-        self._reapply_masks()
+        # self._reapply_masks()
         # TODO: check about regenerating masks
 
     def __eq__(self, __o: object) -> bool:

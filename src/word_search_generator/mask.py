@@ -323,6 +323,7 @@ class Star(Polygon):
     def __init__(self, rotation=0, method=1) -> None:
         self.rotation = rotation if rotation >= 0 else 360 + rotation
         super().__init__(method=method)
+        self.static = False
 
     def generate(self, puzzle_size: int) -> None:
         """Generate a mask.
@@ -348,6 +349,7 @@ class Star(Polygon):
 class Heart(Polygon):
     def __init__(self, method=1) -> None:
         super().__init__(method=method)
+        self.static = False
 
     def generate(self, puzzle_size: int) -> None:
         """Generate a mask.
