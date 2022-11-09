@@ -51,7 +51,7 @@ def write_csv_file(path: Path, ws: WordSearch) -> Path:
             f, delimiter=",", quotechar='"', quoting=csv.QUOTE_MINIMAL
         )
         f_writer.writerow(["WORD SEARCH"])
-        for row in ws.puzzle.puzzle:
+        for row in ws.puzzle:
             f_writer.writerow(row)
         f_writer.writerow([""])
         f_writer.writerow(["Word List:"])
@@ -151,7 +151,7 @@ def draw_puzzle_page(pdf: FPDF, ws: WordSearch, solution: bool = False) -> FPDF:
         for coords in [word.coordinates for word in ws.placed_words]
         for coord in coords
     }  # mypy: ignore
-    for r, row in enumerate(ws.puzzle.puzzle):
+    for r, row in enumerate(ws.puzzle):
         for c, char in enumerate(row):
             # draw a border around correct letters if solution was requested
             if solution and (r, c) in placed_words_coordinates:

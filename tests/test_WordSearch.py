@@ -3,16 +3,15 @@ import pathlib
 
 import pytest
 
-from word_search_generator import Key, WordSearch, config, utils
+from word_search_generator import Key, Puzzle, WordSearch, config, utils
 from word_search_generator.config import level_dirs
-from word_search_generator.puzzle import PuzzleGrid
 from word_search_generator.utils import get_random_words
 from word_search_generator.word import Direction, Word
 
 WORDS = "dog, cat, pig, horse, donkey, turtle, goat, sheep"
 
 
-def check_key(key: Key, puzzle: PuzzleGrid) -> bool:
+def check_key(key: Key, puzzle: Puzzle) -> bool:
     """Test the puzzle key against the current puzzle state."""
     for word, info in key.items():
         row, col = info["start"]  # type: ignore
@@ -86,7 +85,7 @@ def test_manual_level_control():
 def test_set_puzzle_size():
     ws = WordSearch(WORDS)
     ws.size = 15
-    assert len(ws.puzzle.puzzle) == 15
+    assert len(ws.puzzle) == 15
 
 
 def test_bad_puzzle_size_value():
@@ -103,7 +102,7 @@ def test_bad_puzzle_size_type():
 
 def test_puzzle_key():
     ws = WordSearch(WORDS)
-    assert check_key(ws.key, ws.puzzle.puzzle)
+    assert check_key(ws.key, ws.puzzle)
 
 
 def test_export_pdf(tmp_path):
@@ -261,7 +260,7 @@ def test_puzzle_show_solution_output(capsys):
 def test_json_output_property_for_puzzle():
     words = get_random_words(10)
     ws = WordSearch(words, level=3)
-    assert json.loads(ws.json)["puzzle"] == ws.puzzle.puzzle
+    assert json.loads(ws.json)["puzzle"] == ws.puzzle
 
 
 def test_json_output_property_for_key():
@@ -287,7 +286,7 @@ def test_for_empty_spaces():
     for _ in range(100):
         words = get_random_words(10)
         ws = WordSearch(words, level=3)
-        flat = [item for sublist in ws.puzzle.puzzle for item in sublist]
+        flat = [item for sublist in ws.puzzle for item in sublist]
         assert ws.size * ws.size == len(flat)
 
 

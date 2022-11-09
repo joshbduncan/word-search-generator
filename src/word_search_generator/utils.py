@@ -11,8 +11,7 @@ from . import config
 from .word import Direction, Word
 
 if TYPE_CHECKING:  # pragma: no cover
-    from . import DirectionSet, Key, WordSearch
-    from .puzzle import PuzzleGrid
+    from . import DirectionSet, Key, Puzzle, WordSearch
     from .word import Wordlist
 
 
@@ -38,7 +37,7 @@ def calc_puzzle_size(words: Wordlist, level: Sized, size: Optional[int] = None) 
     return size
 
 
-def build_puzzle(size: int, char: str) -> PuzzleGrid:
+def build_puzzle(size: int, char: str) -> Puzzle:
     return [[char] * size for _ in range(size)]
 
 
@@ -175,9 +174,9 @@ def direction_set_repr(ds: DirectionSet) -> str:
     return ("'" + ",".join(d.name for d in ds) + "'") if ds else "None"
 
 
-def highlight_solution(ws: WordSearch) -> PuzzleGrid:
+def highlight_solution(ws: WordSearch) -> Puzzle:
     """Add highlighting to puzzle solution."""
-    output: PuzzleGrid = copy.deepcopy(ws.puzzle.puzzle)
+    output: Puzzle = copy.deepcopy(ws.puzzle)
     for word in ws.placed_words:
         if (
             word.start_column is not None
@@ -202,11 +201,11 @@ def make_header(size: int, text: str) -> str:
 {hr}"""
 
 
-def stringify(puzzle: PuzzleGrid) -> str:
+def stringify(puzzle: Puzzle) -> str:
     """Convert puzzle array of nested lists into a string."""
     output = []
     for line in puzzle:
-        output.append(" ".join(line))
+        output.append(" ".join([c if c else " " for c in line]))
     return "\n".join(output)
 
 
@@ -214,7 +213,7 @@ def format_puzzle_for_show(ws: WordSearch, show_solution: bool = False) -> str:
     header = make_header(ws.size, "WORD SEARCH")
     word_list = get_word_list_str(ws.key)
     # highlight solution if provided
-    puzzle_list = highlight_solution(ws) if show_solution else ws.puzzle.puzzle
+    puzzle_list = highlight_solution(ws) if show_solution else ws.puzzle
     answer_key_intro = (
         "Answer Key (*= Secret Words)" if ws.placed_secret_words else "Answer Key"
     )

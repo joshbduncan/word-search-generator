@@ -119,6 +119,13 @@ class Word:
             + f" @ {self.position_xy}"
         )
 
+    def remove_from_puzzle(self):
+        """Remove word placement details when a puzzle is reset."""
+        self.start_row = None
+        self.start_column = None
+        self.coordinates = []
+        self.direction = None
+
     def __eq__(self, __o: object) -> bool:
         if not isinstance(__o, Word):
             return False
