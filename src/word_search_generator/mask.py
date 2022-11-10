@@ -1,8 +1,16 @@
 import math
+from collections import Counter
+from pathlib import Path
 from typing import Any, List, Optional, Tuple, Union
+
+from PIL import Image, ImageChops
 
 from .config import ACTIVE, INACTIVE, max_puzzle_size, min_puzzle_size
 from .utils import build_puzzle
+
+
+class ContrastError(Exception):
+    ...
 
 
 class Mask:
@@ -49,7 +57,8 @@ class Mask:
             )
         if self._puzzle_size != val:
             self._puzzle_size = val
-            self.reset_points()
+            if not self.static:
+                self.reset_points()
 
     def generate(self, puzzle_size: int) -> None:
         """Generate a mask.
@@ -100,8 +109,46 @@ class Bitmap(Mask):
             puzzle_size (int): Size of puzzle the mask will be applied to.
         """
         self.puzzle_size: int = puzzle_size
-        self.reset_points()
         self.mask = build_puzzle(puzzle_size, INACTIVE)
+        self.draw()
+
+    def draw(self) -> None:
+        for x, y in self.points:
+            self.mask[y][x] = ACTIVE
+
+
+class RasterImage(Mask):
+    threshold = 200
+
+    def __init__(self, image: Union[str, Path], method: int = 1) -> None:
+        super().__init__(method)
+        self.image_path = image
+
+    def generate(self, puzzle_size: int) -> None:
+        """Generate a mask.
+
+        Args:
+            puzzle_size (int): Size of puzzle the mask will be applied to.
+        """
+        self.puzzle_size: int = puzzle_size
+        self.mask = build_puzzle(puzzle_size, INACTIVE)
+
+        # threshold function
+        def meets_threshold(x):
+            return 255 if x >= RasterImage.threshold else 0
+
+        # process image at current puzzle size
+        image = process_image(Image.open(self.image_path))
+        image.thumbnail((self.puzzle_size, self.puzzle_size), resample=0)
+        image = image.convert("L").point(meets_threshold, mode="1")
+        w, _ = image.size
+        self.points = [
+            (0 if i == 0 else i % w, i // w)
+            for i, px in enumerate(image.getdata())
+            if px <= RasterImage.threshold
+        ]
+        if not self.points:
+            raise ContrastError("The provided image lacked enough contrast.")
         self.draw()
 
     def draw(self) -> None:
@@ -124,7 +171,7 @@ class Ellipse(Bitmap):
             puzzle_size (int): Size of puzzle the mask will be applied to.
         """
         self.puzzle_size: int = puzzle_size
-        self.reset_points()
+        # self.reset_points()
         self.mask = build_puzzle(puzzle_size, INACTIVE)
         # if no size is specified, fill the puzzle
         if not self.width or self.width > puzzle_size:
@@ -246,7 +293,7 @@ class Rectangle(Polygon):
         """
         self.puzzle_size = puzzle_size
         self.mask = build_puzzle(puzzle_size, INACTIVE)
-        self.reset_points()
+        # self.reset_points()
         startX, startY = self.position
         # if no size is specified, fill the puzzle
         if not self.width or self.width + startX > puzzle_size:
@@ -280,7 +327,7 @@ class Triangle(Polygon):
         """
         self.puzzle_size = puzzle_size
         self.mask = build_puzzle(puzzle_size, INACTIVE)
-        self.reset_points()
+        # self.reset_points()
         self.width = puzzle_size - 2 if puzzle_size % 2 == 0 else puzzle_size - 1
         self.height = puzzle_size - 1
         self.points = [
@@ -305,7 +352,7 @@ class Diamond(Polygon):
         """
         self.puzzle_size = puzzle_size
         self.mask = build_puzzle(puzzle_size, INACTIVE)
-        self.reset_points()
+        # self.reset_points()
         self.width = puzzle_size - 2 if puzzle_size % 2 == 0 else puzzle_size - 1
         self.height = puzzle_size - 1
         self.points = [
@@ -332,7 +379,7 @@ class Star(Polygon):
             puzzle_size (int): Size of puzzle the mask will be applied to.
         """
         self.puzzle_size = puzzle_size
-        self.reset_points()
+        # self.reset_points()
         self.mask = build_puzzle(puzzle_size, INACTIVE)
         points = calculate_regular_convex_polygon_points(puzzle_size, 5, self.rotation)
         self.points = [
@@ -361,7 +408,7 @@ class Heart(Polygon):
         if puzzle_size < 8:
             puzzle_size = 8
         self.puzzle_size = puzzle_size - 1 if puzzle_size % 2 == 0 else puzzle_size
-        self.reset_points()
+        # self.reset_points()
         self.mask = build_puzzle(puzzle_size, INACTIVE)
         self.points = [
             (self.puzzle_size // 2, self.puzzle_size // 4),
@@ -396,7 +443,7 @@ class ConvexPolygon(Polygon):
             puzzle_size (int): Size of puzzle the mask will be applied to.
         """
         self.puzzle_size = puzzle_size
-        self.reset_points()
+        # self.reset_points()
         self.mask = build_puzzle(puzzle_size, INACTIVE)
         self.points = calculate_regular_convex_polygon_points(
             puzzle_size, self.sides, self.rotation
@@ -622,3 +669,55 @@ def check_if_inside(grid: List[List[str]], x: int, y: int) -> bool:
             follow_direction(grid, "W", x, y),
         ]
     )
+
+
+# ***************************************************************** #
+# ******************** IMAGE UTILITY FUNCTIONS ******************** #
+# ***************************************************************** #
+
+
+def normalize_rgb_values(color):
+    """Clean-up any slight color differences in PIL sampling."""
+    return tuple([0 if val <= 3 else 255 if val >= 253 else val for val in color])
+
+
+def trim_excess(image):
+    """Trim excess background pixels from around an image."""
+    w, h = image.size
+
+    # get RGB value for each corner of image
+    corners = [
+        normalize_rgb_values(image.getpixel((0, 0))),
+        normalize_rgb_values(image.getpixel((w - 1, 0))),
+        normalize_rgb_values(image.getpixel((0, h - 1))),
+        normalize_rgb_values(image.getpixel((w - 1, h - 1))),
+    ]
+    # count how many times each value is present
+    color_count = Counter([pixel for pixel in corners]).most_common()
+
+    # if multiple corners have the same pixel count don't trim
+    if len(color_count) > 1 and color_count[0][1] == color_count[1][1]:
+        return image
+    else:  # set the comparison pixel to the most common value
+        bg_pixel = color_count[0][0]
+
+    # compare the original image to the excess pixels
+    comp = Image.new("RGB", image.size, bg_pixel)
+    diff = ImageChops.difference(image, comp)
+    bbox = diff.getbbox()
+    # crop the difference
+    return image.crop(bbox)
+
+
+def process_image(image, max_size=max_puzzle_size):
+    # composite the image on a white background just in case it has transparency
+    image = image.convert("RGBA")
+    bg = Image.new("RGBA", image.size, (255, 255, 255))
+    image = Image.alpha_composite(bg, image)
+    # convert composite image to RGB since we don't need transparency
+    image = image.convert("RGB")
+    # crop the image if extra surrounding background pixels are found
+    image = trim_excess(image)
+    # reduce the image down to `max_size` to speed up processing
+    image.thumbnail((max_size, max_size), resample=0)
+    return image

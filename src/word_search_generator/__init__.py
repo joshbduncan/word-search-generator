@@ -281,7 +281,7 @@ class WordSearch:
         """Save the current puzzle to a file.
 
         Args:
-            path (Union[str, Path]): A file save path
+            path (Union[str, Path]): A file save path.
             solution (bool, optional): Include solution with the saved file.
             Only applies to PDF file type. Defaults to False.
 
