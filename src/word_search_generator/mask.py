@@ -123,6 +123,7 @@ class RasterImage(Mask):
     def __init__(self, image: Union[str, Path], method: int = 1) -> None:
         super().__init__(method)
         self.image_path = image
+        self.static = False
 
     def generate(self, puzzle_size: int) -> None:
         """Generate a mask.
