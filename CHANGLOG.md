@@ -11,12 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Word class now tracks all coordinates of word (using this in place of keeping a separate 'solution' puzzle)
 - Puzzle Masking
     - Puzzle output (show(), save(), json) crops output to the puzzle mask so no dead space
+    - CLI implementation
+        - -m, --mask Mask the puzzle to a particular shape (choices: circle, diamond, triangle, heart, hexagon, octagon, pentagon, star).
+        - -im, --image-mask Mask the puzzle shape to a provided image (accepts: BMP, JPEG, PNG).
 
 ### Changed
 - CSV export no longer includes the solution
 - Moved all types from 'types.py' file to appropriate object files to help with type checking
 - no_duped_words() function was edited to no longer accept a WordSearch object to make testing easier
 - `.show()`, `.save()`, and `.json` now crop the puzzle to the mask active area (bounding box)
+- CLI arguments/flags now displayed in alphabetical order within help
 
 ## [2.0.1] - 2022-10-28
 

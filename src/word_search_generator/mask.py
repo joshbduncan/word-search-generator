@@ -14,26 +14,32 @@ class ContrastError(Exception):
 
 
 class Mask:
-    def __init__(self, method: int = 1, static: bool = True) -> None:
-        """A WordSearch puzzle mask object.
+    """This class represents a WordSearch puzzle Mask object."""
+
+    def __init__(
+        self, points: List[Any] = [], method: int = 1, static: bool = True
+    ) -> None:
+        """Initialize a WordSearch puzzle mask object.
 
         Args:
+            points (List[Any], optional): Coordinate points used
+            to build the mask. Defaults to [].
             method (int, optional): Masking method. Defaults to 1.
                 1. Standard (Intersection)
                 2. Additive
                 3. Subtractive
             static (bool, optional): Mask should not be recalculated
-            and reapplied after a size change. Defaults to True.
+            and reapplied after a `puzzle_size` change. Defaults to True.
         """
         self._puzzle_size: Optional[int] = None
         self.mask: List[Any] = []
         self.method: int = method
         self.static: bool = static
-        self.points: List[Any] = []
+        self.points: List[Any] = points
 
     @property
     def puzzle_size(self) -> Optional[int]:
-        """Size (in characters) of the puzzle."""
+        """Size (in characters) of the puzzle mask is being applied to."""
         return self._puzzle_size
 
     @puzzle_size.setter
@@ -49,7 +55,7 @@ class Mask:
             less than `config.max_puzzle_size`.
         """
         if not isinstance(val, int):
-            raise TypeError("Size must be an integer.")
+            raise TypeError("Puzzle size must be an integer.")
         if not min_puzzle_size <= val <= max_puzzle_size:
             raise ValueError(
                 f"Puzzle size must be >= {min_puzzle_size}"
@@ -61,11 +67,7 @@ class Mask:
                 self.reset_points()
 
     def generate(self, puzzle_size: int) -> None:
-        """Generate a mask.
-
-        Args:
-            puzzle_size (int): Size of puzzle the mask will be applied to.
-        """
+        """Generate a mask at `puzzle_size`."""
         if self.puzzle_size != puzzle_size:
             self.puzzle_size = puzzle_size
             self.mask = build_puzzle(puzzle_size, INACTIVE)
@@ -75,40 +77,39 @@ class Mask:
             print(" ".join(r))
 
     def invert(self) -> None:
-        """Invert the current mask. Has no effect on the `method`."""
+        """Invert mask. Has no effect on the `method`."""
         self.mask = [
             [ACTIVE if c == INACTIVE else INACTIVE for c in row] for row in self.mask
         ]
 
     def flip_horizontal(self) -> None:
-        """Flip the current mask along the vertical axis (left to right)."""
+        """Flip mask along the vertical axis (left to right)."""
         self.mask = [r[::-1] for r in self.mask]
 
     def flip_vertical(self) -> None:
-        """Flip the current mask along the horizontal axis (top to bottom)."""
+        """Flip mask along the horizontal axis (top to bottom)."""
         self.mask = self.mask[::-1]
 
     def transpose(self) -> None:
-        """Interchange each row with the corresponding column of the mask."""
+        """Interchange each mask row with the corresponding mask column."""
         self.mask = list(map(list, zip(*self.mask)))
 
     def reset_points(self) -> None:
-        """Remove all coordinate point from the mask."""
+        """Remove all coordinate points from the mask."""
         self.points = []
 
 
 class Bitmap(Mask):
-    def __init__(self, points: List[Any] = [], method: int = 1) -> None:
-        super().__init__(method)
+    """This subclass of `Mask` represents Bitmap mask object."""
+
+    def __init__(
+        self, points: List[Any] = [], method: int = 1, static: bool = True
+    ) -> None:
+        super().__init__(method=method, static=static)
         self.points = points
 
     def generate(self, puzzle_size: int) -> None:
-        """Generate a mask.
-
-        Args:
-            puzzle_size (int): Size of puzzle the mask will be applied to.
-        """
-        self.puzzle_size: int = puzzle_size
+        self.puzzle_size = puzzle_size
         self.mask = build_puzzle(puzzle_size, INACTIVE)
         self.draw()
 
@@ -117,36 +118,36 @@ class Bitmap(Mask):
             self.mask[y][x] = ACTIVE
 
 
-class RasterImage(Mask):
+class RasterImage(Bitmap):
+    """This subclass of `Bitmap` represents a RasterImage mask object."""
+
     threshold = 200
 
-    def __init__(self, image: Union[str, Path], method: int = 1) -> None:
-        super().__init__(method)
-        self.image_path = image
-        self.static = False
-
-    def generate(self, puzzle_size: int) -> None:
-        """Generate a mask.
+    def __init__(
+        self, fp: Union[str, Path], method: int = 1, static: bool = False
+    ) -> None:
+        """Generate a mask from a raster image.
 
         Args:
-            puzzle_size (int): Size of puzzle the mask will be applied to.
+            fp (Union[str, Path]): A filename (string), pathlib.Path object.
+            method (int, optional): Masking method. Defaults to 1.
+                1. Standard (Intersection)
+                2. Additive
+                3. Subtractive
+            static (bool, optional): Mask should not be recalculated
+            and reapplied after a `puzzle_size` change. Defaults to False.
         """
-        self.puzzle_size: int = puzzle_size
-        self.mask = build_puzzle(puzzle_size, INACTIVE)
+        super().__init__(method=method, static=static)
+        self.fp = fp
 
-        # flatten, trim, and resize image to current puzzle size
-        image = process_image(Image.open(self.image_path))
-        image.thumbnail((self.puzzle_size, self.puzzle_size), resample=0)
-        # convert image to black and white
-        image = image.convert("L").point(
-            lambda px: 255 if px > RasterImage.threshold else 0, mode="1"
+    def generate(self, puzzle_size: int) -> None:
+        self.puzzle_size = puzzle_size
+        self.mask = build_puzzle(puzzle_size, INACTIVE)
+        self.points = process_image(
+            Image.open(self.fp, formats=("BMP", "JPEG", "PNG")),
+            self.puzzle_size,
+            RasterImage.threshold,
         )
-        w, _ = image.size
-        self.points = [
-            (0 if i == 0 else i % w, i // w)
-            for i, px in enumerate(image.getdata())
-            if px <= RasterImage.threshold
-        ]
         if not self.points:
             raise ContrastError("The provided image lacked enough contrast.")
         self.draw()
@@ -157,63 +158,86 @@ class RasterImage(Mask):
 
 
 class Ellipse(Bitmap):
+    """This subclass of `Bitmap` represents a Ellipse mask object."""
+
     def __init__(
-        self, width: Optional[int] = None, height: Optional[int] = None, method: int = 1
+        self,
+        width: Optional[int] = None,
+        height: Optional[int] = None,
+        method: int = 1,
+        static: bool = True,
     ) -> None:
-        super().__init__(points=[], method=method)
+        """Generate an ellipse mask.
+
+        Args:
+            width (Optional[int], optional): Ellipse width. Defaults to None.
+            height (Optional[int], optional): Ellipse height. Defaults to None.
+            method (int, optional): Masking method. Defaults to 1.
+                1. Standard (Intersection)
+                2. Additive
+                3. Subtractive
+            static (bool, optional): Mask should not be recalculated
+            and reapplied after a `puzzle_size` change. Defaults to True.
+        """
+        super().__init__(method=method, static=static)
         self.width: Optional[int] = width
         self.height: Optional[int] = height
 
     def generate(self, puzzle_size: int) -> None:
-        """Generate a mask.
-
-        Args:
-            puzzle_size (int): Size of puzzle the mask will be applied to.
-        """
-        self.puzzle_size: int = puzzle_size
-        # self.reset_points()
+        self.puzzle_size = puzzle_size
         self.mask = build_puzzle(puzzle_size, INACTIVE)
-        # if no size is specified, fill the puzzle
+        # if no size is specified, or size is too big, fill the puzzle
         if not self.width or self.width > puzzle_size:
             self.width = puzzle_size
         if not self.height or self.height > puzzle_size:
             self.height = puzzle_size
-        # calculate all points withing the ellipse
         self.points = calculate_ellipse_points(self.width, self.height, puzzle_size)
         self.draw()
 
 
 class Circle(Ellipse):
-    def __init__(self, method=1) -> None:
-        super().__init__(method=method)
-        self.static = False
+    """This subclass of `Ellipse` represents a Circle mask object."""
+
+    def __init__(self, method: int = 1, static: bool = False) -> None:
+        super().__init__(method=method, static=static)
+
+    def generate(self, puzzle_size: int) -> None:
+        self.puzzle_size = puzzle_size
+        self.mask = build_puzzle(puzzle_size, INACTIVE)
+        self.width = puzzle_size
+        self.height = puzzle_size
+        self.points = calculate_ellipse_points(self.width, self.height, puzzle_size)
+        self.draw()
 
 
 class Polygon(Mask):
-    """Draw a polygon mask from 3 or more points.
-    (0, 0) coordinate is at top-left of puzzle."""
+    """This subclass of `Mask` represents a Polygon mask object."""
 
-    def __init__(self, points=[], method=1):
-        super().__init__(method=method)
-        self.points = points
+    def __init__(
+        self, points: List[Any] = [], method: int = 1, static: bool = True
+    ) -> None:
+        """Generate a polygon mask from 3 or more coordinate points.
 
-    def generate(self, puzzle_size: int) -> None:
-        """Generate a mask.
+        Note: (0, 0) coordinate is at top-left of puzzle.
 
         Args:
-            puzzle_size (int): Size of puzzle the mask will be applied to.
+            points (list, optional): Polygon vertex coordinate points.
+            Defaults to [].
+            method (int, optional): Masking method. Defaults to 1.
+                1. Standard (Intersection)
+                2. Additive
+                3. Subtractive
+            static (bool, optional): Mask should not be recalculated
+            and reapplied after a `puzzle_size` change. Defaults to True.
         """
+        super().__init__(points=points, method=method, static=static)
+
+    def generate(self, puzzle_size: int) -> None:
         self.puzzle_size = puzzle_size
         self.mask = build_puzzle(puzzle_size, INACTIVE)
         self.draw()
 
-    def draw(self):
-        # old way
-        # for i in range(len(self.points)):
-        #     p1 = self.points[i]
-        #     p2 = self.points[(i + 1) % len(self.points)]
-        #     self.connect_points(p1, p2)
-        # self.fill_shape()
+    def draw(self) -> None:
         for points in split_polygon_points_in_half(self.points):
             for i in range(len(points) - 1):
                 p1 = points[i]
@@ -221,7 +245,9 @@ class Polygon(Mask):
                 self.connect_points(p1, p2)
         self.fill_shape()
 
-    def connect_points(self, p1, p2, c=ACTIVE):
+    def connect_points(
+        self, p1: Tuple[int, int], p2: Tuple[int, int], c: str = ACTIVE
+    ) -> None:
         """Connect two points within a grid using Bresenham's line algorithm."""
         x0, y0 = p1
         x1, y1 = p2
@@ -250,10 +276,10 @@ class Polygon(Mask):
                 y += sy
         self.mask[y][x] = c
 
-    def fill_shape(self, c=ACTIVE):
+    def fill_shape(self, c: str = ACTIVE) -> None:
+        """Fill in the interior of a `Polygon` mask with connected vertices."""
         for y, row in enumerate(self.mask):
             for x in range(len(row)):
-                # speed up tests
                 if (
                     (y, x) == (0, 0)
                     or (y, x) == (0, len(row) - 1)
@@ -267,8 +293,7 @@ class Polygon(Mask):
 
 
 class Rectangle(Polygon):
-    """Draw a rectangle mask from 4 points.
-    (0, 0) coordinate is at top-left of puzzle."""
+    """This subclass of `Polygon` represents a Rectangle mask object."""
 
     # TODO: attempt to scale rectangle on puzzle.size change
     # TODO: make sure supplied rectangle isn't larger than puzzle
@@ -279,55 +304,70 @@ class Rectangle(Polygon):
         height: Optional[int],
         position: Tuple[int, int] = (0, 0),
         method: int = 1,
+        static: bool = True,
     ) -> None:
-        super().__init__(method=method)
+        """Generate a rectangle mask from 4 or more coordinate points.
+
+        Note: (0, 0) coordinate is at top-left of puzzle.
+
+        Args:
+            width (Optional[int]): Rectangle width.
+            height (Optional[int]): Rectangle height.
+            position (Tuple[int, int], optional): Origin coordinate point
+            to draw from. Rectangles are drawn from top-left to
+            bottom-right. Defaults to (0, 0).
+            method (int, optional): Masking method. Defaults to 1.
+                1. Standard (Intersection)
+                2. Additive
+                3. Subtractive
+            static (bool, optional): Mask should not be recalculated
+            and reapplied after a `puzzle_size` change. Defaults to True.
+        """
+        super().__init__(method=method, static=static)
         self.width = width
         self.height = height
         self.position: Tuple[int, int] = position
 
     def generate(self, puzzle_size: int) -> None:
-        """Generate a mask.
-
-        Args:
-            puzzle_size (int): Size of puzzle the mask will be applied to.
-        """
         self.puzzle_size = puzzle_size
         self.mask = build_puzzle(puzzle_size, INACTIVE)
-        # self.reset_points()
-        startX, startY = self.position
+        originX, originY = self.position
         # if no size is specified, fill the puzzle
-        if not self.width or self.width + startX > puzzle_size:
+        if not self.width or self.width + originX > puzzle_size:
             self.width = puzzle_size
-        if not self.height or self.height + startY > puzzle_size:
+        if not self.height or self.height + originY > puzzle_size:
             self.height = puzzle_size
-        # calculate polygon points
         self.points = [
-            (startX, startY),
-            (startX, startY + self.height - 1),
-            (startX + self.width - 1, startY + self.height - 1),
-            (startX + self.width - 1, startY),
+            (originX, originY),
+            (originX, originY + self.height - 1),
+            (originX + self.width - 1, originY + self.height - 1),
+            (originX + self.width - 1, originY),
         ]
         self.draw()
 
 
 class Triangle(Polygon):
-    """Draw a triangle that fills the entire puzzle.
+    """This subclass of `Polygon` represents a Triangle mask object."""
 
-    An odd `puzzle_size` will generate a Isosceles Triangle.
-    An even `puzzle_size` will generate an Scalene Triangle."""
+    def __init__(self, method: int = 1, static: bool = False) -> None:
+        """Generate a triangle mask that fills the entire `puzzle_size`.
 
-    def __init__(self, method: int = 1) -> None:
-        super().__init__(method=method)
-
-    def generate(self, puzzle_size: int) -> None:
-        """Generate a mask.
+        Note: An odd `puzzle_size` will generate a Isosceles Triangle and
+        even `puzzle_size` will generate an Scalene Triangle.
 
         Args:
-            puzzle_size (int): Size of puzzle the mask will be applied to.
+            method (int, optional): Masking method. Defaults to 1.
+                1. Standard (Intersection)
+                2. Additive
+                3. Subtractive
+            static (bool, optional): Mask should not be recalculated
+            and reapplied after a `puzzle_size` change. Defaults to False.
         """
+        super().__init__(method=method, static=static)
+
+    def generate(self, puzzle_size: int) -> None:
         self.puzzle_size = puzzle_size
         self.mask = build_puzzle(puzzle_size, INACTIVE)
-        # self.reset_points()
         self.width = puzzle_size - 2 if puzzle_size % 2 == 0 else puzzle_size - 1
         self.height = puzzle_size - 1
         self.points = [
@@ -339,20 +379,24 @@ class Triangle(Polygon):
 
 
 class Diamond(Polygon):
-    """Draw a diamond that fills the entire puzzle."""
+    """This subclass of `Polygon` represents a Diamond mask object."""
 
-    def __init__(self, method: int = 1) -> None:
-        super().__init__(method=method)
-
-    def generate(self, puzzle_size: int) -> None:
-        """Generate a mask.
+    def __init__(self, method: int = 1, static: bool = False) -> None:
+        """Generate a diamond mask that fills the entire `puzzle_size`.
 
         Args:
-            puzzle_size (int): Size of puzzle the mask will be applied to.
+            method (int, optional): Masking method. Defaults to 1.
+                1. Standard (Intersection)
+                2. Additive
+                3. Subtractive
+            static (bool, optional): Mask should not be recalculated
+            and reapplied after a `puzzle_size` change. Defaults to False.
         """
+        super().__init__(method=method, static=static)
+
+    def generate(self, puzzle_size: int) -> None:
         self.puzzle_size = puzzle_size
         self.mask = build_puzzle(puzzle_size, INACTIVE)
-        # self.reset_points()
         self.width = puzzle_size - 2 if puzzle_size % 2 == 0 else puzzle_size - 1
         self.height = puzzle_size - 1
         self.points = [
@@ -365,21 +409,31 @@ class Diamond(Polygon):
 
 
 class Star(Polygon):
-    """Draw a regular 5-pointed star/pentagram polygon."""
+    """This subclass of `Polygon` represents a Star mask object."""
 
-    def __init__(self, rotation=0, method=1) -> None:
-        self.rotation = rotation if rotation >= 0 else 360 + rotation
-        super().__init__(method=method)
-        self.static = False
+    def __init__(
+        self, rotation: int = 0, method: int = 1, static: bool = False
+    ) -> None:
+        """Generate a regular 5-pointed star/pentagram mask.
 
-    def generate(self, puzzle_size: int) -> None:
-        """Generate a mask.
+        Note: An odd `puzzle_size` will generate a Isosceles Triangle and
+        even `puzzle_size` will generate an Scalene Triangle.
 
         Args:
-            puzzle_size (int): Size of puzzle the mask will be applied to.
+            rotation (int, optional): Rotation of shape within the puzzle.
+            Defaults to 0.
+            method (int, optional): Masking method. Defaults to 1.
+                1. Standard (Intersection)
+                2. Additive
+                3. Subtractive
+            static (bool, optional): Mask should not be recalculated
+            and reapplied after a `puzzle_size` change. Defaults to False.
         """
+        super().__init__(method=method, static=static)
+        self.rotation = rotation if rotation >= 0 else 360 + rotation
+
+    def generate(self, puzzle_size: int) -> None:
         self.puzzle_size = puzzle_size
-        # self.reset_points()
         self.mask = build_puzzle(puzzle_size, INACTIVE)
         points = calculate_regular_convex_polygon_points(puzzle_size, 5, self.rotation)
         self.points = [
@@ -394,21 +448,25 @@ class Star(Polygon):
 
 
 class Heart(Polygon):
-    def __init__(self, method=1) -> None:
-        super().__init__(method=method)
-        self.static = False
+    """This subclass of `Polygon` represents a Heart mask object."""
+
+    def __init__(self, method: int = 1, static: bool = False) -> None:
+        """Generate a 'heart-like' mask.
+        Args:
+            method (int, optional): Masking method. Defaults to 1.
+                1. Standard (Intersection)
+                2. Additive
+                3. Subtractive
+            static (bool, optional): Mask should not be recalculated
+            and reapplied after a `puzzle_size` change. Defaults to False.
+        """
+        super().__init__(method=method, static=static)
 
     def generate(self, puzzle_size: int) -> None:
-        """Generate a mask.
-
-        Args:
-            puzzle_size (int): Size of puzzle the mask will be applied to.
-        """
         # FIXME: min calc for heart if 11 otherwise calculations break
         if puzzle_size < 8:
             puzzle_size = 8
         self.puzzle_size = puzzle_size - 1 if puzzle_size % 2 == 0 else puzzle_size
-        # self.reset_points()
         self.mask = build_puzzle(puzzle_size, INACTIVE)
         self.points = [
             (self.puzzle_size // 2, self.puzzle_size // 4),
@@ -427,23 +485,32 @@ class Heart(Polygon):
 
 
 class ConvexPolygon(Polygon):
-    """Draw a regular convex polygon mask with 3 or more sides.
-    Mask will be drawn from the puzzle center."""
+    """This subclass of `Polygon` represents a ConvexPolygon mask object."""
 
-    def __init__(self, sides=3, rotation=0, method=1) -> None:
-        super().__init__(method=method)
-        self.sides = sides
-        self.rotation = rotation if rotation >= 0 else 360 + rotation
-        self.static = False
+    def __init__(
+        self, sides: int = 3, rotation: int = 0, method: int = 1, static: bool = False
+    ) -> None:
+        """Generate a regular convex polygon mask with 3 or more sides.
 
-    def generate(self, puzzle_size: int) -> None:
-        """Generate a mask.
+        Note: Mask will be drawn from the puzzle center.
 
         Args:
-            puzzle_size (int): Size of puzzle the mask will be applied to.
+            sides (int, optional): Polygon sides. Defaults to 3.
+            rotation (int, optional): Rotation of shape within the puzzle.
+            Defaults to 0.
+            method (int, optional): Masking method. Defaults to 1.
+                1. Standard (Intersection)
+                2. Additive
+                3. Subtractive
+            static (bool, optional): Mask should not be recalculated
+            and reapplied after a `puzzle_size` change. Defaults to False.
         """
+        super().__init__(method=method, static=static)
+        self.sides = sides
+        self.rotation = rotation if rotation >= 0 else 360 + rotation
+
+    def generate(self, puzzle_size: int) -> None:
         self.puzzle_size = puzzle_size
-        # self.reset_points()
         self.mask = build_puzzle(puzzle_size, INACTIVE)
         self.points = calculate_regular_convex_polygon_points(
             puzzle_size, self.sides, self.rotation
@@ -460,23 +527,37 @@ class ConvexPolygon(Polygon):
 
 
 class EquilateralTriangle(ConvexPolygon):
-    def __init__(self, rotation=0, method=1) -> None:
-        super().__init__(method=method)
-        self.sides = 3
-        self.rotation = rotation if rotation >= 0 else 360 + rotation
+    """This subclass of `ConvexPolygon` represents a EquilateralTriangle mask object."""
+
+    def __init__(
+        self, rotation: int = 0, method: int = 1, static: bool = False
+    ) -> None:
+        super().__init__(
+            sides=3,
+            rotation=rotation if rotation >= 0 else 360 + rotation,
+            method=method,
+            static=static,
+        )
 
 
 class EquilateralDiamond(ConvexPolygon):
-    def __init__(self, rotation=0, method=1) -> None:
+    """This subclass of `ConvexPolygon` represents a EquilateralDiamond mask object."""
+
+    def __init__(
+        self, rotation: int = 0, method: int = 1, static: bool = False
+    ) -> None:
         super().__init__(
             sides=4,
             rotation=rotation if rotation >= 0 else 360 + rotation,
             method=method,
+            static=static,
         )
 
 
 class Pentagon(ConvexPolygon):
-    def __init__(self, rotation=0, method=1) -> None:
+    """This subclass of `ConvexPolygon` represents a Pentagon mask object."""
+
+    def __init__(self, rotation: int = 0, method: int = 1) -> None:
         super().__init__(
             sides=5,
             rotation=rotation if rotation >= 0 else 360 + rotation,
@@ -485,14 +566,17 @@ class Pentagon(ConvexPolygon):
 
 
 class Hexagon(ConvexPolygon):
-    def __init__(self, method=1) -> None:
-        super().__init__(sides=6, method=method)
+    """This subclass of `ConvexPolygon` represents a Hexagon mask object."""
+
+    def __init__(self, method: int = 1, static: bool = False) -> None:
+        super().__init__(sides=6, method=method, static=static)
 
 
 class Octagon(ConvexPolygon):
-    def __init__(self, method=1) -> None:
-        # FIXME: points off by 1 with rotation of 30 to normalize (check rounding)
-        super().__init__(sides=8, method=method)
+    """This subclass of `ConvexPolygon` represents a Octagon mask object."""
+
+    def __init__(self, method: int = 1, static: bool = False) -> None:
+        super().__init__(sides=8, method=method, static=static)
 
 
 # *********************************************************** #
@@ -539,12 +623,12 @@ def round_half_up(
     return math.floor(n * multiplier + 0.5) / multiplier
 
 
-def distance(x: int, y: int, ratio: float):
+def distance(x: int, y: int, ratio: float) -> float:
     """Calculate the distance between two coordinates on a grid."""
     return math.sqrt(math.pow(y * ratio, 2) + math.pow(x, 2))
 
 
-def inbounds(x: int, y: int, radius: float, ratio: float):
+def inbounds(x: int, y: int, radius: float, ratio: float) -> bool:
     """Check is a coordinate is within a grid radius."""
     return distance(x, y, ratio) <= radius
 
@@ -572,7 +656,9 @@ def float_range(
         count += 1
 
 
-def calculate_ellipse_points(width: int, height: int, puzzle_size: int):
+def calculate_ellipse_points(
+    width: int, height: int, puzzle_size: int
+) -> List[Tuple[int, int]]:
     """Calculate all coordinates within an ellipse."""
     width_r = width / 2
     height_r = height / 2
@@ -709,12 +795,24 @@ def trim_excess(image: Image) -> Image:
     return image.crop(bbox)
 
 
-def process_image(image: Image) -> Image:
-    """Flatten transparency and trim any excess pixels from `image`."""
+def process_image(image: Image, size: int, threshold: int = 200) -> Image:
+    """Process `image` for bitmap mask capture."""
     # composite the image on a white background just in case it has transparency
     image = image.convert("RGBA")
     bg = Image.new("RGBA", image.size, (255, 255, 255))
     image = Image.alpha_composite(bg, image)
     # convert composite image to RGB since we don't need transparency
     image = image.convert("RGB")
-    return trim_excess(image)
+    # trim excess background pixels
+    image = trim_excess(image)
+    # resize the image so the bitmap matches the puzzle size
+    image.thumbnail((size, size), resample=0)
+    # convert image to black and white
+    image = image.convert("L").point(lambda px: 255 if px > threshold else 0, mode="1")
+    # return all black pixels from the mask
+    w, _ = image.size
+    return [
+        (0 if i == 0 else i % w, i // w)
+        for i, px in enumerate(image.getdata())
+        if px <= threshold
+    ]

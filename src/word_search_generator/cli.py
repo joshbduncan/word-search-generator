@@ -6,7 +6,29 @@ import sys
 from typing import Optional, Sequence
 
 from . import WordSearch, __app_name__, __version__, config, utils
+from .mask import (
+    Circle,
+    EquilateralDiamond,
+    EquilateralTriangle,
+    Heart,
+    Hexagon,
+    Octagon,
+    Pentagon,
+    RasterImage,
+    Star,
+)
 from .word import Direction
+
+BUILTIN_SHAPES = {
+    "circle": Circle(),
+    "diamond": EquilateralDiamond(),
+    "triangle": EquilateralTriangle(),
+    "heart": Heart(),
+    "hexagon": Hexagon(),
+    "octagon": Octagon(),
+    "pentagon": Pentagon(),
+    "star": Star(),
+}
 
 
 class RandomAction(argparse.Action):
@@ -69,35 +91,21 @@ Valid Directions: {', '.join([d.name for d in Direction])}
         prog=__app_name__,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument(
+    words_group = parser.add_mutually_exclusive_group()
+    secret_words_group = parser.add_mutually_exclusive_group()
+    mask_group = parser.add_mutually_exclusive_group()
+    words_group.add_argument(
         "words",
         type=str,
         nargs="*",
         default=sys.stdin,
         help="Words to include in the puzzle (default: stdin).",
     )
-    group.add_argument(
-        "-r",
-        "--random",
-        type=int,
-        action=RandomAction,
-        help="Generate {n} random words to include in the puzzle.",
-    )
-    group2 = parser.add_mutually_exclusive_group()
-    group2.add_argument(
-        "-x",
-        "--secret-words",
-        type=str,
-        default="",
-        help="Secret bonus words not included in the word list.",
-    )
-    group2.add_argument(
-        "-rx",
-        "--random-secret-words",
-        type=int,
-        action=RandomAction,
-        help="Generate {n} random secret words to include in the puzzle.",
+    parser.add_argument(
+        "-c",
+        "--cheat",
+        action="store_true",
+        help="Show the puzzle solution or include it within the `-o, --output` file.",
     )
     # new implementation of -l, --level allowing for more flexibility
     # keeping -l, --level for backwards compatibility
@@ -110,12 +118,41 @@ Valid Directions: {', '.join([d.name for d in Direction])}
         help="Difficulty level (numeric) or cardinal directions \
             puzzle words can go. See valid arguments above.",
     )
+    mask_group.add_argument(
+        "-im",
+        "--image-mask",
+        type=pathlib.Path,
+        help="Mask the puzzle to a provided image \
+            (accepts: BMP, JPEG, PNG).",
+    )
+    mask_group.add_argument(
+        "-m",
+        "--mask",
+        choices=BUILTIN_SHAPES.keys(),
+        metavar="MASK_SHAPE",
+        help=f"Mask the puzzle to a shape \
+            (choices: {', '.join(BUILTIN_SHAPES.keys())}).",
+    )
     parser.add_argument(
-        "-xd",
-        "--secret-difficulty",
-        action=DifficultyAction,
-        help="Difficulty level (numeric) or cardinal directions \
-            secret puzzle words can go. See valid arguments above.",
+        "-o",
+        "--output",
+        type=pathlib.Path,
+        help="Output path for saved puzzle. Specify export type by appending "
+        "'.pdf' or '.csv' to your path (default: PDF).",
+    )
+    words_group.add_argument(
+        "-r",
+        "--random",
+        type=int,
+        action=RandomAction,
+        help="Generate {n} random words to include in the puzzle.",
+    )
+    secret_words_group.add_argument(
+        "-rx",
+        "--random-secret-words",
+        type=int,
+        action=RandomAction,
+        help="Generate {n} random secret words to include in the puzzle.",
     )
     parser.add_argument(
         "-s",
@@ -124,18 +161,19 @@ Valid Directions: {', '.join([d.name for d in Direction])}
         type=int,
         help=f"{config.min_puzzle_size} <= puzzle size <= {config.max_puzzle_size}",
     )
-    parser.add_argument(
-        "-c",
-        "--cheat",
-        action="store_true",
-        help="Show the puzzle solution or include it within the `-o, --output` file.",
+    secret_words_group.add_argument(
+        "-x",
+        "--secret-words",
+        type=str,
+        default="",
+        help="Secret bonus words not included in the word list.",
     )
     parser.add_argument(
-        "-o",
-        "--output",
-        type=pathlib.Path,
-        help="Output path for saved puzzle. Specify export type by appending "
-        "'.pdf' or '.csv' to your path (default: PDF).",
+        "-xd",
+        "--secret-difficulty",
+        action=DifficultyAction,
+        help="Difficulty level (numeric) or cardinal directions \
+            secret puzzle words can go. See valid arguments above.",
     )
     parser.add_argument(
         "--version", action="version", version=f"%(prog)s {__version__}"
@@ -177,6 +215,12 @@ Valid Directions: {', '.join([d.name for d in Direction])}
         secret_words=secret_words if secret_words else None,
         secret_level=args.secret_difficulty,
     )
+
+    # apply masking is specified
+    if args.mask:
+        puzzle.apply_mask(BUILTIN_SHAPES[args.mask])
+    if args.image_mask:
+        puzzle.apply_mask(RasterImage(args.image_mask))
 
     # show the result
     if args.output:
