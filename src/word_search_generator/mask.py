@@ -134,14 +134,13 @@ class RasterImage(Mask):
         self.puzzle_size: int = puzzle_size
         self.mask = build_puzzle(puzzle_size, INACTIVE)
 
-        # threshold function
-        def meets_threshold(x):
-            return 255 if x >= RasterImage.threshold else 0
-
-        # process image at current puzzle size
+        # flatten, trim, and resize image to current puzzle size
         image = process_image(Image.open(self.image_path))
         image.thumbnail((self.puzzle_size, self.puzzle_size), resample=0)
-        image = image.convert("L").point(meets_threshold, mode="1")
+        # convert image to black and white
+        image = image.convert("L").point(
+            lambda px: 255 if px > RasterImage.threshold else 0, mode="1"
+        )
         w, _ = image.size
         self.points = [
             (0 if i == 0 else i % w, i // w)
@@ -677,15 +676,18 @@ def check_if_inside(grid: List[List[str]], x: int, y: int) -> bool:
 # ***************************************************************** #
 
 
-def normalize_rgb_values(color):
-    """Clean-up any slight color differences in PIL sampling."""
-    return tuple([0 if val <= 3 else 255 if val >= 253 else val for val in color])
+def normalize_rgb_values(color: Tuple[int, int, int]) -> Tuple[int, int, int]:
+    """Clean-up any slight color differences in PIL color sampling."""
+    return (
+        0 if color[0] <= 3 else 255,
+        0 if color[1] <= 3 else 255,
+        0 if color[2] <= 3 else 255,
+    )
 
 
-def trim_excess(image):
-    """Trim excess background pixels from around an image."""
+def trim_excess(image: Image) -> Image:
+    """Trim excess background pixels from around `image`."""
     w, h = image.size
-
     # get RGB value for each corner of image
     corners = [
         normalize_rgb_values(image.getpixel((0, 0))),
@@ -695,30 +697,24 @@ def trim_excess(image):
     ]
     # count how many times each value is present
     color_count = Counter([pixel for pixel in corners]).most_common()
-
     # if multiple corners have the same pixel count don't trim
     if len(color_count) > 1 and color_count[0][1] == color_count[1][1]:
         return image
     else:  # set the comparison pixel to the most common value
         bg_pixel = color_count[0][0]
-
-    # compare the original image to the excess pixels
+    # compare the original image to the excess pixels and crop
     comp = Image.new("RGB", image.size, bg_pixel)
     diff = ImageChops.difference(image, comp)
     bbox = diff.getbbox()
-    # crop the difference
     return image.crop(bbox)
 
 
-def process_image(image, max_size=max_puzzle_size):
+def process_image(image: Image) -> Image:
+    """Flatten transparency and trim any excess pixels from `image`."""
     # composite the image on a white background just in case it has transparency
     image = image.convert("RGBA")
     bg = Image.new("RGBA", image.size, (255, 255, 255))
     image = Image.alpha_composite(bg, image)
     # convert composite image to RGB since we don't need transparency
     image = image.convert("RGB")
-    # crop the image if extra surrounding background pixels are found
-    image = trim_excess(image)
-    # reduce the image down to `max_size` to speed up processing
-    image.thumbnail((max_size, max_size), resample=0)
-    return image
+    return trim_excess(image)
