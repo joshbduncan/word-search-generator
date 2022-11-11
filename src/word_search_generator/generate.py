@@ -6,7 +6,7 @@ import string
 from typing import TYPE_CHECKING, List, Tuple
 
 from .config import ACTIVE, INACTIVE, max_fit_tries
-from .utils import out_of_bounds
+from .utils import find_bounding_box, out_of_bounds
 from .word import Direction, Fit, Fits, Word, Wordlist
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -159,8 +159,11 @@ def try_to_fit_word(
 ) -> None:
     """Try to fit `word` at randomized coordinates.
     @retry wrapper controls the number of attempts"""
-    row = random.randint(0, ws.size - 1)
-    col = random.randint(0, ws.size - 1)
+    top_edge, left_edge, right_edge, bottom_edge = (
+        find_bounding_box(ws.mask) if ws.masked else (0, 0, ws.size, ws.size)
+    )
+    row = random.randint(top_edge, bottom_edge)
+    col = random.randint(left_edge, right_edge)
     if ws.mask[row][col] == INACTIVE:
         raise WordFitError
     # try and find a directional fit using the starting coordinates if not INACTIVE
