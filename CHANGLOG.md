@@ -10,7 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Testing to make sure key only shows placed words in response to bug fixed in v2.0.1
 - Word class now tracks all coordinates of word (using this in place of keeping a separate 'solution' puzzle)
 - Puzzle Masking
-    - Puzzle output (show(), save(), json) crops output to the puzzle mask so no dead space
+    - Puzzle output (show(), save()) crops output to the puzzle mask so no dead space
+        - Key is offset by cropped bounding box
     - CLI implementation
         - -m, --mask Mask the puzzle to a particular shape (choices: circle, diamond, triangle, heart, hexagon, octagon, pentagon, star).
         - -im, --image-mask Mask the puzzle shape to a provided image (accepts: BMP, JPEG, PNG).

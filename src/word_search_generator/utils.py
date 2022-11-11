@@ -216,21 +216,19 @@ def format_puzzle_for_show(ws: WordSearch, show_solution: bool = False) -> str:
     word_list = get_word_list_str(ws.key)
     # highlight solution if provided
     puzzle_list = highlight_solution(ws) if show_solution else ws.puzzle
-    # calculate bounding box -> (top_edge, left_edge, right_edge, bottom_edge)
-    bbox = find_bounding_box(ws.mask) if ws.masked else None
     # calculate header length based on cropped puzzle size to account for masks
-    header_width = bbox[2] - bbox[1] if bbox else ws.size
+    header_width = ws.bounding_box[2] - ws.bounding_box[1]
     header = make_header(header_width, "WORD SEARCH")
     answer_key_intro = (
         "Answer Key (*= Secret Words)" if ws.placed_secret_words else "Answer Key"
     )
     return f"""{header}
-{stringify(puzzle_list, bbox)}
+{stringify(puzzle_list, ws.bounding_box)}
 
 Find these words: {word_list if word_list else '<ALL SECRET WORDS>'}
 * Words can go {get_level_dirs_str(ws.level)}.
 
-{answer_key_intro}: {get_answer_key_str(ws.placed_words)}"""
+{answer_key_intro}: {get_answer_key_str(ws.placed_words, ws.bounding_box)}"""
 
 
 def get_level_dirs_str(level: DirectionSet) -> str:
@@ -250,18 +248,28 @@ def get_word_list_list(key: Key) -> List[str]:
     return [k for k in sorted(key.keys()) if not key[k]["secret"]]
 
 
-def get_answer_key_list(words: Wordlist) -> List[Any]:
-    """Return a easy to read answer key for display/export."""
-    keys = []
-    for w in sorted(words, key=lambda word: word.text):
-        keys.append(w.key_string)
-    return keys
+def get_answer_key_list(words: Wordlist, bbox: Tuple[int, int, int, int]) -> List[Any]:
+    """Return a easy to read answer key for display/export. Resulting coordinates
+    will be offset by the supplied values. Used for masked puzzles.
+
+    Args:
+        words (Wordlist): A list of `Word` objects.
+        bbox (Tuple[int, int, int, int]): Puzzle mask bounding box
+        coordinates should be offset by.
+    """
+    return [w.key_string(bbox) for w in sorted(words, key=lambda word: word.text)]
 
 
-def get_answer_key_str(words: Wordlist) -> str:
-    """Return a easy to read answer key for display."""
-    keys = get_answer_key_list(words)
-    return ", ".join(keys)
+def get_answer_key_str(words: Wordlist, bbox: Tuple[int, int, int, int]) -> str:
+    """Return a easy to read answer key for display. Resulting coordinates
+    will be offset by the supplied values. Used for masked puzzles.
+
+    Args:
+        words (Wordlist): A list of `Word` objects.
+        bbox (Tuple[int, int, int, int]): Puzzle mask bounding box
+        coordinates should be offset by.
+    """
+    return ", ".join(get_answer_key_list(words, bbox))
 
 
 def get_random_words(n: int) -> str:

@@ -70,7 +70,7 @@ def write_csv_file(path: Path, ws: WordSearch) -> Path:
             "Answer Key (*= Secret Words)" if ws.placed_secret_words else "Answer Key"
         )
         f_writer.writerow([f"{answer_key_intro}: "])
-        f_writer.writerow(utils.get_answer_key_list(ws.placed_words))
+        f_writer.writerow(utils.get_answer_key_list(ws.placed_words, ws.bounding_box))
     return path.absolute()
 
 
@@ -148,9 +148,11 @@ def draw_puzzle_page(pdf: FPDF, ws: WordSearch, solution: bool = False) -> FPDF:
     # draw the puzzle
     placed_words_coordinates = {
         coord
-        for coords in [word.coordinates for word in ws.placed_words]
-        for coord in coords
-    }  # mypy: ignore
+        for coords in [
+            word.offset_coordinates(ws.bounding_box) for word in ws.placed_words
+        ]
+        for coord in coords  # type: ignore
+    }  # type: ignore
     for r, row in enumerate(ws.cropped_puzzle):
         for c, char in enumerate(row):
             # draw a border around correct letters if solution was requested
@@ -197,7 +199,8 @@ def draw_puzzle_page(pdf: FPDF, ws: WordSearch, solution: bool = False) -> FPDF:
         pdf.set_margin(0.25)
         pdf.set_font("Helvetica", size=config.pdf_font_size_S)
         pdf.write(
-            txt=f"{answer_key_intro}: " + utils.get_answer_key_str(ws.placed_words)
+            txt=f"{answer_key_intro}: "
+            + utils.get_answer_key_str(ws.placed_words, ws.bounding_box)
         )
 
     return pdf

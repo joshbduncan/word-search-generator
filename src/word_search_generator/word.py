@@ -111,13 +111,28 @@ class Word:
             "secret": self.secret,
         }
 
-    @property
-    def key_string(self) -> Union[str, None]:
-        return (
-            f"{'*' if self.secret else ''}{self.text} "
-            + f"{self.direction.name if self.direction else self.direction}"
-            + f" @ {self.position_xy}"
-        )
+    def key_string(self, bbox: Tuple[int, int, int, int]) -> Union[str, None]:
+        if isinstance(self.start_row, int) and isinstance(self.start_column, int):
+            return (
+                f"{'*' if self.secret else ''}{self.text} "
+                + f"{self.direction.name if self.direction else self.direction}"
+                + f" @ {(self.offset_position_xy(bbox))}"
+            )
+        return None
+
+    def offset_position_xy(
+        self, bbox: Tuple[int, int, int, int]
+    ) -> Union[Tuple[int, int], None]:
+        if isinstance(self.start_row, int) and isinstance(self.start_column, int):
+            offset_start_row = self.start_row + 1 - bbox[0]
+            offset_start_column = self.start_column + 1 - bbox[1]
+            return (offset_start_column, offset_start_row)
+        return None
+
+    def offset_coordinates(
+        self, bbox: Tuple[int, int, int, int]
+    ) -> Union[List[Tuple[int, int]], None]:
+        return [(x - bbox[1], y - bbox[0]) for x, y in self.coordinates]
 
     def remove_from_puzzle(self):
         """Remove word placement details when a puzzle is reset."""

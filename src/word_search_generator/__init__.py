@@ -17,7 +17,7 @@ __version__ = "2.0.1"
 
 import json
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Set, Union
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
 
 from . import export, generate, utils
 from .config import ACTIVE, INACTIVE, max_puzzle_size, min_puzzle_size
@@ -144,13 +144,16 @@ class WordSearch:
         return bool(self.masks)
 
     @property
+    def bounding_box(self) -> Tuple[int, int, int, int]:
+        """Bounding box of the active puzzle area."""
+        if self.masked:
+            return utils.find_bounding_box(self.mask)
+        return (0, 0, self.size, self.size)
+
+    @property
     def cropped_puzzle(self) -> Puzzle:
         """The current puzzle state cropped to the mask."""
-        top_edge, left_edge, right_edge, bottom_edge = (
-            utils.find_bounding_box(self.mask)
-            if self.masked
-            else (0, 0, self.size, self.size)
-        )
+        top_edge, left_edge, right_edge, bottom_edge = self.bounding_box
         return [
             [c for c in row[left_edge:right_edge]]
             for row in self.puzzle[top_edge:bottom_edge]
@@ -158,7 +161,8 @@ class WordSearch:
 
     @property
     def key(self) -> Key:
-        """The current puzzle answer key (1-based)."""
+        """The current puzzle answer key (1-based) based from
+        Position(0, 0) of the entire puzzle (not masked area)."""
         return {word.text: word.key_info for word in self.placed_words}
 
     @property
@@ -168,7 +172,8 @@ class WordSearch:
             return json.dumps({})
         return json.dumps(
             {
-                "puzzle": self.cropped_puzzle,
+                "puzzle": self.puzzle,
+                "mask": self.mask,
                 "words": [word.text for word in self.placed_words],
                 "key": {
                     word.text: word.key_info_json

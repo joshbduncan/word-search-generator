@@ -50,5 +50,7 @@ def test_invalid_level_direction_type():
 
 def test_answer_key_list():
     p = WordSearch("bat cab rat")
-    key_as_list = utils.get_answer_key_list(p.hidden_words.union(p.secret_words))
+    key_as_list = utils.get_answer_key_list(
+        p.hidden_words.union(p.secret_words), p.bounding_box
+    )
     assert len(key_as_list) == len(p.key) and key_as_list[0].startswith("BAT")
