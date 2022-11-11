@@ -6,29 +6,8 @@ import sys
 from typing import Optional, Sequence
 
 from . import WordSearch, __app_name__, __version__, config, utils
-from .mask import (
-    Circle,
-    EquilateralDiamond,
-    EquilateralTriangle,
-    Heart,
-    Hexagon,
-    Octagon,
-    Pentagon,
-    RasterImage,
-    Star,
-)
+from .mask import RasterImage, shapes
 from .word import Direction
-
-BUILTIN_SHAPES = {
-    "circle": Circle(),
-    "diamond": EquilateralDiamond(),
-    "triangle": EquilateralTriangle(),
-    "heart": Heart(),
-    "hexagon": Hexagon(),
-    "octagon": Octagon(),
-    "pentagon": Pentagon(),
-    "star": Star(),
-}
 
 
 class RandomAction(argparse.Action):
@@ -128,10 +107,10 @@ Valid Directions: {', '.join([d.name for d in Direction])}
     mask_group.add_argument(
         "-m",
         "--mask",
-        choices=BUILTIN_SHAPES.keys(),
+        choices=shapes.BUILTIN_SHAPES,
         metavar="MASK_SHAPE",
         help=f"Mask the puzzle to a shape \
-            (choices: {', '.join(BUILTIN_SHAPES.keys())}).",
+            (choices: {', '.join(shapes.BUILTIN_SHAPES)}).",
     )
     parser.add_argument(
         "-o",
@@ -218,7 +197,7 @@ Valid Directions: {', '.join([d.name for d in Direction])}
 
     # apply masking is specified
     if args.mask:
-        puzzle.apply_mask(BUILTIN_SHAPES[args.mask])
+        puzzle.apply_mask(eval(f"shapes.{args.mask}")())
     if args.image_mask:
         puzzle.apply_mask(RasterImage(args.image_mask))
 

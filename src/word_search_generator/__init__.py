@@ -21,7 +21,7 @@ from typing import Any, Dict, Iterable, List, Optional, Set, Union
 
 from . import export, generate, utils
 from .config import ACTIVE, INACTIVE, max_puzzle_size, min_puzzle_size
-from .mask import Mask
+from .mask import CompoundMask, Mask
 from .word import Direction, KeyInfo, KeyInfoJson, Wordlist
 
 Puzzle = List[List[str]]
@@ -398,7 +398,7 @@ class WordSearch:
 
     def apply_mask(self, mask: Mask) -> None:
         """Apply a singular mask object to the puzzle."""
-        if not isinstance(mask, Mask):
+        if not isinstance(mask, (Mask, CompoundMask)):
             raise TypeError("Please provide a Mask object.")
         if mask.puzzle_size != self.size:
             mask.generate(self.size)
