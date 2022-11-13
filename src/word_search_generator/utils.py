@@ -41,13 +41,9 @@ def build_puzzle(size: int, char: str) -> Puzzle:
     return [[char] * size for _ in range(size)]
 
 
-def out_of_bounds(size: int, position: Tuple[int, int]) -> bool:
-    """Validate `position` is within the current puzzle bounds."""
-    width = height = size
-    row, col = position
-    if row < 0 or col < 0 or row > height - 1 or col > width - 1:
-        return True
-    return False
+def in_bounds(x: int, y: int, width: int, height: int) -> bool:
+    """Validate position (x, y) is within the current grid."""
+    return x >= 0 and x < width and y >= 0 and y < height
 
 
 def find_bounding_box(grid: List[List[str]]) -> Tuple[int, int, int, int]:

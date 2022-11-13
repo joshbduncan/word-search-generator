@@ -6,7 +6,7 @@ import string
 from typing import TYPE_CHECKING, List, Tuple
 
 from .config import ACTIVE, INACTIVE, max_fit_tries
-from .utils import out_of_bounds
+from .utils import in_bounds
 from .word import Direction, Fit, Fits, Word, Wordlist
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -50,7 +50,7 @@ def capture_all_paths_from_position(
         row, col = position
         chars: List[str] = []
         for _ in range(radius):
-            if out_of_bounds(len(puzzle), (row, col)):
+            if not in_bounds(col, row, len(puzzle), len(puzzle)):
                 break
             chars.append(puzzle[row][col])
             row += direction_coord.r_move
@@ -113,7 +113,7 @@ def test_a_fit(
         row += direction.r_move
         col += direction.c_move
         # if new coordinates are off of puzzle cancel fit test
-        if out_of_bounds(len(puzzle), (row, col)):
+        if not in_bounds(col, row, len(puzzle), len(puzzle)):
             return []
     return coordinates
 

@@ -6,12 +6,12 @@ from ..config import ACTIVE, INACTIVE
 from ..utils import build_puzzle
 from . import (
     CompoundMask,
-    ConvexPolygon,
     Ellipse,
     Polygon,
     Rectangle,
+    RegularPolygon,
     calculate_ellipse_points,
-    calculate_regular_convex_polygon_points,
+    calculate_regular_regular_polygon_points,
 )
 
 
@@ -30,13 +30,23 @@ class Circle(Ellipse):
     def __init__(self, method: int = 1, static: bool = False) -> None:
         super().__init__(method=method, static=static)
 
-    def generate(self, puzzle_size: int) -> None:
+    def generate(
+        self,
+        puzzle_size: int,
+        origin=None,
+    ) -> None:
         self.puzzle_size = puzzle_size
         self.mask = build_puzzle(puzzle_size, INACTIVE)
         self.width = puzzle_size
         self.height = puzzle_size
-        self.points = calculate_ellipse_points(self.width, self.height, puzzle_size)
-        self.draw()
+        self.origin = (puzzle_size // 2, puzzle_size // 2)
+        self.points = calculate_ellipse_points(
+            self.width,
+            self.height,
+            self.origin,
+            puzzle_size,
+        )
+        self._draw()
 
 
 class Diamond(Polygon):
@@ -66,7 +76,7 @@ class Diamond(Polygon):
             (self.width // 2, self.height),
             (self.width, self.height // 2),
         ]
-        self.draw()
+        self._draw()
 
 
 class Donut(CompoundMask):
@@ -94,8 +104,8 @@ class Donut(CompoundMask):
             self._apply_masks(mask)
 
 
-class EquilateralDiamond(ConvexPolygon):
-    """This subclass of `ConvexPolygon` represents a EquilateralDiamond mask object."""
+class EquilateralDiamond(RegularPolygon):
+    """This subclass of `RegularPolygon` represents a EquilateralDiamond mask object."""
 
     def __init__(
         self, rotation: int = 0, method: int = 1, static: bool = False
@@ -108,8 +118,9 @@ class EquilateralDiamond(ConvexPolygon):
         )
 
 
-class EquilateralTriangle(ConvexPolygon):
-    """This subclass of `ConvexPolygon` represents a EquilateralTriangle mask object."""
+class EquilateralTriangle(RegularPolygon):
+    """This subclass of `RegularPolygon` represents a
+    EquilateralTriangle mask object."""
 
     def __init__(
         self, rotation: int = 0, method: int = 1, static: bool = False
@@ -156,25 +167,25 @@ class Heart(Polygon):
             ((self.puzzle_size - 1) - self.puzzle_size // 8 * 3, 0),
             (self.puzzle_size // 2, self.puzzle_size // 4),
         ]
-        self.draw()
+        self._draw()
 
 
-class Hexagon(ConvexPolygon):
-    """This subclass of `ConvexPolygon` represents a Hexagon mask object."""
+class Hexagon(RegularPolygon):
+    """This subclass of `RegularPolygon` represents a Hexagon mask object."""
 
     def __init__(self, method: int = 1, static: bool = False) -> None:
         super().__init__(sides=6, method=method, static=static)
 
 
-class Octagon(ConvexPolygon):
-    """This subclass of `ConvexPolygon` represents a Octagon mask object."""
+class Octagon(RegularPolygon):
+    """This subclass of `RegularPolygon` represents a Octagon mask object."""
 
     def __init__(self, method: int = 1, static: bool = False) -> None:
         super().__init__(sides=8, method=method, static=static)
 
 
-class Pentagon(ConvexPolygon):
-    """This subclass of `ConvexPolygon` represents a Pentagon mask object."""
+class Pentagon(RegularPolygon):
+    """This subclass of `RegularPolygon` represents a Pentagon mask object."""
 
     def __init__(self, rotation: int = 0, method: int = 1) -> None:
         super().__init__(
@@ -199,14 +210,15 @@ class Star(Polygon):
     """This subclass of `Polygon` represents a Star mask object."""
 
     def __init__(
-        self, rotation: int = 0, method: int = 1, static: bool = False
+        self, sides: int = 5, rotation: int = 0, method: int = 1, static: bool = False
     ) -> None:
-        """Generate a regular 5-pointed star/pentagram mask.
+        """Generate a regular star mask with `sides` points.
 
         Note: An odd `puzzle_size` will generate a Isosceles Triangle and
         even `puzzle_size` will generate an Scalene Triangle.
 
         Args:
+            sides (int, optional): Sides or vertices of star. Defaults to 5.
             rotation (int, optional): Rotation of shape within the puzzle.
             Defaults to 0.
             method (int, optional): Masking method. Defaults to 1.
@@ -216,22 +228,56 @@ class Star(Polygon):
             static (bool, optional): Mask should not be recalculated
             and reapplied after a `puzzle_size` change. Defaults to False.
         """
+        # TODO: add size argument
+        # TODO: add sized argument
         super().__init__(method=method, static=static)
         self.rotation = rotation if rotation >= 0 else 360 + rotation
 
     def generate(self, puzzle_size: int) -> None:
+        def distance(p1, p2):
+            x1, y1 = p1
+            x2, y2 = p2
+            return math.sqrt(math.pow(x2 - x1, 2) + math.pow(y2 - y1, 2))
+
+        def mid_point(p1, p2):
+            x1, y1 = p1
+            x2, y2 = p2
+            return ((x1 - x2) * 0.5, (y1 - y2) * 0.5)
+
         self.puzzle_size = puzzle_size
         self.mask = build_puzzle(puzzle_size, INACTIVE)
-        points = calculate_regular_convex_polygon_points(puzzle_size, 5, self.rotation)
+
+        center = (puzzle_size // 2, puzzle_size // 2)
+        points = 5
+
+        outer_points = calculate_regular_regular_polygon_points(
+            puzzle_size, center, points, self.rotation
+        )
+
+        internal_angle = (points - 2) * math.pi / points
+        mid_point_coords = mid_point(outer_points[0], outer_points[1])
+        opp = distance(outer_points[0], mid_point_coords)
+        theta = internal_angle * 0.5
+        distance_in = opp / math.tan(theta)
+
+        inner_radius = distance(center, mid_point_coords) - distance_in
+        inner_points = calculate_regular_regular_polygon_points(
+            inner_radius, center, points, self.rotation + 180
+        )
+
         self.points = [
-            points[0],
-            points[2],
-            points[4],
-            points[1],
-            points[3],
-            points[0],
+            outer_points[0],
+            inner_points[3],
+            outer_points[1],
+            inner_points[4],
+            outer_points[2],
+            inner_points[0],
+            outer_points[3],
+            inner_points[1],
+            outer_points[4],
+            inner_points[2],
         ]
-        self.draw()
+        self._draw()
 
 
 class Tree(CompoundMask):
@@ -262,7 +308,7 @@ class Tree(CompoundMask):
         tree_trunk = Rectangle(
             width=tree_trunk_width,
             height=tree_trunk_height,
-            position=(
+            origin=(
                 tree_trunk_position_x,
                 tree_trunk_position_y,
             ),
@@ -303,7 +349,7 @@ class Triangle(Polygon):
             (0, self.height),
             (self.width, self.height),
         ]
-        self.draw()
+        self._draw()
 
 
 # ********************************************************* #
