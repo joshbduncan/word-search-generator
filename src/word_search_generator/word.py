@@ -78,6 +78,17 @@ class Word:
         self.secret = secret
 
     @property
+    def placed(self) -> bool:
+        # used `is not None` since 0 vals for start_row/column are not truthy
+        return all(
+            (
+                self.start_column is not None,
+                self.start_row is not None,
+                self.direction is not None,
+            )
+        )
+
+    @property
     def position(self) -> Position:
         return Position(self.start_row, self.start_column)
 
@@ -111,7 +122,9 @@ class Word:
             "secret": self.secret,
         }
 
-    def key_string(self, bbox: Tuple[int, int, int, int]) -> Union[str, None]:
+    def key_string(
+        self, bbox: Tuple[Tuple[int, int], Tuple[int, int]]
+    ) -> Union[str, None]:
         if isinstance(self.start_row, int) and isinstance(self.start_column, int):
             return (
                 f"{'*' if self.secret else ''}{self.text} "
@@ -121,18 +134,18 @@ class Word:
         return None
 
     def offset_position_xy(
-        self, bbox: Tuple[int, int, int, int]
+        self, bbox: Tuple[Tuple[int, int], Tuple[int, int]]
     ) -> Union[Tuple[int, int], None]:
         if isinstance(self.start_row, int) and isinstance(self.start_column, int):
-            offset_start_row = self.start_row + 1 - bbox[0]
-            offset_start_column = self.start_column + 1 - bbox[1]
+            offset_start_row = self.start_row + 1 - bbox[0][1]
+            offset_start_column = self.start_column + 1 - bbox[0][0]
             return (offset_start_column, offset_start_row)
         return None
 
     def offset_coordinates(
-        self, bbox: Tuple[int, int, int, int]
+        self, bbox: Tuple[Tuple[int, int], Tuple[int, int]]
     ) -> Union[List[Tuple[int, int]], None]:
-        return [(x - bbox[1], y - bbox[0]) for x, y in self.coordinates]
+        return [(x - bbox[0][0], y - bbox[0][1]) for x, y in self.coordinates]
 
     def remove_from_puzzle(self):
         """Remove word placement details when a puzzle is reset."""

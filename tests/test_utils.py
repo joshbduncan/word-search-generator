@@ -29,7 +29,7 @@ def test_invalid_input_too_short():
 def test_stringify():
     inp = [["a"], ["b"], ["c"]]
     output = "a\nb\nc"
-    assert utils.stringify(inp) == output
+    assert utils.stringify(inp, ((0, 0), (1, 3))) == output
 
 
 def test_palindromes():

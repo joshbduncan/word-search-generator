@@ -6,7 +6,8 @@ import sys
 from typing import Optional, Sequence
 
 from . import WordSearch, __app_name__, __version__, config, utils
-from .mask import RasterImage, shapes
+from .mask.bitmap import Image
+from .mask.shapes import BUILTIN_SHAPES
 from .word import Direction
 
 
@@ -107,10 +108,10 @@ Valid Directions: {', '.join([d.name for d in Direction])}
     mask_group.add_argument(
         "-m",
         "--mask",
-        choices=shapes.BUILTIN_SHAPES,
+        choices=BUILTIN_SHAPES,
         metavar="MASK_SHAPE",
         help=f"Mask the puzzle to a shape \
-            (choices: {', '.join(shapes.BUILTIN_SHAPES)}).",
+            (choices: {', '.join(BUILTIN_SHAPES)}).",
     )
     parser.add_argument(
         "-o",
@@ -140,6 +141,12 @@ Valid Directions: {', '.join([d.name for d in Direction])}
         type=int,
         help=f"{config.min_puzzle_size} <= puzzle size <= {config.max_puzzle_size}",
     )
+    parser.add_argument(
+        "-pm",
+        "--preview-masks",
+        action="store_true",
+        help="Preview all built-in mask shapes.",
+    )
     secret_words_group.add_argument(
         "-x",
         "--secret-words",
@@ -158,6 +165,19 @@ Valid Directions: {', '.join([d.name for d in Direction])}
         "--version", action="version", version=f"%(prog)s {__version__}"
     )
     args = parser.parse_args(argv)
+
+    # check for mask preview first
+    if args.preview_masks:
+        preview_size = 21
+        words = utils.get_random_words(21)
+        puzzle = WordSearch(words)
+        for name, shape in BUILTIN_SHAPES.items():
+            mask = shape
+            mask.generate(preview_size)
+            print(f"MASK SHAPE: {name.upper()}")
+            mask.show(True)
+            print()
+        return 0
 
     # process puzzle words
     words = ""
@@ -197,9 +217,9 @@ Valid Directions: {', '.join([d.name for d in Direction])}
 
     # apply masking is specified
     if args.mask:
-        puzzle.apply_mask(eval(f"shapes.{args.mask}")())
+        puzzle.apply_mask(BUILTIN_SHAPES[args.mask])
     if args.image_mask:
-        puzzle.apply_mask(RasterImage(args.image_mask))
+        puzzle.apply_mask(Image(args.image_mask))
 
     # show the result
     if args.output:

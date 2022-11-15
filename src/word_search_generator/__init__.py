@@ -9,10 +9,10 @@ from __future__ import annotations
     :license: MIT, see LICENSE for more details.
 """
 
+# TODO: implement @classmethod factory for random puzzles
+
 __app_name__ = "word-search"
 __version__ = "2.0.1"
-
-# TODO: test for p = WordSearch(size=15)
 
 
 import json
@@ -79,9 +79,16 @@ class WordSearch:
         )
 
         if size:
-            self.size = size
+            if not isinstance(size, int):
+                raise TypeError("Size must be an integer.")
+            if not min_puzzle_size <= size <= max_puzzle_size:
+                raise ValueError(
+                    f"Puzzle size must be >= {min_puzzle_size}"
+                    + f" and <= {max_puzzle_size}"
+                )
+            self._size = size
         if self.words:
-            self.size = utils.calc_puzzle_size(self._words, self._directions, size)
+            self._size = utils.calc_puzzle_size(self._words, self._directions, size)
             self._generate()
 
     # **************************************************** #
@@ -96,7 +103,7 @@ class WordSearch:
     @property
     def placed_words(self) -> Wordlist:
         """The current puzzle words."""
-        return {word for word in self._words if word.direction}
+        return {word for word in self._words if word.placed}
 
     @property
     def hidden_words(self) -> Wordlist:
@@ -106,7 +113,7 @@ class WordSearch:
     @property
     def placed_hidden_words(self) -> Wordlist:
         """The current puzzle words."""
-        return {word for word in self.hidden_words if word.direction}
+        return {word for word in self.hidden_words if word.placed}
 
     @property
     def secret_words(self) -> Wordlist:
@@ -116,7 +123,7 @@ class WordSearch:
     @property
     def placed_secret_words(self) -> Wordlist:
         """The current secret puzzle words."""
-        return {word for word in self.secret_words if word.direction}
+        return {word for word in self.secret_words if word.placed}
 
     @property
     def puzzle(self) -> Puzzle:
@@ -144,20 +151,16 @@ class WordSearch:
         return bool(self.masks)
 
     @property
-    def bounding_box(self) -> Tuple[int, int, int, int]:
+    def bounding_box(self) -> Tuple[Tuple[int, int], Tuple[int, int]]:
         """Bounding box of the active puzzle area."""
-        if self.masked:
-            return utils.find_bounding_box(self.mask)
-        return (0, 0, self.size, self.size)
+        return utils.find_bounding_box(self.mask)
 
     @property
     def cropped_puzzle(self) -> Puzzle:
         """The current puzzle state cropped to the mask."""
-        top_edge, left_edge, right_edge, bottom_edge = self.bounding_box
-        return [
-            [c for c in row[left_edge:right_edge]]
-            for row in self.puzzle[top_edge:bottom_edge]
-        ]
+        min_x, min_y = self.bounding_box[0]
+        max_x, max_y = self.bounding_box[1]
+        return [[c for c in row[min_x:max_x]] for row in self.puzzle[min_y:max_y]]
 
     @property
     def key(self) -> Key:
@@ -170,15 +173,14 @@ class WordSearch:
         """The current puzzle, words, and answer key in JSON."""
         if not self.key:
             return json.dumps({})
+        # TODO: add secret words to JSON output
         return json.dumps(
             {
                 "puzzle": self.puzzle,
                 "mask": self.mask,
                 "words": [word.text for word in self.placed_words],
                 "key": {
-                    word.text: word.key_info_json
-                    for word in self.words
-                    if word.direction
+                    word.text: word.key_info_json for word in self.words if word.placed
                 },
             }
         )
@@ -276,7 +278,6 @@ class WordSearch:
         Args:
             solution (bool, optional): Highlight the puzzle solution. Defaults to False.
         """
-        # TODO: only show puzzle cropped to masked area
         if self.key:
             print(utils.format_puzzle_for_show(self, solution))
         else:
@@ -407,7 +408,6 @@ class WordSearch:
             raise TypeError("Please provide a Mask object.")
         if mask.puzzle_size != self.size:
             mask.generate(self.size)
-        # TODO: check that mask fits within the bounds of the puzzle
         for y in range(self.size):
             for x in range(self.size):
                 if mask.method == 1:

@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import copy
+import math
 import random
 import string
 import sys
 from math import log2
-from typing import TYPE_CHECKING, Any, Iterable, List, Optional, Sized, Tuple
+from typing import TYPE_CHECKING, Any, Iterable, List, Optional, Sized, Tuple, Union
 
 from . import config
 from .word import Direction, Word
@@ -41,40 +42,79 @@ def build_puzzle(size: int, char: str) -> Puzzle:
     return [[char] * size for _ in range(size)]
 
 
+def round_half_up(
+    n: float, decimals: int = 0
+) -> Union[float, Any]:  # mypy 0.95+ weirdness
+    """Round numbers in a consistent and familiar format."""
+    multiplier = 10**decimals
+    return math.floor(n * multiplier + 0.5) / multiplier
+
+
+def float_range(
+    start: Union[int, float],
+    stop: Optional[Union[int, float]] = None,
+    step: Optional[Union[int, float]] = None,
+):
+    """Generate a float-based range for iteration."""
+    start = float(start)
+    if stop is None:
+        stop = start + 0.0
+        start = 0.0
+    if step is None:
+        step = 1.0
+    count = 0
+    while True:
+        temp = float(start + count * step)
+        if step > 0 and temp >= stop:
+            break
+        elif step < 0 and temp <= stop:
+            break
+        yield temp
+        count += 1
+
+
+def distance(x: int, y: int, ratio: float) -> float:
+    """Calculate the distance between two coordinates on a grid."""
+    return math.sqrt(math.pow(y * ratio, 2) + math.pow(x, 2))
+
+
 def in_bounds(x: int, y: int, width: int, height: int) -> bool:
     """Validate position (x, y) is within the current grid."""
     return x >= 0 and x < width and y >= 0 and y < height
 
 
-def find_bounding_box(grid: List[List[str]]) -> Tuple[int, int, int, int]:
-    """Find the ACTIVE area bounding box of the supplied grid."""
+def find_bounding_box(
+    grid: List[List[str]], edge: str = config.ACTIVE
+) -> Tuple[Tuple[int, int], Tuple[int, int]]:
+    """Bounding box of the masked area as a rectangle defined
+    by a Tuple of (top-left edge as x, y, bottom-right edge as x, y)"""
     size = len(grid)
     # find the top and bottom edges
-    top_edge = 0
+    min_y = 0
     for i in range(size):
-        if grid[i].count(config.ACTIVE):
-            top_edge = i
+        if grid[i].count(edge):
+            min_y = i
             break
     rows_reversed = grid[::-1]
-    bottom_edge = 0
+    max_y = 0
     for i in range(size):
-        if rows_reversed[i].count(config.ACTIVE):
-            bottom_edge = size - i
+        if rows_reversed[i].count(edge):
+            max_y = size - i
             break
     # find the left and right edges
     cols = list(zip(*grid))
-    left_edge = 0
+    min_x = 0
     for i in range(size):
-        if cols[i].count(config.ACTIVE):
-            left_edge = i
+        if cols[i].count(edge):
+            min_x = i
             break
-    right_edge = 0
+    max_x = 0
     cols_reversed = cols[::-1]
     for i in range(size):
-        if cols_reversed[i].count(config.ACTIVE):
-            right_edge = size - i
+        if cols_reversed[i].count(edge):
+            max_x = size - i
             break
-    return (top_edge, left_edge, right_edge, bottom_edge)
+    return ((min_x, min_y), (max_x, max_y))
 
 
 def cleanup_input(words: str, secret: bool = False) -> Wordlist:
@@ -175,16 +215,15 @@ def highlight_solution(ws: WordSearch) -> Puzzle:
     output: Puzzle = copy.deepcopy(ws.puzzle)
     for word in ws.placed_words:
         if (
-            word.start_column is not None
-            and word.start_row is not None
-            and word.direction
-        ):  # FIXME: only here for mypy
-            x = word.start_column
-            y = word.start_row
-            for char in word.text:
-                output[y][x] = f"\u001b[1m\u001b[31m{char}\u001b[0m"
-                x += word.direction.c_move
-                y += word.direction.r_move
+            not word.start_column or not word.start_row or not word.direction
+        ):  # only here for mypy
+            continue
+        x = word.start_column
+        y = word.start_row
+        for char in word.text:
+            output[y][x] = f"\u001b[1m\u001b[31m{char}\u001b[0m"
+            x += word.direction.c_move
+            y += word.direction.r_move
     return output
 
 
@@ -197,14 +236,13 @@ def make_header(size: int, text: str) -> str:
 {hr}"""
 
 
-def stringify(puzzle: Puzzle, bbox: Optional[Tuple[int, int, int, int]] = None) -> str:
+def stringify(puzzle: Puzzle, bbox: Tuple[Tuple[int, int], Tuple[int, int]]) -> str:
     """Convert puzzle array of nested lists into a string."""
-    if not bbox:
-        bbox = (0, 0, len(puzzle[0]), len(puzzle))
-    top_edge, left_edge, right_edge, bottom_edge = bbox
+    min_x, min_y = bbox[0]
+    max_x, max_y = bbox[1]
     output = []
-    for line in puzzle[top_edge:bottom_edge]:
-        output.append(" ".join([c if c else " " for c in line[left_edge:right_edge]]))
+    for line in puzzle[min_y:max_y]:
+        output.append(" ".join([c if c else " " for c in line[min_x:max_x]]))
     return "\n".join(output)
 
 
@@ -213,7 +251,7 @@ def format_puzzle_for_show(ws: WordSearch, show_solution: bool = False) -> str:
     # highlight solution if provided
     puzzle_list = highlight_solution(ws) if show_solution else ws.puzzle
     # calculate header length based on cropped puzzle size to account for masks
-    header_width = ws.bounding_box[2] - ws.bounding_box[1]
+    header_width = ws.bounding_box[1][0] - ws.bounding_box[0][0]
     header = make_header(header_width, "WORD SEARCH")
     answer_key_intro = (
         "Answer Key (*= Secret Words)" if ws.placed_secret_words else "Answer Key"
@@ -244,7 +282,9 @@ def get_word_list_list(key: Key) -> List[str]:
     return [k for k in sorted(key.keys()) if not key[k]["secret"]]
 
 
-def get_answer_key_list(words: Wordlist, bbox: Tuple[int, int, int, int]) -> List[Any]:
+def get_answer_key_list(
+    words: Wordlist, bbox: Tuple[Tuple[int, int], Tuple[int, int]]
+) -> List[Any]:
     """Return a easy to read answer key for display/export. Resulting coordinates
     will be offset by the supplied values. Used for masked puzzles.
 
@@ -256,7 +296,9 @@ def get_answer_key_list(words: Wordlist, bbox: Tuple[int, int, int, int]) -> Lis
     return [w.key_string(bbox) for w in sorted(words, key=lambda word: word.text)]
 
 
-def get_answer_key_str(words: Wordlist, bbox: Tuple[int, int, int, int]) -> str:
+def get_answer_key_str(
+    words: Wordlist, bbox: Tuple[Tuple[int, int], Tuple[int, int]]
+) -> str:
     """Return a easy to read answer key for display. Resulting coordinates
     will be offset by the supplied values. Used for masked puzzles.
 
