@@ -56,7 +56,7 @@ class Image(Bitmap):
 
     def generate(self, puzzle_size: int) -> None:
         self.puzzle_size = puzzle_size
-        self._mask = Mask.build_mask(puzzle_size)
+        self._mask = Mask.build_mask(self.puzzle_size)
         self.points = Image.process_image(
             PILImage.open(self.fp, formats=("BMP", "JPEG", "PNG")),
             self.puzzle_size,

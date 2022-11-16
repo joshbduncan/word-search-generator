@@ -50,7 +50,7 @@ class Polygon(Mask):
 
     def generate(self, puzzle_size: int) -> None:
         self.puzzle_size = puzzle_size
-        self._mask = Mask.build_mask(puzzle_size)
+        self._mask = Mask.build_mask(self.puzzle_size)
         self._draw()
 
     # doesn't draw evenly on second half pf point (going up)
@@ -222,7 +222,7 @@ class RegularPolygon(Polygon):
 
     def generate(self, puzzle_size: int) -> None:
         self.puzzle_size = puzzle_size
-        self._mask = Mask.build_mask(puzzle_size)
+        self._mask = Mask.build_mask(self.puzzle_size)
         even = puzzle_size % 2 == 0
         puzzle_radius = self.puzzle_size // 2 - 1 if even else self.puzzle_size // 2
         puzzle_center = (puzzle_radius, puzzle_radius)
@@ -317,8 +317,8 @@ class Star(Polygon):
 
     def generate(self, puzzle_size: int) -> None:
         self.puzzle_size = puzzle_size
-        self._mask = Mask.build_mask(puzzle_size)
-        even = puzzle_size % 2 == 0
+        self._mask = Mask.build_mask(self.puzzle_size)
+        even = self.puzzle_size % 2 == 0
         puzzle_radius = self.puzzle_size // 2 - 1 if even else self.puzzle_size // 2
         puzzle_center = (puzzle_radius, puzzle_radius)
         self.points = Star.calculate_vertices(

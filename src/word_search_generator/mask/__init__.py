@@ -123,7 +123,7 @@ class Mask:
     def generate(self, puzzle_size: int) -> None:
         """Generate a mask at `puzzle_size`."""
         self.puzzle_size = puzzle_size
-        self._mask = Mask.build_mask(puzzle_size)
+        self._mask = Mask.build_mask(self.puzzle_size)
         self._draw()
 
     def _draw(self) -> None:
@@ -139,24 +139,9 @@ class Mask:
             raise MaskNotGenerated(
                 "Please use `object.generate()` before calling `object.show()`."
             )
-        bbox = (
-            self.bounding_box
-            if active_only
-            else ((0, 0), (self.puzzle_size, self.puzzle_size))
-        )
+        bbox = find_bounding_box(self._mask)
         min_x, min_y = bbox[0]
         max_x, max_y = bbox[1]
-
-        # adjust for shapes with points out of the puzzle bounds
-        if active_only:
-            if min_x < 0:
-                min_x = 0
-            if max_x > self.puzzle_size:
-                max_x = self.puzzle_size
-            if min_y < 0:
-                min_y = 0
-            if max_y > self.puzzle_size:
-                max_y = self.puzzle_size
 
         for r in self.mask[min_y : max_y + 1]:  # noqa: E203
             if active_only:
@@ -216,7 +201,7 @@ class CompoundMask(Mask):
         Note: This is a special implementation of the `bounding.box` property
         in use just for the `CompoundMask` object. Normally the `bounding_box`
         property on a mask is not confined to the puzzle bounds since it is mainly
-        used in calculation for filling the shapes. Since a `CompoundMask` is
+        used in the calculation of filling the shapes. Since a `CompoundMask` is
         really just a collection of `Masks` the `bounding_box` is limited by the
         puzzle bounds."""
         return find_bounding_box(self._mask)
@@ -227,7 +212,7 @@ class CompoundMask(Mask):
     def generate(self, puzzle_size: int) -> None:
         """Generate a mask at `puzzle_size`."""
         self.puzzle_size = puzzle_size
-        self._mask = Mask.build_mask(puzzle_size, ACTIVE)
+        self._mask = Mask.build_mask(self.puzzle_size, ACTIVE)
         for mask in self._masks:
             mask.generate(self.puzzle_size)
             self._apply_mask(mask)

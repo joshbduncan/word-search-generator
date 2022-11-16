@@ -8,12 +8,10 @@ from . import CompoundMask, Mask
 from .ellipse import Ellipse
 from .polygon import RegularPolygon, Star
 
-# from . import CompoundMask, Polygon, Rectangle, RegularPolygon
-# from .ellipse import Ellipse
-
 
 def get_shape_objects():
     """Return all built-in shape objects from this file"""
+    # {key:value for (key,value) in dictonary.items()}
     return [
         name
         for name, obj in inspect.getmembers(sys.modules[__name__], inspect.isclass)
@@ -21,9 +19,19 @@ def get_shape_objects():
     ]
 
 
+class Circle(Ellipse):
+    def __init__(self) -> None:
+        super().__init__()
+
+
+class Diamond(RegularPolygon):
+    def __init__(self) -> None:
+        super().__init__(vertices=4, angle=90)
+
+
 class Donut(CompoundMask):
-    def __init__(self, method: int = 1, static: bool = False) -> None:
-        super().__init__(method=method, static=static)
+    def __init__(self) -> None:
+        super().__init__()
 
     def generate(self, puzzle_size: int) -> None:
         """Generate a mask at `puzzle_size`."""
@@ -47,26 +55,38 @@ class Donut(CompoundMask):
         return donut, hole
 
 
-class SixPointedStar(CompoundMask):
-    def __init__(self, method: int = 1, static: bool = False) -> None:
-        super().__init__(method=method, static=static)
+class Hexagon(RegularPolygon):
+    def __init__(self) -> None:
+        super().__init__(vertices=6, angle=90)
+
+
+class Octagon(RegularPolygon):
+    def __init__(self) -> None:
+        super().__init__(vertices=8, angle=22.5)
+
+
+class Pentagon(RegularPolygon):
+    def __init__(self) -> None:
+        super().__init__(vertices=5)
+
+
+class Star6Points(CompoundMask):
+    def __init__(self) -> None:
+        super().__init__()
         self._masks = [
             (RegularPolygon()),
             (RegularPolygon(angle=180, method=2)),
         ]
 
 
-BUILTIN_SHAPES = {
-    "CIRCLE": Ellipse(),
-    "DIAMOND": RegularPolygon(vertices=4, angle=90),
-    "DONUT": Donut(),
-    # "HEART": Heart(),
-    "HEXAGON": RegularPolygon(vertices=6, angle=90),
-    "OCTAGON": RegularPolygon(vertices=8, angle=22.5),
-    "PENTAGON": RegularPolygon(vertices=5),
-    "TRIANGLE": RegularPolygon(vertices=3),
-    "STAR": Star(),
-    "STAR6": SixPointedStar(),
-}
+class Star5Points(Star):
+    def __init__(self) -> None:
+        super().__init__()
 
-# BUILTIN_SHAPES = get_shape_objects()
+
+class Triangle(RegularPolygon):
+    def __init__(self) -> None:
+        super().__init__(vertices=3)
+
+
+BUILTIN_SHAPES = get_shape_objects()

@@ -89,30 +89,26 @@ def find_bounding_box(
     """Bounding box of the masked area as a rectangle defined
     by a Tuple of (top-left edge as x, y, bottom-right edge as x, y)"""
     size = len(grid)
-    # find the top and bottom edges
     min_y = 0
-    for i in range(size):
-        if grid[i].count(edge):
+    for i, r in enumerate(grid):
+        if edge in r:
             min_y = i
             break
-    rows_reversed = grid[::-1]
-    max_y = 0
-    for i in range(size):
-        if rows_reversed[i].count(edge):
-            max_y = size - i
+    max_y = size
+    for i, r in enumerate(reversed(grid)):
+        if edge in r:
+            max_y = size - 1 - i
             break
-    # find the left and right edges
-    cols = list(zip(*grid))
+    cols = [list(c) for c in zip(*grid)]  # mypy not playing nice w/ `list(zip(*grid))``
     min_x = 0
-    for i in range(size):
-        if cols[i].count(edge):
+    for i, r in enumerate(cols):
+        if edge in r:
             min_x = i
             break
-    max_x = 0
-    cols_reversed = cols[::-1]
-    for i in range(size):
-        if cols_reversed[i].count(edge):
-            max_x = size - i
+    max_x = size
+    for i, r in enumerate(reversed(cols)):
+        if edge in r:
+            max_x = size - 1 - i
             break
     return ((min_x, min_y), (max_x, max_y))
 
@@ -241,8 +237,8 @@ def stringify(puzzle: Puzzle, bbox: Tuple[Tuple[int, int], Tuple[int, int]]) -> 
     min_x, min_y = bbox[0]
     max_x, max_y = bbox[1]
     output = []
-    for line in puzzle[min_y:max_y]:
-        output.append(" ".join([c if c else " " for c in line[min_x:max_x]]))
+    for line in puzzle[min_y : max_y + 1]:
+        output.append(" ".join([c if c else " " for c in line[min_x : max_x + 1]]))
     return "\n".join(output)
 
 
@@ -251,7 +247,7 @@ def format_puzzle_for_show(ws: WordSearch, show_solution: bool = False) -> str:
     # highlight solution if provided
     puzzle_list = highlight_solution(ws) if show_solution else ws.puzzle
     # calculate header length based on cropped puzzle size to account for masks
-    header_width = ws.bounding_box[1][0] - ws.bounding_box[0][0]
+    header_width = ws.bounding_box[1][0] - ws.bounding_box[0][0] + 1
     header = make_header(header_width, "WORD SEARCH")
     answer_key_intro = (
         "Answer Key (*= Secret Words)" if ws.placed_secret_words else "Answer Key"

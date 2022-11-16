@@ -40,7 +40,7 @@ class Ellipse(Bitmap):
         self, puzzle_size: int, origin: Optional[Tuple[int, int]] = None
     ) -> None:
         self.puzzle_size = puzzle_size
-        self._mask = Mask.build_mask(puzzle_size)
+        self._mask = Mask.build_mask(self.puzzle_size)
         # set origin point to center of puzzle if not specified
         self.origin = origin if origin else self.origin
         # if no size is specified, or size is too big, fill the puzzle

@@ -6,8 +6,8 @@ import sys
 from typing import Optional, Sequence
 
 from . import WordSearch, __app_name__, __version__, config, utils
+from .mask import shapes
 from .mask.bitmap import Image
-from .mask.shapes import BUILTIN_SHAPES
 from .word import Direction
 
 
@@ -108,10 +108,10 @@ Valid Directions: {', '.join([d.name for d in Direction])}
     mask_group.add_argument(
         "-m",
         "--mask",
-        choices=BUILTIN_SHAPES,
+        choices=shapes.BUILTIN_SHAPES,
         metavar="MASK_SHAPE",
         help=f"Mask the puzzle to a shape \
-            (choices: {', '.join(BUILTIN_SHAPES)}).",
+            (choices: {', '.join(shapes.BUILTIN_SHAPES)}).",
     )
     parser.add_argument(
         "-o",
@@ -171,10 +171,10 @@ Valid Directions: {', '.join([d.name for d in Direction])}
         preview_size = 21
         words = utils.get_random_words(21)
         puzzle = WordSearch(words)
-        for name, shape in BUILTIN_SHAPES.items():
-            mask = shape
+        for shape in shapes.BUILTIN_SHAPES:
+            mask = eval(f"shapes.{shape}")()
             mask.generate(preview_size)
-            print(f"MASK SHAPE: {name.upper()}")
+            print(f"{shape.upper()}")
             mask.show(True)
             print()
         return 0
@@ -217,7 +217,7 @@ Valid Directions: {', '.join([d.name for d in Direction])}
 
     # apply masking is specified
     if args.mask:
-        puzzle.apply_mask(BUILTIN_SHAPES[args.mask])
+        puzzle.apply_mask(eval(f"shapes.{args.mask}")())
     if args.image_mask:
         puzzle.apply_mask(Image(args.image_mask))
 
