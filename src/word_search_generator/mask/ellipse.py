@@ -7,52 +7,44 @@ from .bitmap import Bitmap
 
 
 class Ellipse(Bitmap):
-    """This subclass of `Bitmap` represents a Ellipse mask object."""
+    """This class represents a subclass of the Bitmap object
+    and generates an Ellipse masks."""
 
     def __init__(
         self,
         width: Optional[int] = None,
         height: Optional[int] = None,
-        origin: Optional[Tuple[int, int]] = None,
+        center: Optional[Tuple[int, int]] = None,
         method: int = 1,
         static: bool = True,
     ) -> None:
         """Generate an ellipse mask.
 
         Args:
-            width (Optional[int], optional): Ellipse width. Defaults to None.
-            height (Optional[int], optional): Ellipse height. Defaults to None.
-            origin (Optional[Tuple[int, int]], optional): Center origin point
-            from which the polygon will be drawn. Defaults to puzzle center.
-            method (int, optional): Masking method. Defaults to 1.
-                1. Standard (Intersection)
-                2. Additive
-                3. Subtractive
-            static (bool, optional): Mask should not be recalculated
-            and reapplied after a `puzzle_size` change. Defaults to True.
+            width (Optional[int], optional): Ellipse width. Defaults to
+            `puzzle_width` provided to the `.generate()` method.
+            height (Optional[int], optional): Ellipse height. Defaults to
+            `puzzle_width` provided to the `.generate()` method.
+            center (Optional[Tuple[int, int]], optional): Center origin point
+            from which the ellipse will be calculated. Defaults to puzzle center.
+            method (int, optional): How Mask is applied to the puzzle
+            (1=Standard (Intersection), 2=Additive, 3=Subtractive). Defaults to 1.
+            static (bool, optional): Should this mask be reapplied
+            after changes to the parent puzzle size. Defaults to True.
         """
         super().__init__(method=method, static=static)
         self.width = width
         self.height = height
-        self.origin = origin
+        self.center = center
 
-    def generate(
-        self, puzzle_size: int, origin: Optional[Tuple[int, int]] = None
-    ) -> None:
+    def generate(self, puzzle_size: int) -> None:
         self.puzzle_size = puzzle_size
         self._mask = Mask.build_mask(self.puzzle_size)
-        # set origin point to center of puzzle if not specified
-        self.origin = origin if origin else self.origin
-        # if no size is specified, or size is too big, fill the puzzle
-        if not self.width or self.width > puzzle_size:
-            self.width = puzzle_size
-        if not self.height or self.height > puzzle_size:
-            self.height = puzzle_size
         self.points = Ellipse.calculate_ellipse_points(
-            self.width,
-            self.height,
-            self.origin
-            if self.origin
+            self.width if self.width else self.puzzle_size,
+            self.height if self.height else self.puzzle_size,
+            self.center
+            if self.center
             else (self.puzzle_size // 2, self.puzzle_size // 2),
             puzzle_size,
         )
@@ -66,11 +58,9 @@ class Ellipse(Bitmap):
         puzzle_size: int,
     ) -> List[Tuple[int, int]]:
         """Calculate all coordinates within an ellipse."""
-
-        width_r = width // 2
-        height_r = height // 2
+        width_r = width / 2
+        height_r = height / 2
         ratio = width_r / height_r
-
         # determine points to check for fitness inside of radius
         if (width_r * 2) % 2 == 0:
             max_pointsX = math.ceil(width_r - 0.5) * 2 + 1
@@ -80,7 +70,6 @@ class Ellipse(Bitmap):
             max_pointsY = math.ceil(height_r - 0.5) * 2 + 1
         else:
             max_pointsY = math.ceil(height_r) * 2
-
         # calculate the origin offset
         if puzzle_size % 2 == 0 and width % 2 != 0:
             x_offset = origin[0] - 1
@@ -90,7 +79,6 @@ class Ellipse(Bitmap):
             y_offset = origin[1] - 1
         else:
             y_offset = origin[1]
-
         # check all points and see if they fit inside of the ellipse
         points = []
         minY = -max_pointsY / 2 + 1
@@ -105,5 +93,5 @@ class Ellipse(Bitmap):
 
     @staticmethod
     def within_radius(x: int, y: int, radius: float, ratio: float) -> bool:
-        """Check if a coordinate is within a grid radius."""
+        """Check if a coordinate is within a given radius."""
         return distance(x, y, ratio) <= radius

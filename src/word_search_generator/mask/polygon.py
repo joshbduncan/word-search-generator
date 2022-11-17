@@ -1,5 +1,5 @@
 import math
-from typing import Any, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 from ..config import ACTIVE
 from ..utils import in_bounds, round_half_up
@@ -7,26 +7,32 @@ from . import Mask, MaskNotGenerated
 
 
 class Polygon(Mask):
-    """This subclass of `Mask` represents a Polygon mask object."""
+    """This class represents a subclass of the Mask object
+    and generates a polygon mask from a set of coordinate points."""
 
     def __init__(
-        self, points: List[Any] = [], method: int = 1, static: bool = True
+        self,
+        points: Optional[List[Tuple[int, int]]] = None,
+        method: int = 1,
+        static: bool = True,
     ) -> None:
         """Generate a polygon mask from 3 or more coordinate points.
+        The (0, 0) coordinate is at top-left of the 2-D array.
 
-        Note: (0, 0) coordinate is at top-left of puzzle.
-        Note: The polygon path will be automatically close if you do not
-        return to the origin at the last point in your list.
+        Note: There is no need to include the origin point at the end
+        of your polygon path. All paths are automatically closed by
+        returning to the origin point (eg. `.points[0]`).
 
         Args:
-            points (list, optional): Polygon vertex coordinate points.
-            Defaults to [].
-            method (int, optional): Masking method. Defaults to 1.
-                1. Standard (Intersection)
-                2. Additive
-                3. Subtractive
-            static (bool, optional): Mask should not be recalculated
-            and reapplied after a `puzzle_size` change. Defaults to True.
+            points (Optional[List[Tuple[int, int]]], optional): Polygon
+            coordinate points. Defaults to None.
+            method (int, optional): How Mask is applied to the puzzle
+            (1=Standard (Intersection), 2=Additive, 3=Subtractive). Defaults to 1.
+            static (bool, optional): Should this mask be reapplied
+            after changes to the parent puzzle size. Defaults to True.
+
+        Raises:
+            ValueError: _description_
         """
         if points and len(points) < 3:
             raise ValueError(
@@ -49,12 +55,14 @@ class Polygon(Mask):
         return left_side, right_side
 
     def generate(self, puzzle_size: int) -> None:
+        """Generate a new mask at `puzzle_size`."""
         self.puzzle_size = puzzle_size
         self._mask = Mask.build_mask(self.puzzle_size)
         self._draw()
 
-    # doesn't draw evenly on second half pf point (going up)
-    def _draw(self) -> None:
+    def _draw(self) -> None:  # doesn't draw evenly on second half pf point (going up)
+        """Connect each coordinate point within `.points` in the
+        order they are listed and then fill in the resulting shape."""
         for i in range(len(self.points)):
             p1 = self.points[i]
             p2 = self.points[(i + 1) % len(self.points)]
@@ -62,6 +70,12 @@ class Polygon(Mask):
         self._fill_shape()
 
     def _draw_in_halves(self) -> None:
+        """Starting with the first coordinate in `.points`, connect the first
+        half of the coordinates, then return to the origin and connect the second
+        half of the points, and then fill in the resulting shape.
+
+        Note: Uses the `.split_points` property and seems to work with the
+        Bresenham's line algorithm for some shape (eg. Stars)."""
         for points in self.split_points:
             for i in range(len(points) - 1):
                 p1 = points[i]
@@ -72,21 +86,22 @@ class Polygon(Mask):
     def _connect_points(
         self, p1: Tuple[int, int], p2: Tuple[int, int], c: str = ACTIVE
     ) -> None:
-        """Connect two points within a grid using Bresenham's line algorithm."""
+        """Connect two points within a grid using Bresenham's line algorithm.
+        The line will be drawn using the single character string `c`."""
         if not self.puzzle_size:
             raise MaskNotGenerated(
-                "No puzzle size specified. Please use the `Polygon.generate()` method."
+                "No puzzle size specified. Please use the `generate()` method."
             )
-        x0, y0 = p1
-        x1, y1 = p2
-        dx = abs(x1 - x0)
-        dy = abs(y1 - y0)
-        x, y = x0, y0
-        sx = -1 if x0 > x1 else 1
-        sy = -1 if y0 > y1 else 1
+        x1, y1 = p1
+        x2, y2 = p2
+        dx = abs(x2 - x1)
+        dy = abs(y2 - y1)
+        x, y = x1, y1
+        sx = -1 if x1 > x2 else 1
+        sy = -1 if y1 > y2 else 1
         if dx > dy:
             err = dx / 2.0
-            while x != x1:
+            while x != x2:
                 if in_bounds(x, y, self.puzzle_size, self.puzzle_size):
                     self.mask[y][x] = c
                 err -= dy
@@ -96,7 +111,7 @@ class Polygon(Mask):
                 x += sx
         else:
             err = dy / 2.0
-            while y != y1:
+            while y != y2:
                 if in_bounds(x, y, self.puzzle_size, self.puzzle_size):
                     self.mask[y][x] = c
                 err -= dx
@@ -108,9 +123,11 @@ class Polygon(Mask):
                 self.mask[y][x] = c
 
     def _fill_shape(self, c: str = ACTIVE) -> None:
-        """Fill interior of a `Polygon` mask with connected vertices."""
+        """Fill the interior of a polygon using the single character string `c`."""
 
         def ray_casting(point, polygon):
+            """Ray-casting algorithm used to determine if a
+            coordinate is within a polygon."""
             x, y = point
             ct = 0
             for i in range(len(polygon) - 1):
@@ -120,13 +137,10 @@ class Polygon(Mask):
                     ct += 1
             return ct % 2 == 1
 
-        if not self.puzzle_size:
+        if not self.puzzle_size or not self.bounding_box:
             raise MaskNotGenerated(
-                "No puzzle size specified. Please use the `Polygon.generate()` method."
+                "No puzzle size specified. Please use the `generate()` method."
             )
-
-        if not self.bounding_box:
-            return
 
         # check all points within the polygon bounding box
         bbox = self.bounding_box
@@ -159,12 +173,10 @@ class Rectangle(Polygon):
             height (int): Rectangle height.
             origin (Tuple[int, int], optional): Top-left origin point from
             which polygon be drawn. Defaults to puzzle top-left at (0, 0).
-            method (int, optional): Masking method. Defaults to 1.
-                1. Standard (Intersection)
-                2. Additive
-                3. Subtractive
-            static (bool, optional): Mask should not be recalculated
-            and reapplied after a `puzzle_size` change. Defaults to True.
+            method (int, optional): How Mask is applied to the puzzle
+            (1=Standard (Intersection), 2=Additive, 3=Subtractive). Defaults to 1.
+            static (bool, optional): Should this mask be reapplied
+            after changes to the parent puzzle size. Defaults to True.
         """
         originX, originY = origin if origin else (0, 0)
         points = [
@@ -195,17 +207,15 @@ class RegularPolygon(Polygon):
             vertices (int, optional): Vertices (sides) of polygon (>=3).
             Defaults to 3.
             radius (Optional[int], optional): Distance from center point to vertices.
-            Defaults to `puzzle_size` // 2.
+            Defaults to half of the `puzzle_width` provided to the `.generate()` method.
             center (Optional[Tuple[int, int]], optional): Center origin point
             from which the polygon will be calculated. Defaults to puzzle center.
             angle (float, optional): Rotation angle in degrees polygon.
             Defaults to 0.0.
-            method (int, optional): Masking method. Defaults to 1.
-                1. Standard (Intersection)
-                2. Additive
-                3. Subtractive
-            static (bool, optional): Mask should not be recalculated
-            and reapplied after a `puzzle_size` change. Defaults to False.
+            method (int, optional): How Mask is applied to the puzzle
+            (1=Standard (Intersection), 2=Additive, 3=Subtractive). Defaults to 1.
+            static (bool, optional): Should this mask be reapplied
+            after changes to the parent puzzle size. Defaults to True.
 
         Raises:
             ValueError: Polygon vertices must be >=3.
@@ -223,13 +233,14 @@ class RegularPolygon(Polygon):
     def generate(self, puzzle_size: int) -> None:
         self.puzzle_size = puzzle_size
         self._mask = Mask.build_mask(self.puzzle_size)
-        even = puzzle_size % 2 == 0
-        puzzle_radius = self.puzzle_size // 2 - 1 if even else self.puzzle_size // 2
-        puzzle_center = (puzzle_radius, puzzle_radius)
+        radius = (
+            self.puzzle_size // 2 - 1 if puzzle_size % 2 == 0 else self.puzzle_size // 2
+        )
+        center = (radius, radius)
         self.points = RegularPolygon.calculate_vertices(
             self.vertices,
-            self.radius if self.radius else puzzle_radius,
-            self.center if self.center else puzzle_center,
+            self.radius if self.radius else radius,
+            self.center if self.center else center,
             self.angle,
         )
         self._draw()
@@ -294,12 +305,10 @@ class Star(Polygon):
             from which the polygon will be calculated. Defaults to puzzle center.
             angle (float, optional): Rotation angle in degrees polygon.
             Defaults to 0.0.
-            method (int, optional): Masking method. Defaults to 1.
-                1. Standard (Intersection)
-                2. Additive
-                3. Subtractive
-            static (bool, optional): Mask should not be recalculated
-            and reapplied after a `puzzle_size` change. Defaults to False.
+            method (int, optional): How Mask is applied to the puzzle
+            (1=Standard (Intersection), 2=Additive, 3=Subtractive). Defaults to 1.
+            static (bool, optional): Should this mask be reapplied
+            after changes to the parent puzzle size. Defaults to True.
 
         Raises:
             ValueError: Polygon outer vertices must be >=3.
@@ -318,8 +327,9 @@ class Star(Polygon):
     def generate(self, puzzle_size: int) -> None:
         self.puzzle_size = puzzle_size
         self._mask = Mask.build_mask(self.puzzle_size)
-        even = self.puzzle_size % 2 == 0
-        puzzle_radius = self.puzzle_size // 2 - 1 if even else self.puzzle_size // 2
+        puzzle_radius = (
+            self.puzzle_size // 2 - 1 if puzzle_size % 2 == 0 else self.puzzle_size // 2
+        )
         puzzle_center = (puzzle_radius, puzzle_radius)
         self.points = Star.calculate_vertices(
             self.outer_vertices,

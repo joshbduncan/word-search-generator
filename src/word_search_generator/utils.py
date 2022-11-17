@@ -79,7 +79,7 @@ def distance(x: int, y: int, ratio: float) -> float:
 
 
 def in_bounds(x: int, y: int, width: int, height: int) -> bool:
-    """Validate position (x, y) is within the current grid."""
+    """Validate position (x, y) is within the supplied bounds."""
     return x >= 0 and x < width and y >= 0 and y < height
 
 

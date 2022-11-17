@@ -68,3 +68,15 @@ def test_too_many_supplied_words():
     w = get_random_words(100)
     p = WordSearch(w, size=5)
     assert len(p.words) != len(p.placed_words)
+
+
+def test_fit_all_words_with_plenty_of_space():
+    for _ in range(10):
+        p = WordSearch("cat dog pig cow mule duck")
+        assert len(p.placed_words) == 6
+
+
+def test_fit_all_words_with_plenty_of_space_and_secret_words():
+    for _ in range(10):
+        p = WordSearch("cat dog pig", secret_words="cow mule duck")
+        assert len(p.placed_words) == 6

@@ -10,6 +10,8 @@ from .mask import shapes
 from .mask.bitmap import Image
 from .word import Direction
 
+BUILTIN_SHAPES = shapes.get_shape_objects()
+
 
 class RandomAction(argparse.Action):
     """Restrict argparse `-r`, `--random` inputs."""
@@ -108,10 +110,10 @@ Valid Directions: {', '.join([d.name for d in Direction])}
     mask_group.add_argument(
         "-m",
         "--mask",
-        choices=shapes.BUILTIN_SHAPES,
+        choices=BUILTIN_SHAPES,
         metavar="MASK_SHAPE",
         help=f"Mask the puzzle to a shape \
-            (choices: {', '.join(shapes.BUILTIN_SHAPES)}).",
+            (choices: {', '.join(BUILTIN_SHAPES)}).",
     )
     parser.add_argument(
         "-o",
@@ -171,7 +173,7 @@ Valid Directions: {', '.join([d.name for d in Direction])}
         preview_size = 21
         words = utils.get_random_words(21)
         puzzle = WordSearch(words)
-        for shape in shapes.BUILTIN_SHAPES:
+        for shape in BUILTIN_SHAPES:
             mask = eval(f"shapes.{shape}")()
             mask.generate(preview_size)
             print(f"{shape.upper()}")
