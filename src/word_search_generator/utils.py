@@ -211,7 +211,9 @@ def highlight_solution(ws: WordSearch) -> Puzzle:
     output: Puzzle = copy.deepcopy(ws.puzzle)
     for word in ws.placed_words:
         if (
-            not word.start_column or not word.start_row or not word.direction
+            word.start_column is None
+            or word.start_row is None
+            or word.direction is None
         ):  # only here for mypy
             continue
         x = word.start_column
