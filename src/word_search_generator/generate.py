@@ -4,6 +4,7 @@ import copy
 import random
 import string
 import sys
+from functools import wraps
 from math import log2
 from typing import TYPE_CHECKING, List, Optional, Sized, Tuple
 
@@ -20,19 +21,21 @@ class WordFitError(Exception):
     pass
 
 
-def retry(func):
-    """Retry fitting word into puzzle. Hat tip to Bob Belderbos @bbelderbos"""
+def retry(retries: int = max_fit_tries):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            attempt = 0
+            while attempt < retries:
+                try:
+                    return func(*args, **kwargs)
+                except Exception:
+                    attempt += 1
+            return
 
-    def wrapper(*args, **kwargs):
-        attempt = 0
-        while attempt < max_fit_tries:
-            try:
-                return func(*args, **kwargs)
-            except Exception:
-                attempt += 1
-        return
+        return wrapper
 
-    return wrapper
+    return decorator
 
 
 def out_of_bounds(puzzle: WordSearch, position: Tuple[int, int]) -> bool:
@@ -177,7 +180,7 @@ def fill_words(puzzle: WordSearch) -> None:
         )
 
 
-@retry
+@retry()
 def try_to_fit_word(
     puzzle: WordSearch,
     word: Word,
