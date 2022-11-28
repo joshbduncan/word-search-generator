@@ -38,6 +38,7 @@ class Ellipse(Bitmap):
         self.center = center
 
     def generate(self, puzzle_size: int) -> None:
+        """Generate a new mask at `puzzle_size`."""
         self.puzzle_size = puzzle_size
         self._mask = Mask.build_mask(self.puzzle_size)
         self.points = Ellipse.calculate_ellipse_points(

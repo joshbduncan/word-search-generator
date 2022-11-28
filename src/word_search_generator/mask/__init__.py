@@ -37,7 +37,7 @@ class Mask:
         shape will be filled in using a ray-casting algorithm.
         """
         self.points = points if points else []
-        self._method = method
+        self.method = method
         self.static = static
         self._puzzle_size: Optional[int] = None
         self._mask: List[Any] = []
@@ -61,14 +61,33 @@ class Mask:
             (1=Standard (Intersection), 2=Additive, 3=Subtractive). Defaults to 1.
 
         Raises:
-            TypeError: Must be an integer.
             ValueError: Must 1, 2, or 3 (see `Mask.METHODS`).
         """
         if not isinstance(val, int):
             raise TypeError("Must be an integer.")
-        if val not in Mask.METHODS:
+        if isinstance(val, int) and val not in Mask.METHODS:
             raise ValueError(f"Must be one of {Mask.METHODS}")
-        self.method = val
+        self._method = val
+
+    @property
+    def static(self) -> int:
+        """Mask static reapplication."""
+        return self._static
+
+    @static.setter
+    def static(self, val: bool) -> None:
+        """Set the Mask static property.
+
+        Args:
+            val (bool): Should this mask be reapplied after
+            changes to the parent puzzle size. Defaults to True.
+
+        Raises:
+            TypeError: Must be a boolean value.
+        """
+        if not isinstance(val, bool):
+            raise TypeError("Must be a boolean value.")
+        self._static = val
 
     @property
     def puzzle_size(self) -> Optional[int]:

@@ -6,7 +6,7 @@ from typing import Tuple
 from ..config import ACTIVE
 from . import CompoundMask, Mask
 from .ellipse import Ellipse
-from .polygon import Rectangle, RegularPolygon, Star
+from .polygon import Polygon, Rectangle, RegularPolygon, Star
 
 
 def get_shape_objects():
@@ -52,6 +52,72 @@ class Donut(CompoundMask):
         if hole % 2 == 0:
             hole += 1
         return donut, hole
+
+
+class Heart(CompoundMask):
+    def __init__(self) -> None:
+        super().__init__()
+
+    def generate(self, puzzle_size: int) -> None:
+        self.puzzle_size = puzzle_size
+        self._mask = Mask.build_mask(puzzle_size, ACTIVE)
+
+        # # option 1
+        ellipse_size = self.puzzle_size // 2
+        left_ellipse = Ellipse(
+            width=ellipse_size,
+            height=ellipse_size,
+            center=(
+                self.puzzle_size // 2 - ellipse_size // 2,
+                self.puzzle_size // 2 - ellipse_size // 2,
+            ),
+        )
+        right_ellipse = Ellipse(
+            width=ellipse_size,
+            height=ellipse_size,
+            center=(
+                self.puzzle_size // 2
+                + ellipse_size // 2
+                - (1 if ellipse_size % 2 == 0 else 0),
+                self.puzzle_size // 2 - ellipse_size // 2,
+            ),
+            method=2,
+        )
+        left_ellipse.generate(self.puzzle_size)
+        right_ellipse.generate(self.puzzle_size)
+
+        # calculate the bottom half polygon
+        if (
+            right_ellipse.bounding_box is not None
+            and left_ellipse.bounding_box is not None
+        ):
+            x1, y1 = left_ellipse.points[0]
+            for x, y in left_ellipse.points:
+                if x < x1:
+                    x1 = x
+                if y > y1:
+                    y1 = y
+            x2, y2 = (
+                self.puzzle_size // 2 - (1 if self.puzzle_size % 2 == 0 else 0),
+                right_ellipse.bounding_box[1][1] * 2,
+            )
+            x3, y3 = right_ellipse.bounding_box[1][0], y1
+            x4, y4 = (
+                self.puzzle_size // 2 - (1 if self.puzzle_size % 2 == 0 else 0),
+                left_ellipse.bounding_box[1][1] // 2,
+            )
+            poly = Polygon(
+                [(x1, y1), (x2, y2), (x3, y3), (x4, y4)],
+                method=2,
+            )
+        poly.generate(self.puzzle_size)
+
+        # self.masks = [left_ellipse]
+        self.masks = [left_ellipse, right_ellipse]
+        # self.masks = [left_ellipse, right_ellipse, poly]
+
+        for mask in self.masks:
+            self._apply_mask(mask)
 
 
 class Hexagon(RegularPolygon):

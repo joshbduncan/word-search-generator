@@ -126,7 +126,7 @@ class Polygon(Mask):
         """Fill the interior of a polygon using the single character string `c`."""
 
         def ray_casting(point, polygon):
-            """Ray-casting algorithm used to determine if a
+            """Ray Casting algorithm used to determine if a
             coordinate is within a polygon."""
             x, y = point
             ct = 0
