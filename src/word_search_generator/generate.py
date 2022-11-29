@@ -3,6 +3,7 @@ from __future__ import annotations
 import copy
 import random
 import string
+from functools import wraps
 from typing import TYPE_CHECKING, List, Tuple
 
 from .config import ACTIVE, INACTIVE, max_fit_tries
@@ -19,19 +20,21 @@ class WordFitError(Exception):
     pass
 
 
-def retry(func):
-    """Retry fitting word into puzzle. Hat tip to Bob Belderbos @bbelderbos"""
+def retry(retries: int = max_fit_tries):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            attempt = 0
+            while attempt < retries:
+                try:
+                    return func(*args, **kwargs)
+                except Exception:
+                    attempt += 1
+            return
 
-    def wrapper(*args, **kwargs):
-        attempt = 0
-        while attempt < max_fit_tries:
-            try:
-                return func(*args, **kwargs)
-            except Exception:
-                attempt += 1
-        return
+        return wrapper
 
-    return wrapper
+    return decorator
 
 
 def capture_all_paths_from_position(
@@ -152,7 +155,7 @@ def fill_words(ws: WordSearch) -> None:
         )
 
 
-@retry
+@retry()
 def try_to_fit_word(
     ws: WordSearch,
     word: Word,
