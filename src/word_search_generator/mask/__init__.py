@@ -125,6 +125,7 @@ class Mask:
         points may lie outside of the puzzle bounds. This property is used
         for filling mask shapes so it needs to know the actual mask bounds no
         matter where lie."""
+
         if not self.points:
             return None
         min_x, min_y = self.points[0]
@@ -297,8 +298,6 @@ class CompoundMask(Mask):
                 elif mask.method == 2:
                     if mask.mask[y][x] == ACTIVE:
                         self.mask[y][x] = ACTIVE
-                    elif self.mask[y][x] != ACTIVE:
-                        self.mask[y][x] = INACTIVE
                 else:
                     if mask.mask[y][x] == ACTIVE:
                         self.mask[y][x] = INACTIVE
