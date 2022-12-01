@@ -185,6 +185,14 @@ class WordSearch:
             }
         )
 
+    @property
+    def unplaced_hidden_words(self) -> Wordlist:
+        return self.hidden_words - self.placed_hidden_words
+
+    @property
+    def unplaced_secret_words(self) -> Wordlist:
+        return self.secret_words - self.placed_secret_words
+
     # ********************************************************* #
     # ******************** GETTERS/SETTERS ******************** #
     # ********************************************************* #
