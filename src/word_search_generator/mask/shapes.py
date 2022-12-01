@@ -59,17 +59,23 @@ class Heart(CompoundMask):
         super().__init__()
 
     def generate(self, puzzle_size: int) -> None:
+        if puzzle_size < 8:
+            raise ValueError("Puzzle size must be > 7 for a Heart mask.")
+
         self.puzzle_size = puzzle_size
         self._mask = Mask.build_mask(puzzle_size, ACTIVE)
 
-        # # option 1
-        ellipse_size = self.puzzle_size // 2
+        # calculate both top ellipses
+        even_odd_offset = self.puzzle_size % 2
+        ellipse_size = self.puzzle_size // 2 + even_odd_offset
+        center_offset = 1 if self.puzzle_size % 2 != 0 and ellipse_size % 2 == 0 else 0
+        ellipse_center = self.puzzle_size // 2 - ellipse_size // 2 + center_offset
         left_ellipse = Ellipse(
             width=ellipse_size,
             height=ellipse_size,
             center=(
-                self.puzzle_size // 2 - ellipse_size // 2,
-                self.puzzle_size // 2 - ellipse_size // 2,
+                ellipse_center,
+                ellipse_center,
             ),
         )
         right_ellipse = Ellipse(
@@ -77,9 +83,9 @@ class Heart(CompoundMask):
             height=ellipse_size,
             center=(
                 self.puzzle_size // 2
-                + ellipse_size // 2
-                - (1 if ellipse_size % 2 == 0 else 0),
-                self.puzzle_size // 2 - ellipse_size // 2,
+                + ellipse_center
+                - (1 if self.puzzle_size % 2 == 0 else 0),
+                ellipse_center,
             ),
             method=2,
         )
@@ -91,30 +97,31 @@ class Heart(CompoundMask):
             right_ellipse.bounding_box is not None
             and left_ellipse.bounding_box is not None
         ):
-            x1, y1 = left_ellipse.points[0]
-            for x, y in left_ellipse.points:
-                if x < x1:
-                    x1 = x
-                if y > y1:
-                    y1 = y
-            x2, y2 = (
-                self.puzzle_size // 2 - (1 if self.puzzle_size % 2 == 0 else 0),
-                right_ellipse.bounding_box[1][1] * 2,
+            x1 = min(x for x, _ in left_ellipse.points)
+            y1 = max(
+                y
+                for y in range(len(left_ellipse.mask))
+                if left_ellipse.mask[y][x1] == ACTIVE
             )
-            x3, y3 = right_ellipse.bounding_box[1][0], y1
-            x4, y4 = (
-                self.puzzle_size // 2 - (1 if self.puzzle_size % 2 == 0 else 0),
-                left_ellipse.bounding_box[1][1] // 2,
+            x2 = left_ellipse.bounding_box[1][1]
+            y2 = right_ellipse.bounding_box[1][1] * 2
+            x3 = right_ellipse.bounding_box[1][0]
+            y3 = y1
+            x4 = left_ellipse.bounding_box[1][0]
+            y4 = left_ellipse.bounding_box[1][1]
+            y4 = min(
+                y
+                for y in range(len(left_ellipse.mask))
+                if left_ellipse.mask[y][x4] == ACTIVE
             )
             poly = Polygon(
                 [(x1, y1), (x2, y2), (x3, y3), (x4, y4)],
                 method=2,
             )
+            print(poly.points)
         poly.generate(self.puzzle_size)
 
-        # self.masks = [left_ellipse]
-        self.masks = [left_ellipse, right_ellipse]
-        # self.masks = [left_ellipse, right_ellipse, poly]
+        self.masks = [left_ellipse, right_ellipse, poly]
 
         for mask in self.masks:
             self._apply_mask(mask)

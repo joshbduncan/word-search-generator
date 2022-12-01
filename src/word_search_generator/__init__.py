@@ -418,8 +418,6 @@ class WordSearch:
                 elif mask.method == 2:
                     if mask.mask[y][x] == ACTIVE:
                         self.mask[y][x] = ACTIVE
-                    elif self.mask[y][x] != ACTIVE:
-                        self.mask[y][x] = INACTIVE
                 else:
                     if mask.mask[y][x] == ACTIVE:
                         self.mask[y][x] = INACTIVE
