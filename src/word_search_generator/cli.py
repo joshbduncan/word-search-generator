@@ -176,7 +176,7 @@ Valid Directions: {', '.join([d.name for d in Direction])}
         for shape in BUILTIN_SHAPES:
             mask = eval(f"shapes.{shape}")()
             mask.generate(preview_size)
-            print(f"{shape.upper()}")
+            print(f"{shape}")
             mask.show(True)
             print()
         return 0

@@ -1,17 +1,7 @@
 import pytest
 
-# from word_search_generator import WordSearch
 from word_search_generator.config import ACTIVE, INACTIVE
 from word_search_generator.mask import CompoundMask, Mask, MaskNotGenerated
-
-# Bitmap,
-# CompoundMask,
-# Ellipse,
-# Image,
-# Polygon,
-# Rectangle,
-# RegularPolygon,
-# Star,
 
 
 def test_mask_property_points_set_during_init():
@@ -146,9 +136,7 @@ def test_show_active_only(capsys):
     m.generate(size)
     for x, y in m.points:
         m.mask[y][x] = ACTIVE
-    match = """*
-  *
-"""
+    match = "*  \n  *\n"
     m.show(True)
     capture = capsys.readouterr()
     assert capture.out == match

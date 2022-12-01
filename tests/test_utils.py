@@ -54,3 +54,15 @@ def test_answer_key_list():
         p.hidden_words.union(p.secret_words), p.bounding_box
     )
     assert len(key_as_list) == len(p.key) and key_as_list[0].startswith("BAT")
+
+
+def test_float_range():
+    assert len(list(utils.float_range(0.10))) == 1
+
+
+def test_float_range_invalid_args():
+    assert not list(utils.float_range(0.40, 0.10, 0.01))
+
+
+def test_float_range_negative():
+    assert len(list(utils.float_range(0.40, 0.30, -0.1))) == 2

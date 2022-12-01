@@ -215,7 +215,7 @@ def highlight_solution(ws: WordSearch) -> Puzzle:
             or word.start_row is None
             or word.direction is None
         ):  # only here for mypy
-            continue
+            continue  # pragma: no cover
         x = word.start_column
         y = word.start_row
         for char in word.text:
