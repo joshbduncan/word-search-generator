@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import sys
 from enum import Enum, unique
 from typing import Any, Dict, List, NamedTuple, Optional, Set, Tuple, Union
@@ -5,7 +7,11 @@ from typing import Any, Dict, List, NamedTuple, Optional, Set, Tuple, Union
 if sys.version_info >= (3, 8):
     from typing import TypedDict
 else:
-    from typing_extensions import TypedDict
+    from typing_extensions import TypedDict  # pragma: no cover
+
+
+Fit = Optional[Tuple[str, List[Tuple[int, int]]]]
+Fits = Dict[str, List[Tuple[int, int]]]
 
 
 @unique
@@ -63,29 +69,33 @@ class Word:
         self,
         text: str,
         secret: bool = False,
-    ):
+    ) -> None:
         self.text = text.upper()
-        self._start_row: Optional[int] = None
-        self._start_column: Optional[int] = None
+        self.start_row: Optional[int] = None
+        self.start_column: Optional[int] = None
+        self.coordinates: List[Tuple[int, int]] = []
         self.direction: Optional[Direction] = None
         self.secret = secret
 
     @property
-    def start_row(self) -> Union[int, None]:
-        return self._start_row
-
-    @property
-    def start_column(self) -> Union[int, None]:
-        return self._start_column
+    def placed(self) -> bool:
+        # used `is not None` since 0 vals for start_row/column are not truthy
+        return all(
+            (
+                self.start_column is not None,
+                self.start_row is not None,
+                self.direction is not None,
+            )
+        )
 
     @property
     def position(self) -> Position:
         return Position(self.start_row, self.start_column)
 
     @position.setter
-    def position(self, val: Position):
-        self._start_row = val.row
-        self._start_column = val.column
+    def position(self, val: Position) -> None:
+        self.start_row = val.row
+        self.start_column = val.column
 
     @property
     def position_xy(self) -> Union[str, None]:
@@ -112,13 +122,37 @@ class Word:
             "secret": self.secret,
         }
 
-    @property
-    def key_string(self) -> Union[str, None]:
-        return (
-            f"{'*' if self.secret else ''}{self.text} "
-            + f"{self.direction.name if self.direction else self.direction}"
-            + f" @ {self.position_xy}"
-        )
+    def key_string(
+        self, bbox: Tuple[Tuple[int, int], Tuple[int, int]]
+    ) -> Union[str, None]:
+        if isinstance(self.start_row, int) and isinstance(self.start_column, int):
+            return (
+                f"{'*' if self.secret else ''}{self.text} "
+                + f"{self.direction.name if self.direction else self.direction}"
+                + f" @ {(self.offset_position_xy(bbox))}"
+            )
+        return None
+
+    def offset_position_xy(
+        self, bbox: Tuple[Tuple[int, int], Tuple[int, int]]
+    ) -> Union[Tuple[int, int], None]:
+        if isinstance(self.start_row, int) and isinstance(self.start_column, int):
+            offset_start_row = self.start_row + 1 - bbox[0][1]
+            offset_start_column = self.start_column + 1 - bbox[0][0]
+            return (offset_start_column, offset_start_row)
+        return None
+
+    def offset_coordinates(
+        self, bbox: Tuple[Tuple[int, int], Tuple[int, int]]
+    ) -> Union[List[Tuple[int, int]], None]:
+        return [(x - bbox[0][0], y - bbox[0][1]) for x, y in self.coordinates]
+
+    def remove_from_puzzle(self):
+        """Remove word placement details when a puzzle is reset."""
+        self.start_row = None
+        self.start_column = None
+        self.coordinates = []
+        self.direction = None
 
     def __eq__(self, __o: object) -> bool:
         if not isinstance(__o, Word):
@@ -128,17 +162,11 @@ class Word:
     def __hash__(self) -> int:
         return hash(self.text)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.__class__.__name__}('{self.text}', " + f"{self.secret})"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.text
 
 
-Puzzle = List[List[str]]
-Key = Dict[str, KeyInfo]
-KeyJson = Dict[str, KeyInfoJson]
-Fit = Optional[Tuple[str, List[Tuple[int, int]]]]
-Fits = Dict[str, List[Tuple[int, int]]]
-DirectionSet = Set[Direction]
 Wordlist = Union[Set[Word], Any]

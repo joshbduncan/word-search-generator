@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """
     Word Search
     -----------
@@ -7,16 +9,25 @@
     :license: MIT, see LICENSE for more details.
 """
 
+# TODO: implement @classmethod factory for random puzzles
+
 __app_name__ = "word-search"
 __version__ = "2.0.1"
 
 
 import json
 from pathlib import Path
-from typing import Iterable, Optional, Union
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
 
-from . import config, export, generate, utils
-from .types import DirectionSet, Key, Puzzle, Wordlist
+from . import export, generate, utils
+from .config import ACTIVE, INACTIVE, max_puzzle_size, min_puzzle_size
+from .mask import CompoundMask, Mask
+from .word import Direction, KeyInfo, KeyInfoJson, Wordlist
+
+Puzzle = List[List[str]]
+DirectionSet = Set[Direction]
+Key = Dict[str, KeyInfo]
+KeyJson = Dict[str, KeyInfoJson]
 
 
 class WordSearch:
@@ -47,8 +58,9 @@ class WordSearch:
 
         # setup puzzle
         self._puzzle: Puzzle = []
-        self._solution: Puzzle = []
-        self._size: int = size if size else 0
+        self._size: int = 0
+        self._masks: List[Any] = []
+        self._mask: Puzzle = []
 
         # setup words
         self._words: Wordlist = set()
@@ -66,9 +78,22 @@ class WordSearch:
             utils.validate_level(secret_level) if secret_level else self.directions
         )
 
+        if size:
+            if not isinstance(size, int):
+                raise TypeError("Size must be an integer.")
+            if not min_puzzle_size <= size <= max_puzzle_size:
+                raise ValueError(
+                    f"Puzzle size must be >= {min_puzzle_size}"
+                    + f" and <= {max_puzzle_size}"
+                )
+            self._size = size
         if self.words:
-            self._size = generate.calc_puzzle_size(self._words, self._directions, size)
+            self._size = utils.calc_puzzle_size(self._words, self._directions, size)
             self._generate()
+
+    # **************************************************** #
+    # ******************** PROPERTIES ******************** #
+    # **************************************************** #
 
     @property
     def words(self) -> Wordlist:
@@ -78,7 +103,7 @@ class WordSearch:
     @property
     def placed_words(self) -> Wordlist:
         """The current puzzle words."""
-        return {word for word in self._words if word.direction}
+        return {word for word in self._words if word.placed}
 
     @property
     def hidden_words(self) -> Wordlist:
@@ -88,7 +113,7 @@ class WordSearch:
     @property
     def placed_hidden_words(self) -> Wordlist:
         """The current puzzle words."""
-        return {word for word in self.hidden_words if word.direction}
+        return {word for word in self.hidden_words if word.placed}
 
     @property
     def secret_words(self) -> Wordlist:
@@ -98,7 +123,7 @@ class WordSearch:
     @property
     def placed_secret_words(self) -> Wordlist:
         """The current secret puzzle words."""
-        return {word for word in self.secret_words if word.direction}
+        return {word for word in self.secret_words if word.placed}
 
     @property
     def puzzle(self) -> Puzzle:
@@ -106,13 +131,41 @@ class WordSearch:
         return self._puzzle
 
     @property
-    def solution(self) -> Puzzle:
+    def solution(self) -> None:
         """Solution to the current puzzle state."""
-        return self._solution
+        self.show(solution=True)
+
+    @property
+    def mask(self) -> Puzzle:
+        """The current puzzle state."""
+        return self._mask
+
+    @property
+    def masks(self) -> List[Mask]:
+        """Puzzle masking status."""
+        return self._masks
+
+    @property
+    def masked(self) -> bool:
+        """Puzzle masking status."""
+        return bool(self.masks)
+
+    @property
+    def bounding_box(self) -> Tuple[Tuple[int, int], Tuple[int, int]]:
+        """Bounding box of the active puzzle area."""
+        return utils.find_bounding_box(self.mask)
+
+    @property
+    def cropped_puzzle(self) -> Puzzle:
+        """The current puzzle state cropped to the mask."""
+        min_x, min_y = self.bounding_box[0]
+        max_x, max_y = self.bounding_box[1]
+        return [[c for c in row[min_x:max_x]] for row in self.puzzle[min_y:max_y]]
 
     @property
     def key(self) -> Key:
-        """The current puzzle answer key (1-based)."""
+        """The current puzzle answer key (1-based) based from
+        Position(0, 0) of the entire puzzle (not masked area)."""
         return {word.text: word.key_info for word in self.placed_words}
 
     @property
@@ -120,17 +173,21 @@ class WordSearch:
         """The current puzzle, words, and answer key in JSON."""
         if not self.key:
             return json.dumps({})
+        # TODO: add secret words to JSON output
         return json.dumps(
             {
                 "puzzle": self.puzzle,
+                "mask": self.mask,
                 "words": [word.text for word in self.placed_words],
                 "key": {
-                    word.text: word.key_info_json
-                    for word in self.words
-                    if word.direction
+                    word.text: word.key_info_json for word in self.words if word.placed
                 },
             }
         )
+
+    # ********************************************************* #
+    # ******************** GETTERS/SETTERS ******************** #
+    # ********************************************************* #
 
     @property
     def directions(self) -> DirectionSet:
@@ -147,7 +204,7 @@ class WordSearch:
             of valid directions from the Direction object.
         """
         self._directions = utils.validate_level(val)
-        self._reset_puzzle()
+        self._generate()
 
     def _set_level(self, val: int) -> None:
         """Set valid puzzle directions to a predefined level set.
@@ -180,7 +237,7 @@ class WordSearch:
             self._secret_directions = utils.validate_level(val)
         else:
             self._secret_directions = None
-        self._reset_puzzle()
+        self._generate()
 
     @property
     def size(self) -> int:
@@ -201,23 +258,80 @@ class WordSearch:
         """
         if not isinstance(val, int):
             raise TypeError("Size must be an integer.")
-        if not config.min_puzzle_size <= val <= config.max_puzzle_size:
+        if not min_puzzle_size <= val <= max_puzzle_size:
             raise ValueError(
-                f"Puzzle size must be >= {config.min_puzzle_size}"
-                + f" and <= {config.max_puzzle_size}"
+                f"Puzzle size must be >= {min_puzzle_size}"
+                + f" and <= {max_puzzle_size}"
             )
-        if self._size != val:
+        if self.size != val:
             self._size = val
-            self._reset_puzzle()
+            self._reapply_masks()
+            self._generate()
+
+    # ************************************************* #
+    # ******************** METHODS ******************** #
+    # ************************************************* #
+
+    def show(self, solution: bool = False) -> None:
+        """Show the current puzzle with or without the solution.
+
+        Args:
+            solution (bool, optional): Highlight the puzzle solution. Defaults to False.
+        """
+        if self.key:
+            print(utils.format_puzzle_for_show(self, solution))
+        else:
+            print("Empty puzzle.")
+
+    def save(self, path: Union[str, Path], solution: bool = False) -> str:
+        """Save the current puzzle to a file.
+
+        Args:
+            path (Union[str, Path]): A file save path.
+            solution (bool, optional): Include solution with the saved file.
+            Only applies to PDF file type. Defaults to False.
+
+        Returns:
+            str: Final save path of the file.
+        """
+        # check type of path provided
+        if isinstance(path, Path):
+            ftype = "csv" if ".csv" in path.name.lower() else "pdf"
+        else:
+            ftype = "csv" if ".csv" in path.lower() else "pdf"
+        # validate export path
+        path = export.validate_path(path)
+        # write the file
+        if ftype == "csv":
+            saved_file = export.write_csv_file(path, self)
+        else:
+            saved_file = export.write_pdf_file(path, self, solution)
+        # return saved file path
+        return str(saved_file)
 
     def reset_size(self):
         """Reset the puzzle size to the default setting
         (based on longest word length and total words)."""
-        self._size = generate.calc_puzzle_size(self._words, self._directions)
-        self._reset_puzzle()
+        self.size = utils.calc_puzzle_size(self._words, self._directions)
+        self._generate()
 
-    def _generate(self) -> None:
-        generate.fill_words(self)
+    # *************************************************************** #
+    # ******************** PROCESSING/GENERATION ******************** #
+    # *************************************************************** #
+
+    def _generate(self, fill_puzzle: bool = True) -> None:
+        """Generate the puzzle grid."""
+        self._puzzle = utils.build_puzzle(self.size, "")
+        for word in self.words:
+            word.remove_from_puzzle()
+        if not self.mask or len(self.mask) != self.size:
+            self._mask = utils.build_puzzle(self.size, ACTIVE)
+        if fill_puzzle:
+            self._fill_puzzle()
+
+    def _fill_puzzle(self) -> None:
+        if self.words:
+            generate.fill_words(self)
         if self.key:
             generate.fill_blanks(self)
 
@@ -237,43 +351,6 @@ class WordSearch:
             self._words.clear()
             self._words.update(clean_words)
 
-    def show(self, solution: bool = False) -> None:
-        """Show the current puzzle with or without the solution.
-
-        Args:
-            solution (bool, optional): Highlight the puzzle solution. Defaults to False.
-        """
-        if self.key:
-            print(utils.format_puzzle_for_show(self, solution))
-        else:
-            print("Empty puzzle.")
-
-    def save(self, path: Union[str, Path], solution: bool = False) -> str:
-        """Save the current puzzle to a file.
-
-        Args:
-            path (Union[str, Path]): A file save path
-            solution (bool, optional): Include solution with the saved file.
-                                       Defaults to False.
-
-        Returns:
-            str: Final save path of the file.
-        """
-        # check type of path provided
-        if isinstance(path, Path):
-            ftype = "csv" if ".csv" in path.name.lower() else "pdf"
-        else:
-            ftype = "csv" if ".csv" in path.lower() else "pdf"
-        # validate export path
-        path = export.validate_path(path)
-        # write the file
-        if ftype == "csv":
-            saved_file = export.write_csv_file(path, self, solution)
-        else:
-            saved_file = export.write_pdf_file(path, self, solution)
-        # return saved file path
-        return str(saved_file)
-
     def add_words(
         self, words: str, secret: bool = False, reset_size: bool = False
     ) -> None:
@@ -289,7 +366,7 @@ class WordSearch:
         self._process_input(words, "add", secret)
         if reset_size:
             self.reset_size()
-        self._reset_puzzle()
+        self._generate()
 
     def remove_words(self, words: str, reset_size: bool = False) -> None:
         """Remove words from the puzzle.
@@ -302,7 +379,7 @@ class WordSearch:
         self._process_input(words, "remove")
         if reset_size:
             self.reset_size()
-        self._reset_puzzle()
+        self._generate()
 
     def replace_words(
         self, words: str, secret: bool = False, reset_size: bool = False
@@ -319,14 +396,97 @@ class WordSearch:
         self._process_input(words, "replace", secret)
         if reset_size:
             self.reset_size()
-        self._reset_puzzle()
-
-    def _reset_puzzle(self):
-        """Reset and regenerate the puzzle."""
-        self._puzzle = []
-        self._solution = []
-        self._key = {}
         self._generate()
+
+    # ************************************************* #
+    # ******************** MASKING ******************** #
+    # ************************************************* #
+
+    def apply_mask(self, mask: Mask) -> None:
+        """Apply a singular mask object to the puzzle."""
+        if not isinstance(mask, (Mask, CompoundMask)):
+            raise TypeError("Please provide a Mask object.")
+        if mask.puzzle_size != self.size:
+            mask.generate(self.size)
+        for y in range(self.size):
+            for x in range(self.size):
+                if mask.method == 1:
+                    if mask.mask[y][x] == ACTIVE and self.mask[y][x] == ACTIVE:
+                        self.mask[y][x] = ACTIVE
+                    else:
+                        self.mask[y][x] = INACTIVE
+                elif mask.method == 2:
+                    if mask.mask[y][x] == ACTIVE:
+                        self.mask[y][x] = ACTIVE
+                else:
+                    if mask.mask[y][x] == ACTIVE:
+                        self.mask[y][x] = INACTIVE
+        # add mask to puzzle instance for later reference
+        if mask not in self.masks:
+            self.masks.append(mask)
+        # fill in the puzzle
+        self._generate()
+
+    def apply_masks(self, masks: Iterable[Mask]) -> None:
+        """Apply a group of masks to the puzzle."""
+        for mask in masks:
+            self.apply_mask(mask)
+
+    def show_mask(self) -> None:
+        """Show the current puzzle mask."""
+        if self.masked:
+            for row in self.mask:
+                print(" ".join(row))
+        else:
+            print("Empty mask.")
+
+    def invert_mask(self) -> None:
+        """Invert the current puzzle mask. Has no effect on the
+        actual mask(s) found in `WordSearch.mask`."""
+        self._mask = [
+            [ACTIVE if c == INACTIVE else INACTIVE for c in row] for row in self.mask
+        ]
+        self._generate()
+
+    def flip_mask_horizontal(self) -> None:
+        """Flip the current puzzle mask along the vertical axis (left to right).
+        Has no effect on the actual mask(s) found in `WordSearch.mask`."""
+        self._mask = [r[::-1] for r in self.mask]
+        self._generate()
+
+    def flip_mask_vertical(self) -> None:
+        """Flip the current puzzle mask along the horizontal axis (top to bottom).
+        Has no effect on the actual mask(s) found in `WordSearch.mask`."""
+        self._mask = self.mask[::-1]
+        self._generate()
+
+    def transpose_mask(self) -> None:
+        """Interchange each row with the corresponding column
+        of the current puzzle mask. Has no effect on the actual
+        mask(s) found in `WordSearch.mask`."""
+        self._mask = list(map(list, zip(*self.mask)))
+        self._generate()
+
+    def remove_masks(self) -> None:
+        """"""
+        self._masks = []
+        self._mask = utils.build_puzzle(self.size, ACTIVE)
+        self._generate()
+
+    def remove_static_masks(self) -> None:
+        self._masks = [mask for mask in self.masks if not mask.static]
+
+    def _reapply_masks(self) -> None:
+        """Reapply all current masks to the puzzle."""
+        self._mask = utils.build_puzzle(self.size, ACTIVE)
+        for mask in self.masks:
+            if mask.static and mask.puzzle_size != self.size:
+                continue
+            self.apply_mask(mask)
+
+    # ******************************************************** #
+    # ******************** DUNDER METHODS ******************** #
+    # ******************************************************** #
 
     def __eq__(self, __o: object) -> bool:
         if isinstance(__o, WordSearch):
@@ -346,7 +506,8 @@ class WordSearch:
             f"{self.__class__.__name__}"
             + f"('{','.join([word.text for word in self.hidden_words])}', "
             + f"{utils.direction_set_repr(self.directions)}, "
-            + f"{self.size}, '{','.join([word.text for word in self.secret_words])}',"
+            + f"{self.size}, "
+            + f"'{','.join([word.text for word in self.secret_words])}',"
             + f"{utils.direction_set_repr(self.secret_directions)})"
         )
 

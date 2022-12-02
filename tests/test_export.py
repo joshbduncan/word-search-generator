@@ -12,6 +12,15 @@ from word_search_generator import WordSearch, config, export, utils
 WORDS = "dog, cat, pig, horse, donkey, turtle, goat, sheep"
 
 
+def test_export_csv(tmp_path):
+    puzzle = WordSearch(WORDS)
+    path = Path.joinpath(tmp_path, "test.csv")
+    puzzle.save(path, solution=False)
+    with open(path, "r") as f:
+        data = f.read()
+    assert not re.findall("\nSOLUTION\n", data)
+
+
 def test_export_pdf_puzzles(tmp_path):
     """Export a bunch of puzzles as PDF and make sure they are all 1-page."""
     puzzles = []
@@ -30,20 +39,6 @@ def test_export_pdf_puzzles(tmp_path):
         pdf = PdfFileReader(open(p, "rb"))
         pages.add(pdf.getNumPages())
     assert pages == {1}
-
-
-def test_export_csv_puzzle_with_solution(tmp_path):
-    puzzle = WordSearch(WORDS)
-    path = Path.joinpath(tmp_path, f"{uuid.uuid4()}.csv")
-    puzzle.save(path, solution=True)
-    found = False
-    with open(path, "r") as fp:
-        lines = fp.readlines()
-        for row in lines:
-            if row.find("SOLUTION") == 0:
-                found = True
-                break
-    assert found
 
 
 def test_export_pdf_puzzle_with_solution(tmp_path):
@@ -97,21 +92,3 @@ def test_export_csv_os_error():
     puzzle = WordSearch(WORDS)
     with pytest.raises(OSError):
         puzzle.save("/test.csv")
-
-
-def test_csv_export_without_solution(tmp_path):
-    puzzle = WordSearch(WORDS)
-    path = Path.joinpath(tmp_path, "test.csv")
-    puzzle.save(path, solution=False)
-    with open(path, "r") as f:
-        data = f.read()
-    assert not re.findall("\nSOLUTION\n", data)
-
-
-def test_csv_export_with_solution(tmp_path):
-    puzzle = WordSearch(WORDS)
-    path = Path.joinpath(tmp_path, "test.csv")
-    puzzle.save(path, solution=True)
-    with open(path, "r") as f:
-        data = f.read()
-    assert re.findall("\nSOLUTION\n", data)

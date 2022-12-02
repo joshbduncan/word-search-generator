@@ -1,4 +1,7 @@
 import subprocess
+from pathlib import Path
+
+from PIL import Image
 
 
 def test_entrypoint():
@@ -115,3 +118,27 @@ def test_random_secret_words_valid_input(capsys):
 def test_random_secret_words_invalid_input():
     result = subprocess.run("word-search -rx 500", shell=True)
     assert result.returncode == 2
+
+
+def test_preview_masks():
+    result = subprocess.run("word-search -pm", shell=True)
+    assert result.returncode == 0
+
+
+def test_mask():
+    result = subprocess.run("word-search -r 5 -s 21 -m Triangle", shell=True)
+    assert result.returncode == 0
+
+
+def test_invalid_mask():
+    result = subprocess.run("word-search -r 5 -s 21 -m Heptakaideka", shell=True)
+    assert result.returncode == 2
+
+
+def test_image_mask(tmp_path):
+    name = "test_image.jpg"
+    test_img = Image.new("L", (100, 100), (0))
+    img_path = Path.joinpath(tmp_path, name)
+    test_img.save(img_path, "JPEG")
+    result = subprocess.run(f"word-search -r 5 -im {img_path}", shell=True)
+    assert result.returncode == 0
