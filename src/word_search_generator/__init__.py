@@ -289,7 +289,7 @@ class WordSearch:
         Args:
             path (Union[str, Path]): A file save path.
             solution (bool, optional): Include solution with the saved file.
-            Only applies to PDF file type. Defaults to False.
+                Only applies to PDF file type. Defaults to False.
 
         Returns:
             str: Final save path of the file.
@@ -359,9 +359,9 @@ class WordSearch:
         Args:
             words (str): Words to remove.
             secret (bool, optional): Should the new words
-            be secret. Defaults to False.
+                be secret. Defaults to False.
             reset_size (bool, optional): Reset the puzzle
-            size based on the updated words. Defaults to False.
+                size based on the updated words. Defaults to False.
         """
         self._process_input(words, "add", secret)
         if reset_size:
@@ -374,7 +374,7 @@ class WordSearch:
         Args:
             words (str): Words to remove.
             reset_size (bool, optional): Reset the puzzle
-            size based on the updated words. Defaults to False.
+                size based on the updated words. Defaults to False.
         """
         self._process_input(words, "remove")
         if reset_size:
@@ -389,9 +389,9 @@ class WordSearch:
         Args:
             words (str): Words to add.
             secret (bool, optional): Should the new words
-            be secret. Defaults to False.
+                be secret. Defaults to False.
             reset_size (bool, optional): Reset the puzzle
-            size based on the updated words. Defaults to False.
+                size based on the updated words. Defaults to False.
         """
         self._process_input(words, "replace", secret)
         if reset_size:

@@ -22,15 +22,15 @@ class Ellipse(Bitmap):
 
         Args:
             width (Optional[int], optional): Ellipse width. Defaults to
-            `puzzle_width` provided to the `.generate()` method.
+                `puzzle_width` provided to the `.generate()` method.
             height (Optional[int], optional): Ellipse height. Defaults to
-            `puzzle_width` provided to the `.generate()` method.
+                `puzzle_width` provided to the `.generate()` method.
             center (Optional[Tuple[int, int]], optional): Center origin point
-            from which the ellipse will be calculated. Defaults to puzzle center.
+                from which the ellipse will be calculated. Defaults to puzzle center.
             method (int, optional): How Mask is applied to the puzzle
-            (1=Standard (Intersection), 2=Additive, 3=Subtractive). Defaults to 1.
+                (1=Standard (Intersection), 2=Additive, 3=Subtractive). Defaults to 1.
             static (bool, optional): Should this mask be reapplied
-            after changes to the parent puzzle size. Defaults to True.
+                after changes to the parent puzzle size. Defaults to True.
         """
         super().__init__(method=method, static=static)
         self.width = width

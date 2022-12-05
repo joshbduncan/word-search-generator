@@ -23,10 +23,9 @@ Install Word-Search-Generator with `pip`:
 
 Just import the WordSearch class from the package, supply it with a list of words and you're set. 🧩
 
-```python
-from word_search_generator import WordSearch
-
-puzzle = WordSearch("dog, cat, pig, horse, donkey, turtle, goat, sheep")
+```pycon
+>>> from word_search_generator import WordSearch
+>>> puzzle = WordSearch("dog, cat, pig, horse, donkey, turtle, goat, sheep")
 ```
 
 👀 Wanna see it?
@@ -308,115 +307,6 @@ $ word-search dog, cat, pig, horse -k > puzzle.txt
 
 📁 **View Sample Files:**
 [Word-Search PDF](/files/puzzle.pdf), [Word-Search CSV](/files/puzzle.csv), [Word-Search TXT](/files/puzzle.txt)
-
-## CLI Integration
-
-Word-Search-Generator works in your terminal too! 🙌
-
-```
-$ word-search -h
-usage: word-search [-h] [-r RANDOM] [-x SECRET_WORDS | -rx RANDOM_SECRET_WORDS] [-d DIFFICULTY]
-                   [-xd SECRET_DIFFICULTY] [-s SIZE] [-c] [-o OUTPUT] [--version]
-                   [words ...]
-
-Generate Word Search Puzzles!
-
-Valid Levels: 1, 2, 3, 4, 8, 7
-Valid Directions: N, NE, E, SE, S, SW, W, NW
-* Directions are to be provided as a comma-separated list.
-
-positional arguments:
-  words                 Words to include in the puzzle (default: stdin).
-
-options:
-  -h, --help            show this help message and exit
-  -r RANDOM, --random RANDOM
-                        Generate {n} random words to include in the puzzle.
-  -x SECRET_WORDS, --secret-words SECRET_WORDS
-                        Secret bonus words not included in the word list.
-  -rx RANDOM_SECRET_WORDS, --random-secret-words RANDOM_SECRET_WORDS
-                        Generate {n} random secret words to include in the puzzle.
-  -d DIFFICULTY, --difficulty DIFFICULTY, -l DIFFICULTY, --level DIFFICULTY
-                        Difficulty level (numeric) or cardinal directions puzzle words can go. See valid arguments
-                        above.
-  -xd SECRET_DIFFICULTY, --secret-difficulty SECRET_DIFFICULTY
-                        Difficulty level (numeric) or cardinal directions secret puzzle words can go. See valid
-                        arguments above.
-  -s SIZE, --size SIZE  Puzzle size >=5 and <=50
-  -c, --cheat           Show the puzzle solution or include it within the `-o, --output` file.
-  -o OUTPUT, --output OUTPUT
-                        Output path for saved puzzle. Specify export type by appending '.pdf' or '.csv' to your path
-                        (default: PDF).
-  --version             show program's version number and exit
-
-Copyright 2022 Josh Duncan (joshbduncan.com)
-```
-
-💻 Generate a puzzle.
-
-```
-$ word-search works, from, the, cli, too
-```
-💻 Generate a puzzle **20 characters wide** with **difficulty level 1**.
-
-```
-$ word-search works, from, the, cli, too -l 1 -s 20
-```
-💻 Generate a puzzle with **10 random dictionary words**.
-
-```
-$ word-search -r 10
-```
-💻 Generate a puzzle and **save as a csv**.
-
-```
-$ word-search works, from, the, cli, too -o puzzle.csv
-```
-💻 Generate a puzzle and **save as a pdf** with the solution puzzle included.
-
-```
-$ word-search works, from, the, cli, too -o ~/Desktop/puzzle.pdf -c
-```
-ℹ️ You can also use words from a file...
-
-```
-$ cat words.txt | word-search
-```
-
-This really came in handy for those kid's food menus. I was able to take a folder full of .txt documents with themed words and generate dozens of level 1 Word Search Puzzles at exactly 15 characters in size super fast...
-
-```
-$ for f in tools/sample_word_lists/word*.txt; do word-search "$(cat $f)" -l 1 -s 15 -o $f.pdf; done
-Puzzle saved: ~/.../words-5.txt.pdf
-...
-Puzzle saved: ~/.../words-50.txt.pdf
-```
-
-### Expert Mode CLI
-
-Really want to challenge yourself? Try this in the CLI. All words will be secret, just don't peek 🫣 at the key! Good luck!
-
-```
-$ word-search -rx 10 -l 3
--------------------
-    WORD SEARCH
--------------------
-M Y C K R E H T I E
-I D A E R I G D G Y
-N K H O K B N R S T
-D J A V F H I E H G
-G S R G T D H C B W
-P N P W Q T T E V F
-A V O T L U Y N M O
-U R N O C P N T A U
-G X C H K E A Q J R
-M I D U N I W R O H
-
-Find these words: <ALL SECRET WORDS>
-* Words can go W, SW, NW, SE, E, N, NE, and S.
-
-Answer Key: *ANYTHING N @ (7, 9), *EITHER W @ (10, 1), *FOUR S @ (10, 6), *GROWTH NE @ (1, 9), *HOT N @ (4, 9), *MIND S @ (1, 1), *PERFORMANCE None @ None, *PUT N @ (6, 8), *READ W @ (5, 2), *RECENT S @ (8, 3)
-```
 
 ## Resources
 
