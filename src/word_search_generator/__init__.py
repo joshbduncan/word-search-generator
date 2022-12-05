@@ -30,6 +30,11 @@ Key = Dict[str, KeyInfo]
 KeyJson = Dict[str, KeyInfoJson]
 
 
+class MissingWordError(Exception):
+    """For when a WordSearch cannot include all its words"""
+    pass
+
+
 class WordSearch:
     """This class represents a WordSearch object."""
 
@@ -40,6 +45,8 @@ class WordSearch:
         size: Optional[int] = None,
         secret_words: Optional[str] = None,
         secret_level: Optional[Union[int, str]] = None,
+        *,
+        include_all_words: bool = False,
     ):
         """Initialize a Word Search puzzle.
 
@@ -54,6 +61,9 @@ class WordSearch:
                 will not be included in the word list. Defaults to None.
             secret_level (Optional[Union[int, str]], optional): Difficulty level or
                 potential word directions for 'secret' words. Defaults to None.
+            include_all_words (bool, optional): Raises an error when _generate()
+                cannot place all the words.  Secret words are not included in this
+                check.
         """
 
         # setup puzzle
@@ -61,6 +71,7 @@ class WordSearch:
         self._size: int = 0
         self._masks: List[Any] = []
         self._mask: Puzzle = []
+        self.force_all_words: bool = include_all_words
 
         # setup words
         self._words: Wordlist = set()
@@ -184,6 +195,14 @@ class WordSearch:
                 },
             }
         )
+
+    @property
+    def unplaced_hidden_words(self) -> Wordlist:
+        return self.hidden_words - self.placed_hidden_words
+
+    @property
+    def unplaced_secret_words(self) -> Wordlist:
+        return self.secret_words - self.placed_secret_words
 
     # ********************************************************* #
     # ******************** GETTERS/SETTERS ******************** #
@@ -328,6 +347,8 @@ class WordSearch:
             self._mask = utils.build_puzzle(self.size, ACTIVE)
         if fill_puzzle:
             self._fill_puzzle()
+        if self.force_all_words and self.unplaced_hidden_words:
+            raise MissingWordError
 
     def _fill_puzzle(self) -> None:
         if self.words:
