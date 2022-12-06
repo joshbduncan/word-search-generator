@@ -12,7 +12,7 @@ from __future__ import annotations
 # TODO: implement @classmethod factory for random puzzles
 
 __app_name__ = "word-search"
-__version__ = "2.0.1"
+__version__ = "3.0.0b1"
 
 
 import json
