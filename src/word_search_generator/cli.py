@@ -171,8 +171,6 @@ Valid Directions: {', '.join([d.name for d in Direction])}
     # check for mask preview first
     if args.preview_masks:
         preview_size = 21
-        words = utils.get_random_words(21)
-        puzzle = WordSearch(words)
         for shape in BUILTIN_SHAPES:
             mask = eval(f"shapes.{shape}")()
             mask.generate(preview_size)

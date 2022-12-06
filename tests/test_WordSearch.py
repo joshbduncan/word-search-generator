@@ -359,3 +359,15 @@ def test_placed_secret_words():
     assert len(p.placed_secret_words) == len(
         {word for word in p.secret_words if word.direction}
     )
+
+
+def test_random_words_only():
+    p = WordSearch(size=25)
+    p.random_words(5)
+    assert len(p.placed_words) == 5
+
+
+def test_random_words_added():
+    p = WordSearch("mispelled", size=25)
+    p.random_words(5)
+    assert len(p.placed_words) == 6

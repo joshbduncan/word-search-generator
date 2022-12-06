@@ -32,6 +32,7 @@ KeyJson = Dict[str, KeyInfoJson]
 
 class MissingWordError(Exception):
     """For when a WordSearch cannot include all its words"""
+
     pass
 
 
@@ -290,6 +291,14 @@ class WordSearch:
     # ************************************************* #
     # ******************** METHODS ******************** #
     # ************************************************* #
+
+    def random_words(self, count: int) -> None:
+        """Add randomly generated words to the puzzle.
+
+        Args:
+            count (int): Count of random words to add.
+        """
+        self.add_words(utils.get_random_words(count))
 
     def show(self, solution: bool = False) -> None:
         """Show the current puzzle with or without the solution.
