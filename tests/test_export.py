@@ -1,3 +1,4 @@
+import json
 import os
 import random
 import re
@@ -15,10 +16,18 @@ WORDS = "dog, cat, pig, horse, donkey, turtle, goat, sheep"
 def test_export_csv(tmp_path):
     puzzle = WordSearch(WORDS)
     path = Path.joinpath(tmp_path, "test.csv")
-    puzzle.save(path, solution=False)
+    puzzle.save(path, format="csv")
     with open(path, "r") as f:
         data = f.read()
     assert not re.findall("\nSOLUTION\n", data)
+
+
+def test_export_json(tmp_path):
+    puzzle = WordSearch(WORDS)
+    path = Path.joinpath(tmp_path, "test.json")
+    final_path = puzzle.save(path, format="json")
+    data = json.loads(Path(final_path).read_text())
+    assert [word.text for word in puzzle.words] == data["words"]
 
 
 def test_export_pdf_puzzles(tmp_path):
@@ -33,7 +42,7 @@ def test_export_pdf_puzzles(tmp_path):
         level = random.randint(1, 3)
         puzzle = WordSearch(words, level=level, size=size)
         path = Path.joinpath(tmp_path, f"{uuid.uuid4()}.pdf")
-        puzzle.save(path)
+        puzzle.save(path, format="pdf")
         puzzles.append(path)
     for p in puzzles:
         pdf = PdfFileReader(open(p, "rb"))
@@ -67,15 +76,6 @@ def test_export_overwrite_file_error(tmp_path):
     path.touch()
     with pytest.raises(FileExistsError):
         export.validate_path(path)
-
-
-def test_export_pdf_no_extension_provided(tmp_path):
-    """Try to export a puzzle with no extension on the path."""
-    puzzle = WordSearch(WORDS)
-    path = Path.joinpath(tmp_path, "test")
-    puzzle.save(path)
-    correct_path = path.with_suffix(".pdf")
-    assert correct_path.exists()
 
 
 @pytest.mark.skipif(os.name == "nt", reason="need to figure out")

@@ -26,14 +26,14 @@ class Direction(Enum):
 
     # is there a better way to specify typing here?
     # without hints here, the linter gets upset with my definitions of r/c_move
-    N: Tuple[int, int] = (-1, 0)
-    NE: Tuple[int, int] = (-1, 1)
-    E: Tuple[int, int] = (0, 1)
-    SE: Tuple[int, int] = (1, 1)
-    S: Tuple[int, int] = (1, 0)
-    SW: Tuple[int, int] = (1, -1)
-    W: Tuple[int, int] = (0, -1)
-    NW: Tuple[int, int] = (-1, -1)
+    N: Tuple[int, int] = (-1, 0)  # type: ignore
+    NE: Tuple[int, int] = (-1, 1)  # type: ignore
+    E: Tuple[int, int] = (0, 1)  # type: ignore
+    SE: Tuple[int, int] = (1, 1)  # type: ignore
+    S: Tuple[int, int] = (1, 0)  # type: ignore
+    SW: Tuple[int, int] = (1, -1)  # type: ignore
+    W: Tuple[int, int] = (0, -1)  # type: ignore
+    NW: Tuple[int, int] = (-1, -1)  # type: ignore
 
     @property
     def r_move(self) -> int:

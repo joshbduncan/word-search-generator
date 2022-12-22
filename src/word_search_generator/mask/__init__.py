@@ -39,7 +39,7 @@ class Mask:
         self.points = points if points else []
         self.method = method
         self.static = static
-        self._puzzle_size: Optional[int] = None
+        self._puzzle_size: int = 0
         self._mask: List[Any] = []
 
     @property
@@ -90,7 +90,7 @@ class Mask:
         self._static = val
 
     @property
-    def puzzle_size(self) -> Optional[int]:
+    def puzzle_size(self) -> int:
         """Size of the puzzle the mask will applied to. Used with the
         `generate()` to to calculate points and placement."""
         return self._puzzle_size

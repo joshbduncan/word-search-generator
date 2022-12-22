@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import pathlib
 import sys
+from datetime import datetime
 from typing import Optional, Sequence
 
 from . import WordSearch, __app_name__, __version__, config, utils
@@ -100,6 +101,14 @@ Valid Directions: {', '.join([d.name for d in Direction])}
         help="Difficulty level (numeric) or cardinal directions \
             puzzle words can go. See valid arguments above.",
     )
+    parser.add_argument(
+        "-f",
+        "--format",
+        choices=["CSV", "JSON", "PDF", "csv", "json", "pdf"],
+        metavar="EXPORT_FORMAT",
+        help='Puzzle output format \
+            (choices: "CSV", "JSON", "PDF").',
+    )
     mask_group.add_argument(
         "-im",
         "--image-mask",
@@ -119,8 +128,13 @@ Valid Directions: {', '.join([d.name for d in Direction])}
         "-o",
         "--output",
         type=pathlib.Path,
-        help="Output path for saved puzzle. Specify export type by appending "
-        "'.pdf' or '.csv' to your path (default: PDF).",
+        help="Output path for the saved puzzle.",
+    )
+    parser.add_argument(
+        "-pm",
+        "--preview-masks",
+        action="store_true",
+        help="Preview all built-in mask shapes.",
     )
     words_group.add_argument(
         "-r",
@@ -142,12 +156,6 @@ Valid Directions: {', '.join([d.name for d in Direction])}
         action=SizeAction,
         type=int,
         help=f"{config.min_puzzle_size} <= puzzle size <= {config.max_puzzle_size}",
-    )
-    parser.add_argument(
-        "-pm",
-        "--preview-masks",
-        action="store_true",
-        help="Preview all built-in mask shapes.",
     )
     secret_words_group.add_argument(
         "-x",
@@ -222,8 +230,14 @@ Valid Directions: {', '.join([d.name for d in Direction])}
         puzzle.apply_mask(Image(args.image_mask))
 
     # show the result
-    if args.output:
-        foutput = puzzle.save(path=args.output, solution=args.cheat)
+    if args.output or args.format:
+        format = args.format if args.format else "PDF"
+        path = (
+            args.output
+            if args.output
+            else f"WordSearchPuzzle {datetime.now()}.{format.lower()}"
+        )
+        foutput = puzzle.save(path=path, format=format, solution=args.cheat)
         print(f"Puzzle saved: {foutput}")
     else:
         puzzle.show(solution=args.cheat)

@@ -198,6 +198,8 @@ def validate_level(d) -> DirectionSet:
     if isinstance(d, str):  # comma-delimited list
         return validate_direction_iterable(d.split(","))
     if isinstance(d, Iterable):  # probably used by external code
+        if not d:
+            raise ValueError("Empty iterable provided.")
         return validate_direction_iterable(d)
     raise TypeError(f"{type(d)} given, not str, int, or Iterable[str]\n{d}")
 
@@ -239,8 +241,11 @@ def stringify(puzzle: Puzzle, bbox: Tuple[Tuple[int, int], Tuple[int, int]]) -> 
     min_x, min_y = bbox[0]
     max_x, max_y = bbox[1]
     output = []
+    offset = " " if len(puzzle) < 6 else ""
     for line in puzzle[min_y : max_y + 1]:
-        output.append(" ".join([c if c else " " for c in line[min_x : max_x + 1]]))
+        output.append(
+            offset + " ".join([c if c else " " for c in line[min_x : max_x + 1]])
+        )
     return "\n".join(output)
 
 

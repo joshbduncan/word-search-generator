@@ -3,7 +3,14 @@ import pathlib
 
 import pytest
 
-from word_search_generator import Key, Puzzle, WordSearch, config, utils
+from word_search_generator import (
+    Key,
+    MissingWordError,
+    Puzzle,
+    WordSearch,
+    config,
+    utils,
+)
 from word_search_generator.config import level_dirs
 from word_search_generator.utils import get_random_words
 from word_search_generator.word import Direction, Word
@@ -299,8 +306,8 @@ def test_puzzle_with_secret_words():
 
 def test_clearing_secret_directions():
     ws = WordSearch(WORDS, secret_level=1)
-    ws.secret_directions = set()
-    assert ws.secret_directions is None
+    with pytest.raises(ValueError):
+        ws.secret_directions = set()
 
 
 def test_get_level():
@@ -371,3 +378,46 @@ def test_random_words_added():
     p = WordSearch("mispelled", size=25)
     p.random_words(5)
     assert len(p.placed_words) == 6
+
+
+def test_invalid_size_at_init_value():
+    with pytest.raises(ValueError):
+        p = WordSearch(size=250)  # noqa: F841
+
+
+def test_invalid_size_at_init_type():
+    with pytest.raises(TypeError):
+        p = WordSearch(size="250")  # type: ignore  # noqa: F841
+
+
+def test_puzzle_solution_output(capsys):
+    ws = WordSearch(WORDS)
+    print(utils.format_puzzle_for_show(ws, True))
+    capture1 = capsys.readouterr()
+    ws.solution
+    capture2 = capsys.readouterr()
+    assert capture1.out == capture2.out
+
+
+def test_unplaced_hidden_words():
+    ws = WordSearch("dog", size=5)
+    ws.add_words("generator")
+    assert len(ws.unplaced_hidden_words) == 1
+
+
+def test_unplaced_secret_words():
+    ws = WordSearch("dog", size=5)
+    ws.add_words("generator", secret=True)
+    assert len(ws.unplaced_secret_words) == 1
+
+
+def test_invalid_export_format():
+    ws = WordSearch(WORDS)
+    with pytest.raises(ValueError):
+        ws.save("test.pdf", format="GIF")
+
+
+def test_missing_word_error():
+    ws = WordSearch("dog", size=5, include_all_words=True)
+    with pytest.raises(MissingWordError):
+        ws.add_words("generator")

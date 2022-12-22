@@ -86,7 +86,7 @@ class WordSearch:
         self._directions: DirectionSet = (
             utils.validate_level(level) if level else utils.validate_level(2)
         )
-        self._secret_directions: Optional[DirectionSet] = (
+        self._secret_directions: DirectionSet = (
             utils.validate_level(secret_level) if secret_level else self.directions
         )
 
@@ -189,7 +189,6 @@ class WordSearch:
         return json.dumps(
             {
                 "puzzle": self.puzzle,
-                "mask": self.mask,
                 "words": [word.text for word in self.placed_words],
                 "key": {
                     word.text: word.key_info_json for word in self.words if word.placed
@@ -231,7 +230,7 @@ class WordSearch:
         Here for backward compatibility."""
         if not isinstance(val, int):
             raise TypeError("Level must be an integer.")
-        self.directions = utils.validate_level(val)
+        self._directions = utils.validate_level(val)
 
     def _get_level(self) -> DirectionSet:
         """Return valid puzzle directions. Here for backward compatibility."""
@@ -240,7 +239,7 @@ class WordSearch:
     level = property(_get_level, _set_level, None, "Numeric setter for the level.")
 
     @property
-    def secret_directions(self):
+    def secret_directions(self) -> DirectionSet:
         """Valid directions for secret puzzle words."""
         return self._secret_directions
 
@@ -253,10 +252,7 @@ class WordSearch:
             valid cardinal directions as a comma separated string, or an iterable
             of valid cardinal directions.
         """
-        if val:
-            self._secret_directions = utils.validate_level(val)
-        else:
-            self._secret_directions = None
+        self._secret_directions = utils.validate_level(val)
         self._generate()
 
     @property
@@ -311,27 +307,33 @@ class WordSearch:
         else:
             print("Empty puzzle.")
 
-    def save(self, path: Union[str, Path], solution: bool = False) -> str:
+    def save(
+        self,
+        path: Union[str, Path],
+        format: str = "PDF",
+        solution: bool = False,
+    ) -> str:
         """Save the current puzzle to a file.
 
         Args:
-            path (Union[str, Path]): A file save path.
+            path (Union[str, Path]): File save path.
+            format (str, optional): Type of file to save ("CSV", "JSON", "PDF").
+                Defaults to "PDF".
             solution (bool, optional): Include solution with the saved file.
                 Only applies to PDF file type. Defaults to False.
 
         Returns:
             str: Final save path of the file.
         """
-        # check type of path provided
-        if isinstance(path, Path):
-            ftype = "csv" if ".csv" in path.name.lower() else "pdf"
-        else:
-            ftype = "csv" if ".csv" in path.lower() else "pdf"
+        if format.upper() not in ["CSV", "JSON", "PDF"]:
+            raise ValueError('Save file format must be either "CSV", "JSON", or "PDF"')
         # validate export path
         path = export.validate_path(path)
         # write the file
-        if ftype == "csv":
+        if format.upper() == "CSV":
             saved_file = export.write_csv_file(path, self)
+        elif format.upper() == "JSON":
+            saved_file = export.write_json_file(path, self)
         else:
             saved_file = export.write_pdf_file(path, self, solution)
         # return saved file path
@@ -357,7 +359,7 @@ class WordSearch:
         if fill_puzzle:
             self._fill_puzzle()
         if self.force_all_words and self.unplaced_hidden_words:
-            raise MissingWordError
+            raise MissingWordError("All words could not be placed in the puzzle.")
 
     def _fill_puzzle(self) -> None:
         if self.words:
@@ -387,7 +389,7 @@ class WordSearch:
         """Add words to the puzzle.
 
         Args:
-            words (str): Words to remove.
+            words (str): Words to add.
             secret (bool, optional): Should the new words
                 be secret. Defaults to False.
             reset_size (bool, optional): Reset the puzzle

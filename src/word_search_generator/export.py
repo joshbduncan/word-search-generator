@@ -27,9 +27,6 @@ def validate_path(path: Union[str, Path]) -> Path:
     # if string provided convert to pathlib Path object
     if isinstance(path, str):
         path = Path(path)
-    # check to make sure file type was specified
-    if not path.suffix or path.suffix.lower() not in [".csv", ".pdf"]:
-        path = path.with_suffix(".pdf")
     if path.exists():
         raise FileExistsError(f"Sorry, output file '{path}' already exists.")
     return path
@@ -71,6 +68,21 @@ def write_csv_file(path: Path, ws: WordSearch) -> Path:
         )
         f_writer.writerow([f"{answer_key_intro}: "])
         f_writer.writerow(utils.get_answer_key_list(ws.placed_words, ws.bounding_box))
+    return path.absolute()
+
+
+def write_json_file(path: Path, ws: WordSearch) -> Path:
+    """Write current puzzle to JSON format at `path`.
+
+    Args:
+        path (Path): Path to write the file to.
+        ws (WordSearch): Current Word Search puzzle.
+
+    Returns:
+        Path: Final save path.
+    """
+    with open(path, mode="w") as f:
+        f.write(ws.json)
     return path.absolute()
 
 
