@@ -17,8 +17,6 @@ from word_search_generator.word import Direction, Word
 
 WORDS = "dog, cat, pig, horse, donkey, turtle, goat, sheep"
 
-# TODO: test for p = WordSearch(size=15)
-
 
 def check_key(key: Key, puzzle: Puzzle) -> bool:
     """Test the puzzle key against the current puzzle state."""

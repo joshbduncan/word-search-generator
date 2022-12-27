@@ -9,8 +9,6 @@ from __future__ import annotations
     :license: MIT, see LICENSE for more details.
 """
 
-# TODO: implement @classmethod factory for random puzzles
-
 __app_name__ = "word-search"
 __version__ = "3.0.0b1"
 
@@ -185,7 +183,6 @@ class WordSearch:
         """The current puzzle, words, and answer key in JSON."""
         if not self.key:
             return json.dumps({})
-        # TODO: add secret words to JSON output
         return json.dumps(
             {
                 "puzzle": self.puzzle,
@@ -288,13 +285,21 @@ class WordSearch:
     # ******************** METHODS ******************** #
     # ************************************************* #
 
-    def random_words(self, count: int) -> None:
+    def random_words(
+        self, count: int, secret: bool = False, reset_size: bool = False
+    ) -> None:
         """Add randomly generated words to the puzzle.
 
         Args:
             count (int): Count of random words to add.
+            secret (bool, optional): Should the new words
+                be secret. Defaults to False.
+            reset_size (bool, optional): Reset the puzzle
+                size based on the updated words. Defaults to False.
         """
-        self.add_words(utils.get_random_words(count))
+        self.add_words(
+            utils.get_random_words(count), secret=secret, reset_size=reset_size
+        )
 
     def show(self, solution: bool = False) -> None:
         """Show the current puzzle with or without the solution.

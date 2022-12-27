@@ -50,7 +50,7 @@ def test_stringify_offset():
         ["e", "e", "e", "e", "e"],
     ]
     output = " a a a a a\n b b b b b\n c c c c c\n d d d d d\n e e e e e"
-    assert utils.stringify(inp, ((0, 0), (5, 5))) == output
+    assert utils.stringify(inp, ((0, 0), (4, 4))) == output
 
 
 def test_palindromes():

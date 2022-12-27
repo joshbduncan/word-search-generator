@@ -64,7 +64,7 @@ def write_csv_file(path: Path, ws: WordSearch) -> Path:
         )
         f_writer.writerow([""])
         answer_key_intro = (
-            "Answer Key (*= Secret Words)" if ws.placed_secret_words else "Answer Key"
+            "Answer Key (*Secret Words)" if ws.placed_secret_words else "Answer Key"
         )
         f_writer.writerow([f"{answer_key_intro}: "])
         f_writer.writerow(utils.get_answer_key_list(ws.placed_words, ws.bounding_box))
@@ -204,7 +204,7 @@ def draw_puzzle_page(pdf: FPDF, ws: WordSearch, solution: bool = False) -> FPDF:
     pdf.set_margin(0)
     # rotate the page to write answer key upside down
     answer_key_intro = (
-        "Answer Key (*= Secret Words)" if ws.placed_secret_words else "Answer Key"
+        "Answer Key (*Secret Words)" if ws.placed_secret_words else "Answer Key"
     )
     with pdf.rotation(angle=180, x=pdf.epw / 2, y=pdf.eph / 2):
         pdf.set_xy(pdf.epw - pdf.epw, 0)

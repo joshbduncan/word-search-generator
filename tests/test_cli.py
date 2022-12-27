@@ -110,7 +110,7 @@ def test_random_secret_words_mutual_exclusivity():
     assert result.returncode == 2
 
 
-def test_random_secret_words_valid_input(capsys):
+def test_random_secret_words_valid_input():
     output = subprocess.check_output("word-search -rx 5", shell=True)
     assert "Find these words: <ALL SECRET WORDS>" in str(output)
 

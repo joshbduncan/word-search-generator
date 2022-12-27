@@ -241,7 +241,7 @@ def stringify(puzzle: Puzzle, bbox: Tuple[Tuple[int, int], Tuple[int, int]]) -> 
     min_x, min_y = bbox[0]
     max_x, max_y = bbox[1]
     output = []
-    offset = " " if len(puzzle) < 6 else ""
+    offset = " " if max_x - min_x < 5 else ""
     for line in puzzle[min_y : max_y + 1]:
         output.append(
             offset + " ".join([c if c else " " for c in line[min_x : max_x + 1]])
@@ -257,7 +257,7 @@ def format_puzzle_for_show(ws: WordSearch, show_solution: bool = False) -> str:
     header_width = ws.bounding_box[1][0] - ws.bounding_box[0][0] + 1
     header = make_header(header_width, "WORD SEARCH")
     answer_key_intro = (
-        "Answer Key (*= Secret Words)" if ws.placed_secret_words else "Answer Key"
+        "Answer Key (*Secret Words)" if ws.placed_secret_words else "Answer Key"
     )
     return f"""{header}
 {stringify(puzzle_list, ws.bounding_box)}
