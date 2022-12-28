@@ -4,7 +4,7 @@ import argparse
 import pathlib
 import sys
 from datetime import datetime
-from typing import Optional, Sequence
+from typing import Sequence
 
 from . import WordSearch, __app_name__, __version__, config, utils
 from .mask import shapes
@@ -54,7 +54,7 @@ class SizeAction(argparse.Action):
         setattr(namespace, self.dest, values)
 
 
-def main(argv: Optional[Sequence[str]] = None) -> int:
+def main(argv: Sequence[str] | None = None) -> int:
     """Word Search Generator CLI.
 
     Args:

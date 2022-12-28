@@ -26,14 +26,14 @@ class Direction(Enum):
 
     # is there a better way to specify typing here?
     # without hints here, the linter gets upset with my definitions of r/c_move
-    N: Tuple[int, int] = (-1, 0)  # type: ignore
-    NE: Tuple[int, int] = (-1, 1)  # type: ignore
-    E: Tuple[int, int] = (0, 1)  # type: ignore
-    SE: Tuple[int, int] = (1, 1)  # type: ignore
-    S: Tuple[int, int] = (1, 0)  # type: ignore
-    SW: Tuple[int, int] = (1, -1)  # type: ignore
-    W: Tuple[int, int] = (0, -1)  # type: ignore
-    NW: Tuple[int, int] = (-1, -1)  # type: ignore
+    N: tuple[int, int] = (-1, 0)  # type: ignore
+    NE: tuple[int, int] = (-1, 1)  # type: ignore
+    E: tuple[int, int] = (0, 1)  # type: ignore
+    SE: tuple[int, int] = (1, 1)  # type: ignore
+    S: tuple[int, int] = (1, 0)  # type: ignore
+    SW: tuple[int, int] = (1, -1)  # type: ignore
+    W: tuple[int, int] = (0, -1)  # type: ignore
+    NW: tuple[int, int] = (-1, -1)  # type: ignore
 
     @property
     def r_move(self) -> int:
@@ -45,20 +45,20 @@ class Direction(Enum):
 
 
 class Position(NamedTuple):
-    row: Optional[int]
-    column: Optional[int]
+    row: int | None
+    column: int | None
 
 
 class KeyInfo(TypedDict):
-    start: Optional[Position]
-    direction: Optional[Direction]
+    start: Position | None
+    direction: Direction | None
     secret: bool
 
 
 class KeyInfoJson(TypedDict):
-    start_row: Optional[int]
-    start_col: Optional[int]
-    direction: Optional[str]
+    start_row: int | None
+    start_col: int | None
+    direction: str | None
     secret: bool
 
 
@@ -72,10 +72,10 @@ class Word:
     ) -> None:
         """Initialize a Word Search puzzle Word."""
         self.text = text.upper()
-        self.start_row: Optional[int] = None
-        self.start_column: Optional[int] = None
-        self.coordinates: List[Tuple[int, int]] = []
-        self.direction: Optional[Direction] = None
+        self.start_row: int | None = None
+        self.start_column: int | None = None
+        self.coordinates: list[tuple[int, int]] = []
+        self.direction: Direction | None = None
         self.secret = secret
 
     @property
@@ -109,7 +109,7 @@ class Word:
         self.start_column = val.column
 
     @property
-    def position_xy(self) -> Union[str, None]:
+    def position_xy(self) -> str | None:
         """Returns a string representation of the word position with
         1-based indexing and a familiar (x, y) coordinate system"""
         if isinstance(self.start_row, int) and isinstance(self.start_column, int):
@@ -137,9 +137,7 @@ class Word:
             "secret": self.secret,
         }
 
-    def key_string(
-        self, bbox: Tuple[Tuple[int, int], Tuple[int, int]]
-    ) -> Union[str, None]:
+    def key_string(self, bbox: tuple[tuple[int, int], tuple[int, int]]) -> str | None:
         """Returns a string representation of the Word placement
         information formatted correctly for a WordSearch puzzle key
         when the WordSearch object it output using the `print()` or
@@ -160,8 +158,8 @@ class Word:
         return None
 
     def offset_position_xy(
-        self, bbox: Tuple[Tuple[int, int], Tuple[int, int]]
-    ) -> Union[Tuple[int, int], None]:
+        self, bbox: tuple[tuple[int, int], tuple[int, int]]
+    ) -> tuple[int, int] | None:
         """Returns a string representation of the word position with
         1-based indexing and a familiar (x, y) coordinate system. The
         position will be offset by the puzzle bounding box when a puzzle
@@ -178,8 +176,8 @@ class Word:
         return None
 
     def offset_coordinates(
-        self, bbox: Tuple[Tuple[int, int], Tuple[int, int]]
-    ) -> Union[List[Tuple[int, int]], None]:
+        self, bbox: tuple[tuple[int, int], tuple[int, int]]
+    ) -> list[tuple[int, int]] | None:
         """Returns a list of the Word letter coordinates, offset
         by the puzzle bounding box.
 

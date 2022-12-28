@@ -15,7 +15,7 @@ __version__ = "3.0.0b1"
 
 import json
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, Iterable, List, Set
 
 from . import export, generate, utils
 from .config import ACTIVE, INACTIVE, max_puzzle_size, min_puzzle_size
@@ -39,11 +39,11 @@ class WordSearch:
 
     def __init__(
         self,
-        words: Optional[str] = None,
-        level: Optional[Union[int, str]] = None,
-        size: Optional[int] = None,
-        secret_words: Optional[str] = None,
-        secret_level: Optional[Union[int, str]] = None,
+        words: str | None = None,
+        level: int | str | None = None,
+        size: int | None = None,
+        secret_words: str | None = None,
+        secret_level: int | str | None = None,
         *,
         include_all_words: bool = False,
     ):
@@ -68,7 +68,7 @@ class WordSearch:
         # setup puzzle
         self._puzzle: Puzzle = []
         self._size: int = 0
-        self._masks: List[Any] = []
+        self._masks: list[Any] = []
         self._mask: Puzzle = []
         self.force_all_words: bool = include_all_words
 
@@ -151,7 +151,7 @@ class WordSearch:
         return self._mask
 
     @property
-    def masks(self) -> List[Mask]:
+    def masks(self) -> list[Mask]:
         """Puzzle masking status."""
         return self._masks
 
@@ -161,7 +161,7 @@ class WordSearch:
         return bool(self.masks)
 
     @property
-    def bounding_box(self) -> Tuple[Tuple[int, int], Tuple[int, int]]:
+    def bounding_box(self) -> tuple[tuple[int, int], tuple[int, int]]:
         """Bounding box of the active puzzle area."""
         return utils.find_bounding_box(self.mask)
 
@@ -211,7 +211,7 @@ class WordSearch:
         return self._directions
 
     @directions.setter
-    def directions(self, val: Union[int, str, Iterable[str]]):
+    def directions(self, val: int | str | Iterable[str]):
         """Possible directions for puzzle words.
 
         Args:
@@ -241,7 +241,7 @@ class WordSearch:
         return self._secret_directions
 
     @secret_directions.setter
-    def secret_directions(self, val: Union[int, str, Iterable[str]]):
+    def secret_directions(self, val: int | str | Iterable[str]):
         """Possible directions for secret puzzle words.
 
         Args:
@@ -314,7 +314,7 @@ class WordSearch:
 
     def save(
         self,
-        path: Union[str, Path],
+        path: str | Path,
         format: str = "PDF",
         solution: bool = False,
     ) -> str:

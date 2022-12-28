@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import csv
 from pathlib import Path
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING
 
 from fpdf import FPDF
 
@@ -12,7 +12,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from . import WordSearch
 
 
-def validate_path(path: Union[str, Path]) -> Path:
+def validate_path(path: str | Path) -> Path:
     """Validate the save path.
 
     Args:

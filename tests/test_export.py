@@ -17,7 +17,7 @@ def test_export_csv(tmp_path):
     puzzle = WordSearch(WORDS)
     path = Path.joinpath(tmp_path, "test.csv")
     puzzle.save(path, format="csv")
-    with open(path, "r") as f:
+    with open(path) as f:
         data = f.read()
     assert not re.findall("\nSOLUTION\n", data)
 

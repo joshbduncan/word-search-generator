@@ -4,7 +4,7 @@ import copy
 import random
 import string
 from functools import wraps
-from typing import TYPE_CHECKING, List, Tuple
+from typing import TYPE_CHECKING
 
 from .config import ACTIVE, INACTIVE, max_fit_tries
 from .utils import in_bounds
@@ -38,20 +38,20 @@ def retry(retries: int = max_fit_tries):
 
 
 def capture_all_paths_from_position(
-    puzzle: Puzzle, placed_words: Wordlist, position: Tuple[int, int]
-) -> List[List[str]]:
+    puzzle: Puzzle, placed_words: Wordlist, position: tuple[int, int]
+) -> list[list[str]]:
     """Capture strings from `position` in each direction."""
     # calculate how large of a search radius to check (length of each path)
     radius = max([len(word.text) for word in placed_words]) if placed_words else 0
     # track each part (start/end) of the search radius for each direction
     # [N, S], [SW, NE] [W, E], [NW, SE]
-    paths: List[List[str]] = [["", ""], ["", ""], ["", ""], ["", ""]]
+    paths: list[list[str]] = [["", ""], ["", ""], ["", ""], ["", ""]]
     # follow each direction and capture all characters in that path
     for i, (direction_letter, direction_coord) in enumerate(
         Direction.__members__.items()
     ):
         row, col = position
-        chars: List[str] = []
+        chars: list[str] = []
         for _ in range(radius):
             if not in_bounds(col, row, len(puzzle), len(puzzle)):
                 break
@@ -68,7 +68,7 @@ def capture_all_paths_from_position(
 
 
 def no_duped_words(
-    puzzle: Puzzle, placed_words: Wordlist, char: str, position: Tuple[int, int]
+    puzzle: Puzzle, placed_words: Wordlist, char: str, position: tuple[int, int]
 ) -> bool:
     """Make sure that adding `char` at `position` will not create a
     duplicate of any word already placed in the puzzle."""
@@ -95,9 +95,9 @@ def test_a_fit(
     puzzle: Puzzle,
     mask: Puzzle,
     word: str,
-    position: Tuple[int, int],
+    position: tuple[int, int],
     direction: Direction,
-) -> List[Tuple[int, int]]:
+) -> list[tuple[int, int]]:
     """Test if word fits in the puzzle at the specified
     coordinates heading in the specified direction."""
     coordinates = []
@@ -121,7 +121,7 @@ def test_a_fit(
     return coordinates
 
 
-def find_a_fit(ws: WordSearch, word: str, position: Tuple[int, int]) -> Fit:
+def find_a_fit(ws: WordSearch, word: str, position: tuple[int, int]) -> Fit:
     """Look for random place in the puzzle where `word` fits."""
     fits: Fits = {}
     random_direction = None
@@ -193,7 +193,7 @@ def try_to_fit_word(
     word.coordinates = coords
 
 
-def no_matching_neighbors(puzzle: Puzzle, char: str, position: Tuple[int, int]) -> bool:
+def no_matching_neighbors(puzzle: Puzzle, char: str, position: tuple[int, int]) -> bool:
     """Ensure no neighboring cells have same character to limit the
     very small chance of a duplicate word."""
     row, col = position
