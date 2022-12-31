@@ -27,11 +27,11 @@ class Bitmap(Mask):
 
         Args:
             points (Optional[List[Tuple[int, int]]], optional): Coordinate points
-            used to build the mask. Defaults to None.
+                used to build the mask. Defaults to None.
             method (int, optional): How Mask is applied to the puzzle
-            (1=Standard (Intersection), 2=Additive, 3=Subtractive). Defaults to 1.
+                (1=Standard (Intersection), 2=Additive, 3=Subtractive). Defaults to 1.
             static (bool, optional): Should this mask be reapplied
-            after changes to the parent puzzle size. Defaults to True.
+                after changes to the parent puzzle size. Defaults to True.
         """
         super().__init__(points=points, method=method, static=static)
 
@@ -69,11 +69,11 @@ class Image(Bitmap):
 
         Args:
             fp (Union[str, Path]): A filepath (string) or `pathlib.Path` object
-            to the raster image the mask will be generated from.
+                to the raster image the mask will be generated from.
             method (int, optional): How Mask is applied to the puzzle
-            (1=Standard (Intersection), 2=Additive, 3=Subtractive). Defaults to 1.
+                (1=Standard (Intersection), 2=Additive, 3=Subtractive). Defaults to 1.
             static (bool, optional): Should this mask be reapplied
-            after changes to the parent puzzle size. Defaults to True.
+                after changes to the parent puzzle size. Defaults to True.
         """
         super().__init__(method=method, static=static)
         self.fp = fp

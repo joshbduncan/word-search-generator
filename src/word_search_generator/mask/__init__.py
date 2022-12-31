@@ -26,11 +26,11 @@ class Mask:
 
         Args:
             points (Optional[List[Tuple[int, int]]], optional): Coordinate points
-            used to build the mask. Defaults to None.
+                used to build the mask. Defaults to None.
             method (int, optional): How Mask is applied to the puzzle
-            (1=Standard (Intersection), 2=Additive, 3=Subtractive). Defaults to 1.
+                (1=Standard (Intersection), 2=Additive, 3=Subtractive). Defaults to 1.
             static (bool, optional): Should this mask be reapplied
-            after changes to the parent puzzle size. Defaults to True.
+                after changes to the parent puzzle size. Defaults to True.
 
         Notes: Bitmap points will be filled in solid, Polygon points will first
         be connected by lines in the order they are supplied and then the resulting
@@ -39,7 +39,7 @@ class Mask:
         self.points = points if points else []
         self.method = method
         self.static = static
-        self._puzzle_size: Optional[int] = None
+        self._puzzle_size: int = 0
         self._mask: List[Any] = []
 
     @property
@@ -90,7 +90,7 @@ class Mask:
         self._static = val
 
     @property
-    def puzzle_size(self) -> Optional[int]:
+    def puzzle_size(self) -> int:
         """Size of the puzzle the mask will applied to. Used with the
         `generate()` to to calculate points and placement."""
         return self._puzzle_size
@@ -148,7 +148,7 @@ class Mask:
         Args:
             size (int): Size of array.
             char (str, optional): Character to fill the array with.
-            Defaults to `config.INACTIVE`.
+                Defaults to `config.INACTIVE`.
 
         Returns:
             List[List[str]]: 2-D array filled will `char`.
@@ -181,8 +181,8 @@ class Mask:
 
         Args:
             active_only (bool, optional): Only output the masked areas
-            that lie within the bounds of `Mask.puzzle_size`. Used for
-            mask creation and testing. Defaults to False.
+                that lie within the bounds of `Mask.puzzle_size`. Used for
+                mask creation and testing. Defaults to False.
 
         Raises:
             MaskNotGenerated: Mask has not yet been generated.
@@ -238,11 +238,11 @@ class CompoundMask(Mask):
 
         Args:
             masks (Optional[List[Mask]], optional): Masks objects used to build
-            a the CompoundMask. Defaults to None.
+                a the CompoundMask. Defaults to None.
             method (int, optional): How Mask is applied to the puzzle
-            (1=Standard (Intersection), 2=Additive, 3=Subtractive). Defaults to 1.
+                (1=Standard (Intersection), 2=Additive, 3=Subtractive). Defaults to 1.
             static (bool, optional): Should this mask be reapplied
-            after changes to the parent puzzle size. Defaults to True.
+                after changes to the parent puzzle size. Defaults to True.
         """
         super().__init__(method=method, static=static)
         self.masks = masks if masks else []
@@ -305,6 +305,10 @@ class CompoundMask(Mask):
 
 # Import all base masks shapes for easier access
 # (eg. `mask.Star` vs. `mask.polygon.Star`)
-from .bitmap import Bitmap, Image  # noqa: F401, E402
-from .ellipse import Ellipse  # noqa: F401, E402
-from .polygon import Polygon, Rectangle, RegularPolygon, Star  # noqa: F401, E402
+from .bitmap import Bitmap as Bitmap  # noqa: F401, E402
+from .bitmap import Image as Image  # noqa: F401, E402
+from .ellipse import Ellipse as Ellipse  # noqa: F401, E402
+from .polygon import Polygon as Polygon  # noqa: F401, E402
+from .polygon import Rectangle as Rectangle  # noqa: F401, E402
+from .polygon import RegularPolygon as RegularPolygon  # noqa: F401, E402
+from .polygon import Star as Star  # noqa: F401, E402

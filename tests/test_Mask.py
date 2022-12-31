@@ -60,7 +60,7 @@ def test_mask_property_static_setter_invalid():
 
 def test_mask_property_puzzle_size_undefined():
     m = Mask()
-    assert m.puzzle_size is None
+    assert m.puzzle_size == 0
 
 
 def test_mask_property_puzzle_size_setter():

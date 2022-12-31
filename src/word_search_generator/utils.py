@@ -6,7 +6,7 @@ import random
 import string
 import sys
 from math import log2
-from typing import TYPE_CHECKING, Any, Iterable, List, Optional, Sized, Tuple, Union
+from typing import TYPE_CHECKING, Any, Iterable, Sized
 
 from . import config
 from .word import Direction, Word
@@ -16,7 +16,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from .word import Wordlist
 
 
-def calc_puzzle_size(words: Wordlist, level: Sized, size: Optional[int] = None) -> int:
+def calc_puzzle_size(words: Wordlist, level: Sized, size: int | None = None) -> int:
     """Calculate the puzzle grid size."""
     all_words = list(word.text for word in words)
     longest_word_length = len(max(all_words, key=len))
@@ -42,18 +42,16 @@ def build_puzzle(size: int, char: str) -> Puzzle:
     return [[char] * size for _ in range(size)]
 
 
-def round_half_up(
-    n: float, decimals: int = 0
-) -> Union[float, Any]:  # mypy 0.95+ weirdness
+def round_half_up(n: float, decimals: int = 0) -> float | Any:  # mypy 0.95+ weirdness
     """Round numbers in a consistent and familiar format."""
     multiplier = 10**decimals
     return math.floor(n * multiplier + 0.5) / multiplier
 
 
 def float_range(
-    start: Union[int, float],
-    stop: Optional[Union[int, float]] = None,
-    step: Optional[Union[int, float]] = None,
+    start: int | float,
+    stop: int | float | None = None,
+    step: int | float | None = None,
 ):
     """Generate a float-based range for iteration."""
     start = float(start)
@@ -84,8 +82,8 @@ def in_bounds(x: int, y: int, width: int, height: int) -> bool:
 
 
 def find_bounding_box(
-    grid: List[List[str]], edge: str = config.ACTIVE
-) -> Tuple[Tuple[int, int], Tuple[int, int]]:
+    grid: list[list[str]], edge: str = config.ACTIVE
+) -> tuple[tuple[int, int], tuple[int, int]]:
     """Bounding box of the masked area as a rectangle defined
     by a Tuple of (top-left edge as x, y, bottom-right edge as x, y)"""
     size = len(grid)
@@ -166,7 +164,7 @@ def word_contains_word(words: Wordlist, word: str) -> bool:
 
 
 def validate_direction_iterable(
-    d: Iterable[str | Tuple[int, int] | Direction]
+    d: Iterable[str | tuple[int, int] | Direction]
 ) -> DirectionSet:
     """Validates that all the directions in d are found as keys to
     config.dir_moves and therefore are valid directions."""
@@ -198,6 +196,8 @@ def validate_level(d) -> DirectionSet:
     if isinstance(d, str):  # comma-delimited list
         return validate_direction_iterable(d.split(","))
     if isinstance(d, Iterable):  # probably used by external code
+        if not d:
+            raise ValueError("Empty iterable provided.")
         return validate_direction_iterable(d)
     raise TypeError(f"{type(d)} given, not str, int, or Iterable[str]\n{d}")
 
@@ -234,13 +234,16 @@ def make_header(size: int, text: str) -> str:
 {hr}"""
 
 
-def stringify(puzzle: Puzzle, bbox: Tuple[Tuple[int, int], Tuple[int, int]]) -> str:
+def stringify(puzzle: Puzzle, bbox: tuple[tuple[int, int], tuple[int, int]]) -> str:
     """Convert puzzle array of nested lists into a string."""
     min_x, min_y = bbox[0]
     max_x, max_y = bbox[1]
     output = []
+    offset = " " if max_x - min_x < 5 else ""
     for line in puzzle[min_y : max_y + 1]:
-        output.append(" ".join([c if c else " " for c in line[min_x : max_x + 1]]))
+        output.append(
+            offset + " ".join([c if c else " " for c in line[min_x : max_x + 1]])
+        )
     return "\n".join(output)
 
 
@@ -252,7 +255,7 @@ def format_puzzle_for_show(ws: WordSearch, show_solution: bool = False) -> str:
     header_width = ws.bounding_box[1][0] - ws.bounding_box[0][0] + 1
     header = make_header(header_width, "WORD SEARCH")
     answer_key_intro = (
-        "Answer Key (*= Secret Words)" if ws.placed_secret_words else "Answer Key"
+        "Answer Key (*Secret Words)" if ws.placed_secret_words else "Answer Key"
     )
     return f"""{header}
 {stringify(puzzle_list, ws.bounding_box)}
@@ -275,14 +278,14 @@ def get_word_list_str(key: Key) -> str:
     return ", ".join(get_word_list_list(key))
 
 
-def get_word_list_list(key: Key) -> List[str]:
+def get_word_list_list(key: Key) -> list[str]:
     """Return all placed puzzle words as a list (excluding secret words)."""
     return [k for k in sorted(key.keys()) if not key[k]["secret"]]
 
 
 def get_answer_key_list(
-    words: Wordlist, bbox: Tuple[Tuple[int, int], Tuple[int, int]]
-) -> List[Any]:
+    words: Wordlist, bbox: tuple[tuple[int, int], tuple[int, int]]
+) -> list[Any]:
     """Return a easy to read answer key for display/export. Resulting coordinates
     will be offset by the supplied values. Used for masked puzzles.
 
@@ -295,7 +298,7 @@ def get_answer_key_list(
 
 
 def get_answer_key_str(
-    words: Wordlist, bbox: Tuple[Tuple[int, int], Tuple[int, int]]
+    words: Wordlist, bbox: tuple[tuple[int, int], tuple[int, int]]
 ) -> str:
     """Return a easy to read answer key for display. Resulting coordinates
     will be offset by the supplied values. Used for masked puzzles.

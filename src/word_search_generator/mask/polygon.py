@@ -25,11 +25,11 @@ class Polygon(Mask):
 
         Args:
             points (Optional[List[Tuple[int, int]]], optional): Polygon
-            coordinate points. Defaults to None.
+                coordinate points. Defaults to None.
             method (int, optional): How Mask is applied to the puzzle
-            (1=Standard (Intersection), 2=Additive, 3=Subtractive). Defaults to 1.
+                (1=Standard (Intersection), 2=Additive, 3=Subtractive). Defaults to 1.
             static (bool, optional): Should this mask be reapplied
-            after changes to the parent puzzle size. Defaults to True.
+                after changes to the parent puzzle size. Defaults to True.
 
         Raises:
             ValueError: _description_
@@ -172,11 +172,11 @@ class Rectangle(Polygon):
             width (int): Rectangle width.
             height (int): Rectangle height.
             origin (Tuple[int, int], optional): Top-left origin point from
-            which polygon be drawn. Defaults to puzzle top-left at (0, 0).
+                which polygon be drawn. Defaults to puzzle top-left at (0, 0).
             method (int, optional): How Mask is applied to the puzzle
-            (1=Standard (Intersection), 2=Additive, 3=Subtractive). Defaults to 1.
+                (1=Standard (Intersection), 2=Additive, 3=Subtractive). Defaults to 1.
             static (bool, optional): Should this mask be reapplied
-            after changes to the parent puzzle size. Defaults to True.
+                after changes to the parent puzzle size. Defaults to True.
         """
         originX, originY = origin if origin else (0, 0)
         points = [
@@ -205,17 +205,18 @@ class RegularPolygon(Polygon):
 
         Args:
             vertices (int, optional): Vertices (sides) of polygon (>=3).
-            Defaults to 3.
+                Defaults to 3.
             radius (Optional[int], optional): Distance from center point to vertices.
-            Defaults to half of the `puzzle_width` provided to the `.generate()` method.
+                Defaults to half of the `puzzle_width` provided to the
+                `.generate()` method.
             center (Optional[Tuple[int, int]], optional): Center origin point
-            from which the polygon will be calculated. Defaults to puzzle center.
+                from which the polygon will be calculated. Defaults to puzzle center.
             angle (float, optional): Rotation angle in degrees polygon.
-            Defaults to 0.0.
+                Defaults to 0.0.
             method (int, optional): How Mask is applied to the puzzle
-            (1=Standard (Intersection), 2=Additive, 3=Subtractive). Defaults to 1.
+                (1=Standard (Intersection), 2=Additive, 3=Subtractive). Defaults to 1.
             static (bool, optional): Should this mask be reapplied
-            after changes to the parent puzzle size. Defaults to True.
+                after changes to the parent puzzle size. Defaults to True.
 
         Raises:
             ValueError: Polygon vertices must be >=3.

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import csv
 from pathlib import Path
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING
 
 from fpdf import FPDF
 
@@ -12,7 +12,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from . import WordSearch
 
 
-def validate_path(path: Union[str, Path]) -> Path:
+def validate_path(path: str | Path) -> Path:
     """Validate the save path.
 
     Args:
@@ -27,9 +27,6 @@ def validate_path(path: Union[str, Path]) -> Path:
     # if string provided convert to pathlib Path object
     if isinstance(path, str):
         path = Path(path)
-    # check to make sure file type was specified
-    if not path.suffix or path.suffix.lower() not in [".csv", ".pdf"]:
-        path = path.with_suffix(".pdf")
     if path.exists():
         raise FileExistsError(f"Sorry, output file '{path}' already exists.")
     return path
@@ -67,10 +64,25 @@ def write_csv_file(path: Path, ws: WordSearch) -> Path:
         )
         f_writer.writerow([""])
         answer_key_intro = (
-            "Answer Key (*= Secret Words)" if ws.placed_secret_words else "Answer Key"
+            "Answer Key (*Secret Words)" if ws.placed_secret_words else "Answer Key"
         )
         f_writer.writerow([f"{answer_key_intro}: "])
         f_writer.writerow(utils.get_answer_key_list(ws.placed_words, ws.bounding_box))
+    return path.absolute()
+
+
+def write_json_file(path: Path, ws: WordSearch) -> Path:
+    """Write current puzzle to JSON format at `path`.
+
+    Args:
+        path (Path): Path to write the file to.
+        ws (WordSearch): Current Word Search puzzle.
+
+    Returns:
+        Path: Final save path.
+    """
+    with open(path, mode="w") as f:
+        f.write(ws.json)
     return path.absolute()
 
 
@@ -192,7 +204,7 @@ def draw_puzzle_page(pdf: FPDF, ws: WordSearch, solution: bool = False) -> FPDF:
     pdf.set_margin(0)
     # rotate the page to write answer key upside down
     answer_key_intro = (
-        "Answer Key (*= Secret Words)" if ws.placed_secret_words else "Answer Key"
+        "Answer Key (*Secret Words)" if ws.placed_secret_words else "Answer Key"
     )
     with pdf.rotation(angle=180, x=pdf.epw / 2, y=pdf.eph / 2):
         pdf.set_xy(pdf.epw - pdf.epw, 0)

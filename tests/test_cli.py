@@ -1,7 +1,22 @@
+import random
 import subprocess
 from pathlib import Path
 
 from PIL import Image
+
+from word_search_generator.word import Direction, Word
+
+from . import ITERATIONS, MASKS
+
+
+def check_chars(puzzle, word):
+    row, col = word.position
+    for c in word.text:
+        if c != puzzle[row][col]:
+            return False
+        row += word.direction.r_move
+        col += word.direction.c_move
+    return True
 
 
 def test_entrypoint():
@@ -110,7 +125,7 @@ def test_random_secret_words_mutual_exclusivity():
     assert result.returncode == 2
 
 
-def test_random_secret_words_valid_input(capsys):
+def test_random_secret_words_valid_input():
     output = subprocess.check_output("word-search -rx 5", shell=True)
     assert "Find these words: <ALL SECRET WORDS>" in str(output)
 
@@ -142,3 +157,36 @@ def test_image_mask(tmp_path):
     test_img.save(img_path, "JPEG")
     result = subprocess.run(f"word-search -r 5 -im {img_path}", shell=True)
     assert result.returncode == 0
+
+
+def test_cli_output():
+    def parse_puzzle(output):
+        return [[r[i] for i in range(0, len(r), 2)] for r in output.split("\n")[3:-6]]
+
+    def parse_words(output):
+        words = set()
+        for w in output.split("\n")[-2:-1][0].split(": ")[1].split("), "):
+            data = w.replace("(", "").replace(")", "").replace(",", "").split()
+            text = data[0][1:] if "*" in data[0] else data[0]
+            secret = True if "*" in data[0] else False
+            word = Word(text, secret=secret)
+            word.direction = Direction[data[1]]
+            word.start_row = int(data[4]) - 1
+            word.start_column = int(data[3]) - 1
+            words.add(word)
+        return words
+
+    results = []
+    for _ in range(ITERATIONS):
+        size = random.randint(8, 21)
+        words = random.randint(5, 21)
+        mask = random.choice(MASKS)
+        command = f"word-search -r {words} -s {size}"
+        if mask:
+            command += f" -m {mask.__class__.__name__}"
+        output = subprocess.check_output(command, shell=True, text=True)
+        puzzle = parse_puzzle(output)
+        words = parse_words(output)
+        results.append(all(check_chars(puzzle, word) for word in words))  # type: ignore
+
+    assert all(results)
