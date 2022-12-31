@@ -1,5 +1,6 @@
 import json
 import pathlib
+import random
 
 import pytest
 
@@ -12,10 +13,21 @@ from word_search_generator import (
     utils,
 )
 from word_search_generator.config import level_dirs
+from word_search_generator.mask.polygon import Rectangle
 from word_search_generator.utils import get_random_words
 from word_search_generator.word import Direction, Word
 
-WORDS = "dog, cat, pig, horse, donkey, turtle, goat, sheep"
+from . import ITERATIONS, MASKS, WORDS
+
+
+def check_chars(puzzle, word):
+    row, col = word.position
+    for c in word.text:
+        if c != puzzle[row][col]:
+            return False
+        row += word.direction.r_move
+        col += word.direction.c_move
+    return True
 
 
 def check_key(key: Key, puzzle: Puzzle) -> bool:
@@ -290,7 +302,7 @@ def test_input_including_palindrome():
 
 
 def test_for_empty_spaces():
-    for _ in range(100):
+    for _ in range(ITERATIONS * 20):
         words = get_random_words(10)
         ws = WordSearch(words, level=3)
         flat = [item for sublist in ws.puzzle for item in sublist]
@@ -369,13 +381,13 @@ def test_placed_secret_words():
 def test_random_words_only():
     p = WordSearch(size=25)
     p.random_words(5)
-    assert len(p.placed_words) == 5
+    assert len(p.words) == 5
 
 
 def test_random_words_added():
-    p = WordSearch("mispelled", size=25)
-    p.random_words(5)
-    assert len(p.placed_words) == 6
+    p = WordSearch("dog cat rat", size=25)
+    p.random_words(2)
+    assert len(p.words) == 5
 
 
 def test_invalid_size_at_init_value():
@@ -419,3 +431,44 @@ def test_missing_word_error():
     ws = WordSearch("dog", size=5, include_all_words=True)
     with pytest.raises(MissingWordError):
         ws.add_words("generator")
+
+
+def test_cropped_puzzle_height():
+    size = 21
+    ws = WordSearch(WORDS, size=size)
+    assert len(ws.cropped_puzzle) == size
+
+
+def test_cropped_puzzle_width():
+    size = 21
+    ws = WordSearch(WORDS, size=size)
+    assert len(ws.cropped_puzzle[0]) == size
+
+
+def test_cropped_puzzle_masked_1():
+    size = 20
+    ws = WordSearch(WORDS, size=size)
+    ws.apply_mask(Rectangle(size - 2, size - 2, (1, 1)))
+    assert ws.puzzle[1][1] == ws.cropped_puzzle[0][0]
+    assert ws.puzzle[size - 2][size - 2] == ws.cropped_puzzle[size - 3][size - 3]
+
+
+def test_cropped_puzzle_masked_2():
+    size = 20
+    ws = WordSearch(WORDS, size=size)
+    ws.apply_mask(Rectangle(size - 10, size - 10, (1, 1)))
+    assert ws.puzzle[1][1] == ws.cropped_puzzle[0][0]
+    assert ws.puzzle[size - 10][size - 10] == ws.cropped_puzzle[size - 11][size - 11]
+
+
+def test_word_placement():
+    results = []
+    for _ in range(ITERATIONS):
+        p = WordSearch(size=random.randint(8, 21))
+        p.random_words(random.randint(5, 21))
+        mask = random.choice(MASKS)
+        if mask:
+            p.apply_mask(mask)
+        results.append(all(check_chars(p.puzzle, word) for word in p.placed_words))
+
+    assert all(results)

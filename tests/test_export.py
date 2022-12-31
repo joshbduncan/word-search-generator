@@ -6,11 +6,22 @@ import uuid
 from pathlib import Path
 
 import pytest
-from PyPDF2 import PdfFileReader
+from pypdf import PdfReader
 
 from word_search_generator import WordSearch, config, export, utils
+from word_search_generator.word import Direction, Word
 
-WORDS = "dog, cat, pig, horse, donkey, turtle, goat, sheep"
+from . import ITERATIONS, WORDS
+
+
+def check_chars(puzzle, word):
+    row, col = word.position
+    for c in word.text:
+        if c != puzzle[row][col]:
+            return False
+        row += word.direction.r_move
+        col += word.direction.c_move
+    return True
 
 
 def test_export_csv(tmp_path):
@@ -34,7 +45,7 @@ def test_export_pdf_puzzles(tmp_path):
     """Export a bunch of puzzles as PDF and make sure they are all 1-page."""
     puzzles = []
     pages = set()
-    for _ in range(10):
+    for _ in range(ITERATIONS):
         size = random.choice(range(config.min_puzzle_size, config.max_puzzle_size))
         words = utils.get_random_words(
             random.randint(config.min_puzzle_words, config.max_puzzle_words)
@@ -45,8 +56,8 @@ def test_export_pdf_puzzles(tmp_path):
         puzzle.save(path, format="pdf")
         puzzles.append(path)
     for p in puzzles:
-        pdf = PdfFileReader(open(p, "rb"))
-        pages.add(pdf.getNumPages())
+        pdf = PdfReader(open(p, "rb"))
+        pages.add(len(pdf.pages))
     assert pages == {1}
 
 
@@ -54,7 +65,7 @@ def test_export_pdf_puzzle_with_solution(tmp_path):
     """Make sure a pdf puzzle exported with the solution is 2 pages."""
     puzzles = []
     pages = set()
-    for _ in range(10):
+    for _ in range(ITERATIONS):
         size = random.choice(range(config.min_puzzle_size, config.max_puzzle_size))
         words = utils.get_random_words(
             random.randint(config.min_puzzle_words, config.max_puzzle_words)
@@ -65,8 +76,8 @@ def test_export_pdf_puzzle_with_solution(tmp_path):
         puzzle.save(path, solution=True)
         puzzles.append(path)
     for p in puzzles:
-        pdf = PdfFileReader(open(p, "rb"))
-        pages.add(pdf.getNumPages())
+        pdf = PdfReader(open(p, "rb"))
+        pages.add(len(pdf.pages))
     assert pages == {2}
 
 
@@ -92,3 +103,86 @@ def test_export_csv_os_error():
     puzzle = WordSearch(WORDS)
     with pytest.raises(OSError):
         puzzle.save("/test.csv")
+
+
+def test_pdf_output_key(tmp_path):
+    def parse_puzzle(extraction):
+        puzzle = []
+        for line in extraction.split("\n"):
+            if line.startswith("WORD SEARCH"):
+                continue
+            elif line.startswith("Find words going"):
+                break
+            else:
+                puzzle.append([c for c in line])
+        return puzzle
+
+    def parse_words(extraction):
+        words = set()
+        for w in extraction.replace("\n", " ").split(": ")[1].split("), "):
+            data = w.replace("(", "").replace(")", "").replace(",", "").split()
+            text = data[0][1:] if "*" in data[0] else data[0]
+            secret = True if "*" in data[0] else False
+            word = Word(text, secret=secret)
+            word.direction = Direction[data[1]]
+            word.start_row = int(data[4]) - 1
+            word.start_column = int(data[3]) - 1
+            words.add(word)
+        return words
+
+    results = []
+    for _ in range(ITERATIONS):
+        p = WordSearch(size=random.randint(8, 21))
+        p.random_words(random.randint(5, 21))
+        path = Path.joinpath(tmp_path, f"{uuid.uuid4()}.pdf")
+        p.save(path)
+        reader = PdfReader(path)
+        page = reader.pages[0]
+        puzzle = parse_puzzle(page.extract_text(0))
+        words = parse_words(page.extract_text(180))
+        print(puzzle)
+        print(words)
+        results.append(all(check_chars(puzzle, word) for word in words))  # type: ignore
+
+    assert all(results)
+
+
+def test_pdf_output_words(tmp_path):
+    def parse_word_list(extraction):
+        return set(
+            word.strip()
+            for word in "".join(
+                extraction.split("Find words ")[1].split("\n")[1:]
+            ).split(",")
+        )
+
+    def parse_words(extraction):
+        words = set()
+        for w in extraction.replace("\n", " ").split(": ")[1].split("), "):
+            data = w.replace("(", "").replace(")", "").replace(",", "").split()
+            text = data[0][1:] if "*" in data[0] else data[0]
+            secret = True if "*" in data[0] else False
+            word = Word(text, secret=secret)
+            word.direction = Direction[data[1]]
+            word.start_row = int(data[4]) - 1
+            word.start_column = int(data[3]) - 1
+            words.add(word)
+        return words
+
+    results = []
+    for i in range(ITERATIONS):
+        p = WordSearch(size=random.randint(8, 21))
+        p.random_words(random.randint(5, 21))
+        path = Path.joinpath(tmp_path, f"{uuid.uuid4()}.pdf")
+        p.save(path)
+        reader = PdfReader(path)
+        page = reader.pages[0]
+        word_list = parse_word_list(page.extract_text(0))
+        words = parse_words(page.extract_text(180))
+        for word in words:
+            if word.secret:
+                results.append(word.text not in word_list)
+            else:
+                results.append(word.text in word_list)
+
+    assert all(results)

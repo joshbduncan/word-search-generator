@@ -170,7 +170,10 @@ class WordSearch:
         """The current puzzle state cropped to the mask."""
         min_x, min_y = self.bounding_box[0]
         max_x, max_y = self.bounding_box[1]
-        return [[c for c in row[min_x:max_x]] for row in self.puzzle[min_y:max_y]]
+        return [
+            [c for c in row[min_x : max_x + 1]]
+            for row in self.puzzle[min_y : max_y + 1]
+        ]
 
     @property
     def key(self) -> Key:
