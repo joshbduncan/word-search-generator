@@ -1,3 +1,4 @@
+import csv
 import json
 import os
 import random
@@ -140,8 +141,6 @@ def test_pdf_output_key(tmp_path):
         page = reader.pages[0]
         puzzle = parse_puzzle(page.extract_text(0))
         words = parse_words(page.extract_text(180))
-        print(puzzle)
-        print(words)
         results.append(all(check_chars(puzzle, word) for word in words))  # type: ignore
 
     assert all(results)
@@ -184,5 +183,61 @@ def test_pdf_output_words(tmp_path):
                 results.append(word.text not in word_list)
             else:
                 results.append(word.text in word_list)
+
+    assert all(results)
+
+
+def test_pdf_output_puzzle_size(tmp_path):
+    def parse_puzzle(extraction):
+        puzzle = []
+        for line in extraction.split("\n"):
+            if line.startswith("WORD SEARCH"):
+                continue
+            elif line.startswith("Find words going"):
+                break
+            else:
+                puzzle.append([c for c in line])
+        return puzzle
+
+    results = []
+    for _ in range(ITERATIONS):
+        p = WordSearch(size=random.randint(8, 21))
+        p.random_words(random.randint(5, 21))
+        path = Path.joinpath(tmp_path, f"{uuid.uuid4()}.pdf")
+        p.save(path)
+        reader = PdfReader(path)
+        page = reader.pages[0]
+        puzzle = parse_puzzle(page.extract_text(0))
+        results.append(
+            p.size == len(puzzle) and p.size == len(puzzle[0])
+        )  # type: ignore
+
+    assert all(results)
+
+
+def test_csv_output_puzzle_size(tmp_path):
+    def parse_puzzle(fp):
+        puzzle = []
+        with open(fp, newline="") as f:
+            data = csv.reader(f)
+            for i, row in enumerate(data):
+                if i == 0:
+                    continue
+                elif row == [""]:
+                    break
+                else:
+                    puzzle.append(row)
+        return puzzle
+
+    results = []
+    for _ in range(ITERATIONS):
+        p = WordSearch(size=random.randint(8, 21))
+        p.random_words(random.randint(5, 21))
+        path = Path.joinpath(tmp_path, f"{uuid.uuid4()}.pdf")
+        p.save(path, format="CSV")
+        puzzle = parse_puzzle(path)
+        results.append(
+            p.size == len(puzzle) and p.size == len(puzzle[0])
+        )  # type: ignore
 
     assert all(results)

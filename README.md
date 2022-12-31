@@ -168,15 +168,3 @@ Answer Key: AFTER S @ (13, 8), BABY E @ (6, 13), BRING S @ (8, 5), DEAL N @ (1, 
 ```
 
 Happy WordSearching ✌️
-
-## Resources
-
-- [PyPi](https://pypi.python.org/pypi/word-search-generator)
-- [PyFPDF/fpdf2: Simple PDF generation for Python](https://github.com/PyFPDF/fpdf2)
-- [Word search - Wikipedia](https://en.wikipedia.org/wiki/Word_search)
-
-
-# Contributors
-
-- Josh Duncan [@joshbduncan](https://github.com/joshbduncan)
-- Chris J.M. [@duck57](https://github.com/duck57)
