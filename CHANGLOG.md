@@ -4,25 +4,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [3.0.0b1] - 2022-12-06
+## [3.0.0] - 2023-01-01
 
 ## Added
-- Testing to make sure key only shows placed words in response to bug fixed in v2.0.1
-- Word class now tracks all coordinates of word (using this in place of keeping a separate 'solution' puzzle)
-- `random_words()` method to add random words to a puzzle.
 - Puzzle Masking
     - Puzzle output (show(), save()) crops output to the puzzle mask so no dead space
         - Key is offset by cropped bounding box
     - CLI implementation
         - -m, --mask Mask the puzzle to a particular shape (choices: circle, diamond, triangle, heart, hexagon, octagon, pentagon, star).
         - -im, --image-mask Mask the puzzle shape to a provided image (accepts: BMP, JPEG, PNG).
+- Project [documentation](https://github.com/joshbduncan/word-search-generator/wiki)
+- `random_words()` method to add random words to a puzzle.
+- Word class now tracks all coordinates of word (using this in place of keeping a separate 'solution' puzzle)
+- Testing to make sure key only shows placed words in response to bug fixed in v2.0.1
 
 ### Changed
 - CSV export no longer includes the solution
 - Moved all types from 'types.py' file to appropriate object files to help with type checking
 - no_duped_words() function was edited to no longer accept a WordSearch object to make testing easier
-- `.show()`, `.save()`, and `.json` now crop the puzzle to the mask active area (bounding box)
-- CLI arguments/flags now displayed in alphabetical order within help
+- `.show()`, `.save()`, and `.json` now crop the puzzle to the masked active area (bounding box)
 
 ## [2.0.1] - 2022-10-28
 
