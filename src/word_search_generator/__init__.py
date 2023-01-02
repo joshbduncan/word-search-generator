@@ -289,7 +289,7 @@ class WordSearch:
     # ************************************************* #
 
     def random_words(
-        self, count: int, secret: bool = False, reset_size: bool = False
+        self, count: int, secret: bool = False, reset_size: bool = True
     ) -> None:
         """Add randomly generated words to the puzzle.
 
@@ -298,7 +298,7 @@ class WordSearch:
             secret (bool, optional): Should the new words
                 be secret. Defaults to False.
             reset_size (bool, optional): Reset the puzzle
-                size based on the updated words. Defaults to False.
+                size based on the updated words. Defaults to True.
         """
         self.add_words(
             utils.get_random_words(count), secret=secret, reset_size=reset_size
