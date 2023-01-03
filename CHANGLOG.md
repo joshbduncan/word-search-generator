@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Moved all types from 'types.py' file to appropriate object files to help with type checking
 - no_duped_words() function was edited to no longer accept a WordSearch object to make testing easier
 - `.show()`, `.save()`, and `.json` now crop the puzzle to the masked active area (bounding box)
+- `utils.get_random_words()` now returns a list instead of a string
 
 ## [2.0.1] - 2022-10-28
 
