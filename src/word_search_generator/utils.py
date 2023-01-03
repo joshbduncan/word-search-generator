@@ -311,8 +311,9 @@ def get_answer_key_str(
     return ", ".join(get_answer_key_list(words, bbox))
 
 
-def get_random_words(n: int) -> str:
-    return ",".join(random.sample(WORD_LIST, n))
+def get_random_words(n: int) -> list[str]:
+    """Return a list of random dictionary words."""
+    return random.sample(WORD_LIST, n)
 
 
 WORD_LIST = [

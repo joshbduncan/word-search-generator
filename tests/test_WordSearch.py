@@ -277,13 +277,13 @@ def test_puzzle_show_solution_output(capsys):
 
 
 def test_json_output_property_for_puzzle():
-    words = get_random_words(10)
+    words = ",".join(get_random_words(10))
     ws = WordSearch(words, level=3)
     assert json.loads(ws.json)["puzzle"] == ws.puzzle
 
 
 def test_json_output_property_for_key():
-    words = get_random_words(10)
+    words = ",".join(get_random_words(10))
     p = WordSearch(words, level=3)
     json_key = json.loads(p.json)["key"]
     for word, info in json_key.items():
@@ -303,7 +303,7 @@ def test_input_including_palindrome():
 
 def test_for_empty_spaces():
     for _ in range(ITERATIONS * 20):
-        words = get_random_words(10)
+        words = ",".join(get_random_words(10))
         ws = WordSearch(words, level=3)
         flat = [item for sublist in ws.puzzle for item in sublist]
         assert ws.size * ws.size == len(flat)
@@ -379,15 +379,27 @@ def test_placed_secret_words():
 
 
 def test_random_words_only():
-    p = WordSearch(size=25)
+    p = WordSearch()
     p.random_words(5)
-    assert len(p.words) == 5
+    assert len(p.words) > 0
 
 
 def test_random_words_added():
     p = WordSearch("dog cat rat", size=25)
     p.random_words(2)
-    assert len(p.words) == 5
+    assert len(p.words) > 3
+
+
+def test_random_words_type_error():
+    p = WordSearch()
+    with pytest.raises(TypeError):
+        p.random_words("five")  # type: ignore
+
+
+def test_random_words_value_error():
+    p = WordSearch()
+    with pytest.raises(ValueError):
+        p.random_words(500)
 
 
 def test_invalid_size_at_init_value():

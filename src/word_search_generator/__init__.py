@@ -18,7 +18,14 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, List, Set
 
 from . import export, generate, utils
-from .config import ACTIVE, INACTIVE, max_puzzle_size, min_puzzle_size
+from .config import (
+    ACTIVE,
+    INACTIVE,
+    max_puzzle_size,
+    max_puzzle_words,
+    min_puzzle_size,
+    min_puzzle_words,
+)
 from .mask import CompoundMask, Mask
 from .word import Direction, KeyInfo, KeyInfoJson, Wordlist
 
@@ -94,7 +101,7 @@ class WordSearch:
             if not min_puzzle_size <= size <= max_puzzle_size:
                 raise ValueError(
                     f"Puzzle size must be >= {min_puzzle_size}"
-                    + f" and <= {max_puzzle_size}"
+                    + f" and <= {max_puzzle_size}."
                 )
             self._size = size
         if self.words:
@@ -277,7 +284,7 @@ class WordSearch:
         if not min_puzzle_size <= val <= max_puzzle_size:
             raise ValueError(
                 f"Puzzle size must be >= {min_puzzle_size}"
-                + f" and <= {max_puzzle_size}"
+                + f" and <= {max_puzzle_size}."
             )
         if self.size != val:
             self._size = val
@@ -291,7 +298,7 @@ class WordSearch:
     def random_words(
         self, count: int, secret: bool = False, reset_size: bool = True
     ) -> None:
-        """Add randomly generated words to the puzzle.
+        """Add `count` randomly generated words to the puzzle.
 
         Args:
             count (int): Count of random words to add.
@@ -299,9 +306,24 @@ class WordSearch:
                 be secret. Defaults to False.
             reset_size (bool, optional): Reset the puzzle
                 size based on the updated words. Defaults to True.
+
+        Raises:
+            TypeError: Must be an integer.
+            ValueError: Must be greater than `config.min_puzzle_words` and
+            less than `config.max_puzzle_words`.
         """
+        if not isinstance(count, int):
+            raise TypeError("Size must be an integer.")
+        if not min_puzzle_words <= count <= max_puzzle_words:
+            raise ValueError(
+                f"Requested random words must be >= {min_puzzle_words}"
+                + f" and <= {max_puzzle_words}."
+            )
+
         self.add_words(
-            utils.get_random_words(count), secret=secret, reset_size=reset_size
+            ",".join(utils.get_random_words(count)),
+            secret=secret,
+            reset_size=reset_size,
         )
 
     def show(self, solution: bool = False) -> None:
@@ -334,7 +356,7 @@ class WordSearch:
             str: Final save path of the file.
         """
         if format.upper() not in ["CSV", "JSON", "PDF"]:
-            raise ValueError('Save file format must be either "CSV", "JSON", or "PDF"')
+            raise ValueError('Save file format must be either "CSV", "JSON", or "PDF".')
         # validate export path
         path = export.validate_path(path)
         # write the file

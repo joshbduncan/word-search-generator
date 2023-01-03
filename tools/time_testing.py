@@ -9,7 +9,7 @@ from word_search_generator.utils import get_random_words
 stmt = """\
 p=WordSearch(size=50)
 p.apply_mask(Star())
-p.add_words(get_random_words(100))"""
+p.add_words(",".join(get_random_words(100)))"""
 
 result = timeit.timeit(stmt=stmt, setup=setup, number=10)
 print(result)

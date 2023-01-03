@@ -459,7 +459,7 @@ def test_add_mask_error():
 
 
 def test_apply_mask_method_1():
-    p = WordSearch(get_random_words(10), size=10)
+    p = WordSearch(",".join(get_random_words(10)), size=10)
     p.apply_mask(Circle())
     assert p.puzzle[0][0] == ""
     assert p.puzzle[0][p.size - 1] == ""
@@ -469,7 +469,7 @@ def test_apply_mask_method_1():
 
 def test_apply_mask_method_2():
     size = 10
-    p = WordSearch(get_random_words(10), size=size)
+    p = WordSearch(",".join(get_random_words(10)), size=size)
     m1 = Mask()
     m1.generate(size)
     p.apply_mask(m1)
@@ -485,7 +485,7 @@ def test_apply_mask_method_2():
 
 def test_apply_mask_method_3():
     size = 10
-    p = WordSearch(get_random_words(10), size=size)
+    p = WordSearch(",".join(get_random_words(10)), size=size)
     m1 = Mask()
     m1.generate(size)
     m1.invert()
