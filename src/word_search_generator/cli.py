@@ -190,7 +190,7 @@ Valid Directions: {', '.join([d.name for d in Direction])}
     # process puzzle words
     words = ""
     if args.random:
-        words = utils.get_random_words(args.random)
+        words = ",".join(utils.get_random_words(args.random))
     else:
         if isinstance(args.words, list):
             # needed when words were provided as "command, then, space"
@@ -204,7 +204,7 @@ Valid Directions: {', '.join([d.name for d in Direction])}
     secret_words = (
         args.secret_words
         if args.secret_words
-        else utils.get_random_words(args.random_secret_words)
+        else ",".join(utils.get_random_words(args.random_secret_words))
         if args.random_secret_words
         else ""
     )

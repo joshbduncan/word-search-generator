@@ -59,13 +59,13 @@ def test_puzzle_size_less_than_shortest_word_length():
 
 
 def test_only_placed_words_in_key():
-    w = get_random_words(100)
+    w = ",".join(get_random_words(100))
     p = WordSearch(w, size=5)
     assert all(word.direction for word in p.placed_words)
 
 
 def test_too_many_supplied_words():
-    w = get_random_words(100)
+    w = ",".join(get_random_words(100))
     p = WordSearch(w, size=5)
     assert len(p.words) != len(p.placed_words)
 

@@ -48,8 +48,10 @@ def test_export_pdf_puzzles(tmp_path):
     pages = set()
     for _ in range(ITERATIONS):
         size = random.choice(range(config.min_puzzle_size, config.max_puzzle_size))
-        words = utils.get_random_words(
-            random.randint(config.min_puzzle_words, config.max_puzzle_words)
+        words = ",".join(
+            utils.get_random_words(
+                random.randint(config.min_puzzle_words, config.max_puzzle_words)
+            )
         )
         level = random.randint(1, 3)
         puzzle = WordSearch(words, level=level, size=size)
@@ -68,8 +70,10 @@ def test_export_pdf_puzzle_with_solution(tmp_path):
     pages = set()
     for _ in range(ITERATIONS):
         size = random.choice(range(config.min_puzzle_size, config.max_puzzle_size))
-        words = utils.get_random_words(
-            random.randint(config.min_puzzle_words, config.max_puzzle_words)
+        words = ",".join(
+            utils.get_random_words(
+                random.randint(config.min_puzzle_words, config.max_puzzle_words)
+            )
         )
         level = random.randint(1, 3)
         puzzle = WordSearch(words, level=level, size=size)

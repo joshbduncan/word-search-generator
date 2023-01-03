@@ -46,7 +46,7 @@ def main():
     ]
     for size in sizes:
         for words in word_ct:
-            wordlist = get_random_words(words)
+            wordlist = ",".join(get_random_words(words))
             p = WordSearch(wordlist, size=size)
             path = f"/Users/jbd/Desktop/PDF-Testing/test_{size}_{words}.pdf"
             print(f"{path=}")
