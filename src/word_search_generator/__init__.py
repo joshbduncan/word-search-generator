@@ -35,8 +35,20 @@ Key = Dict[str, KeyInfo]
 KeyJson = Dict[str, KeyInfoJson]
 
 
+class PuzzleNotGenerated(Exception):
+    """For when a puzzle has yet to be generated."""
+
+    pass
+
+
+class PuzzleSizeError(Exception):
+    """For when the length of each provided word is > `WordSearch.size`."""
+
+    pass
+
+
 class MissingWordError(Exception):
-    """For when a WordSearch cannot include all its words"""
+    """For when a `WordSearch` object cannot place all of its words."""
 
     pass
 
@@ -296,12 +308,19 @@ class WordSearch:
     # ************************************************* #
 
     def random_words(
-        self, count: int, secret: bool = False, reset_size: bool = True
+        self,
+        count: int,
+        action: str = "REPLACE",
+        secret: bool = False,
+        reset_size: bool = True,
     ) -> None:
         """Add `count` randomly generated words to the puzzle.
 
         Args:
             count (int): Count of random words to add.
+            action (str): Should the random words be added ("ADD") to the current
+                wordlist or should they replace ("REPLACE") the current wordlist.
+                Defaults to "REPLACE".
             secret (bool, optional): Should the new words
                 be secret. Defaults to False.
             reset_size (bool, optional): Reset the puzzle
@@ -319,12 +338,22 @@ class WordSearch:
                 f"Requested random words must be >= {min_puzzle_words}"
                 + f" and <= {max_puzzle_words}."
             )
-
-        self.add_words(
-            ",".join(utils.get_random_words(count)),
-            secret=secret,
-            reset_size=reset_size,
-        )
+        if not isinstance(action, str):
+            raise TypeError("Action must be a string.")
+        if action.upper() not in ["ADD", "REPLACE"]:
+            raise ValueError("Action must be either 'ADD' or 'REPLACE'.")
+        if action.upper() == "ADD":
+            self.add_words(
+                ",".join(utils.get_random_words(count)),
+                secret=secret,
+                reset_size=reset_size,
+            )
+        else:
+            self.replace_words(
+                ",".join(utils.get_random_words(count)),
+                secret=secret,
+                reset_size=reset_size,
+            )
 
     def show(self, solution: bool = False) -> None:
         """Show the current puzzle with or without the solution.
@@ -382,6 +411,11 @@ class WordSearch:
     def _generate(self, fill_puzzle: bool = True) -> None:
         """Generate the puzzle grid."""
         self._puzzle = utils.build_puzzle(self.size, "")
+        min_word_length = (
+            min([len(word.text) for word in self.words]) if self.words else self.size
+        )
+        if self.size < min_word_length:
+            raise PuzzleSizeError
         for word in self.words:
             word.remove_from_puzzle()
         if not self.mask or len(self.mask) != self.size:
@@ -428,7 +462,8 @@ class WordSearch:
         self._process_input(words, "add", secret)
         if reset_size:
             self.reset_size()
-        self._generate()
+        else:
+            self._generate()
 
     def remove_words(self, words: str, reset_size: bool = False) -> None:
         """Remove words from the puzzle.
@@ -441,7 +476,8 @@ class WordSearch:
         self._process_input(words, "remove")
         if reset_size:
             self.reset_size()
-        self._generate()
+        else:
+            self._generate()
 
     def replace_words(
         self, words: str, secret: bool = False, reset_size: bool = False
@@ -458,7 +494,8 @@ class WordSearch:
         self._process_input(words, "replace", secret)
         if reset_size:
             self.reset_size()
-        self._generate()
+        else:
+            self._generate()
 
     # ************************************************* #
     # ******************** MASKING ******************** #
@@ -466,6 +503,11 @@ class WordSearch:
 
     def apply_mask(self, mask: Mask) -> None:
         """Apply a singular mask object to the puzzle."""
+        if not self.puzzle:
+            raise PuzzleNotGenerated(
+                "Puzzle not yet generated. Be sure to add puzzle `words` \
+or set the puzzle `size` before applying a mask."
+            )
         if not isinstance(mask, (Mask, CompoundMask)):
             raise TypeError("Please provide a Mask object.")
         if mask.puzzle_size != self.size:

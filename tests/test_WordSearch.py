@@ -386,7 +386,7 @@ def test_random_words_only():
 
 def test_random_words_added():
     p = WordSearch("dog cat rat", size=25)
-    p.random_words(2)
+    p.random_words(2, "ADD")
     assert len(p.words) > 3
 
 
