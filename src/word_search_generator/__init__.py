@@ -35,7 +35,7 @@ Key = Dict[str, KeyInfo]
 KeyJson = Dict[str, KeyInfoJson]
 
 
-class PuzzleNotGenerated(Exception):
+class PuzzleNotGeneratedError(Exception):
     """For when a puzzle has yet to be generated."""
 
     pass
@@ -504,7 +504,7 @@ class WordSearch:
     def apply_mask(self, mask: Mask) -> None:
         """Apply a singular mask object to the puzzle."""
         if not self.puzzle:
-            raise PuzzleNotGenerated(
+            raise PuzzleNotGeneratedError(
                 "Puzzle not yet generated. Be sure to add puzzle `words` \
 or set the puzzle `size` before applying a mask."
             )

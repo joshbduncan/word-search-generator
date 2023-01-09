@@ -8,12 +8,14 @@ from word_search_generator import (
     Key,
     MissingWordError,
     Puzzle,
+    PuzzleNotGeneratedError,
+    PuzzleSizeError,
     WordSearch,
     config,
     utils,
 )
 from word_search_generator.config import level_dirs
-from word_search_generator.mask.polygon import Rectangle
+from word_search_generator.mask.polygon import Rectangle, Star
 from word_search_generator.utils import get_random_words
 from word_search_generator.word import Direction, Word
 
@@ -390,16 +392,28 @@ def test_random_words_added():
     assert len(p.words) > 3
 
 
-def test_random_words_type_error():
+def test_random_words_count_type_error():
     p = WordSearch()
     with pytest.raises(TypeError):
         p.random_words("five")  # type: ignore
 
 
-def test_random_words_value_error():
+def test_random_words_count_value_error():
     p = WordSearch()
     with pytest.raises(ValueError):
         p.random_words(500)
+
+
+def test_random_words_action_type_error():
+    p = WordSearch()
+    with pytest.raises(TypeError):
+        p.random_words(5, action=5)  # type: ignore
+
+
+def test_random_words_action_value_error():
+    p = WordSearch()
+    with pytest.raises(ValueError):
+        p.random_words(5, "SUBTRACT")
 
 
 def test_invalid_size_at_init_value():
@@ -482,5 +496,16 @@ def test_word_placement():
         if mask:
             p.apply_mask(mask)
         results.append(all(check_chars(p.puzzle, word) for word in p.placed_words))
-
     assert all(results)
+
+
+def test_puzzle_size_error():
+    p = WordSearch("abracadabra")
+    with pytest.raises(PuzzleSizeError):
+        p.size = 5
+
+
+def test_not_generated_error():
+    p = WordSearch(size=21)
+    with pytest.raises(PuzzleNotGeneratedError):
+        p.apply_mask(Star())

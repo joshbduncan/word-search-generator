@@ -1,4 +1,5 @@
 from word_search_generator import WordSearch
+from word_search_generator.config import max_puzzle_words
 from word_search_generator.generate import no_duped_words
 from word_search_generator.utils import get_random_words
 from word_search_generator.word import Direction, Word, Wordlist
@@ -80,3 +81,17 @@ def test_fit_all_words_with_plenty_of_space_and_secret_words():
     for _ in range(10):
         p = WordSearch("cat dog pig", secret_words="cow mule duck")
         assert len(p.placed_words) == 6
+
+
+def test_too_many_words():
+    p = WordSearch(size=50)
+    p.random_words(100)
+    p.random_words(100, action="ADD")
+    assert len(p.placed_words) <= max_puzzle_words
+
+
+def test_too_many_secret_words():
+    p = WordSearch(size=50)
+    p.random_words(100)
+    p.random_words(100, action="ADD", secret=True)
+    assert len(p.placed_words) <= max_puzzle_words

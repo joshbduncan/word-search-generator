@@ -48,28 +48,11 @@ def no_duped_words(
     duplicate of any word already placed in the puzzle."""
     if not placed_words:
         return True
-    row, col = position
-    # calculate how large of a search radius to check (length of each path)
+    # calculate how large of a search radius to check
     radius = max([len(word.text) for word in placed_words]) if placed_words else 0
-    fragments = ["*"] * 4
-    for r in range(radius):
-        dir_pairs = (
-            ((-1, -1), (1, 1)),
-            ((0, -1), (0, 1)),
-            ((1, -1), (-1, 1)),
-            ((-1, 0), (1, 0)),
-        )
-        for n, ((ly, lx), (ry, rx)) in enumerate(dir_pairs):
-            n_row = row + (ly * (r + 1))
-            n_col = col + (lx * (r + 1))
-            if in_bounds(n_row, n_col, len(puzzle), len(puzzle)):
-                found = puzzle[n_row][n_col] if puzzle[n_row][n_col] else " "
-                fragments[n] = found + fragments[n]
-            n_row = row + (ry * (r + 1))
-            n_col = col + (rx * (r + 1))
-            if in_bounds(n_row, n_col, len(puzzle), len(puzzle)):
-                found = puzzle[n_row][n_col] if puzzle[n_row][n_col] else " "
-                fragments[n] += found
+    # track each directional fragment of characters
+    fragments = capture_fragments(puzzle, radius, position)
+    # check to see if any duped words are now present
     before_ct = after_ct = 0
     for word in placed_words:
         for before in fragments:
@@ -85,6 +68,39 @@ def no_duped_words(
     if before_ct == after_ct:
         return True
     return False
+
+
+def capture_fragments(
+    puzzle: Puzzle, radius: int, position: tuple[int, int]
+) -> list[str]:
+    """Capture each directional fragment of characters from `position` outward
+    to the `radius`.
+    """
+    row, col = position
+    fragments = ["*"] * 4
+    # while going out to match the calculated radius, grab each
+    # neighboring character to add to the fragments
+    for r in range(radius):
+        dir_pairs = (
+            ((-1, -1), (1, 1)),
+            ((0, -1), (0, 1)),
+            ((1, -1), (-1, 1)),
+            ((-1, 0), (1, 0)),
+        )
+        for n, ((ly, lx), (ry, rx)) in enumerate(dir_pairs):
+            # left and top traveling directions go on the left of the fragment
+            n_row = row + (ly * (r + 1))
+            n_col = col + (lx * (r + 1))
+            if in_bounds(n_row, n_col, len(puzzle), len(puzzle)):
+                found = puzzle[n_row][n_col] if puzzle[n_row][n_col] else " "
+                fragments[n] = found + fragments[n]
+            # right and bottom traveling directions go on the end of the fragment
+            n_row = row + (ry * (r + 1))
+            n_col = col + (rx * (r + 1))
+            if in_bounds(n_row, n_col, len(puzzle), len(puzzle)):
+                found = puzzle[n_row][n_col] if puzzle[n_row][n_col] else " "
+                fragments[n] += found
+    return fragments
 
 
 def test_a_fit(
