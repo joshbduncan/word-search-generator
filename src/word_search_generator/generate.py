@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, List, Tuple
 
 from .config import ACTIVE, INACTIVE, max_fit_tries, max_puzzle_words
 from .utils import in_bounds
-from .word import Direction, Word, Wordlist
+from .word import Direction, Word
 
 if TYPE_CHECKING:  # pragma: no cover
     from . import Puzzle, WordSearch
@@ -42,14 +42,14 @@ def retry(retries: int = max_fit_tries):
 
 
 def no_duped_words(
-    puzzle: Puzzle, placed_words: Wordlist, char: str, position: tuple[int, int]
+    puzzle: Puzzle, placed_words: set[str], char: str, position: tuple[int, int]
 ) -> bool:
     """Make sure that adding `char` at `position` will not create a
     duplicate of any word already placed in the puzzle."""
     if not placed_words:
         return True
     # calculate how large of a search radius to check
-    radius = max([len(word.text) for word in placed_words]) if placed_words else 0
+    radius = len(max(placed_words, key=len))
     # track each directional fragment of characters
     fragments = capture_fragments(puzzle, radius, position)
     # check to see if any duped words are now present
@@ -57,13 +57,13 @@ def no_duped_words(
     for word in placed_words:
         for before in fragments:
             after = before.replace("*", char)
-            if word.text in before:
+            if word in before:
                 before_ct += 1
-            if word.text[::-1] in before:
+            if word[::-1] in before:
                 before_ct += 1
-            if word.text in after:
+            if word in after:
                 after_ct += 1
-            if word.text[::-1] in after:
+            if word[::-1] in after:
                 after_ct += 1
     if before_ct == after_ct:
         return True
@@ -169,6 +169,7 @@ def fill_words(ws: WordSearch) -> None:
 def try_to_fit_word(ws: WordSearch, word: Word) -> None:
     """Try to fit `word` at randomized coordinates.
     @retry wrapper controls the number of attempts"""
+    placed_words = {word.text for word in ws.placed_words}
     row = random.randint(0, ws.size - 1)
     col = random.randint(0, ws.size - 1)
 
@@ -191,7 +192,7 @@ def try_to_fit_word(ws: WordSearch, word: Word) -> None:
         if char == ws.puzzle[check_row][check_col]:
             continue
         # make sure placed character doesn't cause a duped word in the puzzle
-        if no_duped_words(ws.puzzle, ws.placed_words, char, (check_row, check_col)):
+        if no_duped_words(ws.puzzle, placed_words, char, (check_row, check_col)):
             ws._puzzle[check_row][check_col] = char
         else:
             # if a duped word was created put previous characters back in place
@@ -208,14 +209,13 @@ def try_to_fit_word(ws: WordSearch, word: Word) -> None:
 def fill_blanks(ws: WordSearch) -> None:
     """Fill empty puzzle spaces with random characters."""
     # iterate over the entire puzzle
+    placed_words = {word.text for word in ws.placed_words}
     for row in range(ws.size):
         for col in range(ws.size):
             # if the current spot is empty fill with random character
             if ws.puzzle[row][col] == "" and ws.mask[row][col] == ACTIVE:
                 while True:
                     random_char = random.choice(ALPHABET)
-                    if no_duped_words(
-                        ws.puzzle, ws.placed_words, random_char, (row, col)
-                    ):
+                    if no_duped_words(ws.puzzle, placed_words, random_char, (row, col)):
                         ws.puzzle[row][col] = random_char
                         break

@@ -40,17 +40,17 @@ PUZZLE = [
 
 
 def test_dupe_at_position_1():
-    check = no_duped_words(PUZZLE, PLACED_WORDS, "A", (3, 3))
+    check = no_duped_words(PUZZLE, {word.text for word in PLACED_WORDS}, "A", (3, 3))
     assert check is False
 
 
 def test_dupe_at_position_2():
-    check = no_duped_words(PUZZLE, PLACED_WORDS, "A", (1, 3))
+    check = no_duped_words(PUZZLE, {word.text for word in PLACED_WORDS}, "A", (1, 3))
     assert check is False
 
 
 def test_no_dupe_at_position():
-    check = no_duped_words(PUZZLE, PLACED_WORDS, "Z", (1, 3))
+    check = no_duped_words(PUZZLE, {word.text for word in PLACED_WORDS}, "Z", (1, 3))
     assert check is True
 
 
