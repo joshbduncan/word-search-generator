@@ -99,7 +99,7 @@ Valid Directions: {', '.join([d.name for d in Direction])}
         "--level",
         action=DifficultyAction,
         help="Difficulty level (numeric) or cardinal directions \
-            puzzle words can go. See valid arguments above.",
+puzzle words can go. See valid arguments above.",
     )
     parser.add_argument(
         "-f",
@@ -107,14 +107,14 @@ Valid Directions: {', '.join([d.name for d in Direction])}
         choices=["CSV", "JSON", "PDF", "csv", "json", "pdf"],
         metavar="EXPORT_FORMAT",
         help='Puzzle output format \
-            (choices: "CSV", "JSON", "PDF").',
+(choices: "CSV", "JSON", "PDF").',
     )
     mask_group.add_argument(
         "-im",
         "--image-mask",
         type=pathlib.Path,
         help="Mask the puzzle to a provided image \
-            (accepts: BMP, JPEG, PNG).",
+(accepts: BMP, JPEG, PNG).",
     )
     mask_group.add_argument(
         "-m",
@@ -122,7 +122,7 @@ Valid Directions: {', '.join([d.name for d in Direction])}
         choices=BUILTIN_SHAPES,
         metavar="MASK_SHAPE",
         help=f"Mask the puzzle to a shape \
-            (choices: {', '.join(BUILTIN_SHAPES)}).",
+(choices: {', '.join(BUILTIN_SHAPES)}).",
     )
     parser.add_argument(
         "-o",
@@ -169,7 +169,7 @@ Valid Directions: {', '.join([d.name for d in Direction])}
         "--secret-difficulty",
         action=DifficultyAction,
         help="Difficulty level (numeric) or cardinal directions \
-            secret puzzle words can go. See valid arguments above.",
+secret puzzle words can go. See valid arguments above.",
     )
     parser.add_argument(
         "--version", action="version", version=f"%(prog)s {__version__}"
