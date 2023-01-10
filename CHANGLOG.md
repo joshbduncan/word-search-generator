@@ -4,9 +4,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- `PuzzleNotGenerated` is raised if a mask is applied to a puzzle that had yet to be generated, either because it doesn't yet have words or doesn't yet have a size.
+- `PuzzleSizeError` is now raised if the current puzzle size is smaller than the shortest words in the wordlist.
+- Additional tests to keep coverage at 100%.
+
+### Changed
+- `WordSearch.random_words()` now accepts an "action" argument. This determines whether the random words are added ("ADD") to the current wordlist or replace ("REPLACE") the current wordlist. Defaults to "REPLACE".
+- `no_duped_words()` refactored to speed up puzzle generation especially on large puzzles and puzzles with large wordlists.
+- `fill_words()` refactored to stop adding words or secret words if placed words > `config.max_puzzle_words`.
+- `try_to_fit_word()` refactored to no longer use deepcopy. While trying a new word, all changes are made to the actual puzzle, changes are also tracked in `previous_chars`. If a word ends up not fitting, the function backtracks and reset the puzzle to the `previous_chars`.
+- `calc_puzzle_size()` now maxes out at `config.max_puzzle_words` no matter the caculation result.
+- Generation tests updated to work with above changes.
+
+### Removed
+- `no_matching_neighbors()`
+- `capture_all_paths_from_position()`
+
 ## [3.0.0] - 2023-01-02
 
-## Added
+### Added
 - Puzzle Masking
     - Puzzle output (show(), save()) crops output to the puzzle mask so no dead space
         - Key is offset by cropped bounding box
@@ -27,7 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.0.1] - 2022-10-28
 
-## Added
+### Added
 - All puzzle output (stdout, csv, pdf) all indicate that '*' before a word in the key mean that word is secret (not listed in the word list) (e.g. 'Puzzle Key (*= Secret Words): ...').
     - Only shows if secret words are actually present.
 
