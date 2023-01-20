@@ -35,8 +35,9 @@ function tests {
 function upload {
     # upload to pypi
     source venv/bin/activate
-    read -p '❓ version? ' version
+    # read -p '❓ version? ' version
     echo "⬆️ uploading $app to pypi..."
+    #twine upload dist/*$version*
     twine upload dist/*$version*
 }
 
