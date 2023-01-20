@@ -1,2 +1,2 @@
-fpdf2>=2.4.2
-typing-extensions>=4.4.0
+fpdf2==2.4.2
+typing-extensions==4.4.0
