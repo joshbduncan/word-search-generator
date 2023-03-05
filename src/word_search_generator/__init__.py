@@ -15,7 +15,7 @@ __version__ = "3.1.0"
 
 import json
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Set
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Set
 
 from . import export, generate, utils
 from .config import (
@@ -27,7 +27,10 @@ from .config import (
     min_puzzle_words,
 )
 from .mask import CompoundMask, Mask
-from .word import Direction, KeyInfo, KeyInfoJson, Wordlist
+from .word import Direction, KeyInfo, KeyInfoJson
+
+if TYPE_CHECKING:  # pragma: no cover
+    from .word import Wordlist
 
 Puzzle = List[List[str]]
 DirectionSet = Set[Direction]
@@ -127,7 +130,7 @@ class WordSearch:
     @property
     def words(self) -> Wordlist:
         """The current puzzle words."""
-        return {word for word in self._words}
+        return set(self._words)
 
     @property
     def placed_words(self) -> Wordlist:
@@ -189,10 +192,7 @@ class WordSearch:
         """The current puzzle state cropped to the mask."""
         min_x, min_y = self.bounding_box[0]
         max_x, max_y = self.bounding_box[1]
-        return [
-            [c for c in row[min_x : max_x + 1]]
-            for row in self.puzzle[min_y : max_y + 1]
-        ]
+        return [list(row[min_x : max_x + 1]) for row in self.puzzle[min_y : max_y + 1]]
 
     @property
     def key(self) -> Key:
@@ -386,8 +386,9 @@ class WordSearch:
         """
         if format.upper() not in ["CSV", "JSON", "PDF"]:
             raise ValueError('Save file format must be either "CSV", "JSON", or "PDF".')
-        # validate export path
-        path = export.validate_path(path)
+        # convert strings to PATH object
+        if isinstance(path, str):
+            path = Path(path)
         # write the file
         if format.upper() == "CSV":
             saved_file = export.write_csv_file(path, self)

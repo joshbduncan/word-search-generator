@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import csv
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 from fpdf import FPDF
@@ -9,27 +8,9 @@ from fpdf import FPDF
 from . import config, utils
 
 if TYPE_CHECKING:  # pragma: no cover
+    from pathlib import Path
+
     from . import WordSearch
-
-
-def validate_path(path: str | Path) -> Path:
-    """Validate the save path.
-
-    Args:
-        path (Union[str, Path]): Path to save location.
-
-    Raises:
-        FileExistsError: The output path already exists as a file.
-
-    Returns:
-        Path: Validated path.
-    """
-    # if string provided convert to pathlib Path object
-    if isinstance(path, str):
-        path = Path(path)
-    if path.exists():
-        raise FileExistsError(f"Sorry, output file '{path}' already exists.")
-    return path
 
 
 def write_csv_file(path: Path, ws: WordSearch) -> Path:
@@ -43,7 +24,7 @@ def write_csv_file(path: Path, ws: WordSearch) -> Path:
         Path: Final save path.
     """
     word_list = utils.get_word_list_list(ws.key)
-    with open(path, mode="w") as f:
+    with open(path, "x") as f:
         f_writer = csv.writer(
             f, delimiter=",", quotechar='"', quoting=csv.QUOTE_MINIMAL
         )
@@ -81,7 +62,7 @@ def write_json_file(path: Path, ws: WordSearch) -> Path:
     Returns:
         Path: Final save path.
     """
-    with open(path, mode="w") as f:
+    with open(path, "x") as f:
         f.write(ws.json)
     return path.absolute()
 
@@ -114,6 +95,10 @@ def write_pdf_file(path: Path, puzzle: WordSearch, solution: bool = False) -> Pa
     # add puzzle solution page if requested
     if solution:
         pdf = draw_puzzle_page(pdf, puzzle, True)
+
+    # check the provided path since fpdf doesn't offer context manager
+    if path.exists():
+        raise FileExistsError(f"Sorry, output file '{path}' already exists.")
 
     # write the final PDF to the filesystem
     try:

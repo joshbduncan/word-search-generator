@@ -168,7 +168,7 @@ def test_cli_output():
         for w in output.split("\n")[-2:-1][0].split(": ")[1].split("), "):
             data = w.replace("(", "").replace(")", "").replace(",", "").split()
             text = data[0][1:] if "*" in data[0] else data[0]
-            secret = True if "*" in data[0] else False
+            secret = bool("*" in data[0])
             word = Word(text, secret=secret)
             word.direction = Direction[data[1]]
             word.start_row = int(data[4]) - 1
