@@ -18,7 +18,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 def calc_puzzle_size(words: Wordlist, level: Sized, size: int | None = None) -> int:
     """Calculate the puzzle grid size."""
-    all_words = list(word.text for word in words)
+    all_words = [word.text for word in words]
     longest_word_length = len(max(all_words, key=len))
     shortest_word_length = len(min(all_words, key=len))
     if not size:
@@ -65,9 +65,7 @@ def float_range(
     count = 0
     while True:
         temp = float(start + count * step)
-        if step > 0 and temp >= stop:
-            break
-        elif step < 0 and temp <= stop:
+        if step > 0 and temp >= stop or step < 0 and temp <= stop:
             break
         yield temp
         count += 1
@@ -143,7 +141,7 @@ def cleanup_input(words: str, secret: bool = False) -> Wordlist:
 
 def contains_punctuation(word):
     """Check to see if punctuation is present in the provided string."""
-    return any([True if c in string.punctuation else False for c in word])
+    return any([bool(c in string.punctuation) for c in word])
 
 
 def is_palindrome(word: str) -> bool:
@@ -193,7 +191,7 @@ def validate_level(d) -> DirectionSet:
         except KeyError:
             raise ValueError(
                 f"{d} is not a valid difficulty number"
-                + f"[{', '.join([str(i) for i in config.level_dirs.keys()])}]"
+                + f"[{', '.join([str(i) for i in config.level_dirs])}]"
             )
     if isinstance(d, str):  # comma-delimited list
         return validate_direction_iterable(d.split(","))

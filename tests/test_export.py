@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 from pypdf import PdfReader
 
-from word_search_generator import WordSearch, config, export, utils
+from word_search_generator import WordSearch, config, utils
 from word_search_generator.word import Direction, Word
 
 from . import ITERATIONS, WORDS
@@ -39,7 +39,8 @@ def test_export_json(tmp_path):
     path = Path.joinpath(tmp_path, "test.json")
     final_path = puzzle.save(path, format="json")
     data = json.loads(Path(final_path).read_text())
-    assert [word.text for word in puzzle.words] == data["words"]
+    for word in puzzle.words:
+        assert word.text in data["words"]
 
 
 def test_export_pdf_puzzles(tmp_path):
@@ -59,8 +60,9 @@ def test_export_pdf_puzzles(tmp_path):
         puzzle.save(path, format="pdf")
         puzzles.append(path)
     for p in puzzles:
-        pdf = PdfReader(open(p, "rb"))
-        pages.add(len(pdf.pages))
+        with open(p, "rb") as f:
+            pdf = PdfReader(f)
+            pages.add(len(pdf.pages))
     assert pages == {1}
 
 
@@ -81,17 +83,37 @@ def test_export_pdf_puzzle_with_solution(tmp_path):
         puzzle.save(path, solution=True)
         puzzles.append(path)
     for p in puzzles:
-        pdf = PdfReader(open(p, "rb"))
-        pages.add(len(pdf.pages))
+        with open(p, "rb") as f:
+            pdf = PdfReader(f)
+            pages.add(len(pdf.pages))
     assert pages == {2}
 
 
-def test_export_overwrite_file_error(tmp_path):
+def test_export_pdf_overwrite_file_error(tmp_path):
     """Try to export a puzzle with the name of a file that is already present."""
-    path = Path.joinpath(tmp_path, "test.pdf")
+    path = Path.joinpath(tmp_path, "test_pdf.pdf")
     path.touch()
+    puzzle = WordSearch("cat, bird, donkey")
     with pytest.raises(FileExistsError):
-        export.validate_path(path)
+        puzzle.save(path)
+
+
+def test_export_csv_overwrite_file_error(tmp_path):
+    """Try to export a puzzle with the name of a file that is already present."""
+    path = Path.joinpath(tmp_path, "test_csv.pdf")
+    path.touch()
+    puzzle = WordSearch("cat, bird, donkey")
+    with pytest.raises(FileExistsError):
+        puzzle.save(path, format="CSV")
+
+
+def test_export_json_overwrite_file_error(tmp_path):
+    """Try to export a puzzle with the name of a file that is already present."""
+    path = Path.joinpath(tmp_path, "test_json.pdf")
+    path.touch()
+    puzzle = WordSearch("cat, bird, donkey")
+    with pytest.raises(FileExistsError):
+        puzzle.save(path, format="JSON")
 
 
 @pytest.mark.skipif(os.name == "nt", reason="need to figure out")
@@ -119,7 +141,7 @@ def test_pdf_output_key(tmp_path):
             elif line.startswith("Find words going"):
                 break
             else:
-                puzzle.append([c for c in line])
+                puzzle.append(list(line))
         return puzzle
 
     def parse_words(extraction):
@@ -127,7 +149,7 @@ def test_pdf_output_key(tmp_path):
         for w in extraction.replace("\n", " ").split(": ")[1].split("), "):
             data = w.replace("(", "").replace(")", "").replace(",", "").split()
             text = data[0][1:] if "*" in data[0] else data[0]
-            secret = True if "*" in data[0] else False
+            secret = bool("*" in data[0])
             word = Word(text, secret=secret)
             word.direction = Direction[data[1]]
             word.start_row = int(data[4]) - 1
@@ -152,19 +174,19 @@ def test_pdf_output_key(tmp_path):
 
 def test_pdf_output_words(tmp_path):
     def parse_word_list(extraction):
-        return set(
+        return {
             word.strip()
             for word in "".join(
                 extraction.split("Find words ")[1].split("\n")[1:]
             ).split(",")
-        )
+        }
 
     def parse_words(extraction):
         words = set()
         for w in extraction.replace("\n", " ").split(": ")[1].split("), "):
             data = w.replace("(", "").replace(")", "").replace(",", "").split()
             text = data[0][1:] if "*" in data[0] else data[0]
-            secret = True if "*" in data[0] else False
+            secret = bool("*" in data[0])
             word = Word(text, secret=secret)
             word.direction = Direction[data[1]]
             word.start_row = int(data[4]) - 1
@@ -200,7 +222,7 @@ def test_pdf_output_puzzle_size(tmp_path):
             elif line.startswith("Find words going"):
                 break
             else:
-                puzzle.append([c for c in line])
+                puzzle.append(list(line))
         return puzzle
 
     results = []

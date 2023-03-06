@@ -4,12 +4,16 @@ import argparse
 import pathlib
 import sys
 from datetime import datetime
-from typing import Sequence
+from typing import TYPE_CHECKING
 
 from . import WordSearch, __app_name__, __version__, config, utils
 from .mask import shapes
 from .mask.bitmap import Image
 from .word import Direction
+
+if TYPE_CHECKING:  # pragma: no cover
+    from typing import Sequence
+
 
 BUILTIN_SHAPES = shapes.get_shape_objects()
 
@@ -37,7 +41,7 @@ class DifficultyAction(argparse.Action):
                     parser.error(
                         f"{option_string} must be \
 either numeric levels \
-({', '.join([str(i) for i in config.level_dirs.keys()])}) or accepted \
+({', '.join([str(i) for i in config.level_dirs])}) or accepted \
 cardinal directions ({', '.join([d.name for d in Direction])})."
                     )
             setattr(namespace, self.dest, values)
@@ -67,7 +71,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         description=f"""Generate Word Search Puzzles! \
 
 
-Valid Levels: {', '.join([str(i) for i in config.level_dirs.keys()])}
+Valid Levels: {', '.join([str(i) for i in config.level_dirs])}
 Valid Directions: {', '.join([d.name for d in Direction])}
 * Directions are to be provided as a comma-separated list.""",
         epilog="Copyright 2022 Josh Duncan (joshbduncan.com)",

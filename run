@@ -21,6 +21,7 @@ function cleanup {
     isort src tests
     black src tests
     flake8 src tests
+    ruff src tests
     echo "🧾 type checking $app..."
     mypy src tests
 }
