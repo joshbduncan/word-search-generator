@@ -8,6 +8,7 @@ authors = [
     {name = "Josh Duncan", email = "joshbduncan@gmail.com"},
 ]
 description = "Make awesome Word Search puzzles"
+readme = "README.md"
 requires-python = ">=3.7"
 keywords = ["puzzles", "games", "word-search",]
 license = {text = "MIT License"}
@@ -24,11 +25,10 @@ dependencies = [
     "fpdf2==2.4.2",
     "typing_extensions==4.4.0",
 ]
-dynamic = ["readme", "version"]
+dynamic = ["version"]
 
 [tool.setuptools.dynamic]
 version = {attr = "word_search_generator.__version__"}
-readme = {file = ["README.md"]}
 
 [project.urls]
 homepage = "https://github.com/joshbduncan/word-search-generator"

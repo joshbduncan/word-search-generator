@@ -6,12 +6,22 @@ app=$(basename $cdir)
 function build {
     # build the app for pypi
     source venv/bin/activate
-    if cleanup && tests; then
-        echo "⚙️ building $app..."
+    echo "⚙️ building $app..."
+    if [[ $# -eq 0 ]]; then
+        if cleanup && tests; then
+            python -m build
+        else
+            echo "❌ build was unsuccessful"
+        fi
+    elif [ $1="--skip-checks" ]; then
+        echo "⚠️ skipping checks"
         python -m build
-    else
-        echo "❌ build was unsuccessful"
     fi
+}
+
+function check {
+    echo "📝 checking long description"
+    twine check dist/*
 }
 
 function cleanup {
