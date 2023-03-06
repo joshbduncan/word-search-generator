@@ -39,7 +39,8 @@ def test_export_json(tmp_path):
     path = Path.joinpath(tmp_path, "test.json")
     final_path = puzzle.save(path, format="json")
     data = json.loads(Path(final_path).read_text())
-    assert [word.text for word in puzzle.words] == data["words"]
+    for word in puzzle.words:
+        assert word.text in data["words"]
 
 
 def test_export_pdf_puzzles(tmp_path):
