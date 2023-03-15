@@ -6,6 +6,9 @@ The format is based on [TODO.md](https://github.com/todomd/todo.md)
 
 ### Todo
 
+- [ ] Update README.md and wiki home to mention Puzzle Masking
+
 ### Doing
 
 ### Done
+
