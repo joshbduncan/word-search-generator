@@ -159,7 +159,7 @@ class Mask:
         """Generate a new mask at `puzzle_size` and either fill points (`Bitmap`),
         or connect points (`Polygon`) and then fill the resulting polygon shape."""
         self.puzzle_size = puzzle_size
-        self._mask = Mask.build_mask(self.puzzle_size)
+        self._mask = self.build_mask(self.puzzle_size)
         self._draw()
 
     def _draw(self) -> None:
@@ -270,7 +270,7 @@ class CompoundMask(Mask):
         Note: Unlike the parent `Mask` object a `CompoundMask` is initially filled
         with `config.ACTIVE`. This allows for the proper inaction between masks."""
         self.puzzle_size = puzzle_size
-        self._mask = Mask.build_mask(self.puzzle_size, ACTIVE)
+        self._mask = self.build_mask(self.puzzle_size, ACTIVE)
         for mask in self.masks:
             mask.generate(self.puzzle_size)
             self._apply_mask(mask)

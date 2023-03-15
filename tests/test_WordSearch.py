@@ -8,14 +8,13 @@ from word_search_generator import (
     Key,
     MissingWordError,
     Puzzle,
-    PuzzleNotGeneratedError,
     PuzzleSizeError,
     WordSearch,
     config,
     utils,
 )
 from word_search_generator.config import level_dirs
-from word_search_generator.mask.polygon import Rectangle, Star
+from word_search_generator.mask.polygon import Rectangle
 from word_search_generator.utils import get_random_words
 from word_search_generator.word import Direction, Word
 
@@ -503,9 +502,3 @@ def test_puzzle_size_error():
     p = WordSearch("abracadabra")
     with pytest.raises(PuzzleSizeError):
         p.size = 5
-
-
-def test_not_generated_error():
-    p = WordSearch(size=21)
-    with pytest.raises(PuzzleNotGeneratedError):
-        p.apply_mask(Star())

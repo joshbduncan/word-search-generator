@@ -27,9 +27,7 @@ def calc_puzzle_size(words: Wordlist, level: Sized, size: int | None = None) -> 
         multiplier = len(all_words) / 15 if len(all_words) > 15 else 1
         # level lengths in config.py are nice multiples of 2
         l_size = log2(len(level)) if level else 1  # protect against log(0) in tests
-        size = round(longest + l_size * 2 * multiplier)
-        if size > config.max_puzzle_size:
-            size = config.max_puzzle_size
+        size = min(round(longest + l_size * 2 * multiplier), config.max_puzzle_size)
     else:
         if size < shortest_word_length:
             print(

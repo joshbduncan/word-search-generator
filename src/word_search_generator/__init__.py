@@ -312,7 +312,7 @@ class WordSearch:
         count: int,
         action: str = "REPLACE",
         secret: bool = False,
-        reset_size: bool = True,
+        reset_size: bool = False,
     ) -> None:
         """Add `count` randomly generated words to the puzzle.
 
@@ -324,7 +324,7 @@ class WordSearch:
             secret (bool, optional): Should the new words
                 be secret. Defaults to False.
             reset_size (bool, optional): Reset the puzzle
-                size based on the updated words. Defaults to True.
+                size based on the updated words. Defaults to False.
 
         Raises:
             TypeError: Must be an integer.
@@ -415,8 +415,12 @@ class WordSearch:
         min_word_length = (
             min([len(word.text) for word in self.words]) if self.words else self.size
         )
-        if self.size < min_word_length:
+        if self.size and self.size < min_word_length:
             raise PuzzleSizeError
+        # if an empty puzzle object is created then the `random_words()` method
+        # is called set the calculate an appropriate puzzle size
+        if not self.size:
+            self.reset_size()
         for word in self.words:
             word.remove_from_puzzle()
         if not self.mask or len(self.mask) != self.size:
