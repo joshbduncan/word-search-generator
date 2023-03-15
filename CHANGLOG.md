@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- New pre-built mask shapes: [Club](https://github.com/joshbduncan/word-search-generator/wiki/Pre-Built-Mask-Shapes#Club), [Fish](https://github.com/joshbduncan/word-search-generator/wiki/Pre-Built-Mask-Shapes#Fish), [Flower](https://github.com/joshbduncan/word-search-generator/wiki/Pre-Built-Mask-Shapes#Flower), and [Spade](https://github.com/joshbduncan/word-search-generator/wiki/Pre-Built-Mask-Shapes#Spade)
+
+### Fixed
+
+- During mask generation, each class and subclass now refers to their own `build_mask()` method instead of the base class.
+
+### Changed
+
+- The `.random_words()` method default to **NOT** resetting the puzzle size.
+- Radius calculation for the `RegularPolygon` mask.
+- If the `random_words()` method is called on an empty `WordSearch()` object, an appropriate puzzle size is calculated.
+
 ## [3.2.0] - 2023-03-06
 
 ### Changed
