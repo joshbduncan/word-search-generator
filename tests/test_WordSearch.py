@@ -489,7 +489,7 @@ def test_cropped_puzzle_masked_2():
 def test_word_placement():
     results = []
     for _ in range(ITERATIONS):
-        p = WordSearch(size=random.randint(8, 21))
+        p = WordSearch(size=random.randint(21, 35))
         p.random_words(random.randint(5, 21))
         mask = random.choice(BUILTIN_MASK_SHAPES_OBJECTS)
         if mask:
