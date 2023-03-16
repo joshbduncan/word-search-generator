@@ -409,10 +409,16 @@ def test_connect_points_no_generated():
         pm._connect_points((0, 0), (1, 1))
 
 
-def test_fill_shape_no_generated():
+def test_fill_shape_not_generated():
     pm = Polygon()
     with pytest.raises(MaskNotGenerated):
         pm._fill_shape("J")
+
+
+def test_generate_method_no_size():
+    m = Mask()
+    with pytest.raises(TypeError):
+        m.generate()  # type: ignore
 
 
 def test_regular_polygon_too_few_vertices():

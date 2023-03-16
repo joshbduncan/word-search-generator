@@ -15,7 +15,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from typing import Sequence
 
 
-BUILTIN_SHAPES = shapes.get_shape_objects()
+BUILTIN_MASK_SHAPES_OBJECTS = shapes.get_shape_objects()
 
 
 class RandomAction(argparse.Action):
@@ -123,10 +123,10 @@ puzzle words can go. See valid arguments above.",
     mask_group.add_argument(
         "-m",
         "--mask",
-        choices=BUILTIN_SHAPES,
+        choices=BUILTIN_MASK_SHAPES_OBJECTS,
         metavar="MASK_SHAPE",
         help=f"Mask the puzzle to a shape \
-(choices: {', '.join(BUILTIN_SHAPES)}).",
+(choices: {', '.join(BUILTIN_MASK_SHAPES_OBJECTS)}).",
     )
     parser.add_argument(
         "-o",
@@ -183,7 +183,7 @@ secret puzzle words can go. See valid arguments above.",
     # check for mask preview first
     if args.preview_masks:
         preview_size = 21
-        for shape in BUILTIN_SHAPES:
+        for shape in BUILTIN_MASK_SHAPES_OBJECTS:
             mask = eval(f"shapes.{shape}")()
             mask.generate(preview_size)
             print(f"{shape}")

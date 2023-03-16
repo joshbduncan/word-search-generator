@@ -18,7 +18,7 @@ from word_search_generator.mask.polygon import Rectangle
 from word_search_generator.utils import get_random_words
 from word_search_generator.word import Direction, Word
 
-from . import ITERATIONS, MASKS, WORDS
+from . import BUILTIN_MASK_SHAPES_OBJECTS, ITERATIONS, WORDS
 
 
 def check_chars(puzzle, word):
@@ -491,7 +491,7 @@ def test_word_placement():
     for _ in range(ITERATIONS):
         p = WordSearch(size=random.randint(8, 21))
         p.random_words(random.randint(5, 21))
-        mask = random.choice(MASKS)
+        mask = random.choice(BUILTIN_MASK_SHAPES_OBJECTS)
         if mask:
             p.apply_mask(mask)
         results.append(all(check_chars(p.puzzle, word) for word in p.placed_words))

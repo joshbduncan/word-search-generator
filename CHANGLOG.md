@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - New pre-built mask shapes: [Club](https://github.com/joshbduncan/word-search-generator/wiki/Pre-Built-Mask-Shapes#Club), [Fish](https://github.com/joshbduncan/word-search-generator/wiki/Pre-Built-Mask-Shapes#Fish), [Flower](https://github.com/joshbduncan/word-search-generator/wiki/Pre-Built-Mask-Shapes#Flower), and [Spade](https://github.com/joshbduncan/word-search-generator/wiki/Pre-Built-Mask-Shapes#Spade)
+- Testing for built-in masks shapes based on known output
+- 'tools/build_masks_output_dict.py' tool for generating known built-in shapes output dict for us in testing
 
 ### Fixed
 
@@ -19,6 +21,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The `.random_words()` method default to **NOT** resetting the puzzle size.
 - Radius calculation for the `RegularPolygon` mask.
 - If the `random_words()` method is called on an empty `WordSearch()` object, an appropriate puzzle size is calculated.
+- Cleaned up variable naming a bit to make things clear
+    - cli.py `BUILTIN_SHAPES` -> `BUILTIN_MASK_SHAPES_OBJECTS`
+    - shapes.py `MASK_SHAPES` -> `BUILTIN_MASK_SHAPES`
+- Cleaned up calculation of built-in shape objects
+- Cleaned up imports for 'test/__init__.py'
+- README and wiki mention puzzle masking.
+
 
 ## [3.2.0] - 2023-03-06
 

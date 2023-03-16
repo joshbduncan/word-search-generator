@@ -11,7 +11,6 @@ from .polygon import Polygon, Rectangle, RegularPolygon, Star
 
 def get_shape_objects():
     """Return all built-in shape objects from this file"""
-    # {key:value for (key,value) in dictonary.items()}
     return [
         name
         for name, obj in inspect.getmembers(sys.modules[__name__], inspect.isclass)
@@ -40,60 +39,40 @@ for a {self.__class__.__name__} mask."
         self.puzzle_size = puzzle_size
         self._mask = self.build_mask(puzzle_size, ACTIVE)
 
-        ellipse_size = self.puzzle_size // 2 - (
-            1 if self.puzzle_size // 2 % 2 == 0 else 0
-        )
+        center = self.puzzle_size // 2
+        center_offset = self.puzzle_size % 2 - 1
+        ellipse_size = center - (center % 2 - 1)
 
+        # draw the 3 club circles
         top_ellipse = Ellipse(
             ellipse_size,
             ellipse_size,
-            (
-                self.puzzle_size // 2,
-                self.puzzle_size // 2 - ellipse_size // 2,
-            ),
+            (center, center - ellipse_size // 2),
         )
         left_ellipse = Ellipse(
             ellipse_size,
             ellipse_size,
-            (
-                self.puzzle_size // 2 - ellipse_size // 2,
-                self.puzzle_size // 2 + ellipse_size // 4,
-            ),
+            (center - ellipse_size // 2, center + ellipse_size // 4),
             method=2,
         )
         right_ellipse = Ellipse(
             ellipse_size,
             ellipse_size,
-            (
-                self.puzzle_size // 2 + ellipse_size // 2,
-                self.puzzle_size // 2 + ellipse_size // 4,
-            ),
+            (center + ellipse_size // 2, center + ellipse_size // 4),
             method=2,
         )
 
-        base_size = (
-            ellipse_size // 4 + 1 if ellipse_size // 4 % 2 == 0 else ellipse_size // 4
-        )
+        base_size = ellipse_size // 4 - (ellipse_size // 4 % 2 - 1)
         base_vert = Rectangle(
             base_size,
-            self.puzzle_size // 2,
-            (
-                self.puzzle_size // 2
-                - base_size // 2
-                - (1 if self.puzzle_size % 2 == 0 else 0),
-                self.puzzle_size // 2,
-            ),
+            center,
+            (center - base_size // 2 - center_offset, center),
             method=2,
         )
         base_horz = Rectangle(
             ellipse_size,
             2,
-            (
-                self.puzzle_size // 2
-                - ellipse_size // 2
-                - (1 if self.puzzle_size % 2 == 0 else 0),
-                self.puzzle_size - 2,
-            ),
+            (center - ellipse_size // 2 - center_offset, self.puzzle_size - 2),
             method=2,
         )
 
@@ -150,10 +129,9 @@ for a {self.__class__.__name__} mask."
         self.puzzle_size = puzzle_size
         self._mask = self.build_mask(puzzle_size, ACTIVE)
 
+        center = self.puzzle_size // 2
         body_width = int(self.puzzle_size // 1.25)
-        body_height = int(
-            self.puzzle_size // 1.5 - (1 if self.puzzle_size // 1.5 % 2 == 0 else 0)
-        )
+        body_height = int(self.puzzle_size // 1.5 - (self.puzzle_size // 1.5 % 2 - 1))
         body = Ellipse(
             body_width,
             body_height,
@@ -161,27 +139,20 @@ for a {self.__class__.__name__} mask."
                 self.puzzle_size
                 - body_width // 2
                 - (1 if self.puzzle_size % 2 != 0 and body_width % 2 != 0 else 0),
-                self.puzzle_size // 2,
+                center,
             ),
         )
-
         fin = Ellipse(
             body_height,
             body_height,
-            (
-                0,
-                self.puzzle_size // 2,
-            ),
+            (0, center),
             method=2,
         )
 
         fin_cutout = Ellipse(
             body_height,
             body_height,
-            (
-                0 - body_height // 4,
-                self.puzzle_size // 2,
-            ),
+            (0 - body_height // 4, center),
             method=3,
         )
 
@@ -330,51 +301,35 @@ for a {self.__class__.__name__} mask."
         self.puzzle_size = puzzle_size
         self._mask = self.build_mask(puzzle_size, ACTIVE)
 
-        ellipse_size = self.puzzle_size // 2 - (
-            1 if self.puzzle_size // 2 % 2 == 0 else 0
-        )
+        center = self.puzzle_size // 2
+        center_offset = self.puzzle_size % 2 - 1
+        ellipse_size = center - (center % 2 - 1)
 
+        # draw the two space circles
         left_ellipse = Ellipse(
             ellipse_size,
             ellipse_size,
-            (
-                self.puzzle_size // 2 - ellipse_size // 2,
-                self.puzzle_size // 2 + ellipse_size // 4,
-            ),
+            (center - ellipse_size // 2, center + ellipse_size // 4),
         )
         right_ellipse = Ellipse(
             ellipse_size,
             ellipse_size,
-            (
-                self.puzzle_size // 2 + ellipse_size // 2,
-                self.puzzle_size // 2 + ellipse_size // 4,
-            ),
+            (center + ellipse_size // 2, center + ellipse_size // 4),
             method=2,
         )
 
-        base_size = (
-            ellipse_size // 4 + 1 if ellipse_size // 4 % 2 == 0 else ellipse_size // 4
-        )
+        # draw the base
+        base_size = ellipse_size // 4 - (ellipse_size // 4 % 2 - 1)
         base_vert = Rectangle(
             base_size,
-            self.puzzle_size // 2,
-            (
-                self.puzzle_size // 2
-                - base_size // 2
-                - (1 if self.puzzle_size % 2 == 0 else 0),
-                self.puzzle_size // 2,
-            ),
+            center,
+            (center - base_size // 2 - center_offset, center),
             method=2,
         )
         base_horz = Rectangle(
             ellipse_size,
             2,
-            (
-                self.puzzle_size // 2
-                - ellipse_size // 2
-                - (1 if self.puzzle_size % 2 == 0 else 0),
-                self.puzzle_size - 2,
-            ),
+            (center - ellipse_size // 2 - center_offset, self.puzzle_size - 2),
             method=2,
         )
         left_ellipse.generate(self.puzzle_size)
@@ -382,7 +337,7 @@ for a {self.__class__.__name__} mask."
         base_vert.generate(self.puzzle_size)
         base_horz.generate(self.puzzle_size)
 
-        # calculate the top half polygon (will be flipped)
+        # calculate the top half polygon connecting the circles (will be flipped)
         # get the min y values
         left_min_y = min(y for _, y in left_ellipse.points)
         right_min_y = min(y for _, y in right_ellipse.points)
@@ -392,21 +347,13 @@ for a {self.__class__.__name__} mask."
             x for x, y in right_ellipse.points if y == right_min_y
         )
 
-        poly = Polygon(
-            [
-                (
-                    self.puzzle_size // 2 - (1 if self.puzzle_size % 2 == 0 else 0),
-                    0,
-                ),
-                (left_min_x_at_min_y, left_min_y),
-                (
-                    self.puzzle_size // 2 - (1 if self.puzzle_size % 2 == 0 else 0),
-                    self.puzzle_size // 2,
-                ),
-                (right_max_x_at_min_y, right_min_y),
-            ],
-            method=2,
-        )
+        # calculate polygon points
+        p1 = (center - center_offset, 0)
+        p2 = (left_min_x_at_min_y, left_min_y)
+        p3 = (center - center_offset, center)
+        p4 = (right_max_x_at_min_y, right_min_y)
+
+        poly = Polygon([p1, p2, p3, p4], method=2)
         poly.generate(self.puzzle_size)
 
         self.masks = [left_ellipse, right_ellipse, base_horz, base_vert, poly]
@@ -479,4 +426,4 @@ class Triangle(RegularPolygon):
         super().__init__(vertices=3)
 
 
-BUILTIN_SHAPES = get_shape_objects()
+BUILTIN_MASK_SHAPES = get_shape_objects()

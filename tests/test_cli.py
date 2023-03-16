@@ -6,7 +6,7 @@ from PIL import Image
 
 from word_search_generator.word import Direction, Word
 
-from . import ITERATIONS, MASKS
+from . import BUILTIN_MASK_SHAPES_OBJECTS, ITERATIONS
 
 
 def check_chars(puzzle, word):
@@ -178,9 +178,9 @@ def test_cli_output():
 
     results = []
     for _ in range(ITERATIONS):
-        size = random.randint(8, 21)
+        size = random.randint(18, 36)
         words = random.randint(5, 21)
-        mask = random.choice(MASKS)
+        mask = random.choice(BUILTIN_MASK_SHAPES_OBJECTS)
         command = f"word-search -r {words} -s {size}"
         if mask:
             command += f" -m {mask.__class__.__name__}"

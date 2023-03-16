@@ -129,6 +129,35 @@ Answer Key: CAT SW @ (4, 1), DOG SW @ (12, 2), DONKEY SW @ (9, 4), GOAT SW @ (13
 
 😓 Too hard? Go the easy route with `puzzle.level = 1` or `puzzle.directions = "E"`.
 
+🎭 How about adding a mask ([docs](https://github.com/joshbduncan/word-search-generator/wiki/Puzzle-Masking))? ...Fancy!
+
+```pycon
+>>> from word_search_generator.mask.shapes import Heart
+>>> puzzle.apply_mask(Heart())
+>>> puzzle.show()
+-------------------------
+       WORD SEARCH
+-------------------------
+    C L C       C Y E
+  Q S T N S   T E L D K
+Z L O Z T P A K T H N M W
+C C L Q C O N R S P Z V U
+M I X V G O U R H S Z C H
+  M H K D T T L E C U Q
+  H C T H O R S E B M
+    Z I S W R B P E G
+      Y P I G B X Q
+        C A T N G
+        A R W O
+          K D Q
+            A
+
+Find these words: CAT, DOG, DONKEY, GOAT, HORSE, PIG, SHEEP, TURTLE
+* Words can go S, NE, E, and, SE.
+
+Answer Key: CAT E @ (5, 10), DOG NE @ (7, 12), DONKEY NE @ (5, 6), GOAT NE @ (5, 5), HORSE E @ (5, 7), PIG E @ (5, 9), SHEEP S @ (9, 4), TURTLE NE @ (6, 6)
+```
+
 💾 Save your AWESOME puzzle as a PDF.
 
 ```pycon
@@ -138,7 +167,7 @@ Answer Key: CAT SW @ (4, 1), DOG SW @ (12, 2), DONKEY SW @ (9, 4), GOAT SW @ (13
 
 ## 🖥 CLI Integration
 
-You can play WordSearch in your CLI too! WordSearch Generator installs the console entry-point `word-search` so you can interact with the package right in your console.
+You can play WordSearch in your CLI too ([docs](https://github.com/joshbduncan/word-search-generator/wiki/Command-Line-Interface-(CLI)))! WordSearch Generator installs the console entry-point `word-search` so you can interact with the package right in your console.
 
 ```bash
 $ word-search -r 10 -s 15 -l 3
@@ -166,5 +195,9 @@ Find these words: AFTER, BABY, BRING, DEAL, KIND, MODERN, MYSELF, PURPOSE, RATE,
 
 Answer Key: AFTER S @ (13, 8), BABY E @ (6, 13), BRING S @ (8, 5), DEAL N @ (1, 12), KIND SW @ (14, 2), MODERN NE @ (3, 15), MYSELF E @ (4, 2), PURPOSE S @ (14, 7), RATE SW @ (14, 1), THESE E @ (8, 12)
 ```
+
+## 📔 Documentation
+
+If you need more info, most of the fun parts of Word-Search-Generator are documented on Github in the [Project Wiki](https://github.com/joshbduncan/word-search-generator/wiki).
 
 Happy WordSearching ✌️

@@ -1,7 +1,12 @@
+import io
+from contextlib import redirect_stdout
+
 import pytest
 
 from word_search_generator import PuzzleNotGeneratedError, WordSearch
 from word_search_generator.mask import shapes
+
+from . import SHAPES_KNOWN_OUTPUT
 
 
 def test_not_generated_error():
@@ -36,3 +41,16 @@ def test_min_size_spade():
     p.random_words(10)
     with pytest.raises(ValueError):
         p.apply_mask(shapes.Spade())
+
+
+def test_shape_mask_output():
+    preview_size = 21
+    for shape in shapes.BUILTIN_MASK_SHAPES:
+        mask = eval(f"shapes.{shape}")()
+        mask.generate(preview_size)
+
+        with io.StringIO() as buf, redirect_stdout(buf):
+            mask.show()
+            output = buf.getvalue()
+
+        assert SHAPES_KNOWN_OUTPUT[shape] == output
