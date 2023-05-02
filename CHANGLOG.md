@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [3.3.0] - 2023-05-02
 
 ### Added
 
@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - During mask generation, each class and subclass now refers to their own `build_mask()` method instead of the base class.
+- Incorrect horizontal center calculation for `Spade` and `Club` masks on even sized masks.
 
 ### Changed
 
@@ -28,6 +29,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Cleaned up imports for 'test/__init__.py'
 - README and wiki mention puzzle masking.
 
+### Removed
+
+- `make_header()` function no longer needed as header is created with f-strings now
 
 ## [3.2.0] - 2023-03-06
 

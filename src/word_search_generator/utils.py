@@ -139,7 +139,7 @@ def cleanup_input(words: str, secret: bool = False) -> Wordlist:
 
 def contains_punctuation(word):
     """Check to see if punctuation is present in the provided string."""
-    return any([bool(c in string.punctuation) for c in word])
+    return any(bool(c in string.punctuation) for c in word)
 
 
 def is_palindrome(word: str) -> bool:
@@ -223,15 +223,6 @@ def highlight_solution(ws: WordSearch) -> Puzzle:
     return output
 
 
-def make_header(size: int, text: str) -> str:
-    """Generate a header that fits the current puzzle size."""
-    hr = "-" * max(11, (size * 2 - 1))
-    padding = " " * ((len(hr) - len(text)) // 2)
-    return f"""{hr}
-{padding}{text}{padding}
-{hr}"""
-
-
 def stringify(puzzle: Puzzle, bbox: tuple[tuple[int, int], tuple[int, int]]) -> str:
     """Convert puzzle array of nested lists into a string."""
     min_x, min_y = bbox[0]
@@ -250,8 +241,9 @@ def format_puzzle_for_show(ws: WordSearch, show_solution: bool = False) -> str:
     # highlight solution if provided
     puzzle_list = highlight_solution(ws) if show_solution else ws.puzzle
     # calculate header length based on cropped puzzle size to account for masks
-    header_width = ws.bounding_box[1][0] - ws.bounding_box[0][0] + 1
-    header = make_header(header_width, "WORD SEARCH")
+    header_width = max(11, (ws.bounding_box[1][0] - ws.bounding_box[0][0] + 1) * 2 - 1)
+    hr = "-" * header_width
+    header = hr + "\n" + f"{'WORD SEARCH':^{header_width}}" + "\n" + hr
     answer_key_intro = (
         "Answer Key (*Secret Words)" if ws.placed_secret_words else "Answer Key"
     )

@@ -66,13 +66,13 @@ for a {self.__class__.__name__} mask."
         base_vert = Rectangle(
             base_size,
             center,
-            (center - base_size // 2 - center_offset, center),
+            (center - base_size // 2 + center_offset, center),
             method=2,
         )
         base_horz = Rectangle(
             ellipse_size,
             2,
-            (center - ellipse_size // 2 - center_offset, self.puzzle_size - 2),
+            (center - ellipse_size // 2 + center_offset, self.puzzle_size - 2),
             method=2,
         )
 
@@ -323,13 +323,13 @@ for a {self.__class__.__name__} mask."
         base_vert = Rectangle(
             base_size,
             center,
-            (center - base_size // 2 - center_offset, center),
+            (center - base_size // 2 + center_offset, center),
             method=2,
         )
         base_horz = Rectangle(
             ellipse_size,
             2,
-            (center - ellipse_size // 2 - center_offset, self.puzzle_size - 2),
+            (center - ellipse_size // 2 + center_offset, self.puzzle_size - 2),
             method=2,
         )
         left_ellipse.generate(self.puzzle_size)
@@ -348,9 +348,9 @@ for a {self.__class__.__name__} mask."
         )
 
         # calculate polygon points
-        p1 = (center - center_offset, 0)
+        p1 = (center + center_offset, 0)
         p2 = (left_min_x_at_min_y, left_min_y)
-        p3 = (center - center_offset, center)
+        p3 = (center + center_offset, center)
         p4 = (right_max_x_at_min_y, right_min_y)
 
         poly = Polygon([p1, p2, p3, p4], method=2)
