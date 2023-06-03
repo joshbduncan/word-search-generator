@@ -184,7 +184,8 @@ class WordSearch:
 
     @property
     def bounding_box(self) -> tuple[tuple[int, int], tuple[int, int]]:
-        """Bounding box of the active puzzle area."""
+        """Bounding box of the active puzzle area as a rectangle defined
+        by a Tuple of (top-left edge as x, y, bottom-right edge as x, y)"""
         return utils.find_bounding_box(self.mask)
 
     @property
@@ -355,14 +356,16 @@ class WordSearch:
                 reset_size=reset_size,
             )
 
-    def show(self, solution: bool = False) -> None:
+    def show(self, solution: bool = False, hide_fillers: bool = False) -> None:
         """Show the current puzzle with or without the solution.
 
         Args:
             solution (bool, optional): Highlight the puzzle solution. Defaults to False.
+            hide_fillers (bool, optional): Hide all filler letters so only the solution
+                is shown. Overrides `solution`.
         """
         if self.key:
-            print(utils.format_puzzle_for_show(self, solution))
+            print(utils.format_puzzle_for_show(self, solution, hide_fillers))
         else:
             print("Empty puzzle.")
 
@@ -411,16 +414,16 @@ class WordSearch:
 
     def _generate(self, fill_puzzle: bool = True) -> None:
         """Generate the puzzle grid."""
+        # if an empty puzzle object is created then the `random_words()` method
+        # is called set the calculate an appropriate puzzle size
+        if not self.size:
+            self.reset_size()
         self._puzzle = utils.build_puzzle(self.size, "")
         min_word_length = (
             min([len(word.text) for word in self.words]) if self.words else self.size
         )
         if self.size and self.size < min_word_length:
             raise PuzzleSizeError
-        # if an empty puzzle object is created then the `random_words()` method
-        # is called set the calculate an appropriate puzzle size
-        if not self.size:
-            self.reset_size()
         for word in self.words:
             word.remove_from_puzzle()
         if not self.mask or len(self.mask) != self.size:
@@ -467,8 +470,7 @@ class WordSearch:
         self._process_input(words, "add", secret)
         if reset_size:
             self.reset_size()
-        else:
-            self._generate()
+        self._generate()
 
     def remove_words(self, words: str, reset_size: bool = False) -> None:
         """Remove words from the puzzle.
@@ -481,8 +483,7 @@ class WordSearch:
         self._process_input(words, "remove")
         if reset_size:
             self.reset_size()
-        else:
-            self._generate()
+        self._generate()
 
     def replace_words(
         self, words: str, secret: bool = False, reset_size: bool = False
@@ -499,8 +500,7 @@ class WordSearch:
         self._process_input(words, "replace", secret)
         if reset_size:
             self.reset_size()
-        else:
-            self._generate()
+        self._generate()
 
     # ************************************************* #
     # ******************** MASKING ******************** #

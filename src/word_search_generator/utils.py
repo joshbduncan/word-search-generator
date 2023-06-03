@@ -223,6 +223,21 @@ def highlight_solution(ws: WordSearch) -> Puzzle:
     return output
 
 
+def hide_filler_characters(ws: WordSearch) -> Puzzle:
+    """Remove filler characters from a puzzle."""
+    output: Puzzle = copy.deepcopy(ws.puzzle)
+    word_coords = {
+        coord
+        for coords in [word.coordinates for word in ws.placed_words]
+        for coord in coords
+    }
+    for row in range(ws.size):
+        for col in range(ws.size):
+            if (col, row) not in word_coords:
+                output[col][row] = " "
+    return output
+
+
 def stringify(puzzle: Puzzle, bbox: tuple[tuple[int, int], tuple[int, int]]) -> str:
     """Convert puzzle array of nested lists into a string."""
     min_x, min_y = bbox[0]
@@ -236,10 +251,14 @@ def stringify(puzzle: Puzzle, bbox: tuple[tuple[int, int], tuple[int, int]]) -> 
     return "\n".join(output)
 
 
-def format_puzzle_for_show(ws: WordSearch, show_solution: bool = False) -> str:
+def format_puzzle_for_show(
+    ws: WordSearch, show_solution: bool = False, hide_fillers: bool = False
+) -> str:
     word_list = get_word_list_str(ws.key)
-    # highlight solution if provided
+    # highlight solution if requested
     puzzle_list = highlight_solution(ws) if show_solution else ws.puzzle
+    # hide filler characters if requested
+    puzzle_list = hide_filler_characters(ws) if hide_fillers else puzzle_list
     # calculate header length based on cropped puzzle size to account for masks
     header_width = max(11, (ws.bounding_box[1][0] - ws.bounding_box[0][0] + 1) * 2 - 1)
     hr = "-" * header_width

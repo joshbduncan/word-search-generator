@@ -145,6 +145,11 @@ def test_mask():
     assert result.returncode == 0
 
 
+def test_shape_mask_min_size():
+    result = subprocess.run("word-search -r 1 -m Club", shell=True)
+    assert result.returncode == 0
+
+
 def test_invalid_mask():
     result = subprocess.run("word-search -r 5 -s 21 -m Heptakaideka", shell=True)
     assert result.returncode == 2

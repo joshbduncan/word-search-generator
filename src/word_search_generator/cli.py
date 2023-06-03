@@ -227,9 +227,12 @@ secret puzzle words can go. See valid arguments above.",
         secret_level=args.secret_difficulty,
     )
 
-    # apply masking is specified
+    # apply masking if specified
     if args.mask:
-        puzzle.apply_mask(eval(f"shapes.{args.mask}")())
+        mask = eval(f"shapes.{args.mask}")()
+        if hasattr(mask, "min_size") and not args.size and puzzle.size < mask.min_size:
+            puzzle.size = mask.min_size
+        puzzle.apply_mask(mask)
     if args.image_mask:
         puzzle.apply_mask(Image(args.image_mask))
 

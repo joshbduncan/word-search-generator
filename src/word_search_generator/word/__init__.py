@@ -181,7 +181,7 @@ class Word:
             bbox (Tuple[Tuple[int, int], Tuple[int, int]]): The current
                 puzzle bounding box.
         """
-        return [(x - bbox[0][0], y - bbox[0][1]) for x, y in self.coordinates]
+        return [(x + 1 - bbox[0][0], y + 1 - bbox[0][1]) for y, x in self.coordinates]
 
     def remove_from_puzzle(self):
         """Remove word placement details when a puzzle is reset."""

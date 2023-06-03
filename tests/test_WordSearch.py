@@ -1,6 +1,7 @@
 import json
 import pathlib
 import random
+from typing import Set
 
 import pytest
 
@@ -15,7 +16,6 @@ from word_search_generator import (
 )
 from word_search_generator.config import level_dirs
 from word_search_generator.mask.polygon import Rectangle
-from word_search_generator.utils import get_random_words
 from word_search_generator.word import Direction, Word
 
 from . import BUILTIN_MASK_SHAPES_OBJECTS, ITERATIONS, WORDS
@@ -278,13 +278,13 @@ def test_puzzle_show_solution_output(capsys):
 
 
 def test_json_output_property_for_puzzle():
-    words = ",".join(get_random_words(10))
+    words = ",".join(utils.get_random_words(10))
     ws = WordSearch(words, level=3)
     assert json.loads(ws.json)["puzzle"] == ws.puzzle
 
 
 def test_json_output_property_for_key():
-    words = ",".join(get_random_words(10))
+    words = ",".join(utils.get_random_words(10))
     p = WordSearch(words, level=3)
     json_key = json.loads(p.json)["key"]
     for word, info in json_key.items():
@@ -304,7 +304,7 @@ def test_input_including_palindrome():
 
 def test_for_empty_spaces():
     for _ in range(ITERATIONS * 20):
-        words = ",".join(get_random_words(10))
+        words = ",".join(utils.get_random_words(10))
         ws = WordSearch(words, level=3)
         flat = [item for sublist in ws.puzzle for item in sublist]
         assert ws.size * ws.size == len(flat)
@@ -502,3 +502,32 @@ def test_puzzle_size_error():
     p = WordSearch("abracadabra")
     with pytest.raises(PuzzleSizeError):
         p.size = 5
+
+
+def test_hide_fillers():
+    results = []
+    for _ in range(ITERATIONS):
+        p = WordSearch(size=random.randint(21, 35))
+        p.random_words(random.randint(5, 21))
+        mask = random.choice(BUILTIN_MASK_SHAPES_OBJECTS)
+        if mask:
+            p.apply_mask(mask)
+        hidden_fillers = utils.hide_filler_characters(p)
+        chars: Set[str] = set()
+        for word in p.placed_words:
+            chars.update(hidden_fillers[y][x] for y, x in word.coordinates)
+        results.append(" " not in chars)
+    assert all(results)
+
+
+def test_solution_plus_hide_fillers():
+    results = []
+    for _ in range(ITERATIONS):
+        p = WordSearch(size=random.randint(21, 35))
+        p.random_words(random.randint(5, 21))
+        mask = random.choice(BUILTIN_MASK_SHAPES_OBJECTS)
+        if mask:
+            p.apply_mask(mask)
+        chars = {c for chars in p.puzzle for c in chars}
+        results.append("\x1b" not in chars)
+    assert all(results)

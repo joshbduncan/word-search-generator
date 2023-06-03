@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- `Word.offset_coordinates()`
+
+### Changed
+
+- `show()` method now accepts the `hide_fillers` boolean argument
+    - `True` will hide all filler characters showing only the placed words (negates `solution=True`)
+
 ## [3.3.0] - 2023-05-02
 
 ### Added
