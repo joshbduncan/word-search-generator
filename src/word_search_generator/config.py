@@ -15,9 +15,17 @@ INACTIVE = "#"
 
 # puzzle difficulty levels
 level_dirs = {
-    1: {Direction.E, Direction.S},
-    2: {Direction.NE, Direction.E, Direction.SE, Direction.S},
-    3: {
+    1: {  # right or down
+        Direction.E,
+        Direction.S,
+    },
+    2: {  # right-facing or down
+        Direction.NE,
+        Direction.E,
+        Direction.SE,
+        Direction.S,
+    },
+    3: {  # any direction
         Direction.N,
         Direction.NE,
         Direction.E,
@@ -35,8 +43,27 @@ level_dirs = {
         Direction.W,
         Direction.NW,
     },
-    8: {Direction.N, Direction.E, Direction.W, Direction.S},  # no diagonals
-    7: {Direction.NE, Direction.SE, Direction.NW, Direction.SW},  # diagonals only
+    5: {  # no E
+        Direction.N,
+        Direction.NE,
+        Direction.SE,
+        Direction.S,
+        Direction.SW,
+        Direction.W,
+        Direction.NW,
+    },
+    7: {  # diagonals only
+        Direction.NE,
+        Direction.SE,
+        Direction.NW,
+        Direction.SW
+    },
+    8: {  # no diagonals
+        Direction.N,
+        Direction.E,
+        Direction.W,
+        Direction.S,
+    },
 }
 
 # pdf export settings

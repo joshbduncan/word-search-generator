@@ -4,6 +4,9 @@ from word_search_generator.mask import shapes
 
 ITERATIONS = 5
 WORDS = "dog, cat, pig, horse, donkey, turtle, goat, sheep"
+SECRET_WORDS = "rabbit, mule, bunny, ram, kitten, puppy, foal"
+# "tortoise" not included in SECRET_WORDS because it is 8 characters long
+# everything else tops out at 6
 
 # Put all shape masks into a list for use in testing
 BUILTIN_MASK_SHAPES_OBJECTS: List[Any] = []

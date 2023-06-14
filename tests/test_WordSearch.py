@@ -18,7 +18,7 @@ from word_search_generator.config import level_dirs
 from word_search_generator.mask.polygon import Rectangle
 from word_search_generator.word import Direction, Word
 
-from . import BUILTIN_MASK_SHAPES_OBJECTS, ITERATIONS, WORDS
+from . import BUILTIN_MASK_SHAPES_OBJECTS, SECRET_WORDS, ITERATIONS, WORDS
 
 
 def check_chars(puzzle, word):
@@ -531,3 +531,14 @@ def test_solution_plus_hide_fillers():
         chars = {c for chars in p.puzzle for c in chars}
         results.append("\x1b" not in chars)
     assert all(results)
+
+
+def test_word_directions():
+    """
+    Hidden words can go NE, E, SE, or S.
+    Secret words go on diagonals.
+    Do they all obey the restriction rules?
+    """
+    p = WordSearch(WORDS, secret_words=SECRET_WORDS, secret_level=7)
+    assert all(w.direction in p.directions for w in p.placed_hidden_words)
+    assert all(w.direction in p.secret_directions for w in p.placed_secret_words)
