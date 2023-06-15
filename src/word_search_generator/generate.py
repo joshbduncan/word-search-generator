@@ -132,12 +132,12 @@ def test_a_fit(
     return coordinates
 
 
-def find_a_fit(ws: WordSearch, word: str, position: tuple[int, int]) -> Fit:
+def find_a_fit(ws: WordSearch, word: Word, position: tuple[int, int]) -> Fit:
     """Look for random place in the puzzle where `word` fits."""
     fits: Fits = []
     # check all directions for level
-    for d in ws.directions:
-        coords = test_a_fit(ws.puzzle, ws.mask, word, position, d)
+    for d in ws.secret_directions if word.secret else ws.directions:
+        coords = test_a_fit(ws.puzzle, ws.mask, word.text, position, d)
         if coords:
             fits.append((Direction(d).name, coords))
     # if the word fits, pick a random fit for placement
@@ -180,7 +180,7 @@ def try_to_fit_word(ws: WordSearch, word: Word) -> None:
         raise WordFitError
 
     # try and find a directional fit using the starting coordinates if not INACTIVE
-    d, coords = find_a_fit(ws, word.text, (row, col))
+    d, coords = find_a_fit(ws, word, (row, col))
 
     # place word characters at fit coordinates
     previous_chars = []  # track previous to backtrack on WordFitError

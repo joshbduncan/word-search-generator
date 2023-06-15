@@ -1,5 +1,5 @@
 from word_search_generator import WordSearch
-from word_search_generator.config import max_puzzle_words
+from word_search_generator.config import level_dirs, max_puzzle_words
 from word_search_generator.generate import no_duped_words
 from word_search_generator.utils import get_random_words
 from word_search_generator.word import Direction, Word, Wordlist
@@ -95,3 +95,15 @@ def test_too_many_secret_words():
     p.random_words(100)
     p.random_words(100, action="ADD", secret=True)
     assert len(p.placed_words) <= max_puzzle_words
+
+
+def test_secret_word_directions():
+    words = "cat bat rat"
+    level = 1  # right or down
+    secret_words = "pig dog fox"
+    secret_level = 7  # diagonals only
+    p = WordSearch(
+        words, level=level, secret_words=secret_words, secret_level=secret_level
+    )
+    for w in p.placed_secret_words:
+        assert w.direction in level_dirs[secret_level]

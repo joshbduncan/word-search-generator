@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - `Word.offset_coordinates()`
+- Secret words correctly obey their directional constraints (by duck57). Fixes issue #42.
 
 ### Changed
 
