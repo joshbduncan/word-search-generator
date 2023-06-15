@@ -876,7 +876,7 @@ WORD_LIST = [
     "nothing",
     "notice",
     "now",
-    "n't",
+    "nut",
     "number",
     "occur",
     "off",
