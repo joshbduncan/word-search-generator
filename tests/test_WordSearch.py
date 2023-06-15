@@ -18,7 +18,7 @@ from word_search_generator.config import level_dirs
 from word_search_generator.mask.polygon import Rectangle
 from word_search_generator.word import Direction, Word
 
-from . import BUILTIN_MASK_SHAPES_OBJECTS, SECRET_WORDS, ITERATIONS, WORDS
+from . import BUILTIN_MASK_SHAPES_OBJECTS, ITERATIONS, SECRET_WORDS, WORDS
 
 
 def check_chars(puzzle, word):

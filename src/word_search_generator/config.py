@@ -56,7 +56,7 @@ level_dirs = {
         Direction.NE,
         Direction.SE,
         Direction.NW,
-        Direction.SW
+        Direction.SW,
     },
     8: {  # no diagonals
         Direction.N,
