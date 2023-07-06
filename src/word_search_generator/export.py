@@ -143,17 +143,21 @@ def draw_puzzle_page(pdf: FPDF, ws: WordSearch, solution: bool = False) -> FPDF:
     pdf.set_font_size(font_size)
 
     # draw the puzzle
-    placed_words_coordinates = {
-        coord
-        for coords in [
-            word.offset_coordinates(ws.bounding_box) for word in ws.placed_words
-        ]
-        for coord in coords  # type: ignore
-    }  # type: ignore
-    for r, row in enumerate(ws.cropped_puzzle):
-        for c, char in enumerate(row):
+    if solution:
+        placed_words_coordinates = {
+            coord
+            for coords in [
+                word.offset_coordinates(ws.bounding_box) for word in ws.placed_words
+            ]
+            for coord in coords  # type: ignore
+        }  # type: ignore
+    else:
+        placed_words_coordinates = {}  # type: ignore
+    print(f"{placed_words_coordinates=}")
+    for y, row in enumerate(ws.cropped_puzzle):
+        for x, char in enumerate(row):
             # draw a border around correct letters if solution was requested
-            if solution and (r, c) in placed_words_coordinates:
+            if solution and (x + 1, y + 1) in placed_words_coordinates:
                 pdf.set_text_color(255, 0, 0)
                 pdf.multi_cell(gsize, gsize, char, align="C", ln=3)
                 pdf.set_text_color(0, 0, 0)
