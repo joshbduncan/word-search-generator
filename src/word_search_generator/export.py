@@ -153,7 +153,6 @@ def draw_puzzle_page(pdf: FPDF, ws: WordSearch, solution: bool = False) -> FPDF:
         }  # type: ignore
     else:
         placed_words_coordinates = {}  # type: ignore
-    print(f"{placed_words_coordinates=}")
     for y, row in enumerate(ws.cropped_puzzle):
         for x, char in enumerate(row):
             # draw a border around correct letters if solution was requested
