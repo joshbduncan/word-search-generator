@@ -4,14 +4,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Testing for solution highlighting in PDF output
+
+### Changed
+
+- Updated testing to use fixtures
+- Standardized testing variable names
+
 ## [3.4.1]
 
 ### Fixed
+
 - Solution highlighting on exported PDFs
 
 ## [3.4.0]
 
 ### Fixed
+
 - `Word.offset_coordinates()`
 - Secret words correctly obey their directional constraints (by duck57). Fixes issue #42.
 

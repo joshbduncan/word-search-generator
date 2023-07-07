@@ -447,172 +447,166 @@ def test_heart_puzzle_too_small():
 # **************************************************** #
 
 
-def test_masked_property_true():
-    p = WordSearch("pig horse cow")
-    p.apply_mask(Star(5))
-    assert p.masked
+def test_masked_property_true(ws):
+    ws.apply_mask(Star(5))
+    assert ws.masked
 
 
-def test_masked_property_false():
-    p = WordSearch("pig horse cow")
-    assert not p.masked
+def test_masked_property_false(ws):
+    assert not ws.masked
 
 
-def test_add_mask_error():
-    p = WordSearch("pig horse cow")
+def test_add_mask_error(ws):
     with pytest.raises(TypeError):
-        p.apply_mask("J")  # type: ignore
+        ws.apply_mask("J")  # type: ignore
 
 
 def test_apply_mask_method_1():
-    p = WordSearch(",".join(get_random_words(10)), size=10)
-    p.apply_mask(Circle())
-    assert p.puzzle[0][0] == ""
-    assert p.puzzle[0][p.size - 1] == ""
-    assert p.puzzle[p.size - 1][0] == ""
-    assert p.puzzle[p.size - 1][p.size - 1] == ""
+    ws = WordSearch(",".join(get_random_words(10)), size=10)
+    ws.apply_mask(Circle())
+    assert ws.puzzle[0][0] == ""
+    assert ws.puzzle[0][ws.size - 1] == ""
+    assert ws.puzzle[ws.size - 1][0] == ""
+    assert ws.puzzle[ws.size - 1][ws.size - 1] == ""
 
 
 def test_apply_mask_method_2():
     size = 10
-    p = WordSearch(",".join(get_random_words(10)), size=size)
+    ws = WordSearch(",".join(get_random_words(10)), size=size)
     m1 = Mask()
     m1.generate(size)
-    p.apply_mask(m1)
+    ws.apply_mask(m1)
     m2 = Mask(method=2)
     m2.generate(size)
     m2.invert()
-    p.apply_mask(m2)
-    assert p.puzzle[0][0] != ""
-    assert p.puzzle[0][p.size - 1] != ""
-    assert p.puzzle[p.size - 1][0] != ""
-    assert p.puzzle[p.size - 1][p.size - 1] != ""
+    ws.apply_mask(m2)
+    assert ws.puzzle[0][0] != ""
+    assert ws.puzzle[0][ws.size - 1] != ""
+    assert ws.puzzle[ws.size - 1][0] != ""
+    assert ws.puzzle[ws.size - 1][ws.size - 1] != ""
 
 
 def test_apply_mask_method_3():
     size = 10
-    p = WordSearch(",".join(get_random_words(10)), size=size)
+    ws = WordSearch(",".join(get_random_words(10)), size=size)
     m1 = Mask()
     m1.generate(size)
     m1.invert()
-    p.apply_mask(m1)
-    p.apply_mask(Ellipse(method=3))
-    assert p.puzzle[size // 2][size // 2] == ""
+    ws.apply_mask(m1)
+    ws.apply_mask(Ellipse(method=3))
+    assert ws.puzzle[size // 2][size // 2] == ""
 
 
 def test_apply_masks():
     size = 21
-    p = WordSearch("pig horse cow", size=size)
-    p.apply_masks([Circle(), Ellipse(2, 2, method=3)])
-    assert len(p.masks) == 2
-    assert p.puzzle[size // 2][size // 2] == ""
+    ws = WordSearch("pig horse cow", size=size)
+    ws.apply_masks([Circle(), Ellipse(2, 2, method=3)])
+    assert len(ws.masks) == 2
+    assert ws.puzzle[size // 2][size // 2] == ""
 
 
 def test_show_mask(capsys):
     size = 5
-    p = WordSearch("pig horse cow", size=size)
-    p.apply_mask(Circle())
+    ws = WordSearch("pig horse cow", size=size)
+    ws.apply_mask(Circle())
     match = """# * * * #
 * * * * *
 * * * * *
 * * * * *
 # * * * #
 """
-    p.show_mask()
+    ws.show_mask()
     capture = capsys.readouterr()
     assert capture.out == match
 
 
 def test_show_mask_empty(capsys):
     size = 5
-    p = WordSearch("pig horse cow", size=size)
-    p.show_mask()
+    ws = WordSearch("pig horse cow", size=size)
+    ws.show_mask()
     capture = capsys.readouterr()
     assert capture.out == "Empty mask.\n"
 
 
 def test_puzzle_invert_mask():
     size = 21
-    p = WordSearch("pig horse cow", size=size)
-    p.apply_mask(Circle())
-    p.invert_mask()
-    assert p.puzzle[0][0] != ""
-    assert p.puzzle[0][p.size - 1] != ""
-    assert p.puzzle[p.size - 1][0] != ""
-    assert p.puzzle[p.size - 1][p.size - 1] != ""
+    ws = WordSearch("pig horse cow", size=size)
+    ws.apply_mask(Circle())
+    ws.invert_mask()
+    assert ws.puzzle[0][0] != ""
+    assert ws.puzzle[0][ws.size - 1] != ""
+    assert ws.puzzle[ws.size - 1][0] != ""
+    assert ws.puzzle[ws.size - 1][ws.size - 1] != ""
 
 
 def test_puzzle_flip_mask_horizontal():
     size = 6
-    p = WordSearch("pig horse cow", size=size)
+    ws = WordSearch("pig horse cow", size=size)
     m = Polygon([(0, 0), (0, size - 1), (2, size - 1), (2, 0)])
-    p.apply_mask(m)
-    p.flip_mask_horizontal()
-    assert p.mask == [r[::-1] for r in m.mask]
+    ws.apply_mask(m)
+    ws.flip_mask_horizontal()
+    assert ws.mask == [r[::-1] for r in m.mask]
 
 
 def test_puzzle_flip_mask_vertical():
     size = 6
-    p = WordSearch("pig horse cow", size=size)
+    ws = WordSearch("pig horse cow", size=size)
     m = Polygon([(0, 0), (size - 1, 0), (size - 1, 2), (0, 2)])
-    p.apply_mask(m)
-    p.flip_mask_vertical()
-    assert p.mask == m.mask[::-1]
+    ws.apply_mask(m)
+    ws.flip_mask_vertical()
+    assert ws.mask == m.mask[::-1]
 
 
 def test_puzzle_transpose_mask():
     size = 6
-    p = WordSearch("pig horse cow", size=size)
+    ws = WordSearch("pig horse cow", size=size)
     m1 = Polygon([(0, 0), (0, size - 1), (2, size - 1), (2, 0)])
     m2 = Polygon([(0, 0), (size - 1, 0), (size - 1, 2), (0, 2)])
     m2.generate(size)
-    p.apply_mask(m1)
-    p.transpose_mask()
-    assert p.mask == m2.mask
+    ws.apply_mask(m1)
+    ws.transpose_mask()
+    assert ws.mask == m2.mask
 
 
-def test_remove_masks():
-    p = WordSearch("pig horse cow")
-    p.apply_masks([Circle(), Ellipse(2, 2, method=3)])
-    p.remove_masks()
-    assert p.masks == []
-    assert not p.masked
+def test_remove_masks(ws):
+    ws.apply_masks([Circle(), Ellipse(2, 2, method=3)])
+    ws.remove_masks()
+    assert ws.masks == []
+    assert not ws.masked
 
 
-def test_remove_static_masks():
-    p = WordSearch("pig horse cow")
-    p.apply_masks([Star(), Ellipse(2, 2, method=3)])
-    assert len(p.masks) == 2
-    p.remove_static_masks()
-    assert len(p.masks) == 1
+def test_remove_static_masks(ws):
+    ws.apply_masks([Star(), Ellipse(2, 2, method=3)])
+    assert len(ws.masks) == 2
+    ws.remove_static_masks()
+    assert len(ws.masks) == 1
 
 
-def test_reapply_masks_static():
-    p = WordSearch("pig horse cow")
-    p.apply_mask(Circle())
-    assert p.puzzle[0][0] == ""
-    assert p.puzzle[0][p.size - 1] == ""
-    assert p.puzzle[p.size - 1][0] == ""
-    assert p.puzzle[p.size - 1][p.size - 1] == ""
-    p.size = 30
-    p._reapply_masks()
-    assert p.puzzle[0][0] != ""
-    assert p.puzzle[0][p.size - 1] != ""
-    assert p.puzzle[p.size - 1][0] != ""
-    assert p.puzzle[p.size - 1][p.size - 1] != ""
+def test_reapply_masks_static(ws):
+    ws.apply_mask(Circle())
+    assert ws.puzzle[0][0] == ""
+    assert ws.puzzle[0][ws.size - 1] == ""
+    assert ws.puzzle[ws.size - 1][0] == ""
+    assert ws.puzzle[ws.size - 1][ws.size - 1] == ""
+    ws.size = 30
+    ws._reapply_masks()
+    assert ws.puzzle[0][0] != ""
+    assert ws.puzzle[0][ws.size - 1] != ""
+    assert ws.puzzle[ws.size - 1][0] != ""
+    assert ws.puzzle[ws.size - 1][ws.size - 1] != ""
 
 
 def test_reapply_masks_dynamic_scale_up():
-    p = WordSearch("pig horse cow", size=11)
-    p.apply_mask(Star())
-    ct = sum([1 for x in p.puzzle if x != ""])  # type: ignore
-    p.size = 21
-    assert ct != sum([1 for x in p.puzzle if x != ""])  # type: ignore
+    ws = WordSearch("pig horse cow", size=11)
+    ws.apply_mask(Star())
+    ct = sum([1 for x in ws.puzzle if x != ""])  # type: ignore
+    ws.size = 21
+    assert ct != sum([1 for x in ws.puzzle if x != ""])  # type: ignore
 
 
 def test_reapply_masks_dynamic_scale_down():
-    p = WordSearch("pig horse cow", size=21)
-    p.apply_mask(Star())
-    ct = sum([1 for x in p.puzzle if x != ""])  # type: ignore
-    p.size = 11
-    assert ct != sum([1 for x in p.puzzle if x != ""])  # type: ignore
+    ws = WordSearch("pig horse cow", size=21)
+    ws.apply_mask(Star())
+    ct = sum([1 for x in ws.puzzle if x != ""])  # type: ignore
+    ws.size = 11
+    assert ct != sum([1 for x in ws.puzzle if x != ""])  # type: ignore

@@ -61,40 +61,40 @@ def test_puzzle_size_less_than_shortest_word_length():
 
 def test_only_placed_words_in_key():
     w = ",".join(get_random_words(100))
-    p = WordSearch(w, size=5)
-    assert all(word.direction for word in p.placed_words)
+    ws = WordSearch(w, size=5)
+    assert all(word.direction for word in ws.placed_words)
 
 
 def test_too_many_supplied_words():
     w = ",".join(get_random_words(100))
-    p = WordSearch(w, size=5)
-    assert len(p.words) != len(p.placed_words)
+    ws = WordSearch(w, size=5)
+    assert len(ws.words) != len(ws.placed_words)
 
 
 def test_fit_all_words_with_plenty_of_space():
     for _ in range(10):
-        p = WordSearch("cat dog pig cow mule duck")
-        assert len(p.placed_words) == 6
+        ws = WordSearch("cat dog pig cow mule duck")
+        assert len(ws.placed_words) == 6
 
 
 def test_fit_all_words_with_plenty_of_space_and_secret_words():
     for _ in range(10):
-        p = WordSearch("cat dog pig", secret_words="cow mule duck")
-        assert len(p.placed_words) == 6
+        ws = WordSearch("cat dog pig", secret_words="cow mule duck")
+        assert len(ws.placed_words) == 6
 
 
 def test_too_many_words():
-    p = WordSearch(size=50)
-    p.random_words(100)
-    p.random_words(100, action="ADD")
-    assert len(p.placed_words) <= max_puzzle_words
+    ws = WordSearch(size=50)
+    ws.random_words(100)
+    ws.random_words(100, action="ADD")
+    assert len(ws.placed_words) <= max_puzzle_words
 
 
 def test_too_many_secret_words():
-    p = WordSearch(size=50)
-    p.random_words(100)
-    p.random_words(100, action="ADD", secret=True)
-    assert len(p.placed_words) <= max_puzzle_words
+    ws = WordSearch(size=50)
+    ws.random_words(100)
+    ws.random_words(100, action="ADD", secret=True)
+    assert len(ws.placed_words) <= max_puzzle_words
 
 
 def test_secret_word_directions():
@@ -102,8 +102,8 @@ def test_secret_word_directions():
     level = 1  # right or down
     secret_words = "pig dog fox"
     secret_level = 7  # diagonals only
-    p = WordSearch(
+    ws = WordSearch(
         words, level=level, secret_words=secret_words, secret_level=secret_level
     )
-    for w in p.placed_secret_words:
+    for w in ws.placed_secret_words:
         assert w.direction in level_dirs[secret_level]

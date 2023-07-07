@@ -1,6 +1,6 @@
 import pytest
 
-from word_search_generator import WordSearch, utils
+from word_search_generator import utils
 from word_search_generator.word import Word
 
 
@@ -69,12 +69,12 @@ def test_invalid_level_direction_type():
         utils.validate_level(None)
 
 
-def test_answer_key_list():
-    p = WordSearch("bat cab rat")
+def test_answer_key_list(ws, words):
     key_as_list = utils.get_answer_key_list(
-        p.hidden_words.union(p.secret_words), p.bounding_box
+        ws.hidden_words.union(ws.secret_words), ws.bounding_box
     )
-    assert len(key_as_list) == len(p.key) and key_as_list[0].startswith("BAT")
+    assert len(key_as_list) == len(ws.key)
+    assert str(key_as_list[0]).lower().startswith(sorted(words.split(", "))[0].lower())
 
 
 def test_float_range():

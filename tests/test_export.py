@@ -13,8 +13,6 @@ from pypdf import PdfReader
 from word_search_generator import WordSearch, config, utils
 from word_search_generator.word import Direction, Word
 
-from . import ITERATIONS, WORDS
-
 
 def check_chars(puzzle, word):
     row, col = word.position
@@ -26,8 +24,8 @@ def check_chars(puzzle, word):
     return True
 
 
-def test_export_csv(tmp_path):
-    puzzle = WordSearch(WORDS)
+def test_export_csv(words, tmp_path):
+    puzzle = WordSearch(words)
     path = Path.joinpath(tmp_path, "test.csv")
     puzzle.save(path, format="csv")
     with open(path) as f:
@@ -35,8 +33,8 @@ def test_export_csv(tmp_path):
     assert not re.findall("\nSOLUTION\n", data)
 
 
-def test_export_json(tmp_path):
-    puzzle = WordSearch(WORDS)
+def test_export_json(words, tmp_path):
+    puzzle = WordSearch(words)
     path = Path.joinpath(tmp_path, "test.json")
     final_path = puzzle.save(path, format="json")
     data = json.loads(Path(final_path).read_text())
@@ -44,11 +42,11 @@ def test_export_json(tmp_path):
         assert word.text in data["words"]
 
 
-def test_export_pdf_puzzles(tmp_path):
+def test_export_pdf_puzzles(iterations, tmp_path):
     """Export a bunch of puzzles as PDF and make sure they are all 1-page."""
     puzzles = []
     pages = set()
-    for _ in range(ITERATIONS):
+    for _ in range(iterations):
         size = random.choice(range(config.min_puzzle_size, config.max_puzzle_size))
         words = ",".join(
             utils.get_random_words(
@@ -67,11 +65,11 @@ def test_export_pdf_puzzles(tmp_path):
     assert pages == {1}
 
 
-def test_export_pdf_puzzle_with_solution(tmp_path):
+def test_export_pdf_puzzle_with_solution(iterations, tmp_path):
     """Make sure a pdf puzzle exported with the solution is 2 pages."""
     puzzles = []
     pages = set()
-    for _ in range(ITERATIONS):
+    for _ in range(iterations):
         size = random.choice(range(config.min_puzzle_size, config.max_puzzle_size))
         words = ",".join(
             utils.get_random_words(
@@ -118,22 +116,22 @@ def test_export_json_overwrite_file_error(tmp_path):
 
 
 @pytest.mark.skipif(os.name == "nt", reason="need to figure out")
-def test_export_pdf_os_error():
+def test_export_pdf_os_error(words):
     """Try to export a puzzle to a place you don't have access to."""
-    puzzle = WordSearch(WORDS)
+    puzzle = WordSearch(words)
     with pytest.raises(OSError):
         puzzle.save("/test.pdf")
 
 
 @pytest.mark.skipif(os.name == "nt", reason="need to figure out")
-def test_export_csv_os_error():
+def test_export_csv_os_error(words):
     """Try to export a puzzle to a place you don't have access to."""
-    puzzle = WordSearch(WORDS)
+    puzzle = WordSearch(words)
     with pytest.raises(OSError):
         puzzle.save("/test.csv")
 
 
-def test_pdf_output_key(tmp_path):
+def test_pdf_output_key(iterations, tmp_path):
     def parse_puzzle(extraction):
         puzzle = []
         for line in extraction.split("\n"):
@@ -159,11 +157,11 @@ def test_pdf_output_key(tmp_path):
         return words
 
     results = []
-    for _ in range(ITERATIONS):
-        p = WordSearch(size=random.randint(8, 21))
-        p.random_words(random.randint(5, 21))
+    for _ in range(iterations):
+        ws = WordSearch(size=random.randint(8, 21))
+        ws.random_words(random.randint(5, 21))
         path = Path.joinpath(tmp_path, f"{uuid.uuid4()}.pdf")
-        p.save(path)
+        ws.save(path)
         reader = PdfReader(path)
         page = reader.pages[0]
         puzzle = parse_puzzle(page.extract_text(0))
@@ -173,7 +171,7 @@ def test_pdf_output_key(tmp_path):
     assert all(results)
 
 
-def test_pdf_output_words(tmp_path):
+def test_pdf_output_words(iterations, tmp_path):
     def parse_word_list(extraction):
         return {
             word.strip()
@@ -196,11 +194,11 @@ def test_pdf_output_words(tmp_path):
         return words
 
     results = []
-    for i in range(ITERATIONS):
-        p = WordSearch(size=random.randint(8, 21))
-        p.random_words(random.randint(5, 21))
+    for i in range(iterations):
+        ws = WordSearch(size=random.randint(8, 21))
+        ws.random_words(random.randint(5, 21))
         path = Path.joinpath(tmp_path, f"{uuid.uuid4()}.pdf")
-        p.save(path)
+        ws.save(path)
         reader = PdfReader(path)
         page = reader.pages[0]
         word_list = parse_word_list(page.extract_text(0))
@@ -214,7 +212,7 @@ def test_pdf_output_words(tmp_path):
     assert all(results)
 
 
-def test_pdf_output_puzzle_size(tmp_path):
+def test_pdf_output_puzzle_size(iterations, tmp_path):
     def parse_puzzle(extraction):
         puzzle = []
         for line in extraction.split("\n"):
@@ -227,31 +225,31 @@ def test_pdf_output_puzzle_size(tmp_path):
         return puzzle
 
     results = []
-    for _ in range(ITERATIONS):
-        p = WordSearch(size=random.randint(8, 21))
-        p.random_words(random.randint(5, 21))
+    for _ in range(iterations):
+        ws = WordSearch(size=random.randint(8, 21))
+        ws.random_words(random.randint(5, 21))
         path = Path.joinpath(tmp_path, f"{uuid.uuid4()}.pdf")
-        p.save(path)
+        ws.save(path)
         reader = PdfReader(path)
         page = reader.pages[0]
         puzzle = parse_puzzle(page.extract_text(0))
         results.append(
-            p.size == len(puzzle) and p.size == len(puzzle[0])
+            ws.size == len(puzzle) and ws.size == len(puzzle[0])
         )  # type: ignore
 
     assert all(results)
 
 
-def test_pdf_output_solution(tmp_path):
+def test_pdf_output_solution(iterations, tmp_path):
     results = []
-    for _ in range(ITERATIONS):
-        p = WordSearch(size=random.randint(8, 21))
-        p.random_words(random.randint(5, 21))
+    for _ in range(iterations):
+        ws = WordSearch(size=random.randint(8, 21))
+        ws.random_words(random.randint(5, 21))
         path = Path.joinpath(tmp_path, f"{uuid.uuid4()}.pdf")
-        p.save(path=path, format="PDF", solution=True)
+        ws.save(path=path, format="PDF", solution=True)
         with pdfplumber.open(path) as pdf:
             chars = pdf.pages[1].chars  # get all characters from page 2
-        word_chars = sorted({c for word in p.placed_words for c in word.text})
+        word_chars = sorted({c for word in ws.placed_words for c in word.text})
         highlighted_chars = sorted(
             {
                 char["text"]
@@ -265,7 +263,7 @@ def test_pdf_output_solution(tmp_path):
 
 
 @pytest.mark.skipif(os.name == "nt", reason="need to figure out")
-def test_csv_output_puzzle_size(tmp_path):
+def test_csv_output_puzzle_size(iterations, tmp_path):
     def parse_puzzle(fp):
         puzzle = []
         with open(fp, newline="") as f:
@@ -280,14 +278,14 @@ def test_csv_output_puzzle_size(tmp_path):
         return puzzle
 
     results = []
-    for _ in range(ITERATIONS):
-        p = WordSearch(size=random.randint(8, 21))
-        p.random_words(random.randint(5, 21))
+    for _ in range(iterations):
+        ws = WordSearch(size=random.randint(8, 21))
+        ws.random_words(random.randint(5, 21))
         path = Path.joinpath(tmp_path, f"{uuid.uuid4()}.pdf")
-        p.save(path, format="CSV")
+        ws.save(path, format="CSV")
         puzzle = parse_puzzle(path)
         results.append(
-            p.size == len(puzzle) and p.size == len(puzzle[0])
+            ws.size == len(puzzle) and ws.size == len(puzzle[0])
         )  # type: ignore
 
     assert all(results)
