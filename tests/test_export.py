@@ -6,6 +6,7 @@ import re
 import uuid
 from pathlib import Path
 
+import pdfplumber
 import pytest
 from pypdf import PdfReader
 
@@ -237,6 +238,28 @@ def test_pdf_output_puzzle_size(tmp_path):
         results.append(
             p.size == len(puzzle) and p.size == len(puzzle[0])
         )  # type: ignore
+
+    assert all(results)
+
+
+def test_pdf_output_solution(tmp_path):
+    results = []
+    for _ in range(ITERATIONS):
+        p = WordSearch(size=random.randint(8, 21))
+        p.random_words(random.randint(5, 21))
+        path = Path.joinpath(tmp_path, f"{uuid.uuid4()}.pdf")
+        p.save(path=path, format="PDF", solution=True)
+        with pdfplumber.open(path) as pdf:
+            chars = pdf.pages[1].chars  # get all characters from page 2
+        word_chars = sorted({c for word in p.placed_words for c in word.text})
+        highlighted_chars = sorted(
+            {
+                char["text"]
+                for char in chars
+                if char["non_stroking_color"] == (1.0, 0.0, 0.0)
+            }
+        )
+        results.append(word_chars == highlighted_chars)
 
     assert all(results)
 
