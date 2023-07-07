@@ -3,6 +3,7 @@ flake8>=4.0.1
 fpdf2==2.5.0
 isort>=5.10.1
 mypy>=0.990
+pdfplumber>=0.9.0
 pre-commit>=2.17.0
 pypdf==3.1.0
 pytest>=6.2.5
