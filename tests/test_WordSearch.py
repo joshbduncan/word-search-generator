@@ -19,16 +19,6 @@ from word_search_generator.mask.polygon import Rectangle
 from word_search_generator.word import Direction, Word
 
 
-def check_chars(puzzle, word):
-    row, col = word.position
-    for c in word.text:
-        if c != puzzle[row][col]:
-            return False
-        row += word.direction.r_move
-        col += word.direction.c_move
-    return True
-
-
 def check_key(key: Key, puzzle: Puzzle) -> bool:
     """Test the puzzle key against the current puzzle state."""
     for word, info in key.items():
@@ -450,6 +440,15 @@ def test_cropped_puzzle_masked_2(words):
 
 
 def test_word_placement(iterations, builtin_mask_shapes):
+    def check_chars(puzzle, word):
+        row, col = word.position
+        for c in word.text:
+            if c != puzzle[row][col]:
+                return False
+            row += word.direction.r_move
+            col += word.direction.c_move
+        return True
+
     results = []
     for _ in range(iterations):
         ws = WordSearch(size=random.randint(21, 35))

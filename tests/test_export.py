@@ -240,7 +240,7 @@ def test_pdf_output_puzzle_size(iterations, tmp_path):
     assert all(results)
 
 
-def test_pdf_output_solution(iterations, tmp_path):
+def test_pdf_output_solution_characters(iterations, tmp_path):
     results = []
     for _ in range(iterations):
         ws = WordSearch(size=random.randint(8, 21))
@@ -258,6 +258,36 @@ def test_pdf_output_solution(iterations, tmp_path):
             }
         )
         results.append(word_chars == highlighted_chars)
+
+    assert all(results)
+
+
+def test_pdf_output_solution_character_placement(iterations, tmp_path):
+    def check_chars(puzzle, word):
+        row, col = word.position
+        for c in word.text:
+            if c != puzzle[row][col]["text"] or puzzle[row][col][
+                "non_stroking_color"
+            ] != (1.0, 0.0, 0.0):
+                return False
+            row += word.direction.r_move
+            col += word.direction.c_move
+        return True
+
+    results = []
+    for _ in range(iterations):
+        ws = WordSearch(size=random.randint(8, 21))
+        ws.random_words(random.randint(5, 21))
+        path = Path.joinpath(tmp_path, f"{uuid.uuid4()}.pdf")
+        ws.save(path=path, format="PDF", solution=True)
+        with pdfplumber.open(path) as pdf:
+            chars = pdf.pages[1].chars  # get all characters from page 2
+        known_title = "WORD SEARCH (SOLUTION)"
+        puzzle_chars = chars[len(known_title) : len(known_title) + ws.size**2]
+        puzzle = [
+            puzzle_chars[i * ws.size : i * ws.size + ws.size] for i in range(ws.size)
+        ]
+        results.append(all(check_chars(puzzle, word) for word in ws.placed_words))
 
     assert all(results)
 
