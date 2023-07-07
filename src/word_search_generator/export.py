@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import json
 from typing import TYPE_CHECKING
 
 from fpdf import FPDF
@@ -13,23 +14,25 @@ if TYPE_CHECKING:  # pragma: no cover
     from . import WordSearch
 
 
-def write_csv_file(path: Path, ws: WordSearch) -> Path:
+def write_csv_file(path: Path, ws: WordSearch, solution: bool = False) -> Path:
     """Write current puzzle to CSV format at `path`.
 
     Args:
         path (Path): Path to write the file to.
         ws (WordSearch): Current Word Search puzzle.
+        solution (bool, optional): Only include the puzzle solution. Defaults to False.
 
     Returns:
         Path: Final save path.
     """
     word_list = utils.get_word_list_list(ws.key)
+    puzzle = utils.hide_filler_characters(ws) if solution else ws.cropped_puzzle
     with open(path, "x") as f:
         f_writer = csv.writer(
             f, delimiter=",", quotechar='"', quoting=csv.QUOTE_MINIMAL
         )
         f_writer.writerow(["WORD SEARCH"])
-        for row in ws.cropped_puzzle:
+        for row in puzzle:
             f_writer.writerow(row)
         f_writer.writerow([""])
         f_writer.writerow(["Word List:"])
@@ -52,27 +55,36 @@ def write_csv_file(path: Path, ws: WordSearch) -> Path:
     return path.absolute()
 
 
-def write_json_file(path: Path, ws: WordSearch) -> Path:
+def write_json_file(path: Path, ws: WordSearch, solution: bool = False) -> Path:
     """Write current puzzle to JSON format at `path`.
 
     Args:
         path (Path): Path to write the file to.
         ws (WordSearch): Current Word Search puzzle.
+        solution (bool, optional): Only include the puzzle solution. Defaults to False.
 
     Returns:
         Path: Final save path.
     """
+    puzzle = utils.hide_filler_characters(ws) if solution else ws.cropped_puzzle
+    data = json.dumps(
+        {
+            "puzzle": puzzle,
+            "words": [word.text for word in ws.placed_words],
+            "key": {word.text: word.key_info_json for word in ws.words if word.placed},
+        }
+    )
     with open(path, "x") as f:
-        f.write(ws.json)
+        f.write(data)
     return path.absolute()
 
 
-def write_pdf_file(path: Path, puzzle: WordSearch, solution: bool = False) -> Path:
+def write_pdf_file(path: Path, ws: WordSearch, solution: bool = False) -> Path:
     """Write current puzzle to PDF format at `path`.
 
     Args:
         path (Path): Path to write the file to.
-        puzzle (Type[WordSearch]): Current Word Search puzzle.
+        ws (Type[WordSearch]): Current Word Search puzzle.
         solution (bool, optional): Include the puzzle solution. Defaults to False.
 
     Raises:
@@ -90,11 +102,11 @@ def write_pdf_file(path: Path, puzzle: WordSearch, solution: bool = False) -> Pa
     pdf.set_line_width(pdf.line_width * 2)
 
     # draw initial puzzle page
-    pdf = draw_puzzle_page(pdf, puzzle, False)
+    pdf = draw_puzzle_page(pdf, ws)
 
     # add puzzle solution page if requested
     if solution:
-        pdf = draw_puzzle_page(pdf, puzzle, True)
+        pdf = draw_puzzle_page(pdf, ws, solution)
 
     # check the provided path since fpdf doesn't offer context manager
     if path.exists():

@@ -238,6 +238,15 @@ def test_puzzle_show_solution_output(ws, capsys):
     assert capture1.out == capture2.out
 
 
+def test_puzzle_show_hide_fillers_output(ws, capsys):
+    print(utils.format_puzzle_for_show(ws, hide_fillers=True))
+    capture1 = capsys.readouterr()
+    ws.show(hide_fillers=True)
+    capture2 = capsys.readouterr()
+    assert capture1.out == capture2.out
+    assert "\x1b" not in capture2.out
+
+
 def test_json_output_property_for_puzzle():
     words = ",".join(utils.get_random_words(10))
     ws = WordSearch(words, level=3)
@@ -429,6 +438,18 @@ def test_cropped_puzzle_masked_1(words):
     ws.apply_mask(Rectangle(size - 2, size - 2, (1, 1)))
     assert ws.puzzle[1][1] == ws.cropped_puzzle[0][0]
     assert ws.puzzle[size - 2][size - 2] == ws.cropped_puzzle[size - 3][size - 3]
+
+
+def test_cropped_puzzle_size(words):
+    size = 20
+    ws = WordSearch(words, size=size)
+    rec_w = size - 5
+    rec_h = size - 7
+    ws.apply_mask(Rectangle(rec_w, rec_h, (1, 1)))
+    w, h = ws.cropped_size
+    assert w != ws.size
+    assert h != ws.size
+    assert ws.cropped_size == (rec_w, rec_h)
 
 
 def test_cropped_puzzle_masked_2(words):

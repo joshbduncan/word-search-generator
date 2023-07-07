@@ -255,10 +255,13 @@ def format_puzzle_for_show(
     ws: WordSearch, show_solution: bool = False, hide_fillers: bool = False
 ) -> str:
     word_list = get_word_list_str(ws.key)
-    # highlight solution if requested
-    puzzle_list = highlight_solution(ws) if show_solution else ws.puzzle
-    # hide filler characters if requested
-    puzzle_list = hide_filler_characters(ws) if hide_fillers else puzzle_list
+    # prepare the correct version of the puzzle
+    if hide_fillers:
+        puzzle_list = hide_filler_characters(ws)
+    elif show_solution:
+        puzzle_list = highlight_solution(ws)
+    else:
+        puzzle_list = ws.puzzle
     # calculate header length based on cropped puzzle size to account for masks
     header_width = max(11, (ws.bounding_box[1][0] - ws.bounding_box[0][0] + 1) * 2 - 1)
     hr = "-" * header_width

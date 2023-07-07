@@ -10,12 +10,12 @@ from __future__ import annotations
 """
 
 __app_name__ = "word-search"
-__version__ = "3.4.1"
+__version__ = "3.5.0"
 
 
 import json
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Set
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Set, Tuple
 
 from . import export, generate, utils
 from .config import (
@@ -208,7 +208,7 @@ class WordSearch:
             return json.dumps({})
         return json.dumps(
             {
-                "puzzle": self.puzzle,
+                "puzzle": self.cropped_puzzle,
                 "words": [word.text for word in self.placed_words],
                 "key": {
                     word.text: word.key_info_json for word in self.words if word.placed
@@ -304,6 +304,11 @@ class WordSearch:
             self._reapply_masks()
             self._generate()
 
+    @property
+    def cropped_size(self) -> Tuple[int, int]:
+        """Size (in characters) of `self.cropped_puzzle` as a (width, height) tuple."""
+        return (len(self.cropped_puzzle[0]), len(self.cropped_puzzle))
+
     # ************************************************* #
     # ******************** METHODS ******************** #
     # ************************************************* #
@@ -362,7 +367,7 @@ class WordSearch:
         Args:
             solution (bool, optional): Highlight the puzzle solution. Defaults to False.
             hide_fillers (bool, optional): Hide all filler letters so only the solution
-                is shown. Overrides `solution`.
+                is shown. Overrides `solution`. Defaults to False.
         """
         if self.key:
             print(utils.format_puzzle_for_show(self, solution, hide_fillers))
@@ -382,11 +387,15 @@ class WordSearch:
             format (str, optional): Type of file to save ("CSV", "JSON", "PDF").
                 Defaults to "PDF".
             solution (bool, optional): Include solution with the saved file.
-                Only applies to PDF file type. Defaults to False.
+                For CSV and JSON files, only placed word characters will be included.
+                For PDF, a separate solution page will be included with word
+                characters highlighted in red. Defaults to False.
 
         Returns:
             str: Final save path of the file.
         """
+        if not self.key:
+            raise AttributeError("No puzzle data to save.")
         if format.upper() not in ["CSV", "JSON", "PDF"]:
             raise ValueError('Save file format must be either "CSV", "JSON", or "PDF".')
         # convert strings to PATH object
@@ -394,9 +403,9 @@ class WordSearch:
             path = Path(path)
         # write the file
         if format.upper() == "CSV":
-            saved_file = export.write_csv_file(path, self)
+            saved_file = export.write_csv_file(path, self, solution)
         elif format.upper() == "JSON":
-            saved_file = export.write_json_file(path, self)
+            saved_file = export.write_json_file(path, self, solution)
         else:
             saved_file = export.write_pdf_file(path, self, solution)
         # return saved file path

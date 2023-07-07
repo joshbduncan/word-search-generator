@@ -4,11 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [3.5.0] 2023-07-07
 
 ### Added
 
+- `save()` method now also supports the `solution` argument for "CSV" and "JSON" formats. This will remove all filler characters from the saved output, leaving only characters from the placed puzzle words. Closes issues #41 and #44.
 - Testing for solution highlighting in PDF output
+- `cropped_size` property which gives the size (in characters) of a cropped/masked puzzle as a (width, height) tuple
 
 ### Changed
 

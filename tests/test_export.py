@@ -42,6 +42,21 @@ def test_export_json(words, tmp_path):
         assert word.text in data["words"]
 
 
+def test_export_empty_puzzle(tmp_path):
+    with pytest.raises(AttributeError):
+        puzzle = WordSearch()
+        path = Path.joinpath(tmp_path, "test.csv")
+        puzzle.save(path, format="csv")
+    with pytest.raises(AttributeError):
+        puzzle = WordSearch()
+        path = Path.joinpath(tmp_path, "test.json")
+        puzzle.save(path, format="json")
+    with pytest.raises(AttributeError):
+        puzzle = WordSearch()
+        path = Path.joinpath(tmp_path, "test.pdf")
+        puzzle.save(path, format="pdf")
+
+
 def test_export_pdf_puzzles(iterations, tmp_path):
     """Export a bunch of puzzles as PDF and make sure they are all 1-page."""
     puzzles = []
