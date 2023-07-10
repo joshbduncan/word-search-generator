@@ -1,5 +1,3 @@
-from typing import Any, List, Optional, Tuple
-
 from ..config import ACTIVE, INACTIVE, max_puzzle_size, min_puzzle_size
 from ..utils import find_bounding_box
 
@@ -18,14 +16,14 @@ class Mask:
 
     def __init__(
         self,
-        points: Optional[List[Tuple[int, int]]] = None,
+        points: list[tuple[int, int]] | None = None,
         method: int = 1,
         static: bool = True,
     ) -> None:
         """Initialize a WordSearch puzzle mask object.
 
         Args:
-            points (Optional[List[Tuple[int, int]]], optional): Coordinate points
+            points (list[tuple[int, int]] | None, optional): Coordinate points
                 used to build the mask. Defaults to None.
             method (int, optional): How Mask is applied to the puzzle
                 (1=Standard (Intersection), 2=Additive, 3=Subtractive). Defaults to 1.
@@ -40,11 +38,11 @@ class Mask:
         self.method = method
         self.static = static
         self._puzzle_size: int = 0
-        self._mask: List[Any] = []
+        self._mask: list[list[str]] = []
 
     @property
-    def mask(self) -> List[Any]:
-        """Mask as a 2-D array (List[List[str]])."""
+    def mask(self) -> list[list[str]]:
+        """Mask as a 2-D array (list[list[str]])."""
         return self._mask
 
     @property
@@ -53,7 +51,7 @@ class Mask:
         return self._method
 
     @method.setter
-    def method(self, val: int) -> None:
+    def method(self, value: int) -> None:
         """Set the Mask method.
 
         Args:
@@ -63,11 +61,11 @@ class Mask:
         Raises:
             ValueError: Must 1, 2, or 3 (see `Mask.METHODS`).
         """
-        if not isinstance(val, int):
+        if not isinstance(value, int):
             raise TypeError("Must be an integer.")
-        if isinstance(val, int) and val not in Mask.METHODS:
+        if isinstance(value, int) and value not in Mask.METHODS:
             raise ValueError(f"Must be one of {Mask.METHODS}")
-        self._method = val
+        self._method = value
 
     @property
     def static(self) -> int:
@@ -75,7 +73,7 @@ class Mask:
         return self._static
 
     @static.setter
-    def static(self, val: bool) -> None:
+    def static(self, value: bool) -> None:
         """Set the Mask static property.
 
         Args:
@@ -85,9 +83,9 @@ class Mask:
         Raises:
             TypeError: Must be a boolean value.
         """
-        if not isinstance(val, bool):
+        if not isinstance(value, bool):
             raise TypeError("Must be a boolean value.")
-        self._static = val
+        self._static = value
 
     @property
     def puzzle_size(self) -> int:
@@ -96,7 +94,7 @@ class Mask:
         return self._puzzle_size
 
     @puzzle_size.setter
-    def puzzle_size(self, val: int) -> None:
+    def puzzle_size(self, value: int) -> None:
         """Set the `Mask.puzzle_size` value. Should match the size
         of the puzzle the mask will be applied to.
 
@@ -108,20 +106,20 @@ class Mask:
             ValueError: Must be greater than `config.min_puzzle_size` and
             less than `config.max_puzzle_size`.
         """
-        if not isinstance(val, int):
+        if not isinstance(value, int):
             raise TypeError("Must be an integer.")
-        if not min_puzzle_size <= val <= max_puzzle_size:
+        if not min_puzzle_size <= value <= max_puzzle_size:
             raise ValueError(
                 f"Must be >= {min_puzzle_size}" + f" and <= {max_puzzle_size}"
             )
-        self._puzzle_size = val
+        self._puzzle_size = value
         if not self.static:
             self.reset_points()
 
     @property
-    def bounding_box(self) -> Optional[Tuple[Tuple[int, int], Tuple[int, int]]]:
+    def bounding_box(self) -> tuple[tuple[int, int], tuple[int, int]] | None:
         """Bounding box of the masked area as a rectangle defined
-        by a Tuple of (top-left edge as x, y, bottom-right edge as x, y). Returned
+        by a tuple of (top-left edge as x, y, bottom-right edge as x, y). Returned
         points may lie outside of the puzzle bounds. This property is used
         for filling mask shapes so it needs to know the actual mask bounds no
         matter where lie."""
@@ -142,7 +140,7 @@ class Mask:
         return ((min_x, min_y), (max_x, max_y))
 
     @staticmethod
-    def build_mask(size: int, char: str = INACTIVE) -> List[List[str]]:
+    def build_mask(size: int, char: str = INACTIVE) -> list[list[str]]:
         """Generate a 2-D array (square) of `size` filled with `char`.
 
         Args:
@@ -151,7 +149,7 @@ class Mask:
                 Defaults to `config.INACTIVE`.
 
         Returns:
-            List[List[str]]: 2-D array filled will `char`.
+            list[list[str]]: 2-D array filled will `char`.
         """
         return [[char] * size for _ in range(size)]
 
@@ -231,13 +229,13 @@ class CompoundMask(Mask):
     and allows you to generate a single mask from a set of masks."""
 
     def __init__(
-        self, masks: Optional[List[Mask]] = None, method: int = 1, static: bool = True
+        self, masks: list[Mask] | None = None, method: int = 1, static: bool = True
     ) -> None:
         """Initialize a WordSearch puzzle compound mask object
         built from multiple `Mask` objects.
 
         Args:
-            masks (Optional[List[Mask]], optional): Masks objects used to build
+            masks (list[Mask] | None, optional): Masks objects used to build
                 a the CompoundMask. Defaults to None.
             method (int, optional): How Mask is applied to the puzzle
                 (1=Standard (Intersection), 2=Additive, 3=Subtractive). Defaults to 1.
@@ -248,9 +246,9 @@ class CompoundMask(Mask):
         self.masks = masks if masks else []
 
     @property
-    def bounding_box(self) -> Tuple[Tuple[int, int], Tuple[int, int]]:
+    def bounding_box(self) -> tuple[tuple[int, int], tuple[int, int]]:
         """Bounding box of the masked area as a rectangle defined
-        by a Tuple of (top-left edge as x, y, bottom-right edge as x, y).
+        by a tuple of (top-left edge as x, y, bottom-right edge as x, y).
 
         Note: This is a special implementation of the `bounding.box` property
         in use just for the `CompoundMask` object. Normally the `bounding_box`

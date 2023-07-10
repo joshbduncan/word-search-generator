@@ -3,7 +3,6 @@ from __future__ import annotations
 import copy
 import math
 import random
-import sys
 from math import log2
 from typing import TYPE_CHECKING, Any, Iterable, Sized
 
@@ -19,7 +18,6 @@ def calc_puzzle_size(words: Wordlist, level: Sized, size: int | None = None) -> 
     """Calculate the puzzle grid size."""
     all_words = [word.text for word in words]
     longest_word_length = len(max(all_words, key=len))
-    shortest_word_length = len(min(all_words, key=len))
     if not size:
         longest = max(10, longest_word_length)
         # calculate multiplier for larger word lists so that most have room to fit
@@ -27,13 +25,6 @@ def calc_puzzle_size(words: Wordlist, level: Sized, size: int | None = None) -> 
         # level lengths in config.py are nice multiples of 2
         l_size = log2(len(level)) if level else 1  # protect against log(0) in tests
         size = min(round(longest + l_size * 2 * multiplier), config.max_puzzle_size)
-    else:
-        if size < shortest_word_length:
-            print(
-                "Puzzle sized adjust to fit word with the shortest length.",
-                file=sys.stderr,
-            )
-            size = shortest_word_length + 1
     return size
 
 
@@ -82,7 +73,7 @@ def find_bounding_box(
     grid: list[list[str]], edge: str = config.ACTIVE
 ) -> tuple[tuple[int, int], tuple[int, int]]:
     """Bounding box of the masked area as a rectangle defined
-    by a Tuple of (top-left edge as x, y, bottom-right edge as x, y)"""
+    by a tuple of (top-left edge as x, y, bottom-right edge as x, y)"""
     size = len(grid)
     min_y = 0
     for i, r in enumerate(grid):
@@ -264,13 +255,13 @@ def get_word_list_list(key: Key) -> list[str]:
 
 def get_answer_key_list(
     words: Wordlist, bbox: tuple[tuple[int, int], tuple[int, int]]
-) -> list[Any]:
+) -> list[str]:
     """Return a easy to read answer key for display/export. Resulting coordinates
     will be offset by the supplied values. Used for masked puzzles.
 
     Args:
         words (Wordlist): A list of `Word` objects.
-        bbox (Tuple[int, int, int, int]): Puzzle mask bounding box
+        bbox (tuple[int, int, int, int]): Puzzle mask bounding box
         coordinates should be offset by.
     """
     return [w.key_string(bbox) for w in sorted(words, key=lambda word: word.text)]
@@ -284,7 +275,7 @@ def get_answer_key_str(
 
     Args:
         words (Wordlist): A list of `Word` objects.
-        bbox (Tuple[int, int, int, int]): Puzzle mask bounding box
+        bbox (tuple[int, int, int, int]): Puzzle mask bounding box
         coordinates should be offset by.
     """
     return ", ".join(get_answer_key_list(words, bbox))

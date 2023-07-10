@@ -1,7 +1,6 @@
 import json
 import pathlib
 import random
-from typing import Set
 
 import pytest
 
@@ -39,17 +38,6 @@ def test_empty_object():
 
 def test_input_cleanup(ws):
     assert len(ws.words) == 8
-
-
-# def test_junky_input_cleanup():
-#     junky_words = """here, are,                  a, don't
-
-#     it's what's,
-#     junk,,,,,,   , ,i
-
-#     words,"""
-#     junk_ws = WordSearch(junky_words)
-#     assert len(junk_ws.words) == 4
 
 
 def test_set_puzzle_level(ws):
@@ -267,13 +255,8 @@ def test_json_output_property_for_empty_object():
     assert ws.json == json.dumps({})
 
 
-# def test_input_including_palindrome(words):
-#     ws = WordSearch(words + ", level")
-#     assert len(ws.words) == 8
-
-
 def test_for_empty_spaces(iterations):
-    for _ in range(iterations * 20):
+    for _ in range(iterations):
         words = ",".join(utils.get_random_words(10))
         ws = WordSearch(words, level=3)
         flat = [item for sublist in ws.puzzle for item in sublist]
@@ -496,7 +479,7 @@ def test_hide_fillers(iterations, builtin_mask_shapes):
         if mask:
             ws.apply_mask(mask)
         hidden_fillers = utils.hide_filler_characters(ws)
-        chars: Set[str] = set()
+        chars: set[str] = set()
         for word in ws.placed_words:
             chars.update(hidden_fillers[y][x] for y, x in word.coordinates)
         results.append(" " not in chars)

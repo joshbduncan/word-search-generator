@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Word Validators: Previously, all word validation was done during the `WordSearch` object initialization (and also after making any changes to the puzzle words). Now, the default validation (no single letter words, no palindromes, no words that fit inside of other words or encase other words) hsa been abstracted away. Each validator is now based on a `Validator()` abstract base class, allowing users to create their own or disable the defaults. This thought has come up before but because of issue #45 I decided to tackle. Normally in a standard word search puzzle you don't want single-letter words, palindromes, or words that are part of other words, as each of these situations could potentially lead to multiple solutions for the same puzzle.
-    - `word_validators` argument added to `WordSearch` object
+    - `validators` argument added to `WordSearch` object
     - `--no-validators` added to cli arguments to disable default validators
     - Tests updated and added for new functionality
 

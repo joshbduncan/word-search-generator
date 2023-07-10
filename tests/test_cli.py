@@ -7,16 +7,6 @@ from PIL import Image
 from word_search_generator.word import Direction, Word
 
 
-def check_chars(puzzle, word):
-    row, col = word.position
-    for c in word.text:
-        if c != puzzle[row][col]:
-            return False
-        row += word.direction.r_move
-        col += word.direction.c_move
-    return True
-
-
 def test_entrypoint():
     result = subprocess.run("word-search --help", shell=True)
     assert result.returncode == 0
@@ -178,6 +168,15 @@ def test_cli_output(iterations, builtin_mask_shapes):
             word.start_column = int(data[3]) - 1
             words.add(word)
         return words
+
+    def check_chars(puzzle, word):
+        row, col = word.position
+        for c in word.text:
+            if c != puzzle[row][col]:
+                return False
+            row += word.direction.r_move
+            col += word.direction.c_move
+        return True
 
     results = []
     for _ in range(iterations):

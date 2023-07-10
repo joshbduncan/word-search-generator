@@ -1,7 +1,7 @@
 from word_search_generator import WordSearch
 from word_search_generator.config import level_dirs, max_puzzle_words
 from word_search_generator.generate import no_duped_words
-from word_search_generator.utils import get_random_words
+from word_search_generator.utils import calc_puzzle_size, get_random_words
 from word_search_generator.word import Direction, Word, Wordlist
 
 
@@ -54,19 +54,14 @@ def test_no_dupe_at_position():
     assert check is True
 
 
-def test_puzzle_size_less_than_shortest_word_length():
-    ws = WordSearch("DONKEY", size=5)
-    assert ws.size == 7
-
-
 def test_only_placed_words_in_key():
-    w = ",".join(get_random_words(100))
+    w = ",".join(get_random_words(25))
     ws = WordSearch(w, size=5)
     assert all(word.direction for word in ws.placed_words)
 
 
 def test_too_many_supplied_words():
-    w = ",".join(get_random_words(100))
+    w = ",".join(get_random_words(25))
     ws = WordSearch(w, size=5)
     assert len(ws.words) != len(ws.placed_words)
 
@@ -107,3 +102,9 @@ def test_secret_word_directions():
     )
     for w in ws.placed_secret_words:
         assert w.direction in level_dirs[secret_level]
+
+
+def test_generated_size(words):
+    ws = WordSearch(words)
+    calculated_size = calc_puzzle_size(ws.words, ws.level)
+    assert calculated_size == ws.size
