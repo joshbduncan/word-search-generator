@@ -1,7 +1,6 @@
 import pytest
 
 from word_search_generator import utils
-from word_search_generator.word import Word
 
 
 def test_valid_cleanup_input_with_spaces():
@@ -19,11 +18,6 @@ def test_valid_cleanup_input_with_commas():
 def test_invalid_cleanup_input():
     with pytest.raises(TypeError):
         utils.cleanup_input(1)  # type: ignore
-
-
-def test_invalid_input_too_short():
-    with pytest.raises(ValueError):
-        utils.cleanup_input("a")
 
 
 def test_stringify():
@@ -51,17 +45,6 @@ def test_stringify_offset():
     ]
     output = " a a a a a\n b b b b b\n c c c c c\n d d d d d\n e e e e e"
     assert utils.stringify(inp, ((0, 0), (4, 4))) == output
-
-
-def test_palindromes():
-    assert utils.is_palindrome("level")
-
-
-def test_word_within_word():
-    words = set()
-    for word in ["rain", "sun", "clouds"]:
-        words.add(Word(word))
-    assert utils.word_contains_word(words, "")
 
 
 def test_invalid_level_direction_type():

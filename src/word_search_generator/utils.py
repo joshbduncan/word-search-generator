@@ -3,7 +3,6 @@ from __future__ import annotations
 import copy
 import math
 import random
-import string
 import sys
 from math import log2
 from typing import TYPE_CHECKING, Any, Iterable, Sized
@@ -124,41 +123,9 @@ def cleanup_input(words: str, secret: bool = False) -> Wordlist:
     word_set: Wordlist = set()
     while word_list and len(word_set) <= config.max_puzzle_words:
         word = word_list.pop(0)
-        if (
-            len(word) > 1
-            and not contains_punctuation(word)
-            and not is_palindrome(word)
-            and not word_contains_word(word_set, word.upper())
-        ):
+        if word:
             word_set.add(Word(word, secret=secret))
-    # if no words were left raise exception
-    if not word_set:
-        raise ValueError("Use words longer than one-character and without punctuation.")
     return word_set
-
-
-def contains_punctuation(word):
-    """Check to see if punctuation is present in the provided string."""
-    return any(bool(c in string.punctuation) for c in word)
-
-
-def is_palindrome(word: str) -> bool:
-    """Check is a word in a palindrome."""
-    return word == word[::-1]
-
-
-def word_contains_word(words: Wordlist, word: str) -> bool:
-    """Make sure `test_word` cannot be found in any word
-    in `words`, going forward or backward."""
-    for test_word in words:
-        if (
-            word in test_word.text.upper()
-            or word[::-1] in test_word.text.upper()
-            or test_word.text.upper() in word
-            or test_word.text.upper()[::-1] in word
-        ):
-            return True
-    return False
 
 
 def validate_direction_iterable(
