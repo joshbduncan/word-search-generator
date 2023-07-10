@@ -3,7 +3,7 @@ from __future__ import annotations
 import random
 import string
 from functools import wraps
-from typing import TYPE_CHECKING, List, Tuple
+from typing import TYPE_CHECKING
 
 from .config import ACTIVE, INACTIVE, max_fit_tries, max_puzzle_words
 from .utils import in_bounds
@@ -13,8 +13,8 @@ if TYPE_CHECKING:  # pragma: no cover
     from . import Puzzle, WordSearch
 
 
-Fit = Tuple[str, List[Tuple[int, int]]]
-Fits = List[Tuple[str, List[Tuple[int, int]]]]
+Fit = tuple[str, list[tuple[int, int]]]
+Fits = list[tuple[str, list[tuple[int, int]]]]
 
 
 ALPHABET = list(string.ascii_uppercase)
@@ -156,12 +156,10 @@ def fill_words(ws: WordSearch) -> None:
     """Fill `ws.puzzle` with the supplied `words`.
     Some words will be skipped if they don't fit."""
     # try to place each word on the puzzle
-    placed_words: List[str] = []
+    placed_words: list[str] = []
     if ws.hidden_words:
         for word in ws.hidden_words:
-            if ws.word_validators and not word.validate(
-                ws.word_validators, placed_words
-            ):
+            if ws.validators and not word.validate(ws.validators, placed_words):
                 continue
             fit = try_to_fit_word(ws=ws, word=word)
             if fit:
@@ -173,15 +171,15 @@ def fill_words(ws: WordSearch) -> None:
     # this is always done after those have been placed
     if ws.secret_words:
         for word in ws.secret_words:
-            if ws.word_validators and not word.validate(
-                ws.word_validators, placed_words
-            ):
-                continue
-            fit = try_to_fit_word(ws=ws, word=word)
-            if fit:
-                placed_words.append(word.text)
-            if len(ws.placed_words) == max_puzzle_words:
-                break
+            validation = (
+                word.validate(ws.validators, placed_words) if ws.validators else True
+            )
+            if validation:
+                fit = try_to_fit_word(ws=ws, word=word)
+                if fit:
+                    placed_words.append(word.text)
+                if len(ws.placed_words) == max_puzzle_words:
+                    break
 
 
 @retry()

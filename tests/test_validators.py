@@ -19,6 +19,16 @@ def test_no_palindromes_invalid():
     assert not validator.validate("level")
 
 
+def test_no_palindromes_puzzle():
+    ws = WordSearch(
+        "level is a palindrome, so is mom and peep", validators=[NoPalindromes()]
+    )
+    words = (word.text for word in ws.placed_words)
+    assert "level" not in words
+    assert "mom" not in words
+    assert "peep" not in words
+
+
 def test_no_punctuation_valid():
     validator = NoPunctuation()
     assert validator.validate("elephant")
@@ -39,6 +49,13 @@ def test_no_single_letter_words_invalid():
     assert not validator.validate("n")
 
 
+def test_no_single_letter_words_in_puzzle():
+    ws = WordSearch("i is a single letter word", validators=[NoSingleLetterWords()])
+    words = (word.text for word in ws.placed_words)
+    assert "i" not in words
+    assert "1" not in words
+
+
 def test_no_subwords_valid():
     validator = NoSubwords()
     assert validator.validate("laptop", placed_words=["briefcase", "luggage", "duffle"])
@@ -54,4 +71,4 @@ def test_invalid_validator(words):
         pass
 
     with pytest.raises(TypeError):
-        WordSearch(words, word_validators=[Val()])  # type: ignore[list-item]
+        WordSearch(words, validators=[Val()])  # type: ignore[list-item]

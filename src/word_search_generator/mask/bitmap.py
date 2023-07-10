@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import List, Optional, Tuple, Union
 
 from PIL import Image as PILImage
 from PIL import ImageChops
@@ -19,14 +18,14 @@ class Bitmap(Mask):
 
     def __init__(
         self,
-        points: Optional[List[Tuple[int, int]]] = None,
+        points: list[tuple[int, int]] | None = None,
         method: int = 1,
         static: bool = True,
     ) -> None:
         """Initialize a WordSearch puzzle bitmap mask object.
 
         Args:
-            points (Optional[List[Tuple[int, int]]], optional): Coordinate points
+            points (list[tuple[int, int]] | None, optional): Coordinate points
                 used to build the mask. Defaults to None.
             method (int, optional): How Mask is applied to the puzzle
                 (1=Standard (Intersection), 2=Additive, 3=Subtractive). Defaults to 1.
@@ -57,9 +56,7 @@ class Image(Bitmap):
 
     threshold = 200  # normalization contrast point
 
-    def __init__(
-        self, fp: Union[str, Path], method: int = 1, static: bool = False
-    ) -> None:
+    def __init__(self, fp: str | Path, method: int = 1, static: bool = False) -> None:
         """Generate a bitmap mask from a raster image.
 
         Note: Ideally, the raster image should be a single color (dark) on a solid
@@ -68,7 +65,7 @@ class Image(Bitmap):
         to grayscale first.
 
         Args:
-            fp (Union[str, Path]): A filepath (string) or `pathlib.Path` object
+            fp (str | Path): A filepath (string) or `pathlib.Path` object
                 to the raster image the mask will be generated from.
             method (int, optional): How Mask is applied to the puzzle
                 (1=Standard (Intersection), 2=Additive, 3=Subtractive). Defaults to 1.

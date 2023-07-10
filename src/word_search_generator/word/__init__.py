@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import sys
 from enum import Enum, unique
-from typing import Any, List, NamedTuple, Set, Union
+from typing import Any, Iterable, NamedTuple
 
 from .validation import Validator
 
@@ -76,11 +76,13 @@ class Word:
         self.direction: Direction | None = None
         self.secret = secret
 
-    def validate(self, validators: List[Validator], placed_words: List[str]) -> bool:
+    def validate(
+        self, validators: Iterable[Validator], placed_words: list[str]
+    ) -> bool:
         """Validate the word against a list of validators.
 
         Args:
-            validators (List[Validator]): Validators to test.
+            validators (list[Validator]): Validators to test.
 
         Raises:
             TypeError: Incorrect validator type provided.
@@ -116,22 +118,25 @@ class Word:
         return Position(self.start_row, self.start_column)
 
     @position.setter
-    def position(self, val: Position) -> None:
+    def position(self, value: Position) -> None:
         """Set the start position of the Word in the puzzle.
 
         Args:
             val (Position): Tuple of (row, column)
         """
-        self.start_row = val.row
-        self.start_column = val.column
+        self.start_row = value.row
+        self.start_column = value.column
 
     @property
-    def position_xy(self) -> str | None:
-        """Returns a string representation of the word position with
-        1-based indexing and a familiar (x, y) coordinate system"""
-        if isinstance(self.start_row, int) and isinstance(self.start_column, int):
-            return f"({self.start_column + 1}, {self.start_row + 1})"
-        return None
+    def position_xy(self) -> Position:
+        """Returns a the word position with 1-based indexing
+        and a familiar (x, y) coordinate system"""
+        return Position(
+            self.start_row + 1 if self.start_row is not None else self.start_row,
+            self.start_column + 1
+            if self.start_column is not None
+            else self.start_column,
+        )
 
     @property
     def key_info(self) -> KeyInfo:
@@ -161,48 +166,58 @@ class Word:
         `.show()` method.
 
         Args:
-            bbox (Tuple[Tuple[int, int], Tuple[int, int]]): The current
+            bbox (tuple[tuple[int, int], tuple[int, int]]): The current
                 puzzle bounding box. Used to offset the coordinates when
                 the puzzle has been masked and is no longer it's original
                 size.
         """
-        if isinstance(self.start_row, int) and isinstance(self.start_column, int):
+        if self.placed:
+            col, row = self.offset_position_xy(bbox)
             return (
                 f"{'*' if self.secret else ''}{self.text} "
                 + f"{self.direction.name if self.direction else self.direction}"
-                + f" @ {(self.offset_position_xy(bbox))}"
+                + f" @ {(col, row)}"
             )
         return None
 
     def offset_position_xy(
         self, bbox: tuple[tuple[int, int], tuple[int, int]]
-    ) -> tuple[int, int] | None:
+    ) -> Position:
         """Returns a string representation of the word position with
         1-based indexing and a familiar (x, y) coordinate system. The
         position will be offset by the puzzle bounding box when a puzzle
         has been masked.
 
         Args:
-            bbox (Tuple[Tuple[int, int], Tuple[int, int]]): The current
+            bbox (tuple[tuple[int, int], tuple[int, int]]): The current
                 puzzle bounding box.
         """
-        if isinstance(self.start_row, int) and isinstance(self.start_column, int):
-            offset_start_row = self.start_row + 1 - bbox[0][1]
-            offset_start_column = self.start_column + 1 - bbox[0][0]
-            return (offset_start_column, offset_start_row)
-        return None
+        return Position(
+            self.start_column + 1 - bbox[0][0]
+            if self.start_column is not None
+            else self.start_column,
+            self.start_row + 1 - bbox[0][1]
+            if self.start_row is not None
+            else self.start_row,
+        )
 
     def offset_coordinates(
         self, bbox: tuple[tuple[int, int], tuple[int, int]]
-    ) -> list[tuple[int, int]] | None:
+    ) -> list[Position]:
         """Returns a list of the Word letter coordinates, offset
         by the puzzle bounding box.
 
         Args:
-            bbox (Tuple[Tuple[int, int], Tuple[int, int]]): The current
+            bbox (tuple[tuple[int, int], tuple[int, int]]): The current
                 puzzle bounding box.
         """
-        return [(x + 1 - bbox[0][0], y + 1 - bbox[0][1]) for y, x in self.coordinates]
+        return [
+            Position(
+                x + 1 - bbox[0][0] if x is not None else x,
+                y + 1 - bbox[0][1] if y is not None else y,
+            )
+            for y, x in self.coordinates
+        ]
 
     def remove_from_puzzle(self):
         """Remove word placement details when a puzzle is reset."""
@@ -228,4 +243,4 @@ class Word:
         return self.text
 
 
-Wordlist = Union[Set[Word], Any]
+Wordlist = set[Word] | Any

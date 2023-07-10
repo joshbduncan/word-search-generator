@@ -15,11 +15,12 @@ __version__ = "3.5.0"
 
 import json
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Set, Tuple
+from typing import TYPE_CHECKING, Iterable
 
 from . import export, generate, utils
 from .config import (
     ACTIVE,
+    DEFAULT_VALIDATORS,
     INACTIVE,
     max_puzzle_size,
     max_puzzle_words,
@@ -28,21 +29,15 @@ from .config import (
 )
 from .mask import CompoundMask, Mask
 from .word import Direction, KeyInfo, KeyInfoJson
-from .word.validation import (
-    NoPalindromes,
-    NoPunctuation,
-    NoSingleLetterWords,
-    NoSubwords,
-    Validator,
-)
 
 if TYPE_CHECKING:  # pragma: no cover
     from .word import Wordlist
+    from .word.validation import Validator
 
-Puzzle = List[List[str]]
-DirectionSet = Set[Direction]
-Key = Dict[str, KeyInfo]
-KeyJson = Dict[str, KeyInfoJson]
+Puzzle = list[list[str]]
+DirectionSet = set[Direction]
+Key = dict[str, KeyInfo]
+KeyJson = dict[str, KeyInfoJson]
 
 
 class PuzzleNotGeneratedError(Exception):
@@ -75,33 +70,36 @@ class WordSearch:
         secret_level: int | str | None = None,
         *,
         include_all_words: bool = False,
-        word_validators: List[Validator] | None = None,
+        validators: Iterable[Validator] | None = DEFAULT_VALIDATORS,
     ):
         """Initialize a Word Search puzzle.
 
         Args:
-            words (Optional[str], optional): A string of words separated by spaces,
+            words (str | None, optional): A string of words separated by spaces,
                 commas, or new lines. Will be trimmed if more. Defaults to None.
-            level (Optional[Union[int, str]], optional): Difficulty level or potential
+            level (int | str | None, optional): Difficulty level or potential
                 word directions. Defaults to 2.
-            size (Optional[int], optional): Puzzle size. Defaults to None.
-            secret_words (Optional[str], optional): A string of words separated by
+            size (int | None, optional): Puzzle size. Defaults to None.
+            secret_words (str | None, optional): A string of words separated by
                 spaces, commas, or new lines. Words will be 'secret' meaning they
                 will not be included in the word list. Defaults to None.
-            secret_level (Optional[Union[int, str]], optional): Difficulty level or
+            secret_level (int | str | None, optional): Difficulty level or
                 potential word directions for 'secret' words. Defaults to None.
             include_all_words (bool, optional): Raises an error when _generate()
                 cannot place all the words.  Secret words are not included in this
                 check.
+            validators (Iterable[Validator] | None, optional): An iterable
+            of validators that puzzle words will be checked against during puzzle
+            generation. Defaults to `DEFAULT_VALIDATORS`.
         """
 
         # setup puzzle
         self._puzzle: Puzzle = []
         self._size: int = 0
-        self._masks: list[Any] = []
+        self._masks: list[Mask] = []
         self._mask: Puzzle = []
         self.force_all_words: bool = include_all_words
-        self.word_validators = word_validators
+        self._validators: Iterable[Validator] = []
 
         # setup words
         self._words: Wordlist = set()
@@ -112,24 +110,22 @@ class WordSearch:
             self._process_input(words, "add")
 
         # determine valid directions
-        self._directions: DirectionSet = (
+        self.directions: DirectionSet = (
             utils.validate_level(level) if level else utils.validate_level(2)
         )
-        self._secret_directions: DirectionSet = (
+        self.secret_directions: DirectionSet = (
             utils.validate_level(secret_level) if secret_level else self.directions
         )
 
+        # setup validators
+        if validators:
+            self.validators = validators
+
+        # generate puzzle
         if size:
-            if not isinstance(size, int):
-                raise TypeError("Size must be an integer.")
-            if not min_puzzle_size <= size <= max_puzzle_size:
-                raise ValueError(
-                    f"Puzzle size must be >= {min_puzzle_size}"
-                    + f" and <= {max_puzzle_size}."
-                )
-            self._size = size
+            self.size = size
         if self.words:
-            self._size = utils.calc_puzzle_size(self._words, self._directions, size)
+            self.size = utils.calc_puzzle_size(self.words, self.directions, self.size)
             self._generate()
 
     # **************************************************** #
@@ -194,7 +190,7 @@ class WordSearch:
     @property
     def bounding_box(self) -> tuple[tuple[int, int], tuple[int, int]]:
         """Bounding box of the active puzzle area as a rectangle defined
-        by a Tuple of (top-left edge as x, y, bottom-right edge as x, y)"""
+        by a tuple of (top-left edge as x, y, bottom-right edge as x, y)"""
         return utils.find_bounding_box(self.mask)
 
     @property
@@ -203,6 +199,11 @@ class WordSearch:
         min_x, min_y = self.bounding_box[0]
         max_x, max_y = self.bounding_box[1]
         return [list(row[min_x : max_x + 1]) for row in self.puzzle[min_y : max_y + 1]]
+
+    @property
+    def cropped_size(self) -> tuple[int, int]:
+        """Size (in characters) of `self.cropped_puzzle` as a (width, height) tuple."""
+        return (len(self.cropped_puzzle[0]), len(self.cropped_puzzle))
 
     @property
     def key(self) -> Key:
@@ -243,23 +244,23 @@ class WordSearch:
         return self._directions
 
     @directions.setter
-    def directions(self, val: int | str | Iterable[str]):
+    def directions(self, value: int | str | Iterable[str]):
         """Possible directions for puzzle words.
 
         Args:
-            val (Union[int, str, Iterable[str]]): Either a preset puzzle level (int),
+            val (int | str | Iterable[str]): Either a preset puzzle level (int),
             cardinal directions as a comma separated string, or an iterable
             of valid directions from the Direction object.
         """
-        self._directions = utils.validate_level(val)
+        self._directions = utils.validate_level(value)
         self._generate()
 
-    def _set_level(self, val: int) -> None:
+    def _set_level(self, value: int) -> None:
         """Set valid puzzle directions to a predefined level set.
         Here for backward compatibility."""
-        if not isinstance(val, int):
+        if not isinstance(value, int):
             raise TypeError("Level must be an integer.")
-        self._directions = utils.validate_level(val)
+        self._directions = utils.validate_level(value)
 
     def _get_level(self) -> DirectionSet:
         """Return valid puzzle directions. Here for backward compatibility."""
@@ -273,15 +274,15 @@ class WordSearch:
         return self._secret_directions
 
     @secret_directions.setter
-    def secret_directions(self, val: int | str | Iterable[str]):
+    def secret_directions(self, value: int | str | Iterable[str]):
         """Possible directions for secret puzzle words.
 
         Args:
-            val (Union[int, str, Iterable[str]]): Either a preset puzzle level (int),
+            val (int | str | Iterable[str]): Either a preset puzzle level (int),
             valid cardinal directions as a comma separated string, or an iterable
             of valid cardinal directions.
         """
-        self._secret_directions = utils.validate_level(val)
+        self._secret_directions = utils.validate_level(value)
         self._generate()
 
     @property
@@ -290,7 +291,7 @@ class WordSearch:
         return self._size
 
     @size.setter
-    def size(self, val: int):
+    def size(self, value: int):
         """Set the puzzle size. All puzzles are square.
 
         Args:
@@ -301,22 +302,27 @@ class WordSearch:
             ValueError: Must be greater than `config.min_puzzle_size` and
             less than `config.max_puzzle_size`.
         """
-        if not isinstance(val, int):
+        if not isinstance(value, int):
             raise TypeError("Size must be an integer.")
-        if not min_puzzle_size <= val <= max_puzzle_size:
+        if not min_puzzle_size <= value <= max_puzzle_size:
             raise ValueError(
                 f"Puzzle size must be >= {min_puzzle_size}"
                 + f" and <= {max_puzzle_size}."
             )
-        if self.size != val:
-            self._size = val
+        if self.size != value:
+            self._size = value
             self._reapply_masks()
             self._generate()
 
     @property
-    def cropped_size(self) -> Tuple[int, int]:
-        """Size (in characters) of `self.cropped_puzzle` as a (width, height) tuple."""
-        return (len(self.cropped_puzzle[0]), len(self.cropped_puzzle))
+    def validators(self) -> Iterable[Validator]:
+        """Puzzle generation word validators."""
+        return self._validators
+
+    @validators.setter
+    def validators(self, value: Iterable[Validator]) -> None:
+        self._validators = value
+        self._generate()
 
     # ************************************************* #
     # ******************** METHODS ******************** #
@@ -392,7 +398,7 @@ class WordSearch:
         """Save the current puzzle to a file.
 
         Args:
-            path (Union[str, Path]): File save path.
+            path (str | Path): File save path.
             format (str, optional): Type of file to save ("CSV", "JSON", "PDF").
                 Defaults to "PDF".
             solution (bool, optional): Include solution with the saved file.
@@ -434,6 +440,8 @@ class WordSearch:
         """Generate the puzzle grid."""
         # if an empty puzzle object is created then the `random_words()` method
         # is called, calculate an appropriate puzzle size
+        if not self.words:
+            return
         if not self.size:
             self.reset_size()
         self._puzzle = utils.build_puzzle(self.size, "")
@@ -441,24 +449,19 @@ class WordSearch:
             min([len(word.text) for word in self.words]) if self.words else self.size
         )
         if self.size and self.size < min_word_length:
-            raise PuzzleSizeError
+            raise PuzzleSizeError(
+                "Specified puzzle size is smaller than shortest word."
+            )
         for word in self.words:
             word.remove_from_puzzle()
-        if not self.mask or len(self.mask) != self.size:
-            self._mask = utils.build_puzzle(self.size, ACTIVE)
+        # if not self.mask or len(self.mask) != self.size:
+        #     self._mask = utils.build_puzzle(self.size, ACTIVE)
         if fill_puzzle:
             self._fill_puzzle()
         if self.force_all_words and self.unplaced_hidden_words:
             raise MissingWordError("All words could not be placed in the puzzle.")
 
     def _fill_puzzle(self) -> None:
-        if self.word_validators is None:
-            self.word_validators = [
-                NoPalindromes(),
-                NoPunctuation(),
-                NoSingleLetterWords(),
-                NoSubwords(),
-            ]
         if self.words:
             generate.fill_words(self)
         if self.key:
@@ -536,7 +539,7 @@ class WordSearch:
         if not self.puzzle:
             raise PuzzleNotGeneratedError(
                 "Puzzle not yet generated. Be sure to add puzzle `words` \
-or set the puzzle `size` before applying a mask."
+before applying a mask."
             )
         if not isinstance(mask, (Mask, CompoundMask)):
             raise TypeError("Please provide a Mask object.")

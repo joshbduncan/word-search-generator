@@ -1,6 +1,12 @@
 from __future__ import annotations
 
 from .word import Direction
+from .word.validation import (
+    NoPalindromes,
+    NoPunctuation,
+    NoSingleLetterWords,
+    NoSubwords,
+)
 
 # puzzle settings
 min_puzzle_size = 5
@@ -12,6 +18,13 @@ max_fit_tries = 1000
 # puzzle grid settings
 ACTIVE = "*"
 INACTIVE = "#"
+
+DEFAULT_VALIDATORS = [
+    NoPalindromes(),
+    NoPunctuation(),
+    NoSingleLetterWords(),
+    NoSubwords(),
+]
 
 # puzzle difficulty levels
 level_dirs = {

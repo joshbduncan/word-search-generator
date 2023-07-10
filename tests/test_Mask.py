@@ -168,23 +168,23 @@ def test_invert():
 
 def test_flip_horizontal():
     m = Mask()
-    m._mask = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+    m._mask = [["1", "2", "3"], ["4", "5", "6"], ["7", "8", "9"]]
     m.flip_horizontal()
-    assert m.mask == [[3, 2, 1], [6, 5, 4], [9, 8, 7]]
+    assert m.mask == [["3", "2", "1"], ["6", "5", "4"], ["9", "8", "7"]]
 
 
 def test_flip_vertical():
     m = Mask()
-    m._mask = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+    m._mask = [["1", "2", "3"], ["4", "5", "6"], ["7", "8", "9"]]
     m.flip_vertical()
-    assert m.mask == [[7, 8, 9], [4, 5, 6], [1, 2, 3]]
+    assert m.mask == [["7", "8", "9"], ["4", "5", "6"], ["1", "2", "3"]]
 
 
 def test_transpose():
     m = Mask()
-    m._mask = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+    m._mask = [["1", "2", "3"], ["4", "5", "6"], ["7", "8", "9"]]
     m.transpose()
-    assert m.mask == [[1, 4, 7], [2, 5, 8], [3, 6, 9]]
+    assert m.mask == [["1", "4", "7"], ["2", "5", "8"], ["3", "6", "9"]]
 
 
 def test_ungenerated_mask():

@@ -21,7 +21,7 @@ class Validator(ABC):
 
         Args:
             value (str): The value to validate.
-            placed_words (List[str]): Current puzzle words.
+            placed_words (list[str]): Current puzzle words.
 
         Returns:
             bool: The validation result.
