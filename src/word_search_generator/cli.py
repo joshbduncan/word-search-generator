@@ -129,6 +129,11 @@ puzzle words can go. See valid arguments above.",
 (choices: {', '.join(BUILTIN_MASK_SHAPES_OBJECTS)}).",
     )
     parser.add_argument(
+        "--no-validators",
+        action="store_true",
+        help="Disable default word validators.",
+    )
+    parser.add_argument(
         "-o",
         "--output",
         type=pathlib.Path,
@@ -225,6 +230,7 @@ secret puzzle words can go. See valid arguments above.",
         size=args.size,
         secret_words=secret_words if secret_words else None,
         secret_level=args.secret_difficulty,
+        word_validators=[] if args.no_validators else None,
     )
 
     # apply masking if specified

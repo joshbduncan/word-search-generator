@@ -25,6 +25,12 @@ class WordFitError(Exception):
 
 
 def retry(retries: int = max_fit_tries):
+    """Custom retry decorator for retrying a function `retries` times.
+
+    Args:
+        retries (int, optional): Retry attempts. Defaults to max_fit_tries.
+    """
+
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -150,9 +156,16 @@ def fill_words(ws: WordSearch) -> None:
     """Fill `ws.puzzle` with the supplied `words`.
     Some words will be skipped if they don't fit."""
     # try to place each word on the puzzle
+    placed_words: List[str] = []
     if ws.hidden_words:
         for word in ws.hidden_words:
-            try_to_fit_word(ws=ws, word=word)
+            if ws.word_validators and not word.validate(
+                ws.word_validators, placed_words
+            ):
+                continue
+            fit = try_to_fit_word(ws=ws, word=word)
+            if fit:
+                placed_words.append(word.text)
             if len(ws.placed_words) == max_puzzle_words:
                 break
     # try to place each secret word on the puzzle
@@ -160,13 +173,19 @@ def fill_words(ws: WordSearch) -> None:
     # this is always done after those have been placed
     if ws.secret_words:
         for word in ws.secret_words:
-            try_to_fit_word(ws=ws, word=word)
+            if ws.word_validators and not word.validate(
+                ws.word_validators, placed_words
+            ):
+                continue
+            fit = try_to_fit_word(ws=ws, word=word)
+            if fit:
+                placed_words.append(word.text)
             if len(ws.placed_words) == max_puzzle_words:
                 break
 
 
 @retry()
-def try_to_fit_word(ws: WordSearch, word: Word) -> None:
+def try_to_fit_word(ws: WordSearch, word: Word) -> bool:
     """Try to fit `word` at randomized coordinates.
     @retry wrapper controls the number of attempts"""
     placed_words = {word.text for word in ws.placed_words}
@@ -204,6 +223,8 @@ def try_to_fit_word(ws: WordSearch, word: Word) -> None:
     word.start_column = col
     word.direction = Direction[d]
     word.coordinates = coords
+
+    return word.placed
 
 
 def fill_blanks(ws: WordSearch) -> None:

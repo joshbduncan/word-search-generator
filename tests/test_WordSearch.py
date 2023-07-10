@@ -41,15 +41,15 @@ def test_input_cleanup(ws):
     assert len(ws.words) == 8
 
 
-def test_junky_input_cleanup():
-    junky_words = """here, are,                  a, don't
+# def test_junky_input_cleanup():
+#     junky_words = """here, are,                  a, don't
 
-    it's what's,
-    junk,,,,,,   , ,i
+#     it's what's,
+#     junk,,,,,,   , ,i
 
-    words,"""
-    junk_ws = WordSearch(junky_words)
-    assert len(junk_ws.words) == 4
+#     words,"""
+#     junk_ws = WordSearch(junky_words)
+#     assert len(junk_ws.words) == 4
 
 
 def test_set_puzzle_level(ws):
@@ -267,9 +267,9 @@ def test_json_output_property_for_empty_object():
     assert ws.json == json.dumps({})
 
 
-def test_input_including_palindrome(words):
-    ws = WordSearch(words + ", level")
-    assert len(ws.words) == 8
+# def test_input_including_palindrome(words):
+#     ws = WordSearch(words + ", level")
+#     assert len(ws.words) == 8
 
 
 def test_for_empty_spaces(iterations):

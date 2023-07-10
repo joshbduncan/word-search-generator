@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import sys
 from enum import Enum, unique
-from typing import Any, NamedTuple, Set, Union
+from typing import Any, List, NamedTuple, Set, Union
+
+from .validation import Validator
 
 if sys.version_info >= (3, 8):
     from typing import TypedDict
@@ -73,6 +75,25 @@ class Word:
         self.coordinates: list[tuple[int, int]] = []
         self.direction: Direction | None = None
         self.secret = secret
+
+    def validate(self, validators: List[Validator], placed_words: List[str]) -> bool:
+        """Validate the word against a list of validators.
+
+        Args:
+            validators (List[Validator]): Validators to test.
+
+        Raises:
+            TypeError: Incorrect validator type provided.
+
+        Returns:
+            bool: Word passes all validators.
+        """
+        for validator in validators:
+            if not isinstance(validator, Validator):
+                raise TypeError(f"Invalid validator: {validator}.")
+            if not validator.validate(self.text, placed_words=placed_words):
+                return False
+        return True
 
     @property
     def placed(self) -> bool:

@@ -28,6 +28,13 @@ from .config import (
 )
 from .mask import CompoundMask, Mask
 from .word import Direction, KeyInfo, KeyInfoJson
+from .word.validation import (
+    NoPalindromes,
+    NoPunctuation,
+    NoSingleLetterWords,
+    NoSubwords,
+    Validator,
+)
 
 if TYPE_CHECKING:  # pragma: no cover
     from .word import Wordlist
@@ -68,6 +75,7 @@ class WordSearch:
         secret_level: int | str | None = None,
         *,
         include_all_words: bool = False,
+        word_validators: List[Validator] | None = None,
     ):
         """Initialize a Word Search puzzle.
 
@@ -93,6 +101,7 @@ class WordSearch:
         self._masks: list[Any] = []
         self._mask: Puzzle = []
         self.force_all_words: bool = include_all_words
+        self.word_validators = word_validators
 
         # setup words
         self._words: Wordlist = set()
@@ -424,7 +433,7 @@ class WordSearch:
     def _generate(self, fill_puzzle: bool = True) -> None:
         """Generate the puzzle grid."""
         # if an empty puzzle object is created then the `random_words()` method
-        # is called set the calculate an appropriate puzzle size
+        # is called, calculate an appropriate puzzle size
         if not self.size:
             self.reset_size()
         self._puzzle = utils.build_puzzle(self.size, "")
@@ -443,6 +452,13 @@ class WordSearch:
             raise MissingWordError("All words could not be placed in the puzzle.")
 
     def _fill_puzzle(self) -> None:
+        if self.word_validators is None:
+            self.word_validators = [
+                NoPalindromes(),
+                NoPunctuation(),
+                NoSingleLetterWords(),
+                NoSubwords(),
+            ]
         if self.words:
             generate.fill_words(self)
         if self.key:
