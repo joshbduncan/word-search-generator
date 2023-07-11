@@ -152,13 +152,6 @@ def test_replace_secret_words(words):
     assert len(ws.secret_words) == 1
 
 
-def test_reset_puzzle_size(ws):
-    prev_size = ws.size
-    ws.size = 25
-    ws.reset_size()
-    assert ws.size == prev_size
-
-
 def test_puzzle_repr(ws):
     assert eval(repr(ws)) == ws
 

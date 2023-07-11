@@ -21,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tox config
 - `max_fit_tries` raised to 1000 to help more words fitting within smaller puzzles
 
+### Removed
+
+- `reset_size()` function no longer needed as it is included inside of `_generate()` noe
+
 ## [3.5.0] 2023-07-07
 
 ### Added

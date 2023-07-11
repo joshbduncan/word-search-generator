@@ -426,24 +426,18 @@ class WordSearch:
         # return saved file path
         return str(saved_file)
 
-    def reset_size(self):
-        """Reset the puzzle size to the default setting
-        (based on longest word length and total words)."""
-        self.size = utils.calc_puzzle_size(self._words, self._directions)
-        self._generate()
-
-    # *************************************************************** #
+    # *************************************************************** #O
     # ******************** PROCESSING/GENERATION ******************** #
     # *************************************************************** #
 
-    def _generate(self, fill_puzzle: bool = True) -> None:
+    def _generate(self, fill_puzzle: bool = True, reset_size: bool = False) -> None:
         """Generate the puzzle grid."""
         # if an empty puzzle object is created then the `random_words()` method
         # is called, calculate an appropriate puzzle size
         if not self.words:
             return
-        if not self.size:
-            self.reset_size()
+        if not self.size or reset_size:
+            self.size = utils.calc_puzzle_size(self._words, self._directions)
         self._puzzle = utils.build_puzzle(self.size, "")
         min_word_length = (
             min([len(word.text) for word in self.words]) if self.words else self.size
@@ -496,9 +490,7 @@ class WordSearch:
                 size based on the updated words. Defaults to False.
         """
         self._process_input(words, "add", secret)
-        if reset_size:
-            self.reset_size()
-        self._generate()
+        self._generate(reset_size=reset_size)
 
     def remove_words(self, words: str, reset_size: bool = False) -> None:
         """Remove words from the puzzle.
@@ -509,9 +501,7 @@ class WordSearch:
                 size based on the updated words. Defaults to False.
         """
         self._process_input(words, "remove")
-        if reset_size:
-            self.reset_size()
-        self._generate()
+        self._generate(reset_size=reset_size)
 
     def replace_words(
         self, words: str, secret: bool = False, reset_size: bool = False
@@ -526,9 +516,7 @@ class WordSearch:
                 size based on the updated words. Defaults to False.
         """
         self._process_input(words, "replace", secret)
-        if reset_size:
-            self.reset_size()
-        self._generate()
+        self._generate(reset_size=reset_size)
 
     # ************************************************* #
     # ******************** MASKING ******************** #
