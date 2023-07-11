@@ -9,7 +9,7 @@ authors = [
 ]
 description = "Make awesome Word Search puzzles"
 readme = "README.md"
-requires-python = ">=3.7"
+requires-python = ">=3.10"
 keywords = ["puzzles", "games", "word-search",]
 license = {text = "MIT License"}
 classifiers = [
@@ -19,9 +19,6 @@ classifiers = [
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Topic :: Games/Entertainment :: Puzzle Games",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Typing :: Typed",
@@ -98,7 +95,7 @@ format = "grouped"
 line-length = 88
 show-fixes = true
 src = ["src", "test"]
-target-version = "py37"
+target-version = "py310"
 
 [tool.ruff.per-file-ignores]
 # Ignore `E402` (import violations) in all `__init__.py`.

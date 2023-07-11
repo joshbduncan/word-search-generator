@@ -9,13 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Word Validators: Previously, all word validation was done during the `WordSearch` object initialization (and also after making any changes to the puzzle words). Now, the default validation (no single letter words, no palindromes, no words that fit inside of other words or encase other words) hsa been abstracted away. Each validator is now based on a `Validator()` abstract base class, allowing users to create their own or disable the defaults. This thought has come up before but because of issue #45 I decided to tackle. Normally in a standard word search puzzle you don't want single-letter words, palindromes, or words that are part of other words, as each of these situations could potentially lead to multiple solutions for the same puzzle.
+- Validators: Previously, all word validation was done during the `WordSearch` object initialization (and also after making any changes to the puzzle words). Now, the default validation (no single letter words, no palindromes, no words that fit inside of other words or encase other words) hsa been abstracted away. Each validator is now based on a `Validator()` abstract base class, allowing users to create their own or disable the defaults. This thought has come up before but because of issue #45 I decided to tackle. Normally in a standard word search puzzle you don't want single-letter words, palindromes, or words that are part of other words, as each of these situations could potentially lead to multiple solutions for the same puzzle.
     - `validators` argument added to `WordSearch` object
     - `--no-validators` added to cli arguments to disable default validators
     - Tests updated and added for new functionality
 
 ### Changed
 
+- Minimum Python version updated to 3.10
+    - Updating all typing to use the new format (instead of importing from typing)
+- Tox config
 - `max_fit_tries` raised to 1000 to help more words fitting within smaller puzzles
 
 ## [3.5.0] 2023-07-07
