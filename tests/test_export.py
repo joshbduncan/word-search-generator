@@ -1,6 +1,5 @@
 import csv
 import json
-import os
 import random
 import re
 import uuid
@@ -130,7 +129,6 @@ def test_export_json_overwrite_file_error(tmp_path):
         puzzle.save(path, format="JSON")
 
 
-@pytest.mark.skipif(os.name == "nt", reason="need to figure out")
 def test_export_pdf_os_error(words):
     """Try to export a puzzle to a place you don't have access to."""
     puzzle = WordSearch(words)
@@ -138,7 +136,6 @@ def test_export_pdf_os_error(words):
         puzzle.save("/test.pdf")
 
 
-@pytest.mark.skipif(os.name == "nt", reason="need to figure out")
 def test_export_csv_os_error(words):
     """Try to export a puzzle to a place you don't have access to."""
     puzzle = WordSearch(words)
@@ -307,7 +304,6 @@ def test_pdf_output_solution_character_placement(iterations, tmp_path):
     assert all(results)
 
 
-@pytest.mark.skipif(os.name == "nt", reason="need to figure out")
 def test_csv_output_puzzle_size(iterations, tmp_path):
     def parse_puzzle(fp):
         puzzle = []

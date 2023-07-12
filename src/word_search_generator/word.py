@@ -1,7 +1,7 @@
 from enum import Enum, unique
 from typing import Iterable, NamedTuple, TypeAlias, TypedDict
 
-from ..validator import Validator
+from .validator import Validator
 
 
 @unique
