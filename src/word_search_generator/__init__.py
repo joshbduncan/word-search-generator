@@ -15,7 +15,7 @@ import json
 from pathlib import Path
 from typing import Iterable, TypeAlias
 
-from . import export, generate, utils
+from . import export, utils
 from .config import (
     ACTIVE,
     DEFAULT_VALIDATORS,
@@ -25,9 +25,10 @@ from .config import (
     min_puzzle_size,
     min_puzzle_words,
 )
+from .generator import DefaultGenerator, Generator
 from .mask import CompoundMask, Mask
-from .word import Direction, KeyInfo, KeyInfoJson, Wordlist
-from .word.validation import Validator
+from .validator import Validator
+from .word import Direction, KeyInfo, KeyInfoJson, WordSet
 
 Puzzle: TypeAlias = list[list[str]]
 DirectionSet: TypeAlias = set[Direction]
@@ -89,15 +90,16 @@ class WordSearch:
         """
 
         # setup puzzle
+        self._words: WordSet = set()
         self._puzzle: Puzzle = []
         self._size: int = 0
         self._masks: list[Mask] = []
         self._mask: Puzzle = []
         self.force_all_words: bool = include_all_words
-        self._validators: Iterable[Validator] = []
+        self.generator: Generator = DefaultGenerator()
+        self._validators: Iterable[Validator] = validators if validators else []
 
         # setup words
-        self._words: Wordlist = set()
         # in case of dupes, add secret words first so they are overwritten
         if secret_words:
             self._process_input(secret_words, "add", True)
@@ -105,22 +107,25 @@ class WordSearch:
             self._process_input(words, "add")
 
         # determine valid directions
-        self.directions: DirectionSet = (
+        self._directions: DirectionSet = (
             utils.validate_level(level) if level else utils.validate_level(2)
         )
-        self.secret_directions: DirectionSet = (
+        self._secret_directions: DirectionSet = (
             utils.validate_level(secret_level) if secret_level else self.directions
         )
 
-        # setup validators
-        if validators:
-            self.validators = validators
-
         # generate puzzle
         if size:
-            self.size = size
+            if not isinstance(size, int):
+                raise TypeError("Size must be an integer.")
+            if not min_puzzle_size <= size <= max_puzzle_size:
+                raise ValueError(
+                    f"Puzzle size must be >= {min_puzzle_size}"
+                    + f" and <= {max_puzzle_size}."
+                )
+            self._size = size
         if self.words:
-            self.size = utils.calc_puzzle_size(self.words, self.directions, self.size)
+            self._size = utils.calc_puzzle_size(self.words, self.directions, self.size)
             self._generate()
 
     # **************************************************** #
@@ -128,32 +133,32 @@ class WordSearch:
     # **************************************************** #
 
     @property
-    def words(self) -> Wordlist:
+    def words(self) -> WordSet:
         """The current puzzle words."""
         return set(self._words)
 
     @property
-    def placed_words(self) -> Wordlist:
+    def placed_words(self) -> WordSet:
         """The current puzzle words."""
         return {word for word in self._words if word.placed}
 
     @property
-    def hidden_words(self) -> Wordlist:
+    def hidden_words(self) -> WordSet:
         """The current puzzle words."""
         return {word for word in self._words if not word.secret}
 
     @property
-    def placed_hidden_words(self) -> Wordlist:
+    def placed_hidden_words(self) -> WordSet:
         """The current puzzle words."""
         return {word for word in self.hidden_words if word.placed}
 
     @property
-    def secret_words(self) -> Wordlist:
+    def secret_words(self) -> WordSet:
         """The current secret puzzle words."""
         return {word for word in self._words if word.secret}
 
     @property
-    def placed_secret_words(self) -> Wordlist:
+    def placed_secret_words(self) -> WordSet:
         """The current secret puzzle words."""
         return {word for word in self.secret_words if word.placed}
 
@@ -222,11 +227,11 @@ class WordSearch:
         )
 
     @property
-    def unplaced_hidden_words(self) -> Wordlist:
+    def unplaced_hidden_words(self) -> WordSet:
         return self.hidden_words - self.placed_hidden_words
 
     @property
-    def unplaced_secret_words(self) -> Wordlist:
+    def unplaced_secret_words(self) -> WordSet:
         return self.secret_words - self.placed_secret_words
 
     # ********************************************************* #
@@ -425,15 +430,15 @@ class WordSearch:
     # ******************** PROCESSING/GENERATION ******************** #
     # *************************************************************** #
 
-    def _generate(self, fill_puzzle: bool = True, reset_size: bool = False) -> None:
+    def _generate(self, reset_size: bool = False) -> None:
         """Generate the puzzle grid."""
         # if an empty puzzle object is created then the `random_words()` method
         # is called, calculate an appropriate puzzle size
+        self._puzzle = []
         if not self.words:
             return
         if not self.size or reset_size:
             self.size = utils.calc_puzzle_size(self._words, self._directions)
-        self._puzzle = utils.build_puzzle(self.size, "")
         min_word_length = (
             min([len(word.text) for word in self.words]) if self.words else self.size
         )
@@ -443,18 +448,18 @@ class WordSearch:
             )
         for word in self.words:
             word.remove_from_puzzle()
-        # if not self.mask or len(self.mask) != self.size:
-        #     self._mask = utils.build_puzzle(self.size, ACTIVE)
-        if fill_puzzle:
-            self._fill_puzzle()
+        if not self.mask or len(self.mask) != self.size:
+            self._mask = utils.build_puzzle(self.size, ACTIVE)
+        self._puzzle = self.generator.generate(
+            self.size,
+            self.mask,
+            self.words,
+            self.directions,
+            self.secret_directions,
+            self.validators,
+        )
         if self.force_all_words and self.unplaced_hidden_words:
             raise MissingWordError("All words could not be placed in the puzzle.")
-
-    def _fill_puzzle(self) -> None:
-        if self.words:
-            generate.fill_words(self)
-        if self.key:
-            generate.fill_blanks(self)
 
     def _process_input(self, words: str, action: str = "add", secret: bool = False):
         if secret:

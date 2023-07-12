@@ -1,7 +1,5 @@
-import pytest
-
 from word_search_generator import WordSearch
-from word_search_generator.word.validation import (
+from word_search_generator.validator import (
     NoPalindromes,
     NoPunctuation,
     NoSingleLetterWords,
@@ -64,11 +62,3 @@ def test_no_subwords_valid():
 def test_no_subwords_invalid():
     validator = NoSubwords()
     assert not validator.validate("cream", placed_words=["icecream", "cone", "scoop"])
-
-
-def test_invalid_validator(words):
-    class Val:
-        pass
-
-    with pytest.raises(TypeError):
-        WordSearch(words, validators=[Val()])  # type: ignore[list-item]

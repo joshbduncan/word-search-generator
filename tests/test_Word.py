@@ -54,7 +54,7 @@ def test_str():
 
 def test_empty_key_string():
     w = Word("test")
-    assert w.key_string(((0, 0), (10, 10))) is None
+    assert w.key_string(((0, 0), (10, 10))) == ""
 
 
 def test_offset_empty_position_xy():

@@ -1,62 +1,34 @@
 from word_search_generator import WordSearch
 from word_search_generator.config import level_dirs, max_puzzle_words
-from word_search_generator.generate import no_duped_words
+from word_search_generator.generator import DefaultGenerator
 from word_search_generator.utils import calc_puzzle_size, get_random_words
-from word_search_generator.word import Direction, Word, Wordlist
 
 
-def setup_words():
-    BAT = Word("bat")
-    BAT.start_row = 0
-    BAT.start_column = 0
-    BAT.direction = Direction.SE
-    BAT.secret = False
-    PLACED_WORDS.add(BAT)
-
-    CAB = Word("cab")
-    CAB.start_row = 4
-    CAB.start_column = 2
-    CAB.direction = Direction.SE
-    CAB.secret = False
-    PLACED_WORDS.add(CAB)
-
-    RAT = Word("rat")
-    RAT.start_row = 0
-    RAT.start_column = 4
-    RAT.direction = Direction.S
-    RAT.secret = False
-    PLACED_WORDS.add(RAT)
-
-
-PLACED_WORDS: Wordlist = set()
-setup_words()
-PUZZLE = [
-    ["B", "", "", "", "R"],
-    ["", "A", "", "", "A"],
-    ["", "", "T", "", "T"],
-    ["", "", "", "", ""],
-    ["", "", "C", "A", "B"],
-]
-
-
-def test_dupe_at_position_1():
-    check = no_duped_words(PUZZLE, {word.text for word in PLACED_WORDS}, "A", (3, 3))
+def test_dupe_at_position_1(generator_test_puzzle, placed_words):
+    gen = DefaultGenerator()
+    gen.puzzle = generator_test_puzzle
+    gen.words = placed_words
+    check = gen.no_duped_words("A", (3, 3))
     assert check is False
 
 
-def test_dupe_at_position_2():
-    check = no_duped_words(PUZZLE, {word.text for word in PLACED_WORDS}, "A", (1, 3))
+def test_dupe_at_position_2(generator_test_puzzle, placed_words):
+    gen = DefaultGenerator()
+    gen.puzzle = generator_test_puzzle
+    gen.words = placed_words
+    check = gen.no_duped_words("A", (1, 3))
     assert check is False
 
 
-def test_no_dupe_at_position():
-    check = no_duped_words(PUZZLE, {word.text for word in PLACED_WORDS}, "Z", (1, 3))
+def test_no_dupe_at_position(generator_test_puzzle, placed_words):
+    gen = DefaultGenerator()
+    gen.puzzle = generator_test_puzzle
+    gen.words = placed_words
+    check = gen.no_duped_words("Z", (1, 3))
     assert check is True
 
 
-def test_only_placed_words_in_key():
-    w = ",".join(get_random_words(25))
-    ws = WordSearch(w, size=5)
+def test_only_placed_words_in_key(ws):
     assert all(word.direction for word in ws.placed_words)
 
 

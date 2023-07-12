@@ -12,10 +12,10 @@ from .words import WORD_LIST
 
 if TYPE_CHECKING:  # pragma: no cover
     from . import DirectionSet, Key, Puzzle, WordSearch
-    from .word import Wordlist
+    from .word import WordSet
 
 
-def calc_puzzle_size(words: Wordlist, level: Sized, size: int | None = None) -> int:
+def calc_puzzle_size(words: WordSet, level: Sized, size: int | None = None) -> int:
     """Calculate the puzzle grid size."""
     all_words = [word.text for word in words]
     longest_word_length = len(max(all_words, key=len))
@@ -100,7 +100,7 @@ def find_bounding_box(
     return ((min_x, min_y), (max_x, max_y))
 
 
-def cleanup_input(words: str, secret: bool = False) -> Wordlist:
+def cleanup_input(words: str, secret: bool = False) -> WordSet:
     """Cleanup provided input string. Removing spaces
     one-letter words, and words with punctuation."""
     if not isinstance(words, str):
@@ -112,7 +112,7 @@ def cleanup_input(words: str, secret: bool = False) -> Wordlist:
     # remove excess spaces and commas
     word_list = ",".join(words.split(" ")).split(",")
     # iterate through all words and pick first set that match criteria
-    word_set: Wordlist = set()
+    word_set: WordSet = set()
     while word_list and len(word_set) <= config.max_puzzle_words:
         word = word_list.pop(0)
         if word:
@@ -255,13 +255,13 @@ def get_word_list_list(key: Key) -> list[str]:
 
 
 def get_answer_key_list(
-    words: Wordlist, bbox: tuple[tuple[int, int], tuple[int, int]]
+    words: WordSet, bbox: tuple[tuple[int, int], tuple[int, int]]
 ) -> list[str]:
     """Return a easy to read answer key for display/export. Resulting coordinates
     will be offset by the supplied values. Used for masked puzzles.
 
     Args:
-        words (Wordlist): A list of `Word` objects.
+        words (WordSet): A list of `Word` objects.
         bbox (tuple[int, int, int, int]): Puzzle mask bounding box
         coordinates should be offset by.
     """
@@ -269,13 +269,13 @@ def get_answer_key_list(
 
 
 def get_answer_key_str(
-    words: Wordlist, bbox: tuple[tuple[int, int], tuple[int, int]]
+    words: WordSet, bbox: tuple[tuple[int, int], tuple[int, int]]
 ) -> str:
     """Return a easy to read answer key for display. Resulting coordinates
     will be offset by the supplied values. Used for masked puzzles.
 
     Args:
-        words (Wordlist): A list of `Word` objects.
+        words (WordSet): A list of `Word` objects.
         bbox (tuple[int, int, int, int]): Puzzle mask bounding box
         coordinates should be offset by.
     """

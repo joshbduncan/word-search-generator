@@ -1,7 +1,7 @@
 from enum import Enum, unique
-from typing import Any, Iterable, NamedTuple, TypeAlias, TypedDict
+from typing import Iterable, NamedTuple, TypeAlias, TypedDict
 
-from .validation import Validator
+from ..validator import Validator
 
 
 @unique
@@ -151,7 +151,7 @@ class Word:
             "secret": self.secret,
         }
 
-    def key_string(self, bbox: tuple[tuple[int, int], tuple[int, int]]) -> str | None:
+    def key_string(self, bbox: tuple[tuple[int, int], tuple[int, int]]) -> str:
         """Returns a string representation of the Word placement
         information formatted correctly for a WordSearch puzzle key
         when the WordSearch object it output using the `print()` or
@@ -170,7 +170,7 @@ class Word:
                 + f"{self.direction.name if self.direction else self.direction}"
                 + f" @ {(col, row)}"
             )
-        return None
+        return ""
 
     def offset_position_xy(
         self, bbox: tuple[tuple[int, int], tuple[int, int]]
@@ -235,4 +235,4 @@ class Word:
         return self.text
 
 
-Wordlist: TypeAlias = set[Word] | Any
+WordSet: TypeAlias = set[Word]
