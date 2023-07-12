@@ -1,10 +1,5 @@
+from .validator import NoPalindromes, NoPunctuation, NoSingleLetterWords, NoSubwords
 from .word import Direction
-from .word.validation import (
-    NoPalindromes,
-    NoPunctuation,
-    NoSingleLetterWords,
-    NoSubwords,
-)
 
 # puzzle settings
 min_puzzle_size = 5
