@@ -1,20 +1,14 @@
-from __future__ import annotations
-
 import argparse
 import pathlib
 import sys
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import Sequence
 
 from . import WordSearch, __app_name__, __version__, config, utils
 from .config import DEFAULT_VALIDATORS
 from .mask import shapes
 from .mask.bitmap import Image
 from .word import Direction
-
-if TYPE_CHECKING:  # pragma: no cover
-    from typing import Sequence
-
 
 BUILTIN_MASK_SHAPES_OBJECTS = shapes.get_shape_objects()
 

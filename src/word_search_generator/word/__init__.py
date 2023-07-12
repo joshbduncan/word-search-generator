@@ -1,15 +1,7 @@
-from __future__ import annotations
-
-import sys
 from enum import Enum, unique
-from typing import Any, Iterable, NamedTuple
+from typing import Any, Iterable, NamedTuple, TypeAlias, TypedDict
 
 from .validation import Validator
-
-if sys.version_info >= (3, 8):
-    from typing import TypedDict
-else:
-    from typing_extensions import TypedDict  # pragma: no cover
 
 
 @unique
@@ -243,4 +235,4 @@ class Word:
         return self.text
 
 
-Wordlist = set[Word] | Any
+Wordlist: TypeAlias = set[Word] | Any

@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from .word import Direction
 from .word.validation import (
     NoPalindromes,

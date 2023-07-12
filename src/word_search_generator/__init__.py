@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """
     Word Search
     -----------
@@ -15,7 +13,7 @@ __version__ = "3.5.0"
 
 import json
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterable
+from typing import Iterable, TypeAlias
 
 from . import export, generate, utils
 from .config import (
@@ -28,16 +26,13 @@ from .config import (
     min_puzzle_words,
 )
 from .mask import CompoundMask, Mask
-from .word import Direction, KeyInfo, KeyInfoJson
+from .word import Direction, KeyInfo, KeyInfoJson, Wordlist
+from .word.validation import Validator
 
-if TYPE_CHECKING:  # pragma: no cover
-    from .word import Wordlist
-    from .word.validation import Validator
-
-Puzzle = list[list[str]]
-DirectionSet = set[Direction]
-Key = dict[str, KeyInfo]
-KeyJson = dict[str, KeyInfoJson]
+Puzzle: TypeAlias = list[list[str]]
+DirectionSet: TypeAlias = set[Direction]
+Key: TypeAlias = dict[str, KeyInfo]
+KeyJson: TypeAlias = dict[str, KeyInfoJson]
 
 
 class PuzzleNotGeneratedError(Exception):
