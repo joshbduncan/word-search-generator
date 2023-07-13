@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import csv
 import json
 from abc import ABC, abstractmethod
@@ -11,7 +12,7 @@ from fpdf import FPDF
 from . import config, utils
 
 if TYPE_CHECKING:  # pragma: no cover
-    from .game import Game
+    from .game import Game, Puzzle
 
 
 class Formatter(ABC):
@@ -132,7 +133,7 @@ class WordSearchFormatter(Formatter):
             hide_fillers (bool, optional): Hide all filler letters so only the solution
                 is shown. Overrides `solution`. Defaults to False.
         """
-        return utils.format_puzzle_for_show(game, solution, hide_fillers)
+        return self.format_puzzle_for_show(game, solution, hide_fillers)
 
     def save(
         self,
@@ -166,7 +167,7 @@ class WordSearchFormatter(Formatter):
         **kwargs,
     ) -> Path:
         word_list = utils.get_word_list_list(game.key)
-        puzzle = utils.hide_filler_characters(game) if solution else game.cropped_puzzle
+        puzzle = self.hide_filler_characters(game) if solution else game.cropped_puzzle
         with open(path, "x") as f:
             f_writer = csv.writer(
                 f, delimiter=",", quotechar='"', quoting=csv.QUOTE_MINIMAL
@@ -206,7 +207,7 @@ class WordSearchFormatter(Formatter):
         *args,
         **kwargs,
     ) -> Path:
-        puzzle = utils.hide_filler_characters(game) if solution else game.cropped_puzzle
+        puzzle = self.hide_filler_characters(game) if solution else game.cropped_puzzle
         data = json.dumps(
             {
                 "puzzle": puzzle,
@@ -353,3 +354,66 @@ class WordSearchFormatter(Formatter):
         except OSError:
             raise OSError(f"File could not be saved to '{path}'.")
         return path.absolute()
+
+    def format_puzzle_for_show(
+        self, game: Game, show_solution: bool = False, hide_fillers: bool = False
+    ) -> str:
+        word_list = utils.get_word_list_str(game.key)
+        # prepare the correct version of the puzzle
+        if hide_fillers:
+            puzzle_list = self.hide_filler_characters(game)
+        elif show_solution:
+            puzzle_list = self.highlight_solution(game)
+        else:
+            puzzle_list = game.puzzle
+        # calculate header length based on cropped puzzle size to account for masks
+        header_width = max(
+            11, (game.bounding_box[1][0] - game.bounding_box[0][0] + 1) * 2 - 1
+        )
+        hr = "-" * header_width
+        header = hr + "\n" + f"{'WORD SEARCH':^{header_width}}" + "\n" + hr
+        key_intro = (
+            "Answer Key (*Secret Words)" if game.placed_secret_words else "Answer Key"
+        )
+        return f"""{header}
+{utils.stringify(puzzle_list, game.bounding_box)}
+
+Find these words: {word_list if word_list else '<ALL SECRET WORDS>'}
+* Words can go {utils.get_level_dirs_str(game.level)}.
+
+{key_intro}: {utils.get_answer_key_str(game.placed_words, game.bounding_box)}"""
+
+    def highlight_solution(self, game: Game) -> Puzzle:
+        """Add highlighting to puzzle solution."""
+        output: Puzzle = copy.deepcopy(game.puzzle)
+        for word in game.placed_words:
+            if (
+                word.start_column is None
+                or word.start_row is None
+                or word.direction is None
+            ):  # only here for mypy
+                continue  # pragma: no cover
+            x = word.start_column
+            y = word.start_row
+            for char in word.text:
+                output[y][x] = f"\u001b[1m\u001b[31m{char}\u001b[0m"
+                x += word.direction.c_move
+                y += word.direction.r_move
+        return output
+
+    def hide_filler_characters(
+        self,
+        game: Game,
+    ) -> Puzzle:
+        """Remove filler characters from a puzzle."""
+        output: Puzzle = copy.deepcopy(game.puzzle)
+        word_coords = {
+            coord
+            for coords in [word.coordinates for word in game.placed_words]
+            for coord in coords
+        }
+        for row in range(game.size):
+            for col in range(game.size):
+                if (col, row) not in word_coords:
+                    output[col][row] = " "
+        return output

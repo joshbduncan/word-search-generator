@@ -6,10 +6,13 @@ import pytest
 
 from word_search_generator import WordSearch, config, utils
 from word_search_generator.config import level_dirs
+from word_search_generator.formatter import WordSearchFormatter
 from word_search_generator.game import Key, MissingWordError, Puzzle, PuzzleSizeError
 from word_search_generator.mask.polygon import Rectangle
 from word_search_generator.validator import NoSingleLetterWords
 from word_search_generator.word import Direction, Word
+
+formatter = WordSearchFormatter()
 
 
 def check_key(key: Key, puzzle: Puzzle) -> bool:
@@ -36,12 +39,12 @@ def test_input_cleanup(ws: WordSearch):
 
 def test_set_puzzle_level(ws: WordSearch):
     ws.level = 3
-    assert ws.directions == utils.validate_level(config.level_dirs[3])
+    assert ws.directions == ws.validate_level(config.level_dirs[3])
 
 
 def test_set_secret_level(ws: WordSearch):
     ws.secret_directions = 4  # type: ignore
-    assert ws.secret_directions == utils.validate_level(4)  # type: ignore
+    assert ws.secret_directions == ws.validate_level(4)  # type: ignore
 
 
 def test_bad_puzzle_level_value(ws: WordSearch):
@@ -62,7 +65,7 @@ def test_garbage_puzzle_level_type(ws: WordSearch):
 def test_manual_level_control(ws: WordSearch):
     tst_dirs = {Direction.E, Direction.SW, (-1, 0)}
     ws.directions = tst_dirs  # type: ignore
-    assert ws.directions == utils.validate_level(tst_dirs)
+    assert ws.directions == ws.validate_level(tst_dirs)
 
 
 def test_set_puzzle_size(ws: WordSearch):
@@ -169,12 +172,12 @@ def test_puzzle_non_equal(words):
 
 
 def test_puzzle_str(ws: WordSearch):
-    puzzle_str = utils.format_puzzle_for_show(ws)
+    puzzle_str = formatter.format_puzzle_for_show(ws)
     assert str(ws) == puzzle_str
 
 
 def test_puzzle_str_output(ws: WordSearch, capsys):
-    print(utils.format_puzzle_for_show(ws))
+    print(formatter.format_puzzle_for_show(ws))
     capture1 = capsys.readouterr()
     print(ws)
     capture2 = capsys.readouterr()
@@ -182,7 +185,7 @@ def test_puzzle_str_output(ws: WordSearch, capsys):
 
 
 def test_puzzle_show_output(ws: WordSearch, capsys):
-    print(utils.format_puzzle_for_show(ws))
+    print(formatter.format_puzzle_for_show(ws))
     capture1 = capsys.readouterr()
     ws.show()
     capture2 = capsys.readouterr()
@@ -206,7 +209,7 @@ def test_puzzle_show_str_output_for_empty_object(capsys):
 
 
 def test_puzzle_show_solution_output(ws: WordSearch, capsys):
-    print(utils.format_puzzle_for_show(ws, True))
+    print(formatter.format_puzzle_for_show(ws, True))
     capture1 = capsys.readouterr()
     ws.show(True)
     capture2 = capsys.readouterr()
@@ -214,7 +217,7 @@ def test_puzzle_show_solution_output(ws: WordSearch, capsys):
 
 
 def test_puzzle_show_hide_fillers_output(ws: WordSearch, capsys):
-    print(utils.format_puzzle_for_show(ws, hide_fillers=True))
+    print(formatter.format_puzzle_for_show(ws, hide_fillers=True))
     capture1 = capsys.readouterr()
     ws.show(hide_fillers=True)
     capture2 = capsys.readouterr()
@@ -360,7 +363,7 @@ def test_invalid_size_at_init_type():
 
 
 def test_puzzle_solution_output(ws: WordSearch, capsys):
-    print(utils.format_puzzle_for_show(ws, True))
+    print(formatter.format_puzzle_for_show(ws, True))
     capture1 = capsys.readouterr()
     ws.solution
     capture2 = capsys.readouterr()
@@ -465,7 +468,7 @@ def test_hide_fillers(iterations, builtin_mask_shapes):
         mask = random.choice(builtin_mask_shapes)
         if mask:
             ws.apply_mask(mask)
-        hidden_fillers = utils.hide_filler_characters(ws)
+        hidden_fillers = formatter.hide_filler_characters(ws)
         chars: set[str] = set()
         for word in ws.placed_words:
             chars.update(hidden_fillers[y][x] for y, x in word.coordinates)

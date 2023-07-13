@@ -1,23 +1,4 @@
-import pytest
-
 from word_search_generator import utils
-
-
-def test_valid_cleanup_input_with_spaces():
-    word_list = ["cat", "bird", "pig", "horse"]
-    words = utils.cleanup_input(" ".join(word_list))
-    assert len(words) == len(word_list)
-
-
-def test_valid_cleanup_input_with_commas():
-    word_list = ["cat", "bird", "pig", "horse"]
-    words = utils.cleanup_input(",".join(word_list))
-    assert len(words) == len(word_list)
-
-
-def test_invalid_cleanup_input():
-    with pytest.raises(TypeError):
-        utils.cleanup_input(1)  # type: ignore
 
 
 def test_stringify():
@@ -45,11 +26,6 @@ def test_stringify_offset():
     ]
     output = " a a a a a\n b b b b b\n c c c c c\n d d d d d\n e e e e e"
     assert utils.stringify(inp, ((0, 0), (4, 4))) == output
-
-
-def test_invalid_level_direction_type():
-    with pytest.raises(TypeError):
-        utils.validate_level(None)
 
 
 def test_answer_key_list(ws, words):

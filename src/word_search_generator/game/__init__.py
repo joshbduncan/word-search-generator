@@ -2,13 +2,12 @@ import json
 from pathlib import Path
 from typing import Iterable, TypeAlias
 
-from .. import utils
-from ..config import ACTIVE, INACTIVE, max_puzzle_size, min_puzzle_size
+from .. import config, utils
 from ..formatter import Formatter
 from ..generator import Generator
 from ..mask import CompoundMask, Mask
 from ..validator import Validator
-from ..word import Direction, KeyInfo, KeyInfoJson, WordSet
+from ..word import Direction, KeyInfo, KeyInfoJson, Word, WordSet
 
 Puzzle: TypeAlias = list[list[str]]
 DirectionSet: TypeAlias = set[Direction]
@@ -16,13 +15,13 @@ Key: TypeAlias = dict[str, KeyInfo]
 KeyJson: TypeAlias = dict[str, KeyInfoJson]
 
 
-class MissingGenerator(Exception):
+class MissingGeneratorError(Exception):
     """For when a `Game` object doesn't have a generator specified."""
 
     pass
 
 
-class MissingFormatter(Exception):
+class MissingFormatterError(Exception):
     """For when a `Game` object doesn't have a formatter specified."""
 
     pass
@@ -108,20 +107,20 @@ class Game:
 
         # determine valid directions
         self._directions: DirectionSet = (
-            utils.validate_level(level) if level else utils.validate_level(2)
+            self.validate_level(level) if level else self.validate_level(2)
         )
         self._secret_directions: DirectionSet = (
-            utils.validate_level(secret_level) if secret_level else self.directions
+            self.validate_level(secret_level) if secret_level else self.directions
         )
 
         # generate puzzle
         if size:
             if not isinstance(size, int):
                 raise TypeError("Size must be an integer.")
-            if not min_puzzle_size <= size <= max_puzzle_size:
+            if not config.min_puzzle_size <= size <= config.max_puzzle_size:
                 raise ValueError(
-                    f"Puzzle size must be >= {min_puzzle_size}"
-                    + f" and <= {max_puzzle_size}."
+                    f"Puzzle size must be >= {config.min_puzzle_size}"
+                    + f" and <= {config.max_puzzle_size}."
                 )
             self._size = size
         if self.words:
@@ -252,7 +251,7 @@ class Game:
             cardinal directions as a comma separated string, or an iterable
             of valid directions from the Direction object.
         """
-        self._directions = utils.validate_level(value)
+        self._directions = self.validate_level(value)
         self._generate()
 
     def _set_level(self, value: int) -> None:
@@ -260,7 +259,7 @@ class Game:
         Here for backward compatibility."""
         if not isinstance(value, int):
             raise TypeError("Level must be an integer.")
-        self._directions = utils.validate_level(value)
+        self._directions = self.validate_level(value)
 
     def _get_level(self) -> DirectionSet:
         """Return valid puzzle directions. Here for backward compatibility."""
@@ -282,7 +281,7 @@ class Game:
             valid cardinal directions as a comma separated string, or an iterable
             of valid cardinal directions.
         """
-        self._secret_directions = utils.validate_level(value)
+        self._secret_directions = self.validate_level(value)
         self._generate()
 
     @property
@@ -299,15 +298,15 @@ class Game:
 
         Raises:
             TypeError: Must be an integer.
-            ValueError: Must be greater than `config.min_puzzle_size` and
-            less than `config.max_puzzle_size`.
+            ValueError: Must be greater than `config.config.min_puzzle_size` and
+            less than `config.config.max_puzzle_size`.
         """
         if not isinstance(value, int):
             raise TypeError("Size must be an integer.")
-        if not min_puzzle_size <= value <= max_puzzle_size:
+        if not config.min_puzzle_size <= value <= config.max_puzzle_size:
             raise ValueError(
-                f"Puzzle size must be >= {min_puzzle_size}"
-                + f" and <= {max_puzzle_size}."
+                f"Puzzle size must be >= {config.min_puzzle_size}"
+                + f" and <= {config.max_puzzle_size}."
             )
         if self.size != value:
             self._size = value
@@ -343,7 +342,7 @@ class Game:
             return
         if not self.formatter:
             if not self.DEFAULT_FORMATTER:
-                raise MissingFormatter("Missing formatter.")
+                raise MissingFormatterError("Missing formatter.")
             self.formatter = self.DEFAULT_FORMATTER
         print(self.formatter.show(self, solution, hide_fillers, *args, **kwargs))
 
@@ -373,7 +372,7 @@ class Game:
             raise AttributeError("No puzzle data to save.")
         if not self.formatter:
             if not self.DEFAULT_FORMATTER:
-                raise MissingFormatter("Missing formatter.")
+                raise MissingFormatterError("Missing formatter.")
             self.formatter = self.DEFAULT_FORMATTER
         return str(self.formatter.save(self, path, format, solution, *args, **kwargs))
 
@@ -387,7 +386,7 @@ class Game:
         # is called, calculate an appropriate puzzle size
         if not self.generator:
             if not self.DEFAULT_GENERATOR:
-                raise MissingGenerator("Missing generator.")
+                raise MissingGeneratorError("Missing generator.")
             self.generator = self.DEFAULT_GENERATOR
         self._puzzle = []
         if not self.words:
@@ -404,7 +403,7 @@ class Game:
         for word in self.words:
             word.remove_from_puzzle()
         if not self.mask or len(self.mask) != self.size:
-            self._mask = utils.build_puzzle(self.size, ACTIVE)
+            self._mask = utils.build_puzzle(self.size, config.ACTIVE)
         self._puzzle = self.generator.generate(
             self.size,
             self.mask,
@@ -418,9 +417,9 @@ class Game:
 
     def _process_input(self, words: str, action: str = "add", secret: bool = False):
         if secret:
-            clean_words = utils.cleanup_input(words, secret=True)
+            clean_words = self.cleanup_input(words, secret=True)
         else:
-            clean_words = utils.cleanup_input(words)
+            clean_words = self.cleanup_input(words)
 
         if action == "add":
             # remove all new words first so any updates are reflected in the word list
@@ -473,6 +472,62 @@ class Game:
         self._process_input(words, "replace", secret)
         self._generate(reset_size=reset_size)
 
+    def cleanup_input(self, words: str, secret: bool = False) -> WordSet:
+        """Cleanup provided input string. Removing spaces
+        one-letter words, and words with punctuation."""
+        if not isinstance(words, str):
+            raise TypeError(
+                "Words must be a string separated by spaces, commas, or new lines"
+            )
+        # remove new lines
+        words = words.replace("\n", ",")
+        # remove excess spaces and commas
+        word_list = ",".join(words.split(" ")).split(",")
+        # iterate through all words and pick first set that match criteria
+        word_set: WordSet = set()
+        while word_list and len(word_set) <= config.max_puzzle_words:
+            word = word_list.pop(0)
+            if word:
+                word_set.add(Word(word, secret=secret))
+        return word_set
+
+    def validate_direction_iterable(
+        self, d: Iterable[str | tuple[int, int] | Direction]
+    ) -> DirectionSet:
+        """Validates that all the directions in d are found as keys to
+        config.dir_moves and therefore are valid directions."""
+        o = set()
+        for direction in d:
+            if isinstance(direction, Direction):
+                o.add(direction)
+                continue
+            elif isinstance(direction, tuple):
+                o.add(Direction(direction))
+                continue
+            try:
+                o.add(Direction[direction.upper().strip()])
+            except KeyError:
+                raise ValueError(f"'{direction}' is not a valid direction.")
+        return o
+
+    def validate_level(self, d) -> DirectionSet:
+        """Given a d, try to turn it into a list of valid moves."""
+        if isinstance(d, int):  # traditional numeric level
+            try:
+                return config.level_dirs[d]
+            except KeyError:
+                raise ValueError(
+                    f"{d} is not a valid difficulty number"
+                    + f"[{', '.join([str(i) for i in config.level_dirs])}]"
+                )
+        if isinstance(d, str):  # comma-delimited list
+            return self.validate_direction_iterable(d.split(","))
+        if isinstance(d, Iterable):  # probably used by external code
+            if not d:
+                raise ValueError("Empty iterable provided.")
+            return self.validate_direction_iterable(d)
+        raise TypeError(f"{type(d)} given, not str, int, or Iterable[str]\n{d}")
+
     # ************************************************* #
     # ******************** MASKING ******************** #
     # ************************************************* #
@@ -491,16 +546,19 @@ before applying a mask."
         for y in range(self.size):
             for x in range(self.size):
                 if mask.method == 1:
-                    if mask.mask[y][x] == ACTIVE and self.mask[y][x] == ACTIVE:
-                        self.mask[y][x] = ACTIVE
+                    if (
+                        mask.mask[y][x] == config.ACTIVE
+                        and self.mask[y][x] == config.ACTIVE
+                    ):
+                        self.mask[y][x] = config.ACTIVE
                     else:
-                        self.mask[y][x] = INACTIVE
+                        self.mask[y][x] = config.INACTIVE
                 elif mask.method == 2:
-                    if mask.mask[y][x] == ACTIVE:
-                        self.mask[y][x] = ACTIVE
+                    if mask.mask[y][x] == config.ACTIVE:
+                        self.mask[y][x] = config.ACTIVE
                 else:
-                    if mask.mask[y][x] == ACTIVE:
-                        self.mask[y][x] = INACTIVE
+                    if mask.mask[y][x] == config.ACTIVE:
+                        self.mask[y][x] = config.INACTIVE
         # add mask to puzzle instance for later reference
         if mask not in self.masks:
             self.masks.append(mask)
@@ -524,7 +582,8 @@ before applying a mask."
         """Invert the current puzzle mask. Has no effect on the
         actual mask(s) found in `WordSearch.mask`."""
         self._mask = [
-            [ACTIVE if c == INACTIVE else INACTIVE for c in row] for row in self.mask
+            [config.ACTIVE if c == config.INACTIVE else config.INACTIVE for c in row]
+            for row in self.mask
         ]
         self._generate()
 
@@ -550,7 +609,7 @@ before applying a mask."
     def remove_masks(self) -> None:
         """"""
         self._masks = []
-        self._mask = utils.build_puzzle(self.size, ACTIVE)
+        self._mask = utils.build_puzzle(self.size, config.ACTIVE)
         self._generate()
 
     def remove_static_masks(self) -> None:
@@ -558,7 +617,7 @@ before applying a mask."
 
     def _reapply_masks(self) -> None:
         """Reapply all current masks to the puzzle."""
-        self._mask = utils.build_puzzle(self.size, ACTIVE)
+        self._mask = utils.build_puzzle(self.size, config.ACTIVE)
         for mask in self.masks:
             if mask.static and mask.puzzle_size != self.size:
                 continue
