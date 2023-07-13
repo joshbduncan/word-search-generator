@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from word_search_generator.game.word_search import WordSearch
+from word_search_generator import WordSearch
 from word_search_generator.utils import get_random_words
 
 

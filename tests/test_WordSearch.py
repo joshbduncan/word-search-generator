@@ -4,15 +4,9 @@ import random
 
 import pytest
 
-from word_search_generator import config, utils
+from word_search_generator import WordSearch, config, utils
 from word_search_generator.config import level_dirs
-from word_search_generator.game.word_search import (
-    Key,
-    MissingWordError,
-    Puzzle,
-    PuzzleSizeError,
-    WordSearch,
-)
+from word_search_generator.game import Key, MissingWordError, Puzzle, PuzzleSizeError
 from word_search_generator.mask.polygon import Rectangle
 from word_search_generator.validator import NoSingleLetterWords
 from word_search_generator.word import Direction, Word

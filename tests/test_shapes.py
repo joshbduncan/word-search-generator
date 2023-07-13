@@ -3,7 +3,8 @@ from contextlib import redirect_stdout
 
 import pytest
 
-from word_search_generator.game.word_search import PuzzleNotGeneratedError, WordSearch
+from word_search_generator import WordSearch
+from word_search_generator.game import PuzzleNotGeneratedError
 from word_search_generator.mask import shapes
 
 

@@ -1,5 +1,5 @@
+from word_search_generator import WordSearch
 from word_search_generator.config import level_dirs, max_puzzle_words
-from word_search_generator.game.word_search import WordSearch
 from word_search_generator.generator import WordSearchGenerator
 from word_search_generator.utils import calc_puzzle_size, get_random_words
 

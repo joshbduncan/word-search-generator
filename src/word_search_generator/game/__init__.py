@@ -592,6 +592,15 @@ before applying a mask."
         )
 
     def __str__(self) -> str:
-        if not self.key or not self.generator or not self.formatter:
+        if not self.key:
             return "Empty puzzle."
+        if not self.key or not self.generator or not self.formatter:
+            if not self.generator:
+                if not self.DEFAULT_GENERATOR:
+                    return "Missing generator."
+                self.generator = self.DEFAULT_GENERATOR
+            if not self.formatter:
+                if not self.DEFAULT_FORMATTER:
+                    return "Missing formatter."
+                self.formatter = self.DEFAULT_FORMATTER
         return self.formatter.show(self)

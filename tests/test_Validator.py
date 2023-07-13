@@ -1,4 +1,4 @@
-from word_search_generator.game.word_search import WordSearch
+from word_search_generator import WordSearch
 from word_search_generator.validator import (
     NoPalindromes,
     NoPunctuation,
