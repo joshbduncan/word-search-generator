@@ -11,7 +11,8 @@ from .word import Direction, Word
 from .words import WORD_LIST
 
 if TYPE_CHECKING:  # pragma: no cover
-    from . import DirectionSet, Key, Puzzle, WordSearch
+    from .game import DirectionSet, Game, Key, Puzzle
+    from .game.word_search import WordSearch
     from .word import WordSet
 
 
@@ -182,7 +183,7 @@ def highlight_solution(ws: WordSearch) -> Puzzle:
     return output
 
 
-def hide_filler_characters(ws: WordSearch) -> Puzzle:
+def hide_filler_characters(ws: Game) -> Puzzle:
     """Remove filler characters from a puzzle."""
     output: Puzzle = copy.deepcopy(ws.puzzle)
     word_coords = {
@@ -211,7 +212,7 @@ def stringify(puzzle: Puzzle, bbox: tuple[tuple[int, int], tuple[int, int]]) -> 
 
 
 def format_puzzle_for_show(
-    ws: WordSearch, show_solution: bool = False, hide_fillers: bool = False
+    ws: Game, show_solution: bool = False, hide_fillers: bool = False
 ) -> str:
     word_list = get_word_list_str(ws.key)
     # prepare the correct version of the puzzle

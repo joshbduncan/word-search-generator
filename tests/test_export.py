@@ -10,7 +10,8 @@ import pdfplumber
 import pytest
 from pypdf import PdfReader
 
-from word_search_generator import WordSearch, config, utils
+from word_search_generator import config, utils
+from word_search_generator.game.word_search import WordSearch
 from word_search_generator.word import Direction, Word
 
 

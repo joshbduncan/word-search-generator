@@ -1,6 +1,6 @@
 import pytest
 
-from word_search_generator import WordSearch
+from word_search_generator.game.word_search import WordSearch
 from word_search_generator.mask import shapes
 from word_search_generator.word import Direction, Word
 

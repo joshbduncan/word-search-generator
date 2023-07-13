@@ -4,8 +4,8 @@ import sys
 from datetime import datetime
 from typing import Sequence
 
-from . import WordSearch, __app_name__, __version__, config, utils
-from .config import DEFAULT_VALIDATORS
+from . import __app_name__, __version__, config, utils
+from .game.word_search import WordSearch
 from .mask import shapes
 from .mask.bitmap import Image
 from .word import Direction
@@ -225,7 +225,7 @@ secret puzzle words can go. See valid arguments above.",
         size=args.size,
         secret_words=secret_words if secret_words else None,
         secret_level=args.secret_difficulty,
-        validators=[] if args.no_validators else DEFAULT_VALIDATORS,
+        validators=[] if args.no_validators else WordSearch.DEFAULT_VALIDATORS,
     )
 
     # apply masking if specified

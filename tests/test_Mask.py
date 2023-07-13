@@ -3,8 +3,8 @@ from pathlib import Path
 import pytest
 from PIL import Image as PILImage
 
-from word_search_generator import WordSearch
 from word_search_generator.config import ACTIVE, INACTIVE
+from word_search_generator.game.word_search import WordSearch
 from word_search_generator.mask import CompoundMask, Mask, MaskNotGenerated
 from word_search_generator.mask.bitmap import Bitmap, ContrastError, Image
 from word_search_generator.mask.ellipse import Ellipse

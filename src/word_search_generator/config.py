@@ -1,4 +1,3 @@
-from .validator import NoPalindromes, NoPunctuation, NoSingleLetterWords, NoSubwords
 from .word import Direction
 
 # puzzle settings
@@ -11,13 +10,6 @@ max_fit_tries = 1000
 # puzzle grid settings
 ACTIVE = "*"
 INACTIVE = "#"
-
-DEFAULT_VALIDATORS = [
-    NoPalindromes(),
-    NoPunctuation(),
-    NoSingleLetterWords(),
-    NoSubwords(),
-]
 
 # puzzle difficulty levels
 level_dirs = {
