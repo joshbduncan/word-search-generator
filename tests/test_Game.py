@@ -38,11 +38,11 @@ def test_missing_generator():
 
 def test_default_generator_in_str_repr(ws: WordSearch):
     ws.generator = None
-    assert ws.__str__() == ws.formatter.show(ws)
+    assert ws.__str__() == ws.formatter.show(ws)  # type: ignore[union-attr]
 
 
 def test_missing_default_generator_in_str_repr(ws: WordSearch):
-    ws.generator = ws.DEFAULT_GENERATOR = None
+    ws.generator = ws.DEFAULT_GENERATOR = None  # type: ignore[assignment]
     assert ws.__str__() == "Missing generator."
 
 
@@ -53,7 +53,7 @@ def test_missing_formatter():
 
 
 def test_missing_default_formatter_in_str_repr(ws: WordSearch):
-    ws.formatter = ws.DEFAULT_FORMATTER = None
+    ws.formatter = ws.DEFAULT_FORMATTER = None  # type: ignore[assignment]
     assert ws.__str__() == "Missing formatter."
 
 
