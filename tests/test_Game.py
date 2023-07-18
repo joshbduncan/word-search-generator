@@ -63,7 +63,7 @@ def test_set_puzzle_level(level: int | str, expected: set[Direction]):
 )
 def test_set_secret_level(words, level: int, expected: set[Direction]):
     ws = WordSearch(words)
-    ws.secret_directions = level
+    ws.secret_directions = level  # type: ignore[assignment]
     ws.directions == expected
 
 
