@@ -27,13 +27,13 @@ def test_stdin():
     assert result.returncode == 0
 
 
-def test_export_pdf(tmp_path):
+def test_export_pdf(tmp_path: Path):
     fp = tmp_path.joinpath("test.pdf")
     result = subprocess.run(f'word-search some test words -o "{fp}"', shell=True)
     assert result.returncode == 0 and tmp_path.exists()
 
 
-def test_export_csv(tmp_path):
+def test_export_csv(tmp_path: Path):
     fp = tmp_path.joinpath("test.csv")
     result = subprocess.run(f'word-search some test words -o "{fp}"', shell=True)
     assert result.returncode == 0 and tmp_path.exists()
@@ -143,7 +143,7 @@ def test_invalid_mask():
     assert result.returncode == 2
 
 
-def test_image_mask(tmp_path):
+def test_image_mask(tmp_path: Path):
     name = "test_image.jpg"
     test_img = Image.new("L", (100, 100), (0))
     img_path = Path.joinpath(tmp_path, name)

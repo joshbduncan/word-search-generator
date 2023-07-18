@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 
 from word_search_generator import WordSearch
@@ -36,14 +38,18 @@ def test_missing_generator():
         game = Game("dog cat horse")  # noqa: F841
 
 
-def test_default_generator_in_str_repr(ws: WordSearch):
+def test_missing_generator_during_generate_method(words):
+    ws = WordSearch()
     ws.generator = None
-    assert ws.__str__() == ws.formatter.show(ws)  # type: ignore[union-attr]
+    assert ws.generator != ws.DEFAULT_GENERATOR
+    ws.add_words(words)
+    assert ws.generator == ws.DEFAULT_GENERATOR
 
 
-def test_missing_default_generator_in_str_repr(ws: WordSearch):
+def test_missing_default_generator_str_repr(ws: WordSearch):
     ws.generator = ws.DEFAULT_GENERATOR = None  # type: ignore[assignment]
-    assert ws.__str__() == "Missing generator."
+    with pytest.raises(MissingGeneratorError):
+        ws.__str__()
 
 
 def test_missing_formatter():
@@ -52,12 +58,28 @@ def test_missing_formatter():
         game.show()
 
 
+def test_missing_formatter_during_show_method(ws: WordSearch):
+    ws.formatter = None
+    ws.show()
+    assert ws.formatter == ws.DEFAULT_FORMATTER
+
+
+def test_missing_formatter_during_save_method(ws: WordSearch, tmp_path: Path):
+    ws.formatter = None
+    assert ws.formatter != ws.DEFAULT_FORMATTER
+    path = tmp_path.joinpath("test.json")
+    ws.save(path, "JSON")
+    assert ws.formatter == ws.DEFAULT_FORMATTER
+
+
 def test_missing_default_formatter_in_str_repr(ws: WordSearch):
     ws.formatter = ws.DEFAULT_FORMATTER = None  # type: ignore[assignment]
-    assert ws.__str__() == "Missing formatter."
+    with pytest.raises(MissingFormatterError):
+        ws.__str__()
 
 
-def test_missing_default_formatter(tmp_path):
+def test_missing_default_formatter(tmp_path: Path):
     game = Game("dog cat horse", generator=WordSearchGenerator())
+    game.formatter = game.DEFAULT_FORMATTER = None  # type: ignore[assignment]
     with pytest.raises(MissingFormatterError):
         game.save(tmp_path.joinpath("hey-yo.pdf"))

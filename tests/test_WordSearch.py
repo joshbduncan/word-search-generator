@@ -1,13 +1,20 @@
 import json
 import pathlib
 import random
+from pathlib import Path
 
 import pytest
 
 from word_search_generator import WordSearch, config, utils
 from word_search_generator.config import level_dirs
-from word_search_generator.formatter import WordSearchFormatter
-from word_search_generator.game import Key, MissingWordError, Puzzle, PuzzleSizeError
+from word_search_generator.formatter.word_search_formatter import WordSearchFormatter
+from word_search_generator.game import (
+    EmptyPuzzleError,
+    Key,
+    MissingWordError,
+    Puzzle,
+    PuzzleSizeError,
+)
 from word_search_generator.mask.polygon import Rectangle
 from word_search_generator.validator import NoSingleLetterWords
 from word_search_generator.word import Direction, Word
@@ -87,13 +94,13 @@ def test_puzzle_key(ws: WordSearch):
     assert check_key(ws.key, ws.puzzle)
 
 
-def test_export_pdf(ws: WordSearch, tmp_path):
+def test_export_pdf(ws: WordSearch, tmp_path: Path):
     tmp_path = pathlib.Path.joinpath(tmp_path, "test.pdf")
     ws.save(tmp_path)
     assert tmp_path.exists()
 
 
-def test_export_csv(ws: WordSearch, tmp_path):
+def test_export_csv(ws: WordSearch, tmp_path: Path):
     tmp_path = pathlib.Path.joinpath(tmp_path, "test.csv")
     ws.save(tmp_path)
     assert tmp_path.exists()
@@ -192,20 +199,16 @@ def test_puzzle_show_output(ws: WordSearch, capsys):
     assert capture1.out == capture2.out
 
 
-def test_puzzle_show_output_for_empty_object(capsys):
+def test_puzzle_show_output_for_empty_object():
     ws = WordSearch()
-    ws.show()
-    capture = capsys.readouterr()
-
-    assert capture.out == "Empty puzzle.\n"
+    with pytest.raises(EmptyPuzzleError):
+        ws.show()
 
 
-def test_puzzle_show_str_output_for_empty_object(capsys):
+def test_puzzle_show_str_output_for_empty_object():
     ws = WordSearch()
-    print(ws)
-    capture = capsys.readouterr()
-
-    assert capture.out == "Empty puzzle.\n"
+    with pytest.raises(EmptyPuzzleError):
+        print(ws)
 
 
 def test_puzzle_show_solution_output(ws: WordSearch, capsys):

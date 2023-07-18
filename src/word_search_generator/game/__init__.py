@@ -15,26 +15,32 @@ Key: TypeAlias = dict[str, KeyInfo]
 KeyJson: TypeAlias = dict[str, KeyInfoJson]
 
 
+class EmptyPuzzleError(Exception):
+    """For when a `Game` puzzle is requested but is currently empty."""
+
+    def __init__(self, message="Try adding words using the `add_words()` method."):
+        self.message = message
+        super().__init__(self.message)
+
+
 class MissingGeneratorError(Exception):
     """For when a `Game` object doesn't have a generator specified."""
 
-    pass
+    def __init__(self, message="Generator required to puzzle generation."):
+        self.message = message
+        super().__init__(self.message)
 
 
 class MissingFormatterError(Exception):
     """For when a `Game` object doesn't have a formatter specified."""
 
-    pass
+    def __init__(self, message="Formatter required for outputting the puzzle."):
+        self.message = message
+        super().__init__(self.message)
 
 
-class PuzzleNotGeneratedError(Exception):
-    """For when a puzzle has yet to be generated."""
-
-    pass
-
-
-class PuzzleSizeError(Exception):
-    """For when the length of each provided word is > `Game.size`."""
+class PuzzleSizeError(ValueError):
+    """For when a puzzle has an improper size."""
 
     pass
 
@@ -61,9 +67,9 @@ class Game:
         secret_level: int | str | None = None,
         *,
         include_all_words: bool = False,
-        generator: Generator | None = DEFAULT_GENERATOR,
-        formatter: Formatter | None = DEFAULT_FORMATTER,
-        validators: Iterable[Validator] | None = DEFAULT_VALIDATORS,
+        generator: Generator | None = None,
+        formatter: Formatter | None = None,
+        validators: Iterable[Validator] | None = None,
     ):
         """Initialize a game.
 
@@ -82,10 +88,11 @@ class Game:
                 cannot place all the words.  Secret words are not included in this
                 check.
             generator (Generator | None, optional): Puzzle generator. Defaults to None.
+            formatter (Formatter | None, optional): Game formatter. Defaults to None.
             validators (Iterable[Validator] | None, optional): An iterable
             of validators that puzzle words will be checked against during puzzle
-            generation. Defaults to `DEFAULT_VALIDATORS`.
-            formatter (Formatter | None, optional): Game formatter. Defaults to None.
+            generation. Provide an empty iterable to disable word validation.
+            Defaults to `DEFAULT_VALIDATORS`.
         """
         # setup puzzle
         self._words: WordSet = set()
@@ -96,7 +103,9 @@ class Game:
         self.force_all_words: bool = include_all_words
         self.generator: Generator | None = generator
         self.formatter: Formatter | None = formatter
-        self._validators: Iterable[Validator] = validators if validators else []
+        self._validators: Iterable[Validator] = (
+            validators if validators else self.DEFAULT_VALIDATORS
+        )
 
         # setup words
         # in case of dupes, add secret words first so they are overwritten
@@ -112,6 +121,12 @@ class Game:
         self._secret_directions: DirectionSet = (
             self.validate_level(secret_level) if secret_level else self.directions
         )
+
+        # setup required defaults
+        if not self.generator:
+            self.generator = self.DEFAULT_GENERATOR
+        if not self.formatter:
+            self.formatter = self.DEFAULT_FORMATTER
 
         # generate puzzle
         if size:
@@ -304,7 +319,7 @@ class Game:
         if not isinstance(value, int):
             raise TypeError("Size must be an integer.")
         if not config.min_puzzle_size <= value <= config.max_puzzle_size:
-            raise ValueError(
+            raise PuzzleSizeError(
                 f"Puzzle size must be >= {config.min_puzzle_size}"
                 + f" and <= {config.max_puzzle_size}."
             )
@@ -338,11 +353,10 @@ class Game:
                 is shown. Overrides `solution`. Defaults to False.
         """
         if not self.key:
-            print("Empty puzzle.")
-            return
+            raise EmptyPuzzleError()
         if not self.formatter:
             if not self.DEFAULT_FORMATTER:
-                raise MissingFormatterError("Missing formatter.")
+                raise MissingFormatterError()
             self.formatter = self.DEFAULT_FORMATTER
         print(self.formatter.show(self, solution, hide_fillers, *args, **kwargs))
 
@@ -372,7 +386,7 @@ class Game:
             raise AttributeError("No puzzle data to save.")
         if not self.formatter:
             if not self.DEFAULT_FORMATTER:
-                raise MissingFormatterError("Missing formatter.")
+                raise MissingFormatterError()
             self.formatter = self.DEFAULT_FORMATTER
         return str(self.formatter.save(self, path, format, solution, *args, **kwargs))
 
@@ -386,7 +400,7 @@ class Game:
         # is called, calculate an appropriate puzzle size
         if not self.generator:
             if not self.DEFAULT_GENERATOR:
-                raise MissingGeneratorError("Missing generator.")
+                raise MissingGeneratorError()
             self.generator = self.DEFAULT_GENERATOR
         self._puzzle = []
         if not self.words:
@@ -398,7 +412,7 @@ class Game:
         )
         if self.size and self.size < min_word_length:
             raise PuzzleSizeError(
-                "Specified puzzle size is smaller than shortest word."
+                "Specified puzzle size `{self.size}` is smaller than shortest word."
             )
         for word in self.words:
             word.remove_from_puzzle()
@@ -535,10 +549,7 @@ class Game:
     def apply_mask(self, mask: Mask) -> None:
         """Apply a singular mask object to the puzzle."""
         if not self.puzzle:
-            raise PuzzleNotGeneratedError(
-                "Puzzle not yet generated. Be sure to add puzzle `words` \
-before applying a mask."
-            )
+            raise EmptyPuzzleError()
         if not isinstance(mask, (Mask, CompoundMask)):
             raise TypeError("Please provide a Mask object.")
         if mask.puzzle_size != self.size:
@@ -643,23 +654,19 @@ before applying a mask."
     def __repr__(self) -> str:
         return (
             f"{self.__class__.__name__}"
-            + f"('{','.join([word.text for word in self.hidden_words])}', "
-            + f"{utils.direction_set_repr(self.directions)}, "
-            + f"{self.size}, "
-            + f"'{','.join([word.text for word in self.secret_words])}',"
-            + f"{utils.direction_set_repr(self.secret_directions)})"
+            + f"(words='{','.join([word.text for word in self.hidden_words])}', "
+            + f"level={utils.direction_set_repr(self.directions)}, "
+            + f"size={self.size}, "
+            + f"secret_words='{','.join([word.text for word in self.secret_words])}', "
+            + f"secret_level={utils.direction_set_repr(self.secret_directions)}, "
+            + f"include_all_words={self.force_all_words})"
         )
 
     def __str__(self) -> str:
         if not self.key:
-            return "Empty puzzle."
-        if not self.key or not self.generator or not self.formatter:
-            if not self.generator:
-                if not self.DEFAULT_GENERATOR:
-                    return "Missing generator."
-                self.generator = self.DEFAULT_GENERATOR
-            if not self.formatter:
-                if not self.DEFAULT_FORMATTER:
-                    return "Missing formatter."
-                self.formatter = self.DEFAULT_FORMATTER
+            raise EmptyPuzzleError()
+        elif not self.generator:
+            raise MissingGeneratorError()
+        elif not self.formatter:
+            raise MissingFormatterError()
         return self.formatter.show(self)
