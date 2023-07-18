@@ -26,7 +26,7 @@ class EmptyPuzzleError(Exception):
 class MissingGeneratorError(Exception):
     """For when a `Game` object doesn't have a generator specified."""
 
-    def __init__(self, message="Generator required to puzzle generation."):
+    def __init__(self, message="Generator required for puzzle generation."):
         self.message = message
         super().__init__(self.message)
 

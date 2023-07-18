@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from word_search_generator import WordSearch, config, utils
+from word_search_generator import WordSearch, utils
 from word_search_generator.config import level_dirs
 from word_search_generator.formatter.word_search_formatter import WordSearchFormatter
 from word_search_generator.game import (
@@ -17,7 +17,6 @@ from word_search_generator.game import (
 )
 from word_search_generator.mask.polygon import Rectangle
 from word_search_generator.validator import NoSingleLetterWords
-from word_search_generator.word import Direction, Word
 
 formatter = WordSearchFormatter()
 
@@ -33,61 +32,6 @@ def check_key(key: Key, puzzle: Puzzle) -> bool:
             row += d.r_move  # type: ignore
             col += d.c_move  # type: ignore
     return True
-
-
-def test_empty_object():
-    ws = WordSearch()
-    assert len(ws.words) == 0
-
-
-def test_input_cleanup(ws: WordSearch):
-    assert len(ws.words) == 8
-
-
-def test_set_puzzle_level(ws: WordSearch):
-    ws.level = 3
-    assert ws.directions == ws.validate_level(config.level_dirs[3])
-
-
-def test_set_secret_level(ws: WordSearch):
-    ws.secret_directions = 4  # type: ignore
-    assert ws.secret_directions == ws.validate_level(4)  # type: ignore
-
-
-def test_bad_puzzle_level_value(ws: WordSearch):
-    with pytest.raises(ValueError):
-        ws.level = 757
-
-
-def test_bad_puzzle_level_type(ws: WordSearch):
-    with pytest.raises(TypeError):
-        ws.level = "A"  # type: ignore
-
-
-def test_garbage_puzzle_level_type(ws: WordSearch):
-    with pytest.raises(TypeError):
-        ws.level = 17.76  # type: ignore
-
-
-def test_manual_level_control(ws: WordSearch):
-    tst_dirs = {Direction.E, Direction.SW, (-1, 0)}
-    ws.directions = tst_dirs  # type: ignore
-    assert ws.directions == ws.validate_level(tst_dirs)
-
-
-def test_set_puzzle_size(ws: WordSearch):
-    ws.size = 15
-    assert len(ws.puzzle) == 15
-
-
-def test_bad_puzzle_size_value(ws: WordSearch):
-    with pytest.raises(ValueError):
-        ws.size = 1
-
-
-def test_bad_puzzle_size_type(ws: WordSearch):
-    with pytest.raises(TypeError):
-        ws.size = "A"  # type: ignore
 
 
 def test_puzzle_key(ws: WordSearch):
@@ -109,51 +53,6 @@ def test_export_csv(ws: WordSearch, tmp_path: Path):
 def test_invalid_save_path(ws: WordSearch):
     with pytest.raises(OSError):
         ws.save("~/some/random/dir/that/doesnt/exists")
-
-
-def test_add_words(ws: WordSearch):
-    ws.add_words("test")
-    assert Word("test") in ws.words
-
-
-def test_add_regular_words_replacing_secret_word(ws: WordSearch):
-    ws.add_words("test", True)
-    ws.add_words("test")
-    assert Word("test") not in ws.secret_words and Word("test") in ws.words
-
-
-def test_add_secret_words(ws: WordSearch):
-    ws.add_words("test", True)
-    assert Word("test") in ws.secret_words
-
-
-def test_add_secret_words_replacing_regular_word(ws: WordSearch):
-    ws.add_words("test")
-    ws.add_words("test", True)
-    assert Word("test") not in ws.hidden_words and Word("test") in ws.secret_words
-
-
-def test_remove_words(ws: WordSearch):
-    ws.add_words("test")
-    ws.remove_words("test")
-    assert Word("test") not in ws.words
-
-
-def test_remove_words_from_secret_words(ws: WordSearch):
-    ws.add_words("test", True)
-    ws.remove_words("test")
-    assert "test".upper() not in ws.words.union(ws.secret_words)
-
-
-def test_replace_words(ws: WordSearch):
-    ws.replace_words("set, of replaced, words")
-    assert len(ws.words) == 4
-
-
-def test_replace_secret_words(words):
-    ws = WordSearch(words, secret_words="secret, blind, nope")
-    ws.replace_words("hidden", True)
-    assert len(ws.secret_words) == 1
 
 
 def test_puzzle_repr(ws: WordSearch):

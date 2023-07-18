@@ -1,6 +1,7 @@
 import pytest
 
 from word_search_generator import WordSearch
+from word_search_generator.game import Game
 from word_search_generator.mask import shapes
 from word_search_generator.word import Direction, Word
 
@@ -8,6 +9,11 @@ from word_search_generator.word import Direction, Word
 @pytest.fixture
 def iterations():
     return 5
+
+
+@pytest.fixture
+def empty_game():
+    return Game()
 
 
 @pytest.fixture
