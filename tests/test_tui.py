@@ -1,7 +1,7 @@
 # import pytest
 
 from word_search_generator import WordSearch
-from word_search_generator.tui import TUIGame
+from word_search_generator.tui.word_search import TUIGame
 
 
 def test_tui_title():

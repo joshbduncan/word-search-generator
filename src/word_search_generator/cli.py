@@ -256,7 +256,7 @@ secret puzzle words can go. See valid arguments above.",
         puzzle.apply_mask(Image(args.image_mask))
 
     if args.play:
-        from .tui import TUIGame
+        from .tui.word_search import TUIGame
 
         app = TUIGame(puzzle)
         app.run()
