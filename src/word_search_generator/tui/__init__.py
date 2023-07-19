@@ -10,15 +10,27 @@ try:
     from textual.screen import ModalScreen
     from textual.widget import Widget
     from textual.widgets import Button, Footer, Header, Label, Static
-except ImportError as e:
-    print("Please install word-search-generator[play] to use the TUI interface.")
-    raise e
+except ImportError:
+    raise ImportError(
+        "Please install word-search-generator[play] to use the TUI play interface."
+    )
 
 from .. import WordSearch
 from ..word import Position, Word
 
 # TODO: keep score?
 # TODO: help screen
+
+
+class InvalidGameType(Exception):
+    """For when a `Game` type hasn't been implemented for TUI play."""
+
+    def __init__(
+        self,
+        message="Invalid game type. Only WordSearch games at this time.",
+    ):
+        self.message = message
+        super().__init__(self.message)
 
 
 class QuitScreen(ModalScreen):  # type: ignore[type-arg]
@@ -30,7 +42,7 @@ class QuitScreen(ModalScreen):  # type: ignore[type-arg]
         """Create an instance of the screen.
 
         Args:
-            word_search (WordSearch): _description_
+            game (WordSearch): _description_
         """
         self.message = message if message else self.DEFAULT_MESSAGE
         super().__init__()
@@ -107,7 +119,7 @@ class PuzzleWord(Static):
     def cells(self) -> Generator[Widget, None, None] | None:
         """All BoardCells that make up this word in the puzzle."""
         board = self.app.get_widget_by_id("board")
-        bbox = self.app.word_search.bounding_box  # type: ignore[attr-defined]
+        bbox = self.app.game.bounding_box  # type: ignore[attr-defined]
         offset_coordinates: list[Position] | None = self.word.offset_coordinates(bbox)
         if not offset_coordinates:  # only here for mypy
             return None
@@ -180,13 +192,15 @@ class TUIGame(App):  # type: ignore[type-arg]
     cheat_mode = False
     found_words = reactive(0)
 
-    def __init__(self, word_search: WordSearch, *args, **kwargs) -> None:
+    def __init__(self, game: WordSearch, *args, **kwargs) -> None:
         """Create an instance of the app.
 
         Args:
-            word_search (WordSearch): WordSearch to generate puzzle from.
+            game (WordSearch): WordSearch to generate puzzle from.
         """
-        self.word_search = word_search
+        if not isinstance(game, WordSearch):
+            raise InvalidGameType()
+        self.game = game
         super().__init__(*args, **kwargs)
 
     def compose(self) -> ComposeResult:
@@ -198,15 +212,13 @@ class TUIGame(App):  # type: ignore[type-arg]
             yield ElapsedTime("Elapsed Time: 00:00:00.00")
         with Horizontal():
             with VerticalScroll(id="word-list"):
-                words = sorted(
-                    self.word_search.placed_words, key=lambda word: word.text
-                )
+                words = sorted(self.game.placed_words, key=lambda word: word.text)
                 for word in words:
                     yield PuzzleWord(word, classes="word")
             with Grid(id="board"):
-                min_x, min_y = self.word_search.bounding_box[0]
-                max_x, max_y = self.word_search.bounding_box[1]
-                for y, row in enumerate(self.word_search.puzzle[min_y : max_y + 1]):
+                min_x, min_y = self.game.bounding_box[0]
+                max_x, max_y = self.game.bounding_box[1]
+                for y, row in enumerate(self.game.puzzle[min_y : max_y + 1]):
                     for x, col in enumerate(row[min_x : max_x + 1]):
                         yield BoardCell(
                             character=col,
@@ -220,11 +232,7 @@ class TUIGame(App):  # type: ignore[type-arg]
         """Update board and word list when app is mounted."""
         board = self.get_widget_by_id("board")
         board.border_title = "PUZZLE BOARD"
-        columns = (
-            self.word_search.bounding_box[1][0]
-            - self.word_search.bounding_box[0][0]
-            + 1
-        )
+        columns = self.game.bounding_box[1][0] - self.game.bounding_box[0][0] + 1
         board.styles.grid_size_columns = columns
         word_list = self.get_widget_by_id("word-list")
         word_list.border_title = "WORD LIST"
@@ -244,7 +252,7 @@ class TUIGame(App):  # type: ignore[type-arg]
                 continue
             board = self.get_widget_by_id("board")
             obj = puzzle_word.word  # type: ignore[attr-defined]
-            bbox = self.word_search.bounding_box
+            bbox = self.game.bounding_box
             offset_coordinates = obj.offset_coordinates(bbox)
             for x, y in offset_coordinates:
                 if (x, y) in toggled:
@@ -255,8 +263,8 @@ class TUIGame(App):  # type: ignore[type-arg]
                     toggled.add((x, y))
 
     async def watch_found_words(self, count: int) -> None:
-        self.query_one(WordsToFind).count = len(self.word_search.placed_words) - count
-        if count == len(self.word_search.placed_words):
+        self.query_one(WordsToFind).count = len(self.game.placed_words) - count
+        if count == len(self.game.placed_words):
             et = self.query_one(ElapsedTime)
             self.push_screen(
                 QuitScreen(
