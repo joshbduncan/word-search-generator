@@ -280,4 +280,4 @@ def test_missing_default_formatter(tmp_path: Path):
 
 
 def test_empty_puzzle_str(empty_game: Game):
-    assert str(empty_game) == "Empty"
+    assert str(empty_game) == "Empty puzzle."
