@@ -152,7 +152,7 @@ class WordSearchFormatter(Formatter):
 
             # calculate the puzzle size and letter font size
             pdf.set_left_margin(0.75)
-            gsize = config.pdf_puzzle_width / len(game.cropped_puzzle[0])
+            gsize = config.pdf_puzzle_width / game.cropped_size[0]
             gmargin = 0.6875 if gsize > 36 else 0.75
             font_size = int(72 * gsize * gmargin)
             # calculate flexible font size based on word count

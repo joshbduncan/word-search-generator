@@ -8,13 +8,7 @@ import pytest
 from word_search_generator import WordSearch, utils
 from word_search_generator.config import level_dirs
 from word_search_generator.formatter.word_search_formatter import WordSearchFormatter
-from word_search_generator.game import (
-    EmptyPuzzleError,
-    Key,
-    MissingWordError,
-    Puzzle,
-    PuzzleSizeError,
-)
+from word_search_generator.game import Key, MissingWordError, Puzzle, PuzzleSizeError
 from word_search_generator.mask.polygon import Rectangle
 from word_search_generator.validator import NoSingleLetterWords
 
@@ -98,18 +92,6 @@ def test_puzzle_show_output(ws: WordSearch, capsys):
     assert capture1.out == capture2.out
 
 
-def test_puzzle_show_output_for_empty_object():
-    ws = WordSearch()
-    with pytest.raises(EmptyPuzzleError):
-        ws.show()
-
-
-def test_puzzle_show_str_output_for_empty_object():
-    ws = WordSearch()
-    with pytest.raises(EmptyPuzzleError):
-        print(ws)
-
-
 def test_puzzle_show_solution_output(ws: WordSearch, capsys):
     print(formatter.format_puzzle_for_show(ws, True))
     capture1 = capsys.readouterr()
@@ -140,11 +122,6 @@ def test_json_output_property_for_key():
     for word, info in json_key.items():
         pos = (info["start_row"], info["start_col"])
         assert pos == ws.key[word]["start"]
-
-
-def test_json_output_property_for_empty_object():
-    ws = WordSearch()
-    assert ws.json == json.dumps({})
 
 
 def test_for_empty_spaces(iterations):

@@ -11,6 +11,7 @@ import pytest
 from pypdf import PdfReader
 
 from word_search_generator import WordSearch, config, utils
+from word_search_generator.game import EmptyPuzzleError
 from word_search_generator.word import Direction, Word
 
 
@@ -42,19 +43,19 @@ def test_export_json(words, tmp_path: Path):
         assert word.text in data["words"]
 
 
-def test_export_empty_puzzle(tmp_path: Path):
-    with pytest.raises(AttributeError):
-        puzzle = WordSearch()
-        path = Path.joinpath(tmp_path, "test.csv")
-        puzzle.save(path, format="csv")
-    with pytest.raises(AttributeError):
-        puzzle = WordSearch()
-        path = Path.joinpath(tmp_path, "test.json")
-        puzzle.save(path, format="json")
-    with pytest.raises(AttributeError):
-        puzzle = WordSearch()
-        path = Path.joinpath(tmp_path, "test.pdf")
-        puzzle.save(path, format="pdf")
+@pytest.mark.parametrize(
+    "format",
+    [
+        ("csv",),
+        ("json",),
+        ("pdf",),
+    ],
+)
+def test_export_empty_puzzle(tmp_path: Path, format):
+    puzzle = WordSearch()
+    path = Path.joinpath(tmp_path, f"test.{format}")
+    with pytest.raises(EmptyPuzzleError):
+        puzzle.save(path, format=format)
 
 
 def test_export_pdf_puzzles(iterations, tmp_path: Path):

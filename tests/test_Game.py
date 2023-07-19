@@ -252,12 +252,6 @@ def test_missing_generator_during_generate_method(words):
     assert ws.generator == ws.DEFAULT_GENERATOR
 
 
-def test_missing_default_generator_str_repr(ws: WordSearch):
-    ws.generator = None
-    with pytest.raises(MissingGeneratorError):
-        ws.__str__()
-
-
 def test_missing_formatter(words):
     game = Game(words, generator=WordSearchGenerator())
     with pytest.raises(MissingFormatterError):
@@ -278,14 +272,12 @@ def test_missing_formatter_during_save_method(ws: WordSearch, tmp_path: Path):
     assert ws.formatter == ws.DEFAULT_FORMATTER
 
 
-def test_missing_default_formatter_in_str_repr(ws: WordSearch):
-    ws.formatter = ws.DEFAULT_FORMATTER = None  # type: ignore[assignment]
-    with pytest.raises(MissingFormatterError):
-        ws.__str__()
-
-
 def test_missing_default_formatter(tmp_path: Path):
     game = Game("dog cat horse", generator=WordSearchGenerator())
     game.formatter = game.DEFAULT_FORMATTER = None  # type: ignore[assignment]
     with pytest.raises(MissingFormatterError):
         game.save(tmp_path.joinpath("hey-yo.pdf"))
+
+
+def test_empty_puzzle_str(empty_game: Game):
+    assert str(empty_game) == "Empty"

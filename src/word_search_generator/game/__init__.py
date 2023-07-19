@@ -228,8 +228,6 @@ class Game:
     @property
     def json(self) -> str:
         """The current puzzle, words, and answer key in JSON."""
-        if not self.key:
-            return json.dumps({})
         return json.dumps(
             {
                 "puzzle": self.cropped_puzzle,
@@ -352,8 +350,6 @@ class Game:
             hide_fillers (bool, optional): Hide all filler letters so only the solution
                 is shown. Overrides `solution`. Defaults to False.
         """
-        if not self.key:
-            raise EmptyPuzzleError()
         if not self.formatter:
             if not self.DEFAULT_FORMATTER:
                 raise MissingFormatterError()
@@ -382,8 +378,8 @@ class Game:
         Returns:
             str: Final save path of the file.
         """
-        if not self.key:
-            raise AttributeError("No puzzle data to save.")
+        if not self.puzzle:
+            raise EmptyPuzzleError()
         if not self.formatter:
             if not self.DEFAULT_FORMATTER:
                 raise MissingFormatterError()
@@ -663,10 +659,6 @@ class Game:
         )
 
     def __str__(self) -> str:
-        if not self.key:
-            raise EmptyPuzzleError()
-        elif not self.generator:
-            raise MissingGeneratorError()
-        elif not self.formatter:
-            raise MissingFormatterError()
+        if not self.puzzle or not self.formatter:
+            return "Empty puzzle."
         return self.formatter.show(self)
