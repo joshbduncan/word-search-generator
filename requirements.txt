@@ -1,2 +1,4 @@
 fpdf2==2.4.2
+rich==13.4.2
+textual==0.30.0
 typing-extensions==4.4.0

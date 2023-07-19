@@ -76,6 +76,7 @@ Valid Directions: {', '.join([d.name for d in Direction])}
     words_group = parser.add_mutually_exclusive_group()
     secret_words_group = parser.add_mutually_exclusive_group()
     mask_group = parser.add_mutually_exclusive_group()
+    play_group = parser.add_mutually_exclusive_group()
     words_group.add_argument(
         "words",
         type=str,
@@ -128,13 +129,21 @@ puzzle words can go. See valid arguments above.",
         action="store_true",
         help="Disable default word validators.",
     )
-    parser.add_argument(
+    play_group.add_argument(
         "-o",
         "--output",
         type=pathlib.Path,
         help="Output path for the saved puzzle.",
     )
-    parser.add_argument(
+    play_group.add_argument(
+        "-p",
+        "--play",
+        action="store_true",
+        help="Play a TUI version of a WordSearch. Requires \
+            optional dependencies. Install using `pip install \
+                word-search-generator[play]`.",
+    )
+    play_group.add_argument(
         "-pm",
         "--preview-masks",
         action="store_true",
@@ -237,8 +246,14 @@ secret puzzle words can go. See valid arguments above.",
     if args.image_mask:
         puzzle.apply_mask(Image(args.image_mask))
 
+    if args.play:
+        from .tui import TUIGame
+
+        app = TUIGame(word_search=puzzle)
+        app.run()
+
     # show the result
-    if args.output or args.format:
+    elif args.output or args.format:
         format = args.format if args.format else "PDF"
         path = (
             args.output
