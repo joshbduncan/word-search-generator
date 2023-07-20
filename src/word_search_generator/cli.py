@@ -1,13 +1,18 @@
 import argparse
 import pathlib
 import sys
-from datetime import datetime
 from typing import Sequence
 
-from . import WordSearch, __app_name__, __version__, config, utils
-from .config import DEFAULT_VALIDATORS
+from . import __app_name__, __version__
+from .config import (
+    level_dirs,
+    max_puzzle_size,
+    max_puzzle_words,
+    min_puzzle_size,
+    min_puzzle_words,
+)
 from .mask import shapes
-from .mask.bitmap import Image
+from .utils import get_random_words
 from .word import Direction
 
 BUILTIN_MASK_SHAPES_OBJECTS = shapes.get_shape_objects()
@@ -17,8 +22,8 @@ class RandomAction(argparse.Action):
     """Restrict argparse `-r`, `--random` inputs."""
 
     def __call__(self, parser, namespace, values, option_string=None):
-        min_val = config.min_puzzle_words
-        max_val = config.max_puzzle_words
+        min_val = min_puzzle_words
+        max_val = max_puzzle_words
         if values < min_val or values > max_val:
             parser.error(f"{option_string} must be >={min_val} and <={max_val}")
         setattr(namespace, self.dest, values)
@@ -36,7 +41,7 @@ class DifficultyAction(argparse.Action):
                     parser.error(
                         f"{option_string} must be \
 either numeric levels \
-({', '.join([str(i) for i in config.level_dirs])}) or accepted \
+({', '.join([str(i) for i in level_dirs])}) or accepted \
 cardinal directions ({', '.join([d.name for d in Direction])})."
                     )
             setattr(namespace, self.dest, values)
@@ -46,8 +51,8 @@ class SizeAction(argparse.Action):
     """Restrict argparse `-s`, `--size` inputs."""
 
     def __call__(self, parser, namespace, values, option_string=None):
-        min_val = config.min_puzzle_size
-        max_val = config.max_puzzle_size
+        min_val = min_puzzle_size
+        max_val = max_puzzle_size
         if values < min_val or values > max_val:
             parser.error(f"{option_string} must be >={min_val} and <={max_val}")
         setattr(namespace, self.dest, values)
@@ -66,7 +71,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         description=f"""Generate Word Search Puzzles! \
 
 
-Valid Levels: {', '.join([str(i) for i in config.level_dirs])}
+Valid Levels: {', '.join([str(i) for i in level_dirs])}
 Valid Directions: {', '.join([d.name for d in Direction])}
 * Directions are to be provided as a comma-separated list.""",
         epilog="Copyright 2022 Josh Duncan (joshbduncan.com)",
@@ -76,6 +81,7 @@ Valid Directions: {', '.join([d.name for d in Direction])}
     words_group = parser.add_mutually_exclusive_group()
     secret_words_group = parser.add_mutually_exclusive_group()
     mask_group = parser.add_mutually_exclusive_group()
+    play_group = parser.add_mutually_exclusive_group()
     words_group.add_argument(
         "words",
         type=str,
@@ -128,13 +134,21 @@ puzzle words can go. See valid arguments above.",
         action="store_true",
         help="Disable default word validators.",
     )
-    parser.add_argument(
+    play_group.add_argument(
         "-o",
         "--output",
         type=pathlib.Path,
         help="Output path for the saved puzzle.",
     )
-    parser.add_argument(
+    play_group.add_argument(
+        "-p",
+        "--play",
+        action="store_true",
+        help="Play a TUI version of a WordSearch. Requires \
+            optional dependencies. Install using `pip install \
+                word-search-generator[play]`.",
+    )
+    play_group.add_argument(
         "-pm",
         "--preview-masks",
         action="store_true",
@@ -159,7 +173,7 @@ puzzle words can go. See valid arguments above.",
         "--size",
         action=SizeAction,
         type=int,
-        help=f"{config.min_puzzle_size} <= puzzle size <= {config.max_puzzle_size}",
+        help=f"{min_puzzle_size} <= puzzle size <= {max_puzzle_size}",
     )
     secret_words_group.add_argument(
         "-x",
@@ -194,7 +208,7 @@ secret puzzle words can go. See valid arguments above.",
     # process puzzle words
     words = ""
     if args.random:
-        words = ",".join(utils.get_random_words(args.random))
+        words = ",".join(get_random_words(args.random))
     else:
         if isinstance(args.words, list):
             # needed when words were provided as "command, then, space"
@@ -208,7 +222,7 @@ secret puzzle words can go. See valid arguments above.",
     secret_words = (
         args.secret_words
         if args.secret_words
-        else ",".join(utils.get_random_words(args.random_secret_words))
+        else ",".join(get_random_words(args.random_secret_words))
         if args.random_secret_words
         else ""
     )
@@ -219,13 +233,15 @@ secret puzzle words can go. See valid arguments above.",
         return 1
 
     # create a new puzzle object from provided arguments
+    from .game.word_search import WordSearch
+
     puzzle = WordSearch(
         words,
         level=args.difficulty,
         size=args.size,
         secret_words=secret_words if secret_words else None,
         secret_level=args.secret_difficulty,
-        validators=[] if args.no_validators else DEFAULT_VALIDATORS,
+        validators=[] if args.no_validators else WordSearch.DEFAULT_VALIDATORS,
     )
 
     # apply masking if specified
@@ -235,10 +251,20 @@ secret puzzle words can go. See valid arguments above.",
             puzzle.size = mask.min_size
         puzzle.apply_mask(mask)
     if args.image_mask:
+        from .mask.bitmap import Image
+
         puzzle.apply_mask(Image(args.image_mask))
 
+    if args.play:
+        from .tui.word_search import TUIGame
+
+        app = TUIGame(puzzle)
+        app.run()
+
     # show the result
-    if args.output or args.format:
+    elif args.output or args.format:
+        from datetime import datetime
+
         format = args.format if args.format else "PDF"
         path = (
             args.output

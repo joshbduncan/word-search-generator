@@ -314,7 +314,7 @@ def test_bitmap_mask_draw_exception():
         bm._draw()
 
 
-def test_image_mask_init(tmp_path):
+def test_image_mask_init(tmp_path: Path):
     name = "test_image.jpg"
     path = Path.joinpath(tmp_path, name)
     im = Image(path, method=2, static=False)
@@ -324,7 +324,7 @@ def test_image_mask_init(tmp_path):
     assert im.static is False
 
 
-def test_image_mask_solid_black(tmp_path):
+def test_image_mask_solid_black(tmp_path: Path):
     name = "test_image_black.jpg"
     test_img = PILImage.new("L", (100, 100), (0))
     img_path = Path.joinpath(tmp_path, name)
@@ -335,7 +335,7 @@ def test_image_mask_solid_black(tmp_path):
     assert im.mask == [[ACTIVE] * size] * size
 
 
-def test_image_mask_contrast_exception(tmp_path):
+def test_image_mask_contrast_exception(tmp_path: Path):
     name = "test_image_white.png"
     test_img = PILImage.new("L", (100, 100), (255))
     img_path = Path.joinpath(tmp_path, name)

@@ -3,13 +3,14 @@ from contextlib import redirect_stdout
 
 import pytest
 
-from word_search_generator import PuzzleNotGeneratedError, WordSearch
+from word_search_generator import WordSearch
+from word_search_generator.game import EmptyPuzzleError
 from word_search_generator.mask import shapes
 
 
 def test_not_generated_error():
     ws = WordSearch(size=21)
-    with pytest.raises(PuzzleNotGeneratedError):
+    with pytest.raises(EmptyPuzzleError):
         ws.apply_mask(shapes.Star5())
 
 

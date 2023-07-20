@@ -1,22 +1,18 @@
 import json
 import pathlib
 import random
+from pathlib import Path
 
 import pytest
 
-from word_search_generator import (
-    Key,
-    MissingWordError,
-    Puzzle,
-    PuzzleSizeError,
-    WordSearch,
-    config,
-    utils,
-)
+from word_search_generator import WordSearch, utils
 from word_search_generator.config import level_dirs
+from word_search_generator.formatter.word_search_formatter import WordSearchFormatter
+from word_search_generator.game import Key, MissingWordError, Puzzle, PuzzleSizeError
 from word_search_generator.mask.polygon import Rectangle
 from word_search_generator.validator import NoSingleLetterWords
-from word_search_generator.word import Direction, Word
+
+formatter = WordSearchFormatter()
 
 
 def check_key(key: Key, puzzle: Puzzle) -> bool:
@@ -32,72 +28,17 @@ def check_key(key: Key, puzzle: Puzzle) -> bool:
     return True
 
 
-def test_empty_object():
-    ws = WordSearch()
-    assert len(ws.words) == 0
-
-
-def test_input_cleanup(ws: WordSearch):
-    assert len(ws.words) == 8
-
-
-def test_set_puzzle_level(ws: WordSearch):
-    ws.level = 3
-    assert ws.directions == utils.validate_level(config.level_dirs[3])
-
-
-def test_set_secret_level(ws: WordSearch):
-    ws.secret_directions = 4  # type: ignore
-    assert ws.secret_directions == utils.validate_level(4)  # type: ignore
-
-
-def test_bad_puzzle_level_value(ws: WordSearch):
-    with pytest.raises(ValueError):
-        ws.level = 757
-
-
-def test_bad_puzzle_level_type(ws: WordSearch):
-    with pytest.raises(TypeError):
-        ws.level = "A"  # type: ignore
-
-
-def test_garbage_puzzle_level_type(ws: WordSearch):
-    with pytest.raises(TypeError):
-        ws.level = 17.76  # type: ignore
-
-
-def test_manual_level_control(ws: WordSearch):
-    tst_dirs = {Direction.E, Direction.SW, (-1, 0)}
-    ws.directions = tst_dirs  # type: ignore
-    assert ws.directions == utils.validate_level(tst_dirs)
-
-
-def test_set_puzzle_size(ws: WordSearch):
-    ws.size = 15
-    assert len(ws.puzzle) == 15
-
-
-def test_bad_puzzle_size_value(ws: WordSearch):
-    with pytest.raises(ValueError):
-        ws.size = 1
-
-
-def test_bad_puzzle_size_type(ws: WordSearch):
-    with pytest.raises(TypeError):
-        ws.size = "A"  # type: ignore
-
-
 def test_puzzle_key(ws: WordSearch):
     assert check_key(ws.key, ws.puzzle)
 
 
-def test_export_pdf(ws: WordSearch, tmp_path):
+def test_export_pdf(ws: WordSearch, tmp_path: Path):
     tmp_path = pathlib.Path.joinpath(tmp_path, "test.pdf")
     ws.save(tmp_path)
     assert tmp_path.exists()
 
 
-def test_export_csv(ws: WordSearch, tmp_path):
+def test_export_csv(ws: WordSearch, tmp_path: Path):
     tmp_path = pathlib.Path.joinpath(tmp_path, "test.csv")
     ws.save(tmp_path)
     assert tmp_path.exists()
@@ -106,51 +47,6 @@ def test_export_csv(ws: WordSearch, tmp_path):
 def test_invalid_save_path(ws: WordSearch):
     with pytest.raises(OSError):
         ws.save("~/some/random/dir/that/doesnt/exists")
-
-
-def test_add_words(ws: WordSearch):
-    ws.add_words("test")
-    assert Word("test") in ws.words
-
-
-def test_add_regular_words_replacing_secret_word(ws: WordSearch):
-    ws.add_words("test", True)
-    ws.add_words("test")
-    assert Word("test") not in ws.secret_words and Word("test") in ws.words
-
-
-def test_add_secret_words(ws: WordSearch):
-    ws.add_words("test", True)
-    assert Word("test") in ws.secret_words
-
-
-def test_add_secret_words_replacing_regular_word(ws: WordSearch):
-    ws.add_words("test")
-    ws.add_words("test", True)
-    assert Word("test") not in ws.hidden_words and Word("test") in ws.secret_words
-
-
-def test_remove_words(ws: WordSearch):
-    ws.add_words("test")
-    ws.remove_words("test")
-    assert Word("test") not in ws.words
-
-
-def test_remove_words_from_secret_words(ws: WordSearch):
-    ws.add_words("test", True)
-    ws.remove_words("test")
-    assert "test".upper() not in ws.words.union(ws.secret_words)
-
-
-def test_replace_words(ws: WordSearch):
-    ws.replace_words("set, of replaced, words")
-    assert len(ws.words) == 4
-
-
-def test_replace_secret_words(words):
-    ws = WordSearch(words, secret_words="secret, blind, nope")
-    ws.replace_words("hidden", True)
-    assert len(ws.secret_words) == 1
 
 
 def test_puzzle_repr(ws: WordSearch):
@@ -176,12 +72,12 @@ def test_puzzle_non_equal(words):
 
 
 def test_puzzle_str(ws: WordSearch):
-    puzzle_str = utils.format_puzzle_for_show(ws)
+    puzzle_str = formatter.format_puzzle_for_show(ws)
     assert str(ws) == puzzle_str
 
 
 def test_puzzle_str_output(ws: WordSearch, capsys):
-    print(utils.format_puzzle_for_show(ws))
+    print(formatter.format_puzzle_for_show(ws))
     capture1 = capsys.readouterr()
     print(ws)
     capture2 = capsys.readouterr()
@@ -189,31 +85,15 @@ def test_puzzle_str_output(ws: WordSearch, capsys):
 
 
 def test_puzzle_show_output(ws: WordSearch, capsys):
-    print(utils.format_puzzle_for_show(ws))
+    print(formatter.format_puzzle_for_show(ws))
     capture1 = capsys.readouterr()
     ws.show()
     capture2 = capsys.readouterr()
     assert capture1.out == capture2.out
 
 
-def test_puzzle_show_output_for_empty_object(capsys):
-    ws = WordSearch()
-    ws.show()
-    capture = capsys.readouterr()
-
-    assert capture.out == "Empty puzzle.\n"
-
-
-def test_puzzle_show_str_output_for_empty_object(capsys):
-    ws = WordSearch()
-    print(ws)
-    capture = capsys.readouterr()
-
-    assert capture.out == "Empty puzzle.\n"
-
-
 def test_puzzle_show_solution_output(ws: WordSearch, capsys):
-    print(utils.format_puzzle_for_show(ws, True))
+    print(formatter.format_puzzle_for_show(ws, True))
     capture1 = capsys.readouterr()
     ws.show(True)
     capture2 = capsys.readouterr()
@@ -221,7 +101,7 @@ def test_puzzle_show_solution_output(ws: WordSearch, capsys):
 
 
 def test_puzzle_show_hide_fillers_output(ws: WordSearch, capsys):
-    print(utils.format_puzzle_for_show(ws, hide_fillers=True))
+    print(formatter.format_puzzle_for_show(ws, hide_fillers=True))
     capture1 = capsys.readouterr()
     ws.show(hide_fillers=True)
     capture2 = capsys.readouterr()
@@ -242,11 +122,6 @@ def test_json_output_property_for_key():
     for word, info in json_key.items():
         pos = (info["start_row"], info["start_col"])
         assert pos == ws.key[word]["start"]
-
-
-def test_json_output_property_for_empty_object():
-    ws = WordSearch()
-    assert ws.json == json.dumps({})
 
 
 def test_for_empty_spaces(iterations):
@@ -367,7 +242,7 @@ def test_invalid_size_at_init_type():
 
 
 def test_puzzle_solution_output(ws: WordSearch, capsys):
-    print(utils.format_puzzle_for_show(ws, True))
+    print(formatter.format_puzzle_for_show(ws, True))
     capture1 = capsys.readouterr()
     ws.solution
     capture2 = capsys.readouterr()
@@ -472,7 +347,7 @@ def test_hide_fillers(iterations, builtin_mask_shapes):
         mask = random.choice(builtin_mask_shapes)
         if mask:
             ws.apply_mask(mask)
-        hidden_fillers = utils.hide_filler_characters(ws)
+        hidden_fillers = formatter.hide_filler_characters(ws)
         chars: set[str] = set()
         for word in ws.placed_words:
             chars.update(hidden_fillers[y][x] for y, x in word.coordinates)

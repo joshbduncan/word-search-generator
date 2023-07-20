@@ -1,11 +1,11 @@
 from word_search_generator import WordSearch
 from word_search_generator.config import level_dirs, max_puzzle_words
-from word_search_generator.generator import DefaultGenerator
+from word_search_generator.generator import WordSearchGenerator
 from word_search_generator.utils import calc_puzzle_size, get_random_words
 
 
 def test_dupe_at_position_1(generator_test_puzzle, placed_words):
-    gen = DefaultGenerator()
+    gen = WordSearchGenerator()
     gen.puzzle = generator_test_puzzle
     gen.words = placed_words
     check = gen.no_duped_words("A", (3, 3))
@@ -13,7 +13,7 @@ def test_dupe_at_position_1(generator_test_puzzle, placed_words):
 
 
 def test_dupe_at_position_2(generator_test_puzzle, placed_words):
-    gen = DefaultGenerator()
+    gen = WordSearchGenerator()
     gen.puzzle = generator_test_puzzle
     gen.words = placed_words
     check = gen.no_duped_words("A", (1, 3))
@@ -21,7 +21,7 @@ def test_dupe_at_position_2(generator_test_puzzle, placed_words):
 
 
 def test_no_dupe_at_position(generator_test_puzzle, placed_words):
-    gen = DefaultGenerator()
+    gen = WordSearchGenerator()
     gen.puzzle = generator_test_puzzle
     gen.words = placed_words
     check = gen.no_duped_words("Z", (1, 3))

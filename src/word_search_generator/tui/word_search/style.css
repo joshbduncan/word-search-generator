@@ -1,0 +1,94 @@
+Header {
+  background: $primary;
+  text-style: bold;
+  height: 3;
+}
+
+#info-bar {
+  background: $accent;
+  height: 1;
+}
+
+#info-bar Static {
+  width: auto;
+  min-width: 50%;
+  text-align: center;
+  text-style: bold;
+}
+
+WordsToFind {
+  dock: left;
+}
+
+ElapsedTime {
+  dock: right;
+}
+
+#word-list {
+  border: solid $secondary;
+  width: auto;
+  min-width: 20%;
+}
+
+.word {
+  text-style: bold;
+  padding-left: 1;
+}
+
+#board {
+  align: center middle;
+  border: solid $secondary;
+  grid-columns: 2;
+  grid-rows: 1;
+  grid-gutter: 0;
+  overflow-x: auto;
+  overflow-y: auto;
+}
+
+.cell {
+  text-style: bold;
+}
+
+.cell:hover {
+  background: $background-lighten-3;
+}
+
+.found {
+  color: $success;
+  text-style: strike;
+}
+
+.cheat {
+  color: $error;
+}
+
+.correct {
+  color: $success;
+}
+
+QuitScreen {
+  align: center middle;
+}
+
+#dialog {
+  grid-size: 2;
+  grid-gutter: 1 2;
+  grid-rows: 1fr 3;
+  padding: 0 1;
+  width: 60;
+  height: 11;
+  border: thick $secondary 80%;
+  background: $surface;
+}
+
+#message {
+  column-span: 2;
+  height: 1fr;
+  width: 1fr;
+  content-align: center middle;
+}
+
+Button {
+  width: 1fr;
+  margin: 0 1;
+}

@@ -11,7 +11,7 @@ from ..utils import build_puzzle, in_bounds
 from ..word import Direction, Word, WordSet
 
 if TYPE_CHECKING:  # pragma: no cover
-    from .. import DirectionSet, Puzzle
+    from ..game import DirectionSet, Puzzle
     from ..validator import Validator
 
 
@@ -57,7 +57,7 @@ class Generator(ABC):
     Example:
         ```python
         class CoolGenerator(Generator):
-            def validate(self,  *args, **kwargs) -> None:
+            def generate(self,  *args, **kwargs) -> Puzzle:
                 ...
         ```
     """
@@ -92,7 +92,7 @@ class Generator(ABC):
         """
 
 
-class DefaultGenerator(Generator):
+class WordSearchGenerator(Generator):
     """Default generator for standard WordSearch puzzles."""
 
     def generate(

@@ -1,17 +1,15 @@
 from __future__ import annotations
 
-import copy
 import math
 import random
 from math import log2
-from typing import TYPE_CHECKING, Any, Iterable, Sized
+from typing import TYPE_CHECKING, Any, Sized
 
 from . import config
-from .word import Direction, Word
 from .words import WORD_LIST
 
 if TYPE_CHECKING:  # pragma: no cover
-    from . import DirectionSet, Key, Puzzle, WordSearch
+    from .game import DirectionSet, Key, Puzzle
     from .word import WordSet
 
 
@@ -100,101 +98,8 @@ def find_bounding_box(
     return ((min_x, min_y), (max_x, max_y))
 
 
-def cleanup_input(words: str, secret: bool = False) -> WordSet:
-    """Cleanup provided input string. Removing spaces
-    one-letter words, and words with punctuation."""
-    if not isinstance(words, str):
-        raise TypeError(
-            "Words must be a string separated by spaces, commas, or new lines"
-        )
-    # remove new lines
-    words = words.replace("\n", ",")
-    # remove excess spaces and commas
-    word_list = ",".join(words.split(" ")).split(",")
-    # iterate through all words and pick first set that match criteria
-    word_set: WordSet = set()
-    while word_list and len(word_set) <= config.max_puzzle_words:
-        word = word_list.pop(0)
-        if word:
-            word_set.add(Word(word, secret=secret))
-    return word_set
-
-
-def validate_direction_iterable(
-    d: Iterable[str | tuple[int, int] | Direction]
-) -> DirectionSet:
-    """Validates that all the directions in d are found as keys to
-    config.dir_moves and therefore are valid directions."""
-    o = set()
-    for direction in d:
-        if isinstance(direction, Direction):
-            o.add(direction)
-            continue
-        elif isinstance(direction, tuple):
-            o.add(Direction(direction))
-            continue
-        try:
-            o.add(Direction[direction.upper().strip()])
-        except KeyError:
-            raise ValueError(f"'{direction}' is not a valid direction.")
-    return o
-
-
-def validate_level(d) -> DirectionSet:
-    """Given a d, try to turn it into a list of valid moves."""
-    if isinstance(d, int):  # traditional numeric level
-        try:
-            return config.level_dirs[d]
-        except KeyError:
-            raise ValueError(
-                f"{d} is not a valid difficulty number"
-                + f"[{', '.join([str(i) for i in config.level_dirs])}]"
-            )
-    if isinstance(d, str):  # comma-delimited list
-        return validate_direction_iterable(d.split(","))
-    if isinstance(d, Iterable):  # probably used by external code
-        if not d:
-            raise ValueError("Empty iterable provided.")
-        return validate_direction_iterable(d)
-    raise TypeError(f"{type(d)} given, not str, int, or Iterable[str]\n{d}")
-
-
 def direction_set_repr(ds: DirectionSet) -> str:
     return ("'" + ",".join(d.name for d in ds) + "'") if ds else "None"
-
-
-def highlight_solution(ws: WordSearch) -> Puzzle:
-    """Add highlighting to puzzle solution."""
-    output: Puzzle = copy.deepcopy(ws.puzzle)
-    for word in ws.placed_words:
-        if (
-            word.start_column is None
-            or word.start_row is None
-            or word.direction is None
-        ):  # only here for mypy
-            continue  # pragma: no cover
-        x = word.start_column
-        y = word.start_row
-        for char in word.text:
-            output[y][x] = f"\u001b[1m\u001b[31m{char}\u001b[0m"
-            x += word.direction.c_move
-            y += word.direction.r_move
-    return output
-
-
-def hide_filler_characters(ws: WordSearch) -> Puzzle:
-    """Remove filler characters from a puzzle."""
-    output: Puzzle = copy.deepcopy(ws.puzzle)
-    word_coords = {
-        coord
-        for coords in [word.coordinates for word in ws.placed_words]
-        for coord in coords
-    }
-    for row in range(ws.size):
-        for col in range(ws.size):
-            if (col, row) not in word_coords:
-                output[col][row] = " "
-    return output
 
 
 def stringify(puzzle: Puzzle, bbox: tuple[tuple[int, int], tuple[int, int]]) -> str:
@@ -208,33 +113,6 @@ def stringify(puzzle: Puzzle, bbox: tuple[tuple[int, int], tuple[int, int]]) -> 
             offset + " ".join([c if c else " " for c in line[min_x : max_x + 1]])
         )
     return "\n".join(output)
-
-
-def format_puzzle_for_show(
-    ws: WordSearch, show_solution: bool = False, hide_fillers: bool = False
-) -> str:
-    word_list = get_word_list_str(ws.key)
-    # prepare the correct version of the puzzle
-    if hide_fillers:
-        puzzle_list = hide_filler_characters(ws)
-    elif show_solution:
-        puzzle_list = highlight_solution(ws)
-    else:
-        puzzle_list = ws.puzzle
-    # calculate header length based on cropped puzzle size to account for masks
-    header_width = max(11, (ws.bounding_box[1][0] - ws.bounding_box[0][0] + 1) * 2 - 1)
-    hr = "-" * header_width
-    header = hr + "\n" + f"{'WORD SEARCH':^{header_width}}" + "\n" + hr
-    answer_key_intro = (
-        "Answer Key (*Secret Words)" if ws.placed_secret_words else "Answer Key"
-    )
-    return f"""{header}
-{stringify(puzzle_list, ws.bounding_box)}
-
-Find these words: {word_list if word_list else '<ALL SECRET WORDS>'}
-* Words can go {get_level_dirs_str(ws.level)}.
-
-{answer_key_intro}: {get_answer_key_str(ws.placed_words, ws.bounding_box)}"""
 
 
 def get_level_dirs_str(level: DirectionSet) -> str:
