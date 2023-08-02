@@ -1,58 +1,52 @@
-#!/bin/sh
+#!/bin/bash
 
 cdir=$(pwd)
-app=$(basename $cdir)
+app=$(basename "$cdir")
+venv="$cdir"/venv
+bin="$venv"/bin
 
-function build {
-    # build the app for pypi
-    source venv/bin/activate
+build() { # build the app for pypi
     echo "⚙️ building $app..."
-    if [[ $# -eq 0 ]]; then
-        if cleanup && tests; then
-            python -m build
-        else
-            echo "❌ build was unsuccessful"
-        fi
-    elif [ $1="--skip-checks" ]; then
-        echo "⚠️ skipping checks"
-        python -m build
+    if cleanup && tests; then
+        "$bin"/python -m build
+    else
+        echo "❌ build was unsuccessful"
     fi
 }
 
-function check {
+check() { # check the app long description
     echo "📝 checking long description"
-    twine check dist/*
+    "$bin"/twine check dist/*
 }
 
-function cleanup {
-    # lint app using black and flake8
-    echo "🧾 linting $app..."
-    source venv/bin/activate
-    isort src tests
-    black src tests
-    flake8 src tests
-    ruff src tests
-    echo "🧾 type checking $app..."
-    mypy src tests
+cleanup() { # lint app
+    echo "⏱️ isort"
+    "$bin"/isort src tests
+    echo "⏱️ black"
+    "$bin"/black src tests
+    echo "⏱️ flake8"
+    "$bin"/flake8 src tests
+    echo "⏱️ ruff"
+    "$bin"/ruff src tests
+    typing
 }
 
-function tests {
-    # test app using pytest
+typing() { # type check app
+    echo "⏱️ type checking with mypy"
+    "$bin"/mypy src tests
+}
+
+tests() { # test app using pytest
     echo "🧾 testing $app..."
-    source venv/bin/activate
-    pytest -vv --cov-report term-missing
+    "$bin"/pytest -vv --cov-report term-missing
 }
 
-function upload {
-    # upload to pypi
-    source venv/bin/activate
-    # read -p '❓ version? ' version
+upload() { # upload to pypi
     echo "⬆️ uploading $app to pypi..."
-    #twine upload dist/*$version*
-    twine upload dist/*$version*
+    "$bin"/twine upload dist/*
 }
 
-function help {
+help() {
   printf "%s <task> [args]\n\nTasks:\n" "${0}"
 
   compgen -A function | grep -v "^_" | cat -n
