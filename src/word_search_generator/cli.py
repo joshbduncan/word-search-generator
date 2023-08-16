@@ -262,7 +262,7 @@ secret puzzle words can go. See valid arguments above.",
         from .tui.word_search import TUIGame
 
         app = TUIGame(puzzle)
-        return app.run()  # type: ignore[return-value]
+        return app.run()  # type: ignore[return-value, no-any-return]
 
     # show the result
     elif args.output or args.format:
