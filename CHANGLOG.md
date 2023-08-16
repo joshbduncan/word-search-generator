@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Updating all typing to use the new format (instead of importing from typing)
 - Tox config
 - `max_fit_tries` raised to 1000 to help more words fitting within smaller puzzles
+- `get_random_words()` now accepts a `max_length` argument, helpful when working with puzzles of a smaller size
 
 ### Removed
 

@@ -208,7 +208,9 @@ secret puzzle words can go. See valid arguments above.",
     # process puzzle words
     words = ""
     if args.random:
-        words = ",".join(get_random_words(args.random))
+        words = ",".join(
+            get_random_words(args.random, max_length=args.size if args.size else None)
+        )
     else:
         if isinstance(args.words, list):
             # needed when words were provided as "command, then, space"
@@ -250,6 +252,7 @@ secret puzzle words can go. See valid arguments above.",
         if hasattr(mask, "min_size") and not args.size and puzzle.size < mask.min_size:
             puzzle.size = mask.min_size
         puzzle.apply_mask(mask)
+
     if args.image_mask:
         from .mask.bitmap import Image
 
@@ -259,7 +262,7 @@ secret puzzle words can go. See valid arguments above.",
         from .tui.word_search import TUIGame
 
         app = TUIGame(puzzle)
-        app.run()
+        return app.run()  # type: ignore[return-value]
 
     # show the result
     elif args.output or args.format:
@@ -273,6 +276,7 @@ secret puzzle words can go. See valid arguments above.",
         )
         foutput = puzzle.save(path=path, format=format, solution=args.cheat)
         print(f"Puzzle saved: {foutput}")
+
     else:
         puzzle.show(solution=args.cheat)
 

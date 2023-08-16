@@ -20,22 +20,22 @@ WordsToFind {
   dock: left;
 }
 
-ElapsedTime {
+Timer {
   dock: right;
 }
 
-#word-list {
+WordList {
   border: solid $secondary;
   width: auto;
   min-width: 20%;
 }
 
-.word {
+PuzzleWord {
   text-style: bold;
   padding-left: 1;
 }
 
-#board {
+Board {
   align: center middle;
   border: solid $secondary;
   grid-columns: 2;
@@ -45,24 +45,24 @@ ElapsedTime {
   overflow-y: auto;
 }
 
-.cell {
+BoardCell {
   text-style: bold;
 }
 
-.cell:hover {
+BoardCell:hover {
   background: $background-lighten-3;
 }
 
-.found {
+PuzzleWord.found {
   color: $success;
   text-style: strike;
 }
 
-.cheat {
+BoardCell.cheat {
   color: $error;
 }
 
-.correct {
+BoardCell.correct {
   color: $success;
 }
 

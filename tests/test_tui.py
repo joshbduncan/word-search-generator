@@ -8,7 +8,7 @@ def test_tui_title():
     ws = WordSearch()
     ws.random_words(10)
     app = TUIGame(ws)
-    assert app.title == "TUIGame"
+    assert app.title == "WORD SEARCH"
 
 
 # @pytest.mark.asyncio
