@@ -1,13 +1,8 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from textual.message import Message
 from textual.reactive import reactive
 from textual.widgets import Static
-
-if TYPE_CHECKING:
-    from textual.events import Click
 
 
 class BoardCell(Static):
@@ -25,7 +20,7 @@ class BoardCell(Static):
     def __init__(
         self, character: str, coordinates: tuple[int, int], *args, **kwargs
     ) -> None:
-        """Create a board cell instance.
+        """Create a board cell.
 
         Args:
             character (str): Alphabet character from puzzle.
@@ -35,7 +30,7 @@ class BoardCell(Static):
         self.coordinates = coordinates
         super().__init__(self.character, *args, **kwargs)
 
-    def on_click(self, event: Click) -> None:
+    def on_click(self) -> None:
         if self.correct:
             return
         self.post_message(self.CellClicked(self))

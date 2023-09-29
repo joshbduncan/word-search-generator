@@ -1,3 +1,5 @@
+from typing import Generator
+
 from textual.message import Message
 from textual.reactive import reactive
 from textual.widget import Widget
@@ -17,7 +19,7 @@ class PuzzleWord(Static):
     cells: set[Widget] = set()
 
     def __init__(self, word: Word, *args, **kwargs) -> None:
-        """Create a word list word instance.
+        """Create a word list word.
 
         Args:
             word (Word): A WordSearch puzzle word.
@@ -28,19 +30,11 @@ class PuzzleWord(Static):
 
     def on_mount(self) -> None:
         board = self.app.query_one(Board)
-        self.cells = {
-            board.get_child_by_id(f"x{x}-y{y}")
-            for x, y in self.word.offset_coordinates(board.bounding_box)
-        }
+        self.cells = board.word_cells(self.word)
 
-    # @property
-    # def cells(self) -> Generator[Widget, None, None] | None:
-    #     """All BoardCells that make up this word in the puzzle."""
-    #     board = self.app.query_one(Board)
-    #     return (
-    #         board.get_child_by_id(f"x{x}-y{y}")
-    #         for x, y in self.word.offset_coordinates(board.bounding_box)
-    #     )
+    @property
+    def unfound_cells(self) -> Generator[Widget, None, None]:
+        return (cell for cell in self.cells if not cell.correct)  # type: ignore[attr-defined]  # noqa: E501
 
     def check_found(self) -> bool:
         """Check if every BoardCell linked to this word is marked correct."""

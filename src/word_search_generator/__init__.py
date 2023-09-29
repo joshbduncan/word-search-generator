@@ -11,3 +11,5 @@ __app_name__ = "word-search"
 __version__ = "3.5.0"
 
 from .game.word_search import WordSearch  # noqa: F401c
+
+__all__ = ["WordSearch"]

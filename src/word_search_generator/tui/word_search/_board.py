@@ -1,7 +1,9 @@
 from textual.app import ComposeResult
 from textual.containers import Grid
+from textual.widget import Widget
 
 from ...game import Puzzle
+from ...word import Word
 from ._board_cell import BoardCell
 
 
@@ -15,7 +17,7 @@ class Board(Grid):
         *args,
         **kwargs,
     ) -> None:
-        """Create a puzzle board instance.
+        """Create a puzzle board.
 
         Args:
             puzzle (Puzzle): Puzzle to draw board from.
@@ -24,9 +26,10 @@ class Board(Grid):
         super().__init__(*args, **kwargs)
         self.puzzle = puzzle
         self.bounding_box = bounding_box
-        self.columns = self.bounding_box[1][0] - self.bounding_box[0][0] + 1
         self.border_title = "PUZZLE BOARD"
-        self.styles.grid_size_columns = self.columns
+        self.styles.grid_size_columns = (
+            self.bounding_box[1][0] - self.bounding_box[0][0] + 1
+        )
 
     def compose(self) -> ComposeResult:
         min_x, min_y = self.bounding_box[0]
@@ -38,3 +41,9 @@ class Board(Grid):
                     coordinates=(x + 1, y + 1),
                     id=f"x{x+1}-y{y+1}",
                 )
+
+    def word_cells(self, word: Word) -> set[Widget]:
+        return {
+            self.get_child_by_id(f"x{x}-y{y}")
+            for x, y in word.offset_coordinates(self.bounding_box)
+        }

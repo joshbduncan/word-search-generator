@@ -1,3 +1,4 @@
+from textual import on
 from textual.app import ComposeResult
 from textual.containers import Grid
 from textual.screen import ModalScreen
@@ -10,10 +11,11 @@ class QuitScreen(ModalScreen):  # type: ignore[type-arg]
     DEFAULT_MESSAGE = "Are you sure you want to quit?"
 
     def __init__(self, message: str | None = None) -> None:
-        """Create an instance of the screen.
+        """Create an instance of the modal screen.
 
         Args:
-            game (WordSearch): _description_
+            message (str | None, optional): Message to display within the modal.
+            Defaults to None.
         """
         super().__init__()
         self.message = message if message else self.DEFAULT_MESSAGE
@@ -26,8 +28,10 @@ class QuitScreen(ModalScreen):  # type: ignore[type-arg]
             id="dialog",
         )
 
-    def on_button_pressed(self, event: Button.Pressed) -> None:
-        if event.button.id == "quit":
-            self.app.exit()
-        else:
-            self.app.pop_screen()
+    @on(Button.Pressed, "#quit")
+    def quit_app(self) -> None:
+        self.app.exit()
+
+    @on(Button.Pressed, "#cancel")
+    def cancel_modal(self) -> None:
+        self.app.pop_screen()

@@ -3,7 +3,6 @@ from typing import Generator
 from textual.app import ComposeResult
 from textual.containers import VerticalScroll
 from textual.reactive import reactive
-from textual.widget import Widget
 
 from ...word import Word
 from ._puzzle_word import PuzzleWord
@@ -32,9 +31,5 @@ class WordList(VerticalScroll):
             yield puzzle_word
 
     @property
-    def correct_cells(self) -> Generator[Widget, None, None]:
-        """BoardCells for every word in the word list."""
-        words = self.children
-        return (
-            cell for word in words for cell in word.cells  # type: ignore[attr-defined]
-        )
+    def unfound_words(self) -> Generator[PuzzleWord, None, None]:
+        return (word for word in self.puzzle_words if not word.found)
