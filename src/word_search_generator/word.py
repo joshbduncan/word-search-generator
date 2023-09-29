@@ -61,7 +61,7 @@ class Word:
         secret: bool = False,
     ) -> None:
         """Initialize a Word Search puzzle Word."""
-        self.text = text.upper()
+        self.text = text.upper().strip()
         self.start_row: int | None = None
         self.start_column: int | None = None
         self.coordinates: list[tuple[int, int]] = []
@@ -227,6 +227,10 @@ class Word:
     def __hash__(self) -> int:
         """Returns the hashes value of the word text."""
         return hash(self.text)
+
+    def __len__(self) -> int:
+        """Returns the length of the word text."""
+        return len(self.text)
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}('{self.text}', " + f"{self.secret})"
