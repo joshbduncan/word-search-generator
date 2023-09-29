@@ -218,6 +218,11 @@ class Word:
         self.coordinates = []
         self.direction = None
 
+    def __bool__(self) -> bool:
+        """Returns the truthiness of a word.
+        Should always return true, except for the null word."""
+        return bool(self.text)
+
     def __eq__(self, __o: object) -> bool:
         """Returns True if both instances have the same text."""
         if not isinstance(__o, Word):
@@ -240,3 +245,5 @@ class Word:
 
 
 WordSet: TypeAlias = set[Word]
+# in the future, add allowed_directions = set() and priority = 999
+NULL_WORD = Word("", True)

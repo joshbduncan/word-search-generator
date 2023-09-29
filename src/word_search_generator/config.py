@@ -13,6 +13,7 @@ INACTIVE = "#"
 
 # puzzle difficulty levels
 level_dirs = {
+    -1: set(),  # no valid directions
     1: {  # right or down
         Direction.E,
         Direction.S,
