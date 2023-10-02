@@ -4,6 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "word-search-generator"
+version = "3.5.0"
 authors = [
     {name = "Josh Duncan", email = "joshbduncan@gmail.com"},
 ]
@@ -27,7 +28,6 @@ dependencies = [
     "fpdf2==2.7.5",
     "typing_extensions>=4.8.0",
 ]
-dynamic = ["version"]
 
 [tool.setuptools.dynamic]
 version = {attr = "word_search_generator.__version__"}

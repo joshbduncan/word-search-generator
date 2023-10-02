@@ -7,9 +7,19 @@
     :license: MIT, see LICENSE for more details.
 """
 
-__app_name__ = "word-search"
-__version__ = "3.5.0"
+__all__ = [
+    "__version__",
+    "WordSearch",
+]
 
 from .game.word_search import WordSearch  # noqa: F401c
 
-__all__ = ["WordSearch"]
+
+def __getattr__(name: str) -> str:
+    """Lazily get the version when needed."""
+
+    if name == "__version__":
+        from importlib.metadata import version
+
+        return version("word_search_generator")
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

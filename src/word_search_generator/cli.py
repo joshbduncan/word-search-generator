@@ -1,9 +1,9 @@
 import argparse
 import pathlib
 import sys
+from importlib.metadata import version
 from typing import Sequence
 
-from . import __app_name__, __version__
 from .config import (
     level_dirs,
     max_puzzle_size,
@@ -75,7 +75,6 @@ Valid Levels: {', '.join([str(i) for i in level_dirs])}
 Valid Directions: {', '.join([d.name for d in Direction])}
 * Directions are to be provided as a comma-separated list.""",
         epilog="Copyright 2022 Josh Duncan (joshbduncan.com)",
-        prog=__app_name__,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     words_group = parser.add_mutually_exclusive_group()
@@ -190,7 +189,9 @@ puzzle words can go. See valid arguments above.",
 secret puzzle words can go. See valid arguments above.",
     )
     parser.add_argument(
-        "--version", action="version", version=f"%(prog)s {__version__}"
+        "--version",
+        action="version",
+        version=f"%(prog)s {version('word_search_generator')}",
     )
     args = parser.parse_args(argv)
 

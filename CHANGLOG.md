@@ -26,7 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-- `reset_size()` function no longer needed as it is included inside of `_generate()` noe
+- `reset_size()` function no longer needed as it is included inside of `_generate()` now
+- removed `__version__` from init. Version info is loaded from [pyproject.toml](pyproject.toml) using `importlib.metadata.version`
 
 ## [3.5.0] 2023-07-07
 
