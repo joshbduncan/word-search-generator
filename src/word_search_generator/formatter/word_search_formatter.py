@@ -147,7 +147,7 @@ class WordSearchFormatter(Formatter):
             # insert the title
             title = "WORD SEARCH" if not solution else "WORD SEARCH (SOLUTION)"
             pdf.set_font("Helvetica", "B", config.pdf_font_size_XXL)
-            pdf.cell(pdf.epw, 0.25, title, ln=2, align="C", center=True)
+            pdf.cell(pdf.epw, 0.25, title, new_y="NEXT", align="C", center=True)
             pdf.ln(0.375)
 
             # calculate the puzzle size and letter font size
@@ -176,13 +176,13 @@ class WordSearchFormatter(Formatter):
                 placed_words_coordinates = {}  # type: ignore
             for y, row in enumerate(game.cropped_puzzle):
                 for x, char in enumerate(row):
-                    # draw a border around correct letters if solution was requested
+                    # change text color for correct letters if solution was requested
                     if solution and (x + 1, y + 1) in placed_words_coordinates:
                         pdf.set_text_color(255, 0, 0)
-                        pdf.multi_cell(gsize, gsize, char, align="C", ln=3)
+                        pdf.cell(gsize, gsize, char, align="C")
                         pdf.set_text_color(0, 0, 0)
                     else:
-                        pdf.multi_cell(gsize, gsize, char, align="C", ln=3)
+                        pdf.cell(gsize, gsize, char, align="C")
                 pdf.ln(gsize)
             pdf.ln(0.25)
 
@@ -192,7 +192,7 @@ class WordSearchFormatter(Formatter):
                 pdf.epw,
                 txt=f"Find words going {utils.get_level_dirs_str(game.directions)}:",
                 align="C",
-                ln=2,
+                new_y="NEXT",
             )
             pdf.ln(0.125)
 
@@ -205,7 +205,7 @@ class WordSearchFormatter(Formatter):
                 info_font_size / 72 * 1.125,
                 word_list if word_list else "<ALL SECRET WORDS>",
                 align="C",
-                ln=2,
+                new_y="NEXT",
             )
 
             # write the puzzle answer key

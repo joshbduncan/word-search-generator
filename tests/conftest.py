@@ -8,7 +8,7 @@ from word_search_generator.word import Direction, Word
 
 @pytest.fixture
 def iterations():
-    return 5
+    return 10
 
 
 @pytest.fixture

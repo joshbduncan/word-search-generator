@@ -63,7 +63,7 @@ def test_export_pdf_puzzles(iterations, tmp_path: Path):
     puzzles = []
     pages = set()
     for _ in range(iterations):
-        size = random.choice(range(config.min_puzzle_size, config.max_puzzle_size))
+        size = random.randint(config.min_puzzle_size, config.max_puzzle_size)
         words = ",".join(
             utils.get_random_words(
                 random.randint(config.min_puzzle_words, config.max_puzzle_words)
