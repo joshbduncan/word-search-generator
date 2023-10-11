@@ -6,6 +6,9 @@ on:
     branches:
       - main
 
+env:
+  TOX_PARALLEL_NO_SPINNER: 1
+
 jobs:
   test:
     runs-on: ${{ matrix.os }}
