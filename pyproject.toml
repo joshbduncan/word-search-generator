@@ -29,9 +29,6 @@ dependencies = [
     "typing_extensions>=4.8.0",
 ]
 
-[tool.setuptools.dynamic]
-version = {attr = "word_search_generator.__version__"}
-
 [project.urls]
 homepage = "https://github.com/joshbduncan/word-search-generator"
 documentation = "https://github.com/joshbduncan/word-search-generator/wiki"
@@ -50,7 +47,7 @@ dev = [
     "black>=23.9.1",
     "flake8>=6.1.0",
     "isort>=5.12.0",
-    "mypy>=1.3.0",
+    "mypy>=1.5.1",
     "pdfplumber>=0.10.2",
     "pre-commit>=3.4.0",
     "pypdf>=3.16.2",

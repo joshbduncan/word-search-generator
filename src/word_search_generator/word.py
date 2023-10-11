@@ -219,7 +219,7 @@ class Word:
         self.direction = None
 
     def __eq__(self, __o: object) -> bool:
-        """Returns True if both instances have the text."""
+        """Returns True if both instances have the same text."""
         if not isinstance(__o, Word):
             return False
         return self.text == __o.text
