@@ -12,7 +12,7 @@ ACTIVE = "*"
 INACTIVE = "#"
 
 # puzzle difficulty levels
-level_dirs = {
+level_dirs: dict[int, set[Direction]] = {
     -1: set(),  # no valid directions
     1: {  # right or down
         Direction.E,
