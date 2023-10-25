@@ -61,7 +61,7 @@ class Word:
         secret: bool = False,
     ) -> None:
         """Initialize a Word Search puzzle Word."""
-        self.text = text.upper()
+        self.text = text.upper().strip()
         self.start_row: int | None = None
         self.start_column: int | None = None
         self.coordinates: list[tuple[int, int]] = []
@@ -218,6 +218,11 @@ class Word:
         self.coordinates = []
         self.direction = None
 
+    def __bool__(self) -> bool:
+        """Returns the truthiness of a word.
+        Should always return true, except for the null word."""
+        return bool(self.text)
+
     def __eq__(self, __o: object) -> bool:
         """Returns True if both instances have the same text."""
         if not isinstance(__o, Word):
@@ -228,6 +233,10 @@ class Word:
         """Returns the hashes value of the word text."""
         return hash(self.text)
 
+    def __len__(self) -> int:
+        """Returns the length of the word text."""
+        return len(self.text)
+
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}('{self.text}', " + f"{self.secret})"
 
@@ -236,3 +245,5 @@ class Word:
 
 
 WordSet: TypeAlias = set[Word]
+# in the future, add allowed_directions = set() and priority = 999
+NULL_WORD = Word("", True)
