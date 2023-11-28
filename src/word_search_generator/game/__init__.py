@@ -408,7 +408,7 @@ class Game:
         )
         if self.size and self.size < min_word_length:
             raise PuzzleSizeError(
-                "Specified puzzle size `{self.size}` is smaller than shortest word."
+                f"Specified puzzle size `{self.size}` is smaller than shortest word."
             )
         for word in self.words:
             word.remove_from_puzzle()

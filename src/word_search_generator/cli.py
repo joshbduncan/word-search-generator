@@ -74,7 +74,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 Valid Levels: {', '.join([str(i) for i in level_dirs])}
 Valid Directions: {', '.join([d.name for d in Direction])}
 * Directions are to be provided as a comma-separated list.""",
-        epilog="Copyright 2022 Josh Duncan (joshbduncan.com)",
+        epilog="Copyright 2023 Josh Duncan (joshbduncan.com)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     words_group = parser.add_mutually_exclusive_group()
