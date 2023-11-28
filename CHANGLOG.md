@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `get_random_words()` now accepts a `max_length` argument, helpful when working with puzzles of a smaller size
 - Dependencies updated and tested on latest release
     - Updated word search puzzle export to work with fpdf2 v2.7.5 changes
+- CLI `word-search` no longer accepts stdin as I couldn't get it to play nice with Textual.
 
 ### Removed
 

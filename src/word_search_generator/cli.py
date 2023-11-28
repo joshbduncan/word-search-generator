@@ -85,8 +85,14 @@ Valid Directions: {', '.join([d.name for d in Direction])}
         "words",
         type=str,
         nargs="*",
-        default=sys.stdin,
-        help="Words to include in the puzzle (default: stdin).",
+        default="",
+        help="Words to include in the puzzle.",
+    )
+    words_group.add_argument(
+        "-i",
+        "--input",
+        type=pathlib.Path,
+        help="Text file to load puzzle words from.",
     )
     parser.add_argument(
         "-c",
@@ -212,14 +218,12 @@ secret puzzle words can go. See valid arguments above.",
         words = ",".join(
             get_random_words(args.random, max_length=args.size if args.size else None)
         )
+    elif args.input:
+        words = args.input.read_text()
     else:
         if isinstance(args.words, list):
             # needed when words were provided as "command, then, space"
             words = ",".join([word.replace(",", "") for word in args.words])
-        elif not sys.stdin.isatty():
-            # disable interactive tty which can be confusing
-            # but still process words were piped in from the shell
-            words = args.words.read().rstrip()
 
     # process secret puzzle words
     secret_words = (

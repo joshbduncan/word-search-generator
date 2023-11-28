@@ -22,11 +22,6 @@ def test_with_secret_words():
     assert result.returncode == 0
 
 
-def test_stdin():
-    result = subprocess.run("echo computer robot soda | word-search", shell=True)
-    assert result.returncode == 0
-
-
 def test_export_pdf(tmp_path: Path):
     fp = tmp_path.joinpath("test.pdf")
     result = subprocess.run(f'word-search some test words -o "{fp}"', shell=True)
@@ -192,3 +187,10 @@ def test_cli_output(iterations, builtin_mask_shapes):
         results.append(all(check_chars(puzzle, word) for word in words))  # type: ignore
 
     assert all(results)
+
+
+def test_input_file(tmp_path: Path):
+    file_to_read = Path.joinpath(tmp_path, "words.txt")
+    file_to_read.write_text("dog, pig\nmoose,horse,cat,    mouse, newt\ngoose")
+    result = subprocess.run(f"word-search -i {file_to_read.absolute()}", shell=True)
+    assert result.returncode == 0
