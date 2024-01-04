@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - `--no-validators` added to cli arguments to disable default validators
     - Tests updated and added for new functionality
 
+### Fixed
+
+- Bug creating false negatives in `WordSearchGenerator.no_duped_words()` method that is used when placing new words and filler characters
+
 ### Changed
 
 - Minimum Python version updated to 3.10
@@ -24,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dependencies updated and tested on latest release
     - Updated word search puzzle export to work with fpdf2 v2.7.5 changes
 - CLI `word-search` no longer accepts stdin as I couldn't get it to play nice with Textual.
+- None now allowed as `Game` or `Generator` validator.
 
 ### Removed
 

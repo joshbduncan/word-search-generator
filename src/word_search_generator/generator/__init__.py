@@ -73,7 +73,7 @@ class Generator(ABC):
         words: WordSet,
         directions: DirectionSet,
         secret_directions: DirectionSet,
-        validators: Iterable[Validator],
+        validators: Iterable[Validator] | None,
         *args,
         **kwargs,
     ) -> Puzzle:
@@ -85,7 +85,7 @@ class Generator(ABC):
             words (WordSet): WordSearch words to use for generation.
             directions (DirectionSet): Direction for hidden words.
             secret_directions (DirectionSet): Directions for secret words.
-            validators (Iterable[Validator]): WordSearch word validators.
+            validators (Iterable[Validator] | None, optional): Word validators.
 
         Returns:
             Puzzle: Generated puzzle.
@@ -102,7 +102,7 @@ class WordSearchGenerator(Generator):
         words: WordSet,
         directions: DirectionSet,
         secret_directions: DirectionSet,
-        validators: Iterable[Validator],
+        validators: Iterable[Validator] | None,
         *args,
         **kwargs,
     ) -> Puzzle:
@@ -118,65 +118,74 @@ class WordSearchGenerator(Generator):
             self.fill_blanks()
         return self.puzzle
 
-    def no_duped_words(self, char: str, position: tuple[int, int]) -> bool:
+    def no_duped_words(
+        self, char: str, position: tuple[int, int], current_word: str | None = None
+    ) -> bool:
         """Make sure that adding `char` at `position` will not create a
         duplicate of any word already placed in the puzzle."""
-        placed_word_strings = [word.text for word in self.words if word.placed]
+        placed_word_strings = []
+        for word in self.words:
+            if word.placed:
+                if current_word and (
+                    current_word in word.text or word.text in current_word
+                ):
+                    print(f"subwords: {current_word=}, {word.text=}")
+                    continue
+                placed_word_strings.append(word.text)
         if not placed_word_strings:
             return True
+
         # calculate how large of a search radius to check
         radius = len(max(placed_word_strings, key=len))
         # track each directional fragment of characters
         fragments = self.capture_fragments(radius, position)
         # check to see if any duped words are now present
         before_ct = after_ct = 0
-        for word in placed_word_strings:
+        for word_text in placed_word_strings:
             for before in fragments:
+                # remove the current word
+                # after = before.replace(current_word, "")
                 after = before.replace("*", char)
-                if word in before:
+                if word_text in before or word_text[::-1] in before:
                     before_ct += 1
-                if word[::-1] in before:
-                    before_ct += 1
-                if word in after:
-                    after_ct += 1
-                if word[::-1] in after:
+                if word_text in after or word_text[::-1] in after:
                     after_ct += 1
         if before_ct == after_ct:
             return True
         return False
 
     def capture_fragments(self, radius: int, position: tuple[int, int]) -> list[str]:
-        """Capture each directional fragment of characters from `position` outward
-        to the `radius`.
-        """
         row, col = position
-        fragments = ["*"] * 4
-        # while going out to match the calculated radius, grab each
-        # neighboring character to add to the fragments
-        for r in range(radius):
-            dir_pairs = (
-                ((-1, -1), (1, 1)),
-                ((0, -1), (0, 1)),
-                ((1, -1), (-1, 1)),
-                ((-1, 0), (1, 0)),
-            )
-            for n, ((ly, lx), (ry, rx)) in enumerate(dir_pairs):
-                # left and top traveling directions go on the left of the fragment
-                n_row = row + (ly * (r + 1))
-                n_col = col + (lx * (r + 1))
-                if in_bounds(n_row, n_col, len(self.puzzle), len(self.puzzle)):
-                    found = (
-                        self.puzzle[n_row][n_col] if self.puzzle[n_row][n_col] else " "
-                    )
-                    fragments[n] = found + fragments[n]
-                # right and bottom traveling directions go on the end of the fragment
-                n_row = row + (ry * (r + 1))
-                n_col = col + (rx * (r + 1))
-                if in_bounds(n_row, n_col, len(self.puzzle), len(self.puzzle)):
-                    found = (
-                        self.puzzle[n_row][n_col] if self.puzzle[n_row][n_col] else " "
-                    )
-                    fragments[n] += found
+        fragments = []
+        height, width = len(self.puzzle), len(self.puzzle[0])
+
+        # cardinal direction ranges to capture
+        ranges = [
+            (
+                range(row - (radius - 1), row + radius),
+                range(col - (radius - 1), col + radius),
+            ),  # top-left to bottom-right
+            (
+                [row] * (radius * 2 - 1),
+                range(col - (radius - 1), col + radius),
+            ),  # left to right
+            (
+                range(row - (radius - 1), row + radius),
+                [col] * (radius * 2 - 1),
+            ),  # top to bottom
+            (
+                range(row + (radius - 1), row - radius, -1),
+                range(col - (radius - 1), col + radius),
+            ),  # bottom-left to top-right
+        ]
+
+        for row_range, col_range in ranges:
+            fragment = ""
+            for r, c in zip(row_range, col_range):
+                if not in_bounds(c, r, width, height):
+                    continue
+                fragment += "*" if (r, c) == (row, col) else self.puzzle[r][c]
+            fragments.append(fragment)
         return fragments
 
     def test_a_fit(
@@ -263,7 +272,7 @@ class WordSearchGenerator(Generator):
             if char == self.puzzle[check_row][check_col]:
                 continue
             # make sure placed character doesn't cause a duped word in the puzzle
-            if self.no_duped_words(char, (check_row, check_col)):
+            if self.no_duped_words(char, (check_row, check_col), word.text):
                 self.puzzle[check_row][check_col] = char
             else:
                 # if a duped word was created put previous characters back in place
@@ -282,6 +291,7 @@ class WordSearchGenerator(Generator):
     def fill_blanks(self) -> None:
         """Fill empty puzzle spaces with random characters."""
         # iterate over the entire puzzle
+
         size = len(self.puzzle)
         for row in range(size):
             for col in range(size):

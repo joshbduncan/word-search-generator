@@ -69,7 +69,7 @@ class Game:
         include_all_words: bool = False,
         generator: Generator | None = None,
         formatter: Formatter | None = None,
-        validators: Iterable[Validator] | None = None,
+        validators: Iterable[Validator] | None = DEFAULT_VALIDATORS,
     ):
         """Initialize a game.
 
@@ -103,9 +103,7 @@ class Game:
         self.force_all_words: bool = include_all_words
         self.generator: Generator | None = generator
         self.formatter: Formatter | None = formatter
-        self._validators: Iterable[Validator] = (
-            validators if validators else self.DEFAULT_VALIDATORS
-        )
+        self._validators: Iterable[Validator] | None = validators
 
         # setup words
         # in case of dupes, add secret words first so they are overwritten
@@ -327,7 +325,7 @@ class Game:
             self._generate()
 
     @property
-    def validators(self) -> Iterable[Validator]:
+    def validators(self) -> Iterable[Validator] | None:
         """Puzzle generation word validators."""
         return self._validators
 

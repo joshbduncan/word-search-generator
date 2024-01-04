@@ -248,7 +248,7 @@ secret puzzle words can go. See valid arguments above.",
         size=args.size,
         secret_words=secret_words if secret_words else None,
         secret_level=args.secret_difficulty,
-        validators=[] if args.no_validators else WordSearch.DEFAULT_VALIDATORS,
+        validators=None if args.no_validators else WordSearch.DEFAULT_VALIDATORS,
     )
 
     # apply masking if specified
