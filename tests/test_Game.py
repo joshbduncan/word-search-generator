@@ -8,7 +8,7 @@ from word_search_generator.game import (
     MissingFormatterError,
     MissingGeneratorError,
 )
-from word_search_generator.generator import WordSearchGenerator
+from word_search_generator.generator.word_search import WordSearchGenerator
 from word_search_generator.word import Direction, Word
 
 
