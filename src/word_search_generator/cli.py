@@ -80,13 +80,12 @@ Valid Directions: {', '.join([d.name for d in Direction])}
     words_group = parser.add_mutually_exclusive_group()
     secret_words_group = parser.add_mutually_exclusive_group()
     mask_group = parser.add_mutually_exclusive_group()
-    play_group = parser.add_mutually_exclusive_group()
     words_group.add_argument(
         "words",
         type=str,
         nargs="*",
-        default="",
-        help="Words to include in the puzzle.",
+        default=sys.stdin,
+        help="Words to include in the puzzle (default: stdin).",
     )
     words_group.add_argument(
         "-i",
@@ -139,21 +138,13 @@ puzzle words can go. See valid arguments above.",
         action="store_true",
         help="Disable default word validators.",
     )
-    play_group.add_argument(
+    parser.add_argument(
         "-o",
         "--output",
         type=pathlib.Path,
         help="Output path for the saved puzzle.",
     )
-    play_group.add_argument(
-        "-p",
-        "--play",
-        action="store_true",
-        help="Play a TUI version of a WordSearch. Requires \
-            optional dependencies. Install using `pip install \
-                word-search-generator[play]`.",
-    )
-    play_group.add_argument(
+    parser.add_argument(
         "-pm",
         "--preview-masks",
         action="store_true",
@@ -220,10 +211,13 @@ secret puzzle words can go. See valid arguments above.",
         )
     elif args.input:
         words = args.input.read_text()
-    else:
-        if isinstance(args.words, list):
-            # needed when words were provided as "command, then, space"
-            words = ",".join([word.replace(",", "") for word in args.words])
+    elif isinstance(args.words, list):
+        # needed when words were provided as "command, then, space"
+        words = ",".join([word.replace(",", "") for word in args.words])
+    elif not sys.stdin.isatty():
+        # disable interactive tty which can be confusing
+        # but still process words were piped in from the shell
+        words = args.words.read().rstrip()
 
     # process secret puzzle words
     secret_words = (
@@ -263,14 +257,8 @@ secret puzzle words can go. See valid arguments above.",
 
         puzzle.apply_mask(Image(args.image_mask))
 
-    if args.play:
-        from .tui.word_search import TUIGame
-
-        app = TUIGame(puzzle)
-        return app.run()  # type: ignore[return-value, no-any-return]
-
     # show the result
-    elif args.output or args.format:
+    if args.output or args.format:
         from datetime import datetime
 
         format = args.format if args.format else "PDF"

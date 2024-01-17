@@ -5,14 +5,12 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "word-search-generator"
 version = "3.5.0"
-authors = [
-    {name = "Josh Duncan", email = "joshbduncan@gmail.com"},
-]
+authors = [{ name = "Josh Duncan", email = "joshbduncan@gmail.com" }]
 description = "Make awesome Word Search puzzles"
 readme = "README.md"
 requires-python = ">=3.10"
-keywords = ["puzzles", "games", "word-search",]
-license = {text = "MIT License"}
+keywords = ["puzzles", "games", "word-search"]
+license = { text = "MIT License" }
 classifiers = [
     "Intended Audience :: End Users/Desktop",
     "License :: OSI Approved :: MIT License",
@@ -24,10 +22,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Typing :: Typed",
 ]
-dependencies = [
-    "fpdf2==2.7.5",
-    "typing_extensions>=4.8.0",
-]
+dependencies = ["fpdf2==2.7.5", "typing_extensions>=4.8.0"]
 
 [project.urls]
 homepage = "https://github.com/joshbduncan/word-search-generator"
@@ -53,10 +48,6 @@ dev = [
     "pypdf>=3.16.2",
     "ruff>=0.0.291",
     "tox>=4.11.3",
-]
-play = [
-    "rich>=13.6.0",
-    "textual>=0.38.1",
 ]
 
 [tool.setuptools.packages.find]
@@ -85,9 +76,7 @@ profile = "black"
 
 [tool.pytest.ini_options]
 addopts = "--cov=word_search_generator"
-testpaths = [
-    "tests",
-]
+testpaths = ["tests"]
 
 [tool.mypy]
 mypy_path = "src"

@@ -1,3 +1,5 @@
+import pytest
+
 from word_search_generator import WordSearch
 from word_search_generator.config import level_dirs, max_puzzle_words
 from word_search_generator.generator import WordSearchGenerator
@@ -80,3 +82,10 @@ def test_generated_size(words):
     ws = WordSearch(words)
     calculated_size = calc_puzzle_size(ws.words, ws.level)
     assert calculated_size == ws.size
+
+
+def test_custom_get_attr():
+    import word_search_generator
+
+    with pytest.raises(AttributeError):
+        word_search_generator.__ver__

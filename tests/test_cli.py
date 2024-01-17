@@ -22,6 +22,11 @@ def test_with_secret_words():
     assert result.returncode == 0
 
 
+def test_stdin():
+    result = subprocess.run("echo computer robot soda | word-search", shell=True)
+    assert result.returncode == 0
+
+
 def test_export_pdf(tmp_path: Path):
     fp = tmp_path.joinpath("test.pdf")
     result = subprocess.run(f'word-search some test words -o "{fp}"', shell=True)
