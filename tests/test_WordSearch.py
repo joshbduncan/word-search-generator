@@ -255,6 +255,13 @@ def test_puzzle_solution_output(ws: WordSearch, capsys):
     assert capture1.out == capture2.out
 
 
+def test_unplaced_words():
+    ws = WordSearch("dog", size=5)
+    ws.add_words("generator")
+    ws.add_words("refrigerator", secret=True)
+    assert len(ws.unplaced_words) == 2
+
+
 def test_unplaced_hidden_words():
     ws = WordSearch("dog", size=5)
     ws.add_words("generator")
