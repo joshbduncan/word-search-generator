@@ -8,7 +8,13 @@ import pytest
 from word_search_generator import WordSearch, utils
 from word_search_generator.config import level_dirs
 from word_search_generator.formatter.word_search_formatter import WordSearchFormatter
-from word_search_generator.game import Key, MissingWordError, Puzzle, PuzzleSizeError
+from word_search_generator.game import (
+    EmptyWordlistError,
+    Key,
+    MissingWordError,
+    Puzzle,
+    PuzzleSizeError,
+)
 from word_search_generator.mask.polygon import Rectangle
 from word_search_generator.validator import NoSingleLetterWords
 
@@ -395,5 +401,5 @@ def test_validator_setter_invalid_validator(words):
 
 def test_no_words_to_generate(ws: WordSearch):
     ws._words = set()
-    ws._generate()
-    assert ws.puzzle == []
+    with pytest.raises(EmptyWordlistError):
+        ws._generate()
