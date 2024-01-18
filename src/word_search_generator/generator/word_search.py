@@ -58,7 +58,6 @@ class WordSearchGenerator(Generator):
                 if current_word and (
                     current_word in word.text or word.text in current_word
                 ):
-                    print(f"subwords: {current_word=}, {word.text=}")
                     continue
                 placed_word_strings.append(word.text)
         if not placed_word_strings:

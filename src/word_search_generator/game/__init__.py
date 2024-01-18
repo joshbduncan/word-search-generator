@@ -45,6 +45,12 @@ class PuzzleSizeError(ValueError):
     pass
 
 
+class EmptyWordlistError(Exception):
+    """For when a `Game` object has no words."""
+
+    pass
+
+
 class MissingWordError(Exception):
     """For when a `Game` object cannot place all of its words."""
 
@@ -66,7 +72,7 @@ class Game:
         secret_words: str | None = None,
         secret_level: int | str | None = None,
         *,
-        include_all_words: bool = False,
+        force_all_words: bool = False,
         generator: Generator | None = None,
         formatter: Formatter | None = None,
         validators: Iterable[Validator] | None = DEFAULT_VALIDATORS,
@@ -84,7 +90,7 @@ class Game:
                 will not be included in the word list. Defaults to None.
             secret_level (int | str | None, optional): Difficulty level or
                 potential word directions for 'secret' words. Defaults to None.
-            include_all_words (bool, optional): Raises an error when `generator`
+            force_all_words (bool, optional): Raises an error when `generator`
                 cannot place all the words.  Secret words are not included in this
                 check.
             generator (Generator | None, optional): Puzzle generator. Defaults to None.
@@ -100,7 +106,7 @@ class Game:
         self._size: int = 0
         self._masks: list[Mask] = []
         self._mask: Puzzle = []
-        self.force_all_words: bool = include_all_words
+        self.force_all_words: bool = force_all_words
         self.generator: Generator | None = generator
         self.formatter: Formatter | None = formatter
         self._validators: Iterable[Validator] | None = validators
@@ -146,33 +152,48 @@ class Game:
 
     @property
     def words(self) -> WordSet:
-        """The current puzzle words."""
+        """All puzzle words."""
         return set(self._words)
 
     @property
     def placed_words(self) -> WordSet:
-        """The current puzzle words."""
-        return {word for word in self._words if word.placed}
+        """Words of any type currently placed in the puzzle."""
+        return {word for word in self.words if word.placed}
+
+    @property
+    def unplaced_words(self) -> WordSet:
+        """Words of any type not currently placed in the puzzle."""
+        return {word for word in self.words if not word.placed}
 
     @property
     def hidden_words(self) -> WordSet:
-        """The current puzzle words."""
-        return {word for word in self._words if not word.secret}
+        """Words of type "hidden"."""
+        return {word for word in self.words if not word.secret}
 
     @property
     def placed_hidden_words(self) -> WordSet:
-        """The current puzzle words."""
-        return {word for word in self.hidden_words if word.placed}
+        """Words of type "hidden" currently placed in the puzzle."""
+        return {word for word in self.placed_words if not word.secret}
+
+    @property
+    def unplaced_hidden_words(self) -> WordSet:
+        """Words of type "hidden" not currently placed in the puzzle."""
+        return self.hidden_words - self.placed_hidden_words
 
     @property
     def secret_words(self) -> WordSet:
-        """The current secret puzzle words."""
-        return {word for word in self._words if word.secret}
+        """Words of type "secret"."""
+        return {word for word in self.words if word.secret}
 
     @property
     def placed_secret_words(self) -> WordSet:
-        """The current secret puzzle words."""
-        return {word for word in self.secret_words if word.placed}
+        """Words of type "secret" currently placed in the puzzle."""
+        return {word for word in self.placed_words if word.secret}
+
+    @property
+    def unplaced_secret_words(self) -> WordSet:
+        """Words of type "secret" not currently placed in the puzzle."""
+        return self.secret_words - self.placed_secret_words
 
     @property
     def puzzle(self) -> Puzzle:
@@ -235,14 +256,6 @@ class Game:
                 },
             }
         )
-
-    @property
-    def unplaced_hidden_words(self) -> WordSet:
-        return self.hidden_words - self.placed_hidden_words
-
-    @property
-    def unplaced_secret_words(self) -> WordSet:
-        return self.secret_words - self.placed_secret_words
 
     # ********************************************************* #
     # ******************** GETTERS/SETTERS ******************** #
@@ -398,7 +411,7 @@ class Game:
             self.generator = self.DEFAULT_GENERATOR
         self._puzzle = []
         if not self.words:
-            return
+            raise EmptyWordlistError("No words have been added to the puzzle.")
         if not self.size or reset_size:
             self.size = utils.calc_puzzle_size(self._words, self._directions)
         min_word_length = (
@@ -653,7 +666,7 @@ class Game:
             + f"size={self.size}, "
             + f"secret_words='{','.join([word.text for word in self.secret_words])}', "
             + f"secret_level={utils.direction_set_repr(self.secret_directions)}, "
-            + f"include_all_words={self.force_all_words})"
+            + f"force_all_words={self.force_all_words})"
         )
 
     def __str__(self) -> str:
