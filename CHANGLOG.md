@@ -12,11 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - OOP and ABC all the way down
     - Most key parts of this package have been extracted out into separate units allowing for more extensibility.
     - All games now derive from a base `Game` object. Each `Game` can have custom a `Generator` for generating the puzzle, a `Formatter` for displaying/outputting the puzzle, and custom word `Validator`s (e.g. no palindromes, no punctuation, no single letter words, no subwords) for validating puzzle words.
-- Validators: Previously, all word validation was done during the `WordSearch` object initialization (and also after making any changes to the puzzle words). Now, the default validation (no single letter words, no palindromes, no words that fit inside of other words or encase other words) has been abstracted away. Each validator is now based on a `Validator()` abstract base class, allowing users to create their own or disable the defaults. This thought has come up before but because of issue #45 I decided to tackle. Normally in a standard word search puzzle you don't want single-letter words, palindromes, or words that are part of other words, as each of these situations could potentially lead to multiple solutions for the same puzzle.
+- Validators: Previously, all word validation was done during the `WordSearch` object initialization (and also after making any changes to the puzzle words). Now, the default validation (no single letter words, no palindromes, no words that fit inside of other words or encase other words) has been abstracted away. Each validator is now based on a `Validator()` abstract base class, allowing users to create their own or disable the defaults. This thought has come up before but because of issue #45 I decided to tackle. Normally in a standard word search puzzle you don't want single-letter words, calindromes, or words that are part of other words, as each of these situations could potentially lead to multiple solutions for the same puzzle.
     - `validators` argument added to `WordSearch` object
     - `--no-validators` added to cli arguments to disable default validators
     - Tests updated and added for new functionality
 - `force_all_words` has been added to `Game.init()`. When set to `True` a `MissingWordError` will be raised if all provided "hidden" words can't be placed successfully. This does not take into account "secret" words.
+- `lowercase` argument added to `show` and `save` methods which outputs all puzzle letters in lowercase (as opposed to the UPPERCASE default). Added `-lc, --lowercase` flag to CLI as well. Issue #58
 
 ### Fixed
 

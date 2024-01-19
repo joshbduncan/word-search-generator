@@ -118,6 +118,12 @@ puzzle words can go. See valid arguments above.",
         help='Puzzle output format \
 (choices: "CSV", "JSON", "PDF").',
     )
+    parser.add_argument(
+        "-lc",
+        "--lowercase",
+        action="store_true",
+        help="Output puzzle letters in lower (as opposed to the UPPERCASE default).",
+    )
     mask_group.add_argument(
         "-im",
         "--image-mask",
@@ -267,11 +273,13 @@ secret puzzle words can go. See valid arguments above.",
             if args.output
             else f"WordSearchPuzzle {datetime.now()}.{format.lower()}"
         )
-        foutput = puzzle.save(path=path, format=format, solution=args.cheat)
+        foutput = puzzle.save(
+            path=path, format=format, solution=args.cheat, lowercase=args.lowercase
+        )
         print(f"Puzzle saved: {foutput}")
 
     else:
-        puzzle.show(solution=args.cheat)
+        puzzle.show(solution=args.cheat, lowercase=args.lowercase)
 
     return 0
 

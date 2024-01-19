@@ -15,7 +15,7 @@ from word_search_generator.game import EmptyPuzzleError
 from word_search_generator.word import Direction, Word
 
 
-def check_chars(puzzle, word):
+def check_chars(puzzle, word) -> bool:
     row, col = word.position
     for c in word.text:
         if c != puzzle[row][col]:
@@ -25,13 +25,94 @@ def check_chars(puzzle, word):
     return True
 
 
+def parse_csv_puzzle_file(
+    fp: Path, puzzle_size
+) -> tuple[list[list[str]], list[str], list[str], list[str]]:
+    puzzle = []
+    with open(fp) as f:
+        data = [row for row in csv.reader(f)]  # noqa: C416
+
+    # extract each part
+    puzzle = data[1 : puzzle_size + 1]
+    word_list = data[puzzle_size + 3]
+    directions = [
+        d[0] for d in re.findall(r"\s([A-Z]+)(,|\.)", data[puzzle_size + 4][0])
+    ]
+    answer_key = data[puzzle_size + 7]
+
+    return (puzzle, word_list, directions, answer_key)
+
+
 def test_export_csv(words, tmp_path: Path):
     puzzle = WordSearch(words)
     path = Path.joinpath(tmp_path, "test.csv")
     puzzle.save(path, format="csv")
-    with open(path) as f:
-        data = f.read()
-    assert not re.findall("\nSOLUTION\n", data)
+    (
+        extracted_puzzle,
+        extracted_words,
+        extracted_directions,
+        extracted_key,
+    ) = parse_csv_puzzle_file(path, puzzle.size)
+
+    # extract start positions from key
+    regex = re.compile(r"^(\w+).*?(\d+).*?(\d+)")
+    key_info = [regex.findall(s)[0] for s in extracted_key]
+
+    assert puzzle.puzzle == extracted_puzzle
+    assert all(w.text in extracted_words for w in puzzle.placed_hidden_words)
+    assert all(d.name in extracted_directions for d in puzzle.level)
+    assert all(
+        puzzle.puzzle[int(y) - 1][int(x) - 1] == word[0] for word, x, y in key_info
+    )
+
+
+def test_export_csv_only_secret_words(tmp_path: Path):
+    puzzle = WordSearch(secret_words="cat bat rat hat")
+    path = Path.joinpath(tmp_path, "test.csv")
+    puzzle.save(path, format="csv")
+    (
+        extracted_puzzle,
+        extracted_words,
+        extracted_directions,
+        extracted_key,
+    ) = parse_csv_puzzle_file(path, puzzle.size)
+
+    # extract start positions from key
+    regex = re.compile(r"(\w+).*?(\d+).*?(\d+)")
+    key_info = [regex.findall(s)[0] for s in extracted_key]
+
+    assert puzzle.puzzle == extracted_puzzle
+    assert extracted_words[0] == "<ALL SECRET WORDS>"
+    assert all(d.name in extracted_directions for d in puzzle.level)
+    assert all(
+        puzzle.puzzle[int(y) - 1][int(x) - 1] == word[0] for word, x, y in key_info
+    )
+
+
+def test_export_csv_lowercase(words, tmp_path: Path):
+    puzzle = WordSearch(words)
+    path = Path.joinpath(tmp_path, "test.csv")
+    puzzle.save(path, format="csv", lowercase=True)
+    (
+        extracted_puzzle,
+        extracted_words,
+        extracted_directions,
+        extracted_key,
+    ) = parse_csv_puzzle_file(path, puzzle.size)
+
+    # extract start positions from key
+    regex = re.compile(r"^(\w+).*?(\d+).*?(\d+)")
+    key_info = [regex.findall(s)[0] for s in extracted_key]
+
+    # convert puzzle to lowercase for testing
+    lowercase_puzzle = [[c.lower() for c in line] for line in puzzle.puzzle]
+
+    assert lowercase_puzzle == extracted_puzzle
+    assert all(w.text.lower() in extracted_words for w in puzzle.placed_hidden_words)
+    assert all(d.name in extracted_directions for d in puzzle.level)
+    assert all(
+        lowercase_puzzle[int(y) - 1][int(x) - 1] == word[0] for word, x, y in key_info
+    )
 
 
 def test_export_json(words, tmp_path: Path):
@@ -41,6 +122,15 @@ def test_export_json(words, tmp_path: Path):
     data = json.loads(Path(final_path).read_text())
     for word in puzzle.words:
         assert word.text in data["words"]
+
+
+def test_export_json_lowercase(words, tmp_path: Path):
+    puzzle = WordSearch(words)
+    path = Path.joinpath(tmp_path, "test.json")
+    final_path = puzzle.save(path, format="json", lowercase=True)
+    data = json.loads(Path(final_path).read_text())
+    for word in puzzle.words:
+        assert word.text.lower() in data["words"]
 
 
 @pytest.mark.parametrize(
@@ -147,6 +237,36 @@ def test_export_csv_os_error(words):
         puzzle.save("/test.csv")
 
 
+def test_pdf_output_puzzle_lowercase(iterations, tmp_path: Path):
+    def parse_puzzle(extraction):
+        puzzle = []
+        for line in extraction.split("\n"):
+            if line.startswith("WORD SEARCH"):
+                continue
+            elif line.startswith("Find words going"):
+                break
+            else:
+                puzzle.append(list(line))
+        return puzzle
+
+    results = []
+    for _ in range(iterations):
+        ws = WordSearch(size=random.randint(8, 21))
+        ws.random_words(random.randint(5, 21))
+        path = Path.joinpath(tmp_path, f"{uuid.uuid4()}.pdf")
+        ws.save(path, lowercase=True)
+        reader = PdfReader(path)
+        page = reader.pages[0]
+        puzzle = parse_puzzle(page.extract_text(0))
+
+        # convert puzzle to lowercase for testing
+        lowercase_puzzle = [[c.lower() for c in line] for line in ws.puzzle]
+
+        results.append(puzzle == lowercase_puzzle)
+
+    assert all(results)
+
+
 def test_pdf_output_key(iterations, tmp_path: Path):
     def parse_puzzle(extraction):
         puzzle = []
@@ -226,6 +346,26 @@ def test_pdf_output_words(iterations, tmp_path: Path):
                 results.append(word.text in word_list)
 
     assert all(results)
+
+
+def test_pdf_output_words_secret_only(iterations, tmp_path: Path):
+    def parse_word_list(extraction):
+        return {
+            word.strip()
+            for word in "".join(
+                extraction.split("Find words ")[1].split("\n")[1:]
+            ).split(",")
+        }
+
+    for i in range(iterations):
+        words = "cat bat rat hat mat"
+        ws = WordSearch(secret_words=words, size=random.randint(8, 21))
+        path = Path.joinpath(tmp_path, f"{uuid.uuid4()}.pdf")
+        ws.save(path, lowercase=True)
+        reader = PdfReader(path)
+        page = reader.pages[0]
+        word_list = parse_word_list(page.extract_text(0))
+        assert "".join(word_list) == "<ALL SECRET WORDS>"
 
 
 def test_pdf_output_puzzle_size(iterations, tmp_path: Path):
