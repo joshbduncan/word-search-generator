@@ -3,7 +3,7 @@
     -----------
     Generate Word Search puzzles with Python.
     -----------
-    :copyright: (c) 2023 Josh Duncan.
+    :copyright: (c) 2024 Josh Duncan.
     :license: MIT, see LICENSE for more details.
 """
 
