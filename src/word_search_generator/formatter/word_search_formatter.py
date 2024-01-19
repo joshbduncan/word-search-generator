@@ -21,17 +21,18 @@ class WordSearchFormatter(Formatter):
         game: Game,
         solution: bool = False,
         hide_fillers: bool = False,
+        lowercase: bool = False,
         *args,
         **kwargs,
     ) -> str:
         """Return a string representation of the game.
 
         Args:
-            solution (bool, optional): Highlight the puzzle solution. Defaults to False.
-            hide_fillers (bool, optional): Hide all filler letters so only the solution
-                is shown. Overrides `solution`. Defaults to False.
+            solution: Highlight the puzzle solution. Defaults to False.
+            hide_fillers: Hide filler letters (show only words). Defaults to False.
+            lowercase: Change letters to lower case. Defaults to False.
         """
-        return self.format_puzzle_for_show(game, solution, hide_fillers)
+        return self.format_puzzle_for_show(game, solution, hide_fillers, lowercase)
 
     def save(
         self,
@@ -39,6 +40,7 @@ class WordSearchFormatter(Formatter):
         path: str | Path,
         format: str = "PDF",
         solution: bool = False,
+        lowercase: bool = False,
         *args,
         **kwargs,
     ) -> Path:
@@ -48,11 +50,11 @@ class WordSearchFormatter(Formatter):
         if isinstance(path, str):
             path = Path(path)
         if format.upper() == "CSV":
-            saved_file = self.write_csv_file(path, game, solution)
+            saved_file = self.write_csv_file(path, game, solution, lowercase)
         elif format.upper() == "JSON":
-            saved_file = self.write_json_file(path, game, solution)
+            saved_file = self.write_json_file(path, game, solution, lowercase)
         else:
-            saved_file = self.write_pdf_file(path, game, solution)
+            saved_file = self.write_pdf_file(path, game, solution, lowercase)
         # return saved file path
         return saved_file
 
@@ -61,11 +63,32 @@ class WordSearchFormatter(Formatter):
         path: Path,
         game: Game,
         solution: bool = False,
+        lowercase: bool = False,
         *args,
         **kwargs,
     ) -> Path:
         word_list = utils.get_word_list_list(game.key)
         puzzle = self.hide_filler_characters(game) if solution else game.cropped_puzzle
+        level_dirs_str = utils.get_level_dirs_str(game.level)
+        key_intro = (
+            "Answer Key (*Secret Words)" if game.placed_secret_words else "Answer Key"
+        )
+        answer_key_list = utils.get_answer_key_list(
+            game.placed_words, game.bounding_box
+        )
+
+        # lower case was requested change case or letters for puzzle, words, and key
+        if lowercase:
+            word_list = [word.lower() for word in word_list]
+            puzzle = [[c.lower() for c in line] for line in puzzle]
+            for i, s in enumerate(answer_key_list):
+                parts = s.split(" ")
+                answer_key_list[i] = parts[0].lower() + " " + " ".join(parts[1:])
+
+        # catch case of all secret words
+        if not word_list:
+            word_list = ["<ALL SECRET WORDS>"]
+
         with open(path, "x") as f:
             f_writer = csv.writer(
                 f, delimiter=",", quotechar='"', quoting=csv.QUOTE_MINIMAL
@@ -75,26 +98,11 @@ class WordSearchFormatter(Formatter):
                 f_writer.writerow(row)
             f_writer.writerow([""])
             f_writer.writerow(["Word List:"])
-            f_writer.writerow(
-                word_list
-                if word_list
-                else [
-                    "<ALL SECRET WORDS>",
-                ]
-            )
-            f_writer.writerow(
-                [f"* Words can go {utils.get_level_dirs_str(game.directions)}."]
-            )
+            f_writer.writerow(word_list)
+            f_writer.writerow([f"* Words can go {level_dirs_str}."])
             f_writer.writerow([""])
-            answer_key_intro = (
-                "Answer Key (*Secret Words)"
-                if game.placed_secret_words
-                else "Answer Key"
-            )
-            f_writer.writerow([f"{answer_key_intro}: "])
-            f_writer.writerow(
-                utils.get_answer_key_list(game.placed_words, game.bounding_box)
-            )
+            f_writer.writerow([f"{key_intro}: "])
+            f_writer.writerow(answer_key_list)
         return path.absolute()
 
     def write_json_file(
@@ -102,16 +110,28 @@ class WordSearchFormatter(Formatter):
         path: Path,
         game: Game,
         solution: bool = False,
+        lowercase: bool = False,
         *args,
         **kwargs,
     ) -> Path:
+        word_list = utils.get_word_list_list(game.key)
         puzzle = self.hide_filler_characters(game) if solution else game.cropped_puzzle
+
+        # lower case was requested change case or letters for puzzle, words, and key
+        if lowercase:
+            word_list = [word.lower() for word in word_list]
+            puzzle = [[c.lower() for c in line] for line in puzzle]
+
         data = json.dumps(
             {
                 "puzzle": puzzle,
-                "words": [word.text for word in game.placed_words],
+                "words": [
+                    word.text.lower() if lowercase else word.text
+                    for word in game.placed_words
+                ],
                 "key": {
-                    word.text: word.key_info_json for word in game.words if word.placed
+                    word.text.lower() if lowercase else word.text: word.key_info_json
+                    for word in game.placed_words
                 },
             }
         )
@@ -124,6 +144,7 @@ class WordSearchFormatter(Formatter):
         path: Path,
         game: Game,
         solution: bool = False,
+        lowercase: bool = False,
         *args,
         **kwargs,
     ) -> Path:
@@ -179,31 +200,64 @@ class WordSearchFormatter(Formatter):
                     # change text color for correct letters if solution was requested
                     if solution and (x + 1, y + 1) in placed_words_coordinates:
                         pdf.set_text_color(255, 0, 0)
-                        pdf.cell(gsize, gsize, char, align="C")
+                        pdf.cell(
+                            gsize,
+                            gsize,
+                            char.lower() if lowercase else char,
+                            align="C",
+                        )
                         pdf.set_text_color(0, 0, 0)
                     else:
-                        pdf.cell(gsize, gsize, char, align="C")
+                        pdf.cell(
+                            gsize,
+                            gsize,
+                            char.lower() if lowercase else char,
+                            align="C",
+                        )
                 pdf.ln(gsize)
             pdf.ln(0.25)
+
+            # collect puzzle information
+            word_list_str = utils.get_word_list_str(game.key)
+            level_dirs_str = utils.get_level_dirs_str(game.level)
+            key_intro = (
+                "Answer Key (*Secret Words)"
+                if game.placed_secret_words
+                else "Answer Key"
+            )
+            answer_key_str = utils.get_answer_key_str(
+                game.placed_words, game.bounding_box
+            )
+
+            # lower case was requested change case or letters for puzzle, words, and key
+            if lowercase:
+                word_list_str = word_list_str.lower()
+                for word in game.placed_words:
+                    answer_key_str = answer_key_str.replace(
+                        word.text, word.text.lower()
+                    )
+
+            # catch case of all secret words
+            if not word_list_str:
+                word_list_str = "<ALL SECRET WORDS>"
 
             # write word list info
             pdf.set_font("Helvetica", "BU", size=info_font_size)
             pdf.cell(
                 pdf.epw,
-                txt=f"Find words going {utils.get_level_dirs_str(game.directions)}:",
+                txt=f"Find words going {level_dirs_str}:",
                 align="C",
                 new_y="NEXT",
             )
             pdf.ln(0.125)
 
             # write word list
-            word_list = utils.get_word_list_str(game.key)
             pdf.set_font("Helvetica", "B", size=info_font_size)
             pdf.set_font_size(info_font_size)
             pdf.multi_cell(
                 pdf.epw,
                 info_font_size / 72 * 1.125,
-                word_list if word_list else "<ALL SECRET WORDS>",
+                word_list_str,
                 align="C",
                 new_y="NEXT",
             )
@@ -212,19 +266,11 @@ class WordSearchFormatter(Formatter):
             # resetting the margin before rotating makes layout easier to figure
             pdf.set_margin(0)
             # rotate the page to write answer key upside down
-            answer_key_intro = (
-                "Answer Key (*Secret Words)"
-                if game.placed_secret_words
-                else "Answer Key"
-            )
             with pdf.rotation(angle=180, x=pdf.epw / 2, y=pdf.eph / 2):
                 pdf.set_xy(pdf.epw - pdf.epw, 0)
                 pdf.set_margin(0.25)
                 pdf.set_font("Helvetica", size=config.pdf_font_size_S)
-                pdf.write(
-                    txt=f"{answer_key_intro}: "
-                    + utils.get_answer_key_str(game.placed_words, game.bounding_box)
-                )
+                pdf.write(txt=f"{key_intro}: {answer_key_str}")
 
             return pdf
 
@@ -254,9 +300,13 @@ class WordSearchFormatter(Formatter):
         return path.absolute()
 
     def format_puzzle_for_show(
-        self, game: Game, show_solution: bool = False, hide_fillers: bool = False
+        self,
+        game: Game,
+        show_solution: bool = False,
+        hide_fillers: bool = False,
+        lowercase: bool = False,
     ) -> str:
-        word_list = utils.get_word_list_str(game.key)
+        word_list_str = utils.get_word_list_str(game.key)
         # prepare the correct version of the puzzle
         if hide_fillers:
             puzzle_list = self.hide_filler_characters(game)
@@ -270,16 +320,31 @@ class WordSearchFormatter(Formatter):
         )
         hr = "-" * header_width
         header = hr + "\n" + f"{'WORD SEARCH':^{header_width}}" + "\n" + hr
+        puzzle_str = utils.stringify(puzzle_list, game.bounding_box)
+        level_dirs_str = utils.get_level_dirs_str(game.level)
         key_intro = (
             "Answer Key (*Secret Words)" if game.placed_secret_words else "Answer Key"
         )
-        return f"""{header}
-{utils.stringify(puzzle_list, game.bounding_box)}
+        answer_key_str = utils.get_answer_key_str(game.placed_words, game.bounding_box)
 
-Find these words: {word_list if word_list else '<ALL SECRET WORDS>'}
-* Words can go {utils.get_level_dirs_str(game.level)}.
+        # lower case was requested change case or letters for puzzle, words, and key
+        if lowercase:
+            word_list_str = word_list_str.lower()
+            puzzle_str = puzzle_str.lower()
+            for word in game.placed_words:
+                answer_key_str = answer_key_str.replace(word.text, word.text.lower())
 
-{key_intro}: {utils.get_answer_key_str(game.placed_words, game.bounding_box)}"""
+        # catch case of all secret words
+        if not word_list_str:
+            word_list_str = "<ALL SECRET WORDS>"
+
+        output = ""
+        output += f"{header}\n"
+        output += f"{puzzle_str}\n\n"
+        output += f"Find these words: {word_list_str}\n"
+        output += f"* Words can go {level_dirs_str}\n\n"
+        output += f"{key_intro}: {answer_key_str}"
+        return output
 
     def highlight_solution(self, game: Game) -> Puzzle:
         """Add highlighting to puzzle solution."""

@@ -98,6 +98,14 @@ def test_puzzle_show_output(ws: WordSearch, capsys):
     assert capture1.out == capture2.out
 
 
+def test_puzzle_show_output_lowercase(ws: WordSearch, capsys):
+    print(formatter.format_puzzle_for_show(ws, lowercase=True))
+    capture1 = capsys.readouterr()
+    ws.show(lowercase=True)
+    capture2 = capsys.readouterr()
+    assert capture1.out == capture2.out
+
+
 def test_puzzle_show_solution_output(ws: WordSearch, capsys):
     print(formatter.format_puzzle_for_show(ws, True))
     capture1 = capsys.readouterr()

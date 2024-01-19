@@ -352,26 +352,39 @@ class Game:
     # ************************************************* #
 
     def show(
-        self, solution: bool = False, hide_fillers: bool = False, *args, **kwargs
+        self,
+        solution: bool = False,
+        hide_fillers: bool = False,
+        lowercase: bool = False,
+        *args,
+        **kwargs,
     ) -> None:
         """Show the current puzzle with or without the solution.
 
         Args:
-            solution (bool, optional): Highlight the puzzle solution. Defaults to False.
-            hide_fillers (bool, optional): Hide all filler letters so only the solution
-                is shown. Overrides `solution`. Defaults to False.
+            solution: Highlight the puzzle solution. Defaults to False.
+            hide_fillers: Hide filler letters (show only words). Defaults to False.
+            lowercase: Change letters to lower case. Defaults to False.
+
+        Raises:
+            MissingFormatterError: No puzzle formatter set.
         """
         if not self.formatter:
             if not self.DEFAULT_FORMATTER:
                 raise MissingFormatterError()
             self.formatter = self.DEFAULT_FORMATTER
-        print(self.formatter.show(self, solution, hide_fillers, *args, **kwargs))
+        print(
+            self.formatter.show(
+                self, solution, hide_fillers, lowercase, *args, **kwargs
+            )
+        )
 
     def save(
         self,
         path: str | Path,
         format: str = "PDF",
         solution: bool = False,
+        lowercase: bool = False,
         *args,
         **kwargs,
     ) -> str:
@@ -385,6 +398,7 @@ class Game:
                 For CSV and JSON files, only placed word characters will be included.
                 For PDF, a separate solution page will be included with word
                 characters highlighted in red. Defaults to False.
+            lowercase: Change letters to lower case. Defaults to False.
 
         Returns:
             str: Final save path of the file.
@@ -395,7 +409,11 @@ class Game:
             if not self.DEFAULT_FORMATTER:
                 raise MissingFormatterError()
             self.formatter = self.DEFAULT_FORMATTER
-        return str(self.formatter.save(self, path, format, solution, *args, **kwargs))
+        return str(
+            self.formatter.save(
+                self, path, format, solution, lowercase, *args, **kwargs
+            )
+        )
 
     # *************************************************************** #O
     # ******************** PROCESSING/GENERATION ******************** #
