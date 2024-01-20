@@ -43,7 +43,6 @@ def parse_csv_puzzle_file(
     return (puzzle, word_list, directions, answer_key)
 
 
-@pytest.mark.skipif(os.name == "nt", reason="blank lines in csv reader")
 def test_export_csv(words, tmp_path: Path):
     puzzle = WordSearch(words)
     path = Path.joinpath(tmp_path, "test.csv")
@@ -67,7 +66,6 @@ def test_export_csv(words, tmp_path: Path):
     )
 
 
-@pytest.mark.skipif(os.name == "nt", reason="blank lines in csv reader")
 def test_export_csv_only_secret_words(tmp_path: Path):
     puzzle = WordSearch(secret_words="cat bat rat hat")
     path = Path.joinpath(tmp_path, "test.csv")
@@ -91,7 +89,6 @@ def test_export_csv_only_secret_words(tmp_path: Path):
     )
 
 
-@pytest.mark.skipif(os.name == "nt", reason="blank lines in csv reader")
 def test_export_csv_lowercase(words, tmp_path: Path):
     puzzle = WordSearch(words)
     path = Path.joinpath(tmp_path, "test.csv")
@@ -451,7 +448,6 @@ def test_pdf_output_solution_character_placement(iterations, tmp_path: Path):
     assert all(results)
 
 
-@pytest.mark.skipif(os.name == "nt", reason="need to figure out")
 def test_csv_output_puzzle_size(iterations, tmp_path: Path):
     def parse_puzzle(fp):
         puzzle = []

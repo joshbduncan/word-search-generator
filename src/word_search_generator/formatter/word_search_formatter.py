@@ -89,7 +89,7 @@ class WordSearchFormatter(Formatter):
         if not word_list:
             word_list = ["<ALL SECRET WORDS>"]
 
-        with open(path, "x") as f:
+        with open(path, "x", newline="", encoding="utf-8") as f:
             f_writer = csv.writer(
                 f, delimiter=",", quotechar='"', quoting=csv.QUOTE_MINIMAL
             )
