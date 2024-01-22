@@ -12,7 +12,7 @@ __all__ = [
     "WordSearch",
 ]
 
-from .game.word_search import WordSearch  # noqa: F401c
+from .games.word_search.word_search import WordSearch  # noqa: F401c
 
 
 def __getattr__(name: str) -> str:

@@ -8,11 +8,11 @@ from typing import TYPE_CHECKING
 
 from fpdf import FPDF
 
-from .. import config, utils
-from . import Formatter
+from ... import config, utils
+from ...formatter import Formatter
 
 if TYPE_CHECKING:  # pragma: no cover
-    from ..game import Game, Puzzle
+    from ...game.game import Game, Puzzle
 
 
 class WordSearchFormatter(Formatter):

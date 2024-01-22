@@ -4,14 +4,15 @@ import random
 import string
 from typing import TYPE_CHECKING, Iterable, TypeAlias
 
-from ..config import ACTIVE, INACTIVE, max_puzzle_words
-from ..utils import build_puzzle, in_bounds
-from ..word import Direction, Word, WordSet
-from . import Generator, WordFitError, retry
+from ...config import ACTIVE, INACTIVE, max_puzzle_words
+from ...generator import Generator
+from ...generator.generator import WordFitError, retry
+from ...utils import build_puzzle, in_bounds
+from ...word import Direction, Word, WordSet
 
 if TYPE_CHECKING:  # pragma: no cover
-    from ..game import DirectionSet, Puzzle
-    from ..validator import Validator
+    from ...game.game import DirectionSet, Puzzle
+    from ...validator import Validator
 
 
 Fit: TypeAlias = tuple[str, list[tuple[int, int]]]

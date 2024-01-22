@@ -240,7 +240,7 @@ secret puzzle words can go. See valid arguments above.",
         return 1
 
     # create a new puzzle object from provided arguments
-    from .game.word_search import WordSearch
+    from .games.word_search import WordSearch
 
     puzzle = WordSearch(
         words,

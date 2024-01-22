@@ -1,12 +1,12 @@
 from typing import TypeAlias
 
-from .. import utils
-from ..config import max_puzzle_words, min_puzzle_words
-from ..formatter.word_search_formatter import WordSearchFormatter
-from ..generator.word_search import WordSearchGenerator
-from ..validator import NoPalindromes, NoPunctuation, NoSingleLetterWords, NoSubwords
-from ..word import Direction, KeyInfo, KeyInfoJson
-from . import Game
+from ... import utils
+from ...config import max_puzzle_words, min_puzzle_words
+from ...game.game import Game
+from ...validator import NoPalindromes, NoPunctuation, NoSingleLetterWords, NoSubwords
+from ...word import Direction, KeyInfo, KeyInfoJson
+from ._formatter import WordSearchFormatter
+from ._generator import WordSearchGenerator
 
 Puzzle: TypeAlias = list[list[str]]
 DirectionSet: TypeAlias = set[Direction]

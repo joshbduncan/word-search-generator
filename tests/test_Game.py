@@ -3,12 +3,12 @@ from pathlib import Path
 import pytest
 
 from word_search_generator import WordSearch, config
-from word_search_generator.game import (
+from word_search_generator.game.game import (
     Game,
     MissingFormatterError,
     MissingGeneratorError,
 )
-from word_search_generator.generator.word_search import WordSearchGenerator
+from word_search_generator.games.word_search._generator import WordSearchGenerator
 from word_search_generator.word import Direction, Word
 
 

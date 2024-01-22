@@ -22,7 +22,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Typing :: Typed",
 ]
-dependencies = ["fpdf2==2.7.5", "typing_extensions>=4.8.0"]
+dependencies = ["fpdf2==2.7.5"]
 
 [project.urls]
 homepage = "https://github.com/joshbduncan/word-search-generator"

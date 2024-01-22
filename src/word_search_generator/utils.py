@@ -9,7 +9,7 @@ from . import config
 from .words import WORD_LIST
 
 if TYPE_CHECKING:  # pragma: no cover
-    from .game import DirectionSet, Key, Puzzle
+    from .game.game import DirectionSet, Key, Puzzle
     from .word import WordSet
 
 

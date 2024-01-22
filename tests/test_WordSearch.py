@@ -7,14 +7,14 @@ import pytest
 
 from word_search_generator import WordSearch, utils
 from word_search_generator.config import level_dirs
-from word_search_generator.formatter.word_search_formatter import WordSearchFormatter
-from word_search_generator.game import (
+from word_search_generator.game.game import (
     EmptyWordlistError,
     Key,
     MissingWordError,
     Puzzle,
     PuzzleSizeError,
 )
+from word_search_generator.games.word_search._formatter import WordSearchFormatter
 from word_search_generator.mask.polygon import Rectangle
 from word_search_generator.validator import NoSingleLetterWords
 

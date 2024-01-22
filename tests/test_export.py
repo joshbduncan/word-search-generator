@@ -11,7 +11,7 @@ import pytest
 from pypdf import PdfReader
 
 from word_search_generator import WordSearch, config, utils
-from word_search_generator.game import EmptyPuzzleError
+from word_search_generator.game.game import EmptyPuzzleError
 from word_search_generator.word import Direction, Word
 
 
