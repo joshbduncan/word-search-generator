@@ -288,7 +288,7 @@ def test_invalid_export_format(ws: WordSearch):
 
 
 def test_missing_word_error():
-    ws = WordSearch("dog", size=5, force_all_words=True)
+    ws = WordSearch("dog", size=5, require_all_words=True)
     with pytest.raises(MissingWordError):
         ws.add_words("generator")
 

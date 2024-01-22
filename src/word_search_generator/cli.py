@@ -163,6 +163,13 @@ puzzle words can go. See valid arguments above.",
         action=RandomAction,
         help="Generate {n} random words to include in the puzzle.",
     )
+    parser.add_argument(
+        "-rall",
+        "--require-all-words",
+        action="store_true",
+        help="Require all words to be placed by the generator. \
+If all words can't be placed, and exception will be raised.",
+    )
     secret_words_group.add_argument(
         "-rx",
         "--random-secret-words",
@@ -248,6 +255,7 @@ secret puzzle words can go. See valid arguments above.",
         size=args.size,
         secret_words=secret_words if secret_words else None,
         secret_level=args.secret_difficulty,
+        require_all_words=args.require_all_words,
         validators=None if args.no_validators else WordSearch.DEFAULT_VALIDATORS,
     )
 

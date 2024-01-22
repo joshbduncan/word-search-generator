@@ -72,7 +72,7 @@ class Game:
         secret_words: str | None = None,
         secret_level: int | str | None = None,
         *,
-        force_all_words: bool = False,
+        require_all_words: bool = False,
         generator: Generator | None = None,
         formatter: Formatter | None = None,
         validators: Iterable[Validator] | None = DEFAULT_VALIDATORS,
@@ -90,7 +90,7 @@ class Game:
                 will not be included in the word list. Defaults to None.
             secret_level (int | str | None, optional): Difficulty level or
                 potential word directions for 'secret' words. Defaults to None.
-            force_all_words (bool, optional): Raises an error when `generator`
+            require_all_words (bool, optional): Raises an error when `generator`
                 cannot place all the words.  Secret words are not included in this
                 check.
             generator (Generator | None, optional): Puzzle generator. Defaults to None.
@@ -106,7 +106,7 @@ class Game:
         self._size: int = 0
         self._masks: list[Mask] = []
         self._mask: Puzzle = []
-        self.force_all_words: bool = force_all_words
+        self.require_all_words: bool = require_all_words
         self.generator: Generator | None = generator
         self.formatter: Formatter | None = formatter
         self._validators: Iterable[Validator] | None = validators
@@ -451,7 +451,7 @@ class Game:
             self.secret_directions,
             self.validators,
         )
-        if self.force_all_words and self.unplaced_hidden_words:
+        if self.require_all_words and self.unplaced_hidden_words:
             raise MissingWordError("All words could not be placed in the puzzle.")
 
     def _process_input(self, words: str, action: str = "add", secret: bool = False):
@@ -684,7 +684,7 @@ class Game:
             + f"size={self.size}, "
             + f"secret_words='{','.join([word.text for word in self.secret_words])}', "
             + f"secret_level={utils.direction_set_repr(self.secret_directions)}, "
-            + f"force_all_words={self.force_all_words})"
+            + f"require_all_words={self.require_all_words})"
         )
 
     def __str__(self) -> str:
