@@ -1,18 +1,15 @@
 import json
+from math import log2
 from pathlib import Path
-from typing import Iterable, TypeAlias
+from typing import Iterable, Sized, TypeAlias
 
-from .. import config, utils
-from ..formatter import Formatter
-from ..generator import Generator
+from .. import utils
+from ..core.formatter import Formatter
+from ..core.generator import Generator
 from ..mask import CompoundMask, Mask
-from ..validator import Validator
-from ..word import Direction, KeyInfo, KeyInfoJson, Word, WordSet
-
-Puzzle: TypeAlias = list[list[str]]
-DirectionSet: TypeAlias = set[Direction]
-Key: TypeAlias = dict[str, KeyInfo]
-KeyJson: TypeAlias = dict[str, KeyInfoJson]
+from .directions import LEVEL_DIRS, Direction
+from .validator import Validator
+from .word import KeyInfo, KeyInfoJson, Word
 
 
 class EmptyPuzzleError(Exception):
@@ -57,12 +54,28 @@ class MissingWordError(Exception):
     pass
 
 
+Puzzle: TypeAlias = list[list[str]]
+DirectionSet: TypeAlias = set[Direction]
+Key: TypeAlias = dict[str, KeyInfo]
+KeyJson: TypeAlias = dict[str, KeyInfoJson]
+WordSet: TypeAlias = set[Word]
+
+
 class Game:
     """Base object for a word base puzzle game."""
+
+    MIN_PUZZLE_SIZE = 5
+    MAX_PUZZLE_SIZE = 50
+    MIN_PUZZLE_WORDS = 1
+    MAX_PUZZLE_WORDS = 100
+    MAX_FIT_TRIES = 1000
 
     DEFAULT_GENERATOR: Generator | None = None
     DEFAULT_FORMATTER: Formatter | None = None
     DEFAULT_VALIDATORS: Iterable[Validator] = []
+
+    ACTIVE = "*"
+    INACTIVE = "#"
 
     def __init__(
         self,
@@ -80,25 +93,22 @@ class Game:
         """Initialize a game.
 
         Args:
-            words (str | None, optional): A string of words separated by spaces,
-                commas, or new lines. Will be trimmed if more. Defaults to None.
-            level (int | str | None, optional): Difficulty level or potential
-                word directions. Defaults to 2.
-            size (int | None, optional): Puzzle size. Defaults to None.
-            secret_words (str | None, optional): A string of words separated by
-                spaces, commas, or new lines. Words will be 'secret' meaning they
-                will not be included in the word list. Defaults to None.
-            secret_level (int | str | None, optional): Difficulty level or
-                potential word directions for 'secret' words. Defaults to None.
-            require_all_words (bool, optional): Raises an error when `generator`
-                cannot place all the words.  Secret words are not included in this
-                check.
-            generator (Generator | None, optional): Puzzle generator. Defaults to None.
-            formatter (Formatter | None, optional): Game formatter. Defaults to None.
-            validators (Iterable[Validator] | None, optional): An iterable
-            of validators that puzzle words will be checked against during puzzle
-            generation. Provide an empty iterable to disable word validation.
-            Defaults to `DEFAULT_VALIDATORS`.
+            words: A string of words separated by spaces, commas, or new lines.
+                Will be trimmed if more. Defaults to None.
+            level: Difficulty level or potential word directions. Defaults to 2.
+            size: Puzzle size. Defaults to None.
+            secret_words: A string of words separated by spaces, commas, or new lines.
+                Words will be 'secret' meaning they will not be included in the
+                word list. Defaults to None.
+            secret_level: Difficulty level or potential word directions for
+                'secret' words. Defaults to None.
+            require_all_words: Raises an error when `generator` cannot place all of
+                the words.  Secret words are not included in this check.
+            generator: Puzzle generator. Defaults to None.
+            formatter: Game formatter. Defaults to None.
+            validators: An iterable of validators that puzzle words will be checked
+                against during puzzle generation. Provide an empty iterable to disable
+                word validation. Defaults to `DEFAULT_VALIDATORS`.
         """
         # setup puzzle
         self._words: WordSet = set()
@@ -111,20 +121,20 @@ class Game:
         self.formatter: Formatter | None = formatter
         self._validators: Iterable[Validator] | None = validators
 
-        # setup words
-        # in case of dupes, add secret words first so they are overwritten
-        if secret_words:
-            self._process_input(secret_words, "add", True)
-        if words:
-            self._process_input(words, "add")
-
-        # determine valid directions
+        # determine valid word directions
         self._directions: DirectionSet = (
             self.validate_level(level) if level else self.validate_level(2)
         )
         self._secret_directions: DirectionSet = (
             self.validate_level(secret_level) if secret_level else self.directions
         )
+
+        # setup words
+        # in case of dupes, add secret words first so they are overwritten
+        if secret_words:
+            self.add_words(secret_words, secret=True)
+        if words:
+            self.add_words(words)
 
         # setup required defaults
         if not self.generator:
@@ -136,14 +146,14 @@ class Game:
         if size:
             if not isinstance(size, int):
                 raise TypeError("Size must be an integer.")
-            if not config.min_puzzle_size <= size <= config.max_puzzle_size:
+            if not self.MIN_PUZZLE_SIZE <= size <= self.MAX_PUZZLE_SIZE:
                 raise ValueError(
-                    f"Puzzle size must be >= {config.min_puzzle_size}"
-                    + f" and <= {config.max_puzzle_size}."
+                    f"Puzzle size must be >= {self.MIN_PUZZLE_SIZE}"
+                    + f" and <= {self.MAX_PUZZLE_SIZE}."
                 )
             self._size = size
         if self.words:
-            self._size = utils.calc_puzzle_size(self.words, self.directions, self.size)
+            self._size = self._calc_puzzle_size(self.words, self.directions, self.size)
             self._generate()
 
     # **************************************************** #
@@ -224,7 +234,7 @@ class Game:
     def bounding_box(self) -> tuple[tuple[int, int], tuple[int, int]]:
         """Bounding box of the active puzzle area as a rectangle defined
         by a tuple of (top-left edge as x, y, bottom-right edge as x, y)"""
-        return utils.find_bounding_box(self.mask)
+        return utils.find_bounding_box(self.mask, self.ACTIVE)
 
     @property
     def cropped_puzzle(self) -> Puzzle:
@@ -271,12 +281,21 @@ class Game:
         """Possible directions for puzzle words.
 
         Args:
-            val (int | str | Iterable[str]): Either a preset puzzle level (int),
-            cardinal directions as a comma separated string, or an iterable
-            of valid directions from the Direction object.
+            val: Either a preset puzzle level (int), cardinal directions
+                as a comma separated string, or an iterable of valid directions
+                from the Direction object.
         """
         self._directions = self.validate_level(value)
         self._generate()
+
+    @property
+    def direction_set_repr(self) -> str:
+        """String representation of the game directions."""
+        return (
+            ("'" + ",".join(d.name for d in self.directions) + "'")
+            if self.directions
+            else "None"
+        )
 
     def _set_level(self, value: int) -> None:
         """Set valid puzzle directions to a predefined level set.
@@ -301,9 +320,9 @@ class Game:
         """Possible directions for secret puzzle words.
 
         Args:
-            val (int | str | Iterable[str]): Either a preset puzzle level (int),
-            valid cardinal directions as a comma separated string, or an iterable
-            of valid cardinal directions.
+            val: Either a preset puzzle level (int), cardinal directions
+                as a comma separated string, or an iterable of valid directions
+                from the Direction object.
         """
         self._secret_directions = self.validate_level(value)
         self._generate()
@@ -318,19 +337,19 @@ class Game:
         """Set the puzzle size. All puzzles are square.
 
         Args:
-            val (int): Size in grid squares (characters).
+            val: Size in grid squares (characters).
 
         Raises:
             TypeError: Must be an integer.
-            ValueError: Must be greater than `config.config.min_puzzle_size` and
-            less than `config.config.max_puzzle_size`.
+            ValueError: Must be greater than `self.MIN_PUZZLE_SIZE` and
+                less than `self.MAX_PUZZLE_SIZE`.
         """
         if not isinstance(value, int):
             raise TypeError("Size must be an integer.")
-        if not config.min_puzzle_size <= value <= config.max_puzzle_size:
+        if not self.MIN_PUZZLE_SIZE <= value <= self.MAX_PUZZLE_SIZE:
             raise PuzzleSizeError(
-                f"Puzzle size must be >= {config.min_puzzle_size}"
-                + f" and <= {config.max_puzzle_size}."
+                f"Puzzle size must be >= {self.MIN_PUZZLE_SIZE}"
+                + f" and <= {self.MAX_PUZZLE_SIZE}."
             )
         if self.size != value:
             self._size = value
@@ -339,11 +358,20 @@ class Game:
 
     @property
     def validators(self) -> Iterable[Validator] | None:
-        """Puzzle generation word validators."""
+        """Game generation word validators."""
         return self._validators
 
     @validators.setter
     def validators(self, value: Iterable[Validator]) -> None:
+        """Set validators for the game words.
+
+        Args:
+            value: Game word validators.
+        """
+        if not isinstance(value, Iterable):
+            raise TypeError("Argument must be an `Iterable` of `Validator`s.")
+        if not all(isinstance(v, Validator) for v in value):
+            raise TypeError("All validators must be derived from `Validator`.")
         self._validators = value
         self._generate()
 
@@ -391,10 +419,9 @@ class Game:
         """Save the current puzzle to a file.
 
         Args:
-            path (str | Path): File save path.
-            format (str, optional): Type of file to save ("CSV", "JSON", "PDF").
-                Defaults to "PDF".
-            solution (bool, optional): Include solution with the saved file.
+            path: File save path.
+            format: Type of file to save ("CSV", "JSON", "PDF"). Defaults to "PDF".
+            solution: Include solution with the saved file.
                 For CSV and JSON files, only placed word characters will be included.
                 For PDF, a separate solution page will be included with word
                 characters highlighted in red. Defaults to False.
@@ -415,14 +442,28 @@ class Game:
             )
         )
 
-    # *************************************************************** #O
+    # *************************************************************** #
     # ******************** PROCESSING/GENERATION ******************** #
     # *************************************************************** #
 
+    @staticmethod
+    def _build_puzzle(size: int, char: str) -> Puzzle:
+        """Build an empty nested list/puzzle grid."""
+        return [[char] * size for _ in range(size)]
+
     def _generate(self, reset_size: bool = False) -> None:
-        """Generate the puzzle grid."""
-        # if an empty puzzle object is created then the `random_words()` method
-        # is called, calculate an appropriate puzzle size
+        """Generate the puzzle grid.
+
+        Args:
+            reset_size: Recalculate the puzzle size before generation.
+                Defaults to False.
+
+        Raises:
+            MissingGeneratorError: No set puzzle generator.
+            EmptyWordlistError: No game words.
+            PuzzleSizeError: Invalid puzzle size.
+            MissingWordError: Not all game words could be placed by the generator.
+        """
         if not self.generator:
             if not self.DEFAULT_GENERATOR:
                 raise MissingGeneratorError()
@@ -431,7 +472,7 @@ class Game:
         if not self.words:
             raise EmptyWordlistError("No words have been added to the puzzle.")
         if not self.size or reset_size:
-            self.size = utils.calc_puzzle_size(self._words, self._directions)
+            self.size = self._calc_puzzle_size(self._words, self._directions)
         min_word_length = (
             min([len(word.text) for word in self.words]) if self.words else self.size
         )
@@ -442,33 +483,39 @@ class Game:
         for word in self.words:
             word.remove_from_puzzle()
         if not self.mask or len(self.mask) != self.size:
-            self._mask = utils.build_puzzle(self.size, config.ACTIVE)
-        self._puzzle = self.generator.generate(
-            self.size,
-            self.mask,
-            self.words,
-            self.directions,
-            self.secret_directions,
-            self.validators,
-        )
+            self._mask = self._build_puzzle(self.size, self.ACTIVE)
+        self._puzzle = self.generator.generate(self)
         if self.require_all_words and self.unplaced_hidden_words:
             raise MissingWordError("All words could not be placed in the puzzle.")
 
-    def _process_input(self, words: str, action: str = "add", secret: bool = False):
-        if secret:
-            clean_words = self.cleanup_input(words, secret=True)
-        else:
-            clean_words = self.cleanup_input(words)
+    def _process_input(self, words: str, secret: bool = False) -> WordSet:
+        clean_words = self._cleanup_input(
+            words, secret=secret, max_words=self.MAX_PUZZLE_WORDS
+        )
+        return clean_words
 
-        if action == "add":
-            # remove all new words first so any updates are reflected in the word list
-            self._words.symmetric_difference_update(clean_words)
-            self._words.update(clean_words)
-        if action == "remove":
-            self._words.difference_update(clean_words)
-        if action == "replace":
-            self._words.clear()
-            self._words.update(clean_words)
+    @staticmethod
+    def _calc_puzzle_size(words: WordSet, level: Sized, size: int | None = None) -> int:
+        """Calculate the puzzle grid size.
+
+        Args:
+            words: Game words.
+            level: Game level.
+            size: Set puzzle size. Defaults to None.
+
+        Returns:
+            Calculated puzzle size.
+        """
+        all_words = [word.text for word in words]
+        longest_word_length = len(max(all_words, key=len))
+        if not size:
+            longest = max(10, longest_word_length)
+            # calculate multiplier for larger word lists so that most have room to fit
+            multiplier = len(all_words) / 15 if len(all_words) > 15 else 1
+            # level lengths in `core.directions` are nice multiples of 2
+            l_size = log2(len(level)) if level else 1  # protect against log(0) in tests
+            size = min(round(longest + l_size * 2 * multiplier), Game.MAX_PUZZLE_SIZE)
+        return size
 
     def add_words(
         self, words: str, secret: bool = False, reset_size: bool = False
@@ -476,24 +523,31 @@ class Game:
         """Add words to the puzzle.
 
         Args:
-            words (str): Words to add.
-            secret (bool, optional): Should the new words
-                be secret. Defaults to False.
-            reset_size (bool, optional): Reset the puzzle
-                size based on the updated words. Defaults to False.
+            words: Words to add.
+            secret: Should the new words be secret. Defaults to False.
+            reset_size: Reset the puzzle size based on the updated words.
+                Defaults to False.
         """
-        self._process_input(words, "add", secret)
+        new_words = self._process_input(words, secret)
+
+        # remove all new words first so any updates are reflected in the word list
+        self._words.symmetric_difference_update(new_words)
+        self._words.update(new_words)
+
         self._generate(reset_size=reset_size)
 
     def remove_words(self, words: str, reset_size: bool = False) -> None:
         """Remove words from the puzzle.
 
         Args:
-            words (str): Words to remove.
-            reset_size (bool, optional): Reset the puzzle
-                size based on the updated words. Defaults to False.
+            words: Words to remove.
+            reset_size: Reset the puzzle size based on the updated words.
+                Defaults to False.
         """
-        self._process_input(words, "remove")
+        words_to_remove = self._process_input(words)
+
+        self._words.difference_update(words_to_remove)
+
         self._generate(reset_size=reset_size)
 
     def replace_words(
@@ -502,18 +556,21 @@ class Game:
         """Replace all words from the puzzle.
 
         Args:
-            words (str): Words to add.
-            secret (bool, optional): Should the new words
-                be secret. Defaults to False.
-            reset_size (bool, optional): Reset the puzzle
-                size based on the updated words. Defaults to False.
+            words: Words to add.
+            secret: Should the new words be secret. Defaults to False.
+            reset_size: Reset the puzzle size based on the updated words.
+                Defaults to False.
         """
-        self._process_input(words, "replace", secret)
+        replacement_words = self._process_input(words, secret)
+
+        self._words.clear()
+        self._words.update(replacement_words)
+
         self._generate(reset_size=reset_size)
 
-    def cleanup_input(self, words: str, secret: bool = False) -> WordSet:
-        """Cleanup provided input string. Removing spaces
-        one-letter words, and words with punctuation."""
+    @staticmethod
+    def _cleanup_input(words: str, secret: bool, max_words: int) -> WordSet:
+        """Cleanup provided input string."""
         if not isinstance(words, str):
             raise TypeError(
                 "Words must be a string separated by spaces, commas, or new lines"
@@ -524,17 +581,18 @@ class Game:
         word_list = ",".join(words.split(" ")).split(",")
         # iterate through all words and pick first set that match criteria
         word_set: WordSet = set()
-        while word_list and len(word_set) <= config.max_puzzle_words:
+        while word_list and len(word_set) <= max_words:
             word = word_list.pop(0)
             if word:
                 word_set.add(Word(word, secret=secret))
         return word_set
 
-    def validate_direction_iterable(
-        self, d: Iterable[str | tuple[int, int] | Direction]
+    @staticmethod
+    def _validate_direction_iterable(
+        d: Iterable[str | tuple[int, int] | Direction]
     ) -> DirectionSet:
         """Validates that all the directions in d are found as keys to
-        config.dir_moves and therefore are valid directions."""
+        directions.dir_moves and therefore are valid directions."""
         o = set()
         for direction in d:
             if isinstance(direction, Direction):
@@ -553,18 +611,18 @@ class Game:
         """Given a d, try to turn it into a list of valid moves."""
         if isinstance(d, int):  # traditional numeric level
             try:
-                return config.level_dirs[d]
+                return LEVEL_DIRS[d]
             except KeyError:
                 raise ValueError(
                     f"{d} is not a valid difficulty number"
-                    + f"[{', '.join([str(i) for i in config.level_dirs])}]"
+                    + f"[{', '.join([str(i) for i in LEVEL_DIRS])}]"
                 )
         if isinstance(d, str):  # comma-delimited list
-            return self.validate_direction_iterable(d.split(","))
+            return self._validate_direction_iterable(d.split(","))
         if isinstance(d, Iterable):  # probably used by external code
             if not d:
                 raise ValueError("Empty iterable provided.")
-            return self.validate_direction_iterable(d)
+            return self._validate_direction_iterable(d)
         raise TypeError(f"{type(d)} given, not str, int, or Iterable[str]\n{d}")
 
     # ************************************************* #
@@ -583,18 +641,18 @@ class Game:
             for x in range(self.size):
                 if mask.method == 1:
                     if (
-                        mask.mask[y][x] == config.ACTIVE
-                        and self.mask[y][x] == config.ACTIVE
+                        mask.mask[y][x] == self.ACTIVE
+                        and self.mask[y][x] == self.ACTIVE
                     ):
-                        self.mask[y][x] = config.ACTIVE
+                        self.mask[y][x] = self.ACTIVE
                     else:
-                        self.mask[y][x] = config.INACTIVE
+                        self.mask[y][x] = self.INACTIVE
                 elif mask.method == 2:
-                    if mask.mask[y][x] == config.ACTIVE:
-                        self.mask[y][x] = config.ACTIVE
+                    if mask.mask[y][x] == self.ACTIVE:
+                        self.mask[y][x] = self.ACTIVE
                 else:
-                    if mask.mask[y][x] == config.ACTIVE:
-                        self.mask[y][x] = config.INACTIVE
+                    if mask.mask[y][x] == self.ACTIVE:
+                        self.mask[y][x] = self.INACTIVE
         # add mask to puzzle instance for later reference
         if mask not in self.masks:
             self.masks.append(mask)
@@ -618,7 +676,7 @@ class Game:
         """Invert the current puzzle mask. Has no effect on the
         actual mask(s) found in `WordSearch.mask`."""
         self._mask = [
-            [config.ACTIVE if c == config.INACTIVE else config.INACTIVE for c in row]
+            [self.ACTIVE if c == self.INACTIVE else self.INACTIVE for c in row]
             for row in self.mask
         ]
         self._generate()
@@ -643,9 +701,8 @@ class Game:
         self._generate()
 
     def remove_masks(self) -> None:
-        """"""
         self._masks = []
-        self._mask = utils.build_puzzle(self.size, config.ACTIVE)
+        self._mask = self._build_puzzle(self.size, self.ACTIVE)
         self._generate()
 
     def remove_static_masks(self) -> None:
@@ -653,7 +710,7 @@ class Game:
 
     def _reapply_masks(self) -> None:
         """Reapply all current masks to the puzzle."""
-        self._mask = utils.build_puzzle(self.size, config.ACTIVE)
+        self._mask = self._build_puzzle(self.size, self.ACTIVE)
         for mask in self.masks:
             if mask.static and mask.puzzle_size != self.size:
                 continue
@@ -680,10 +737,10 @@ class Game:
         return (
             f"{self.__class__.__name__}"
             + f"(words='{','.join([word.text for word in self.hidden_words])}', "
-            + f"level={utils.direction_set_repr(self.directions)}, "
+            + f"level={self.direction_set_repr}, "
             + f"size={self.size}, "
             + f"secret_words='{','.join([word.text for word in self.secret_words])}', "
-            + f"secret_level={utils.direction_set_repr(self.secret_directions)}, "
+            + f"secret_level={self.direction_set_repr}, "
             + f"require_all_words={self.require_all_words})"
         )
 

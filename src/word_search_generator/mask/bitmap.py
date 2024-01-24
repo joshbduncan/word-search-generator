@@ -3,7 +3,6 @@ from pathlib import Path
 from PIL import Image as PILImage
 from PIL import ImageChops
 
-from ..config import ACTIVE
 from ..utils import in_bounds
 from . import Mask, MaskNotGenerated
 
@@ -36,7 +35,7 @@ class Bitmap(Mask):
 
     def _draw(self) -> None:
         """Set each coordinate point from `object.points` as
-        `config.ACTIVE` in `Object._mask`.
+        `ACTIVE` in `Object._mask`.
 
         Raises:
             MaskNotGenerated: Mask has not yet been generated.
@@ -47,7 +46,7 @@ class Bitmap(Mask):
             )
         for x, y in self.points:
             if in_bounds(x, y, self.puzzle_size, self.puzzle_size):
-                self._mask[y][x] = ACTIVE
+                self._mask[y][x] = self.ACTIVE
 
 
 class Image(Bitmap):
@@ -78,7 +77,7 @@ class Image(Bitmap):
     def generate(self, puzzle_size: int) -> None:
         """Generate a new mask at `puzzle_size` from a raster image."""
         self.puzzle_size = puzzle_size
-        self._mask = self.build_mask(self.puzzle_size)
+        self._mask = self.build_mask(self.puzzle_size, self.INACTIVE)
         self.points = Image.process_image(
             PILImage.open(self.fp, formats=("BMP", "JPEG", "PNG")),
             self.puzzle_size,

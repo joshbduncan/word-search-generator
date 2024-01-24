@@ -4,7 +4,6 @@ import pytest
 from PIL import Image as PILImage
 
 from word_search_generator import WordSearch
-from word_search_generator.config import ACTIVE, INACTIVE
 from word_search_generator.mask import CompoundMask, Mask, MaskNotGenerated
 from word_search_generator.mask.bitmap import Bitmap, ContrastError, Image
 from word_search_generator.mask.ellipse import Ellipse
@@ -83,12 +82,6 @@ def test_mask_property_puzzle_size_setter_invalid_type():
         m.puzzle_size = "a"  # type: ignore  # noqa: F841
 
 
-def test_mask_property_puzzle_size_setter_invalid_value():
-    m = Mask()
-    with pytest.raises(ValueError):
-        m.puzzle_size = 7000  # type: ignore # noqa: F841
-
-
 def test_mask_property_bounding_box():
     m = Mask([(1, 2), (3, 4)])
     assert m.bounding_box == ((1, 2), (3, 4))
@@ -116,7 +109,7 @@ def test_generate():
     m = Mask()
     m.generate(size)
     assert m.puzzle_size == size
-    assert m.mask == [[INACTIVE] * size for _ in range(5)]
+    assert m.mask == [[m.INACTIVE] * size for _ in range(5)]
 
 
 def test_show_not_generated():
@@ -144,7 +137,7 @@ def test_show_active_only(capsys):
     m = Mask([(0, 0), (1, 1)])
     m.generate(size)
     for x, y in m.points:
-        m.mask[y][x] = ACTIVE
+        m.mask[y][x] = m.ACTIVE
     match = "*  \n  *\n"
     m.show(True)
     capture = capsys.readouterr()
@@ -154,15 +147,15 @@ def test_show_active_only(capsys):
 def test_invert():
     m = Mask()
     m._mask = [
-        [ACTIVE, INACTIVE, ACTIVE],
-        [INACTIVE, ACTIVE, INACTIVE],
-        [ACTIVE, INACTIVE, ACTIVE],
+        [m.ACTIVE, m.INACTIVE, m.ACTIVE],
+        [m.INACTIVE, m.ACTIVE, m.INACTIVE],
+        [m.ACTIVE, m.INACTIVE, m.ACTIVE],
     ]
     m.invert()
     assert m.mask == [
-        [INACTIVE, ACTIVE, INACTIVE],
-        [ACTIVE, INACTIVE, ACTIVE],
-        [INACTIVE, ACTIVE, INACTIVE],
+        [m.INACTIVE, m.ACTIVE, m.INACTIVE],
+        [m.ACTIVE, m.INACTIVE, m.ACTIVE],
+        [m.INACTIVE, m.ACTIVE, m.INACTIVE],
     ]
 
 
@@ -230,7 +223,7 @@ def test_compound_mask_generate():
     cm = CompoundMask()
     cm.generate(size)
     assert cm.puzzle_size == size
-    assert cm.mask == [[ACTIVE] * size] * size
+    assert cm.mask == [[cm.ACTIVE] * size] * size
 
 
 def test_compound_mask_generate_submasks():
@@ -239,7 +232,7 @@ def test_compound_mask_generate_submasks():
     cm = CompoundMask([m1])
     cm.generate(size)
     assert m1.puzzle_size == size
-    assert m1.mask == [[INACTIVE] * size] * size
+    assert m1.mask == [[m1.INACTIVE] * size] * size
 
 
 def test_compound_mask_apply_mask_error():
@@ -279,7 +272,7 @@ def test_compound_mask_apply_mask_method_3():
     cm = CompoundMask()
     cm.generate(size)
     cm._apply_mask(m1)
-    assert cm.mask == [[INACTIVE] * size] * size
+    assert cm.mask == [[cm.INACTIVE] * size] * size
 
 
 # ************************************************ #
@@ -332,7 +325,7 @@ def test_image_mask_solid_black(tmp_path: Path):
     size = 11
     im = Image(img_path)
     im.generate(size)
-    assert im.mask == [[ACTIVE] * size] * size
+    assert im.mask == [[im.ACTIVE] * size] * size
 
 
 def test_image_mask_contrast_exception(tmp_path: Path):
@@ -406,7 +399,7 @@ def test_polygon_too_few_points():
 def test_connect_points_no_generated():
     pm = Polygon()
     with pytest.raises(MaskNotGenerated):
-        pm._connect_points((0, 0), (1, 1))
+        pm._connect_points((0, 0), (1, 1), pm.ACTIVE)
 
 
 def test_fill_shape_not_generated():

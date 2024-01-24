@@ -8,14 +8,26 @@ from typing import TYPE_CHECKING
 
 from fpdf import FPDF
 
-from ... import config, utils
-from ...formatter import Formatter
+from .. import utils
+from ..core.formatter import Formatter
+from ..core.game import Game
 
 if TYPE_CHECKING:  # pragma: no cover
-    from ...game.game import Game, Puzzle
+    from ..core.game import Puzzle
 
 
 class WordSearchFormatter(Formatter):
+    # pdf export settings
+    PDF_AUTHOR = "Josh Duncan"
+    PDF_CREATOR = "word-search @ joshbduncan.com"
+    PDF_TITLE = "Word Search Puzzle"
+    PDF_FONT_SIZE_XXL = 18
+    PDF_FONT_SIZE_XL = 15
+    PDF_FONT_SIZE_L = 12
+    PDF_FONT_SIZE_M = 9
+    PDF_FONT_SIZE_S = 5
+    PDF_PUZZLE_WIDTH = 7  # inches
+
     def show(
         self,
         game: Game,
@@ -69,7 +81,7 @@ class WordSearchFormatter(Formatter):
     ) -> Path:
         word_list = utils.get_word_list_list(game.key)
         puzzle = self.hide_filler_characters(game) if solution else game.cropped_puzzle
-        level_dirs_str = utils.get_level_dirs_str(game.level)
+        LEVEL_DIRS_str = utils.get_LEVEL_DIRS_str(game.level)
         key_intro = (
             "Answer Key (*Secret Words)" if game.placed_secret_words else "Answer Key"
         )
@@ -99,7 +111,7 @@ class WordSearchFormatter(Formatter):
             f_writer.writerow([""])
             f_writer.writerow(["Word List:"])
             f_writer.writerow(word_list)
-            f_writer.writerow([f"* Words can go {level_dirs_str}."])
+            f_writer.writerow([f"* Words can go {LEVEL_DIRS_str}."])
             f_writer.writerow([""])
             f_writer.writerow([f"{key_intro}: "])
             f_writer.writerow(answer_key_list)
@@ -167,20 +179,20 @@ class WordSearchFormatter(Formatter):
 
             # insert the title
             title = "WORD SEARCH" if not solution else "WORD SEARCH (SOLUTION)"
-            pdf.set_font("Helvetica", "B", config.pdf_font_size_XXL)
+            pdf.set_font("Helvetica", "B", self.PDF_FONT_SIZE_XXL)
             pdf.cell(pdf.epw, 0.25, title, new_y="NEXT", align="C", center=True)
             pdf.ln(0.375)
 
             # calculate the puzzle size and letter font size
             pdf.set_left_margin(0.75)
-            gsize = config.pdf_puzzle_width / game.cropped_size[0]
+            gsize = self.PDF_PUZZLE_WIDTH / game.cropped_size[0]
             gmargin = 0.6875 if gsize > 36 else 0.75
             font_size = int(72 * gsize * gmargin)
             # calculate flexible font size based on word count
             # to ensure all words and the puzzle key fit on one page
-            info_font_size = config.pdf_font_size_XL - (
-                len(game.words) - config.min_puzzle_words
-            ) * (6 / (config.max_puzzle_words - config.min_puzzle_words))
+            info_font_size = self.PDF_FONT_SIZE_XL - (
+                len(game.words) - Game.MIN_PUZZLE_WORDS
+            ) * (6 / (Game.MAX_PUZZLE_WORDS - Game.MIN_PUZZLE_WORDS))
             pdf.set_font_size(font_size)
 
             # draw the puzzle
@@ -219,7 +231,7 @@ class WordSearchFormatter(Formatter):
 
             # collect puzzle information
             word_list_str = utils.get_word_list_str(game.key)
-            level_dirs_str = utils.get_level_dirs_str(game.level)
+            LEVEL_DIRS_str = utils.get_LEVEL_DIRS_str(game.level)
             key_intro = (
                 "Answer Key (*Secret Words)"
                 if game.placed_secret_words
@@ -245,7 +257,7 @@ class WordSearchFormatter(Formatter):
             pdf.set_font("Helvetica", "BU", size=info_font_size)
             pdf.cell(
                 pdf.epw,
-                txt=f"Find words going {level_dirs_str}:",
+                txt=f"Find words going {LEVEL_DIRS_str}:",
                 align="C",
                 new_y="NEXT",
             )
@@ -269,16 +281,16 @@ class WordSearchFormatter(Formatter):
             with pdf.rotation(angle=180, x=pdf.epw / 2, y=pdf.eph / 2):
                 pdf.set_xy(pdf.epw - pdf.epw, 0)
                 pdf.set_margin(0.25)
-                pdf.set_font("Helvetica", size=config.pdf_font_size_S)
+                pdf.set_font("Helvetica", size=self.PDF_FONT_SIZE_S)
                 pdf.write(txt=f"{key_intro}: {answer_key_str}")
 
             return pdf
 
         # setup the PDF document
         pdf = FPDF(orientation="P", unit="in", format="Letter")
-        pdf.set_author(config.pdf_author)
-        pdf.set_creator(config.pdf_creator)
-        pdf.set_title(config.pdf_title)
+        pdf.set_author(self.PDF_AUTHOR)
+        pdf.set_creator(self.PDF_CREATOR)
+        pdf.set_title(self.PDF_TITLE)
         pdf.set_line_width(pdf.line_width * 2)
 
         # draw initial puzzle page
@@ -321,7 +333,7 @@ class WordSearchFormatter(Formatter):
         hr = "-" * header_width
         header = hr + "\n" + f"{'WORD SEARCH':^{header_width}}" + "\n" + hr
         puzzle_str = utils.stringify(puzzle_list, game.bounding_box)
-        level_dirs_str = utils.get_level_dirs_str(game.level)
+        LEVEL_DIRS_str = utils.get_LEVEL_DIRS_str(game.level)
         key_intro = (
             "Answer Key (*Secret Words)" if game.placed_secret_words else "Answer Key"
         )
@@ -342,7 +354,7 @@ class WordSearchFormatter(Formatter):
         output += f"{header}\n"
         output += f"{puzzle_str}\n\n"
         output += f"Find these words: {word_list_str}\n"
-        output += f"* Words can go {level_dirs_str}\n\n"
+        output += f"* Words can go {LEVEL_DIRS_str}\n\n"
         output += f"{key_intro}: {answer_key_str}"
         return output
 

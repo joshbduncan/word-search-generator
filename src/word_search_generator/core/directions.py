@@ -1,18 +1,38 @@
-from .word import Direction
+from enum import Enum, unique
 
-# puzzle settings
-min_puzzle_size = 5
-max_puzzle_size = 50
-min_puzzle_words = 1
-max_puzzle_words = 100
-max_fit_tries = 1000
 
-# puzzle grid settings
-ACTIVE = "*"
-INACTIVE = "#"
+@unique
+class Direction(Enum):
+    """
+    If you want custom directions, like `"skipE": (0, 2)`, this is the
+    place to monkey-patch them in.
+
+    Tuples are listed in (∂row, ∂col) pairs, presumably b/c that makes
+    it easier to use with the Puzzle = list[list[chr]] format
+    """
+
+    # is there a better way to specify typing here?
+    # without hints here, the linter gets upset with my definitions of r/c_move
+    N: tuple[int, int] = (-1, 0)  # type: ignore
+    NE: tuple[int, int] = (-1, 1)  # type: ignore
+    E: tuple[int, int] = (0, 1)  # type: ignore
+    SE: tuple[int, int] = (1, 1)  # type: ignore
+    S: tuple[int, int] = (1, 0)  # type: ignore
+    SW: tuple[int, int] = (1, -1)  # type: ignore
+    W: tuple[int, int] = (0, -1)  # type: ignore
+    NW: tuple[int, int] = (-1, -1)  # type: ignore
+
+    @property
+    def r_move(self) -> int:
+        return self.value[0]
+
+    @property
+    def c_move(self) -> int:
+        return self.value[1]
+
 
 # puzzle difficulty levels
-level_dirs: dict[int, set[Direction]] = {
+LEVEL_DIRS: dict[int, set[Direction]] = {
     -1: set(),  # no valid directions
     1: {  # right or down
         Direction.E,
@@ -64,14 +84,3 @@ level_dirs: dict[int, set[Direction]] = {
         Direction.S,
     },
 }
-
-# pdf export settings
-pdf_author = "Josh Duncan"
-pdf_creator = "word-search @ joshbduncan.com"
-pdf_title = "Word Search Puzzle"
-pdf_font_size_XXL = 18
-pdf_font_size_XL = 15
-pdf_font_size_L = 12
-pdf_font_size_M = 9
-pdf_font_size_S = 5
-pdf_puzzle_width = 7  # inches

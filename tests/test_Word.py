@@ -1,4 +1,4 @@
-from word_search_generator.word import Direction, Position, Word
+from word_search_generator.core.word import Direction, Position, Word
 
 
 def test_empty_start_row():

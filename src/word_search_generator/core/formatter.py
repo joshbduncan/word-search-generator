@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:  # pragma: no cover
     from pathlib import Path
 
-    from ..game.game import Game
+    from .game import Game
 
 
 class Formatter(ABC):

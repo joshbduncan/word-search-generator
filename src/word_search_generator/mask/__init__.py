@@ -1,4 +1,3 @@
-from ..config import ACTIVE, INACTIVE, max_puzzle_size, min_puzzle_size
 from ..utils import find_bounding_box
 
 
@@ -12,6 +11,8 @@ class Mask:
     """This class represents Mask object that can be applied
     to a WordSearch puzzle."""
 
+    ACTIVE = "*"
+    INACTIVE = "#"
     METHODS = [1, 2, 3]
 
     def __init__(
@@ -103,15 +104,9 @@ class Mask:
 
         Raises:
             TypeError: Must be an integer.
-            ValueError: Must be greater than `config.min_puzzle_size` and
-            less than `config.max_puzzle_size`.
         """
         if not isinstance(value, int):
             raise TypeError("Must be an integer.")
-        if not min_puzzle_size <= value <= max_puzzle_size:
-            raise ValueError(
-                f"Must be >= {min_puzzle_size}" + f" and <= {max_puzzle_size}"
-            )
         self._puzzle_size = value
         if not self.static:
             self.reset_points()
@@ -140,13 +135,12 @@ class Mask:
         return ((min_x, min_y), (max_x, max_y))
 
     @staticmethod
-    def build_mask(size: int, char: str = INACTIVE) -> list[list[str]]:
+    def build_mask(size: int, char: str) -> list[list[str]]:
         """Generate a 2-D array (square) of `size` filled with `char`.
 
         Args:
             size (int): Size of array.
             char (str, optional): Character to fill the array with.
-                Defaults to `config.INACTIVE`.
 
         Returns:
             list[list[str]]: 2-D array filled will `char`.
@@ -157,7 +151,7 @@ class Mask:
         """Generate a new mask at `puzzle_size` and either fill points (`Bitmap`),
         or connect points (`Polygon`) and then fill the resulting polygon shape."""
         self.puzzle_size = puzzle_size
-        self._mask = self.build_mask(self.puzzle_size)
+        self._mask = self.build_mask(self.puzzle_size, self.INACTIVE)
         self._draw()
 
     def _draw(self) -> None:
@@ -190,7 +184,9 @@ class Mask:
                 "Please use `object.generate()` before calling `object.show()`."
             )
         if active_only:
-            ((min_x, min_y), (max_x, max_y)) = find_bounding_box(self._mask)
+            ((min_x, min_y), (max_x, max_y)) = find_bounding_box(
+                self._mask, self.ACTIVE
+            )
         else:
             ((min_x, min_y), (max_x, max_y)) = (
                 (0, 0),
@@ -198,13 +194,14 @@ class Mask:
             )
         for r in self.mask[min_y : max_y + 1]:
             if active_only:
-                r = [c if c == ACTIVE else " " for c in r]
+                r = [c if c == self.ACTIVE else " " for c in r]
             print(" ".join(r[min_x : max_x + 1]))
 
     def invert(self) -> None:
         """Invert the mask. Has no effect on the mask `method`."""
         self._mask = [
-            [ACTIVE if c == INACTIVE else INACTIVE for c in row] for row in self.mask
+            [self.ACTIVE if c == self.INACTIVE else self.INACTIVE for c in row]
+            for row in self.mask
         ]
 
     def flip_horizontal(self) -> None:
@@ -256,7 +253,7 @@ class CompoundMask(Mask):
         used in the calculation of filling the shapes. Since a `CompoundMask` is
         really just a collection of `Masks` the `bounding_box` is limited by the
         puzzle bounds."""
-        return find_bounding_box(self._mask)
+        return find_bounding_box(self._mask, self.ACTIVE)
 
     def add_mask(self, mask: Mask) -> None:
         self.masks.append(mask)
@@ -266,9 +263,9 @@ class CompoundMask(Mask):
         from `CompoundMask.masks` in order.
 
         Note: Unlike the parent `Mask` object a `CompoundMask` is initially filled
-        with `config.ACTIVE`. This allows for the proper inaction between masks."""
+        with `self.ACTIVE`. This allows for the proper inaction between masks."""
         self.puzzle_size = puzzle_size
-        self._mask = self.build_mask(self.puzzle_size, ACTIVE)
+        self._mask = self.build_mask(self.puzzle_size, self.ACTIVE)
         for mask in self.masks:
             mask.generate(self.puzzle_size)
             self._apply_mask(mask)
@@ -289,16 +286,19 @@ class CompoundMask(Mask):
         for y in range(self.puzzle_size):
             for x in range(self.puzzle_size):
                 if mask.method == 1:
-                    if mask.mask[y][x] == ACTIVE and self.mask[y][x] == ACTIVE:
-                        self.mask[y][x] = ACTIVE
+                    if (
+                        mask.mask[y][x] == self.ACTIVE
+                        and self.mask[y][x] == self.ACTIVE
+                    ):
+                        self.mask[y][x] = self.ACTIVE
                     else:
-                        self.mask[y][x] = INACTIVE
+                        self.mask[y][x] = self.INACTIVE
                 elif mask.method == 2:
-                    if mask.mask[y][x] == ACTIVE:
-                        self.mask[y][x] = ACTIVE
+                    if mask.mask[y][x] == self.ACTIVE:
+                        self.mask[y][x] = self.ACTIVE
                 else:
-                    if mask.mask[y][x] == ACTIVE:
-                        self.mask[y][x] = INACTIVE
+                    if mask.mask[y][x] == self.ACTIVE:
+                        self.mask[y][x] = self.INACTIVE
 
 
 # Import all base masks shapes for easier access

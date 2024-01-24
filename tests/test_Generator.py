@@ -1,31 +1,31 @@
 import pytest
 
 from word_search_generator import WordSearch
-from word_search_generator.config import level_dirs, max_puzzle_words
-from word_search_generator.games.word_search._generator import WordSearchGenerator
-from word_search_generator.utils import calc_puzzle_size, get_random_words
+from word_search_generator.core.directions import LEVEL_DIRS
+from word_search_generator.utils import get_random_words
+from word_search_generator.word_search._generator import WordSearchGenerator
 
 
-def test_dupe_at_position_1(generator_test_puzzle, placed_words):
+def test_dupe_at_position_1(generator_test_game):
     gen = WordSearchGenerator()
-    gen.puzzle = generator_test_puzzle
-    gen.words = placed_words
+    gen.game = generator_test_game
+    gen.puzzle = generator_test_game.puzzle
     check = gen.no_duped_words("A", (3, 3))
     assert check is False
 
 
-def test_dupe_at_position_2(generator_test_puzzle, placed_words):
+def test_dupe_at_position_2(generator_test_game):
     gen = WordSearchGenerator()
-    gen.puzzle = generator_test_puzzle
-    gen.words = placed_words
+    gen.game = generator_test_game
+    gen.puzzle = generator_test_game.puzzle
     check = gen.no_duped_words("A", (1, 3))
     assert check is False
 
 
-def test_no_dupe_at_position(generator_test_puzzle, placed_words):
+def test_no_dupe_at_position(generator_test_game):
     gen = WordSearchGenerator()
-    gen.puzzle = generator_test_puzzle
-    gen.words = placed_words
+    gen.game = generator_test_game
+    gen.puzzle = generator_test_game.puzzle
     check = gen.no_duped_words("Z", (1, 3))
     assert check is True
 
@@ -54,16 +54,16 @@ def test_fit_all_words_with_plenty_of_space_and_secret_words():
 
 def test_too_many_words():
     ws = WordSearch(size=50)
-    ws.random_words(100)
+    ws.random_words(50)
     ws.random_words(100, action="ADD")
-    assert len(ws.placed_words) <= max_puzzle_words
+    assert len(ws.placed_words) <= ws.MAX_PUZZLE_WORDS
 
 
 def test_too_many_secret_words():
     ws = WordSearch(size=50)
     ws.random_words(100)
     ws.random_words(100, action="ADD", secret=True)
-    assert len(ws.placed_words) <= max_puzzle_words
+    assert len(ws.placed_words) <= ws.MAX_PUZZLE_WORDS
 
 
 def test_secret_word_directions():
@@ -75,12 +75,12 @@ def test_secret_word_directions():
         words, level=level, secret_words=secret_words, secret_level=secret_level
     )
     for w in ws.placed_secret_words:
-        assert w.direction in level_dirs[secret_level]
+        assert w.direction in LEVEL_DIRS[secret_level]
 
 
 def test_generated_size(words):
     ws = WordSearch(words)
-    calculated_size = calc_puzzle_size(ws.words, ws.level)
+    calculated_size = ws._calc_puzzle_size(ws.words, ws.level)
     assert calculated_size == ws.size
 
 

@@ -1,5 +1,5 @@
 from word_search_generator import WordSearch
-from word_search_generator.validator import (
+from word_search_generator.core.validator import (
     NoPalindromes,
     NoPunctuation,
     NoSingleLetterWords,

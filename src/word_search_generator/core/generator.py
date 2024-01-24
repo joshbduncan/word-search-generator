@@ -2,14 +2,10 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from functools import wraps
-from typing import TYPE_CHECKING, Iterable, TypeAlias
-
-from ..config import max_fit_tries
+from typing import TYPE_CHECKING, TypeAlias
 
 if TYPE_CHECKING:  # pragma: no cover
-    from ..game.game import DirectionSet, Puzzle
-    from ..validator import Validator
-    from ..word import WordSet
+    from .game import Game, Puzzle
 
 
 Fit: TypeAlias = tuple[str, list[tuple[int, int]]]
@@ -20,11 +16,11 @@ class WordFitError(Exception):
     pass
 
 
-def retry(retries: int = max_fit_tries):
+def retry(retries: int = 1000):
     """Custom retry decorator for retrying a function `retries` times.
 
     Args:
-        retries (int, optional): Retry attempts. Defaults to max_fit_tries.
+        retries (int, optional): Retry attempts. Defaults to 1000.
     """
 
     def decorator(func):
@@ -56,31 +52,13 @@ class Generator(ABC):
         ```
     """
 
-    def __init__(self) -> None:
-        self.puzzle: Puzzle = []
-
     @abstractmethod
-    def generate(
-        self,
-        size: int,
-        mask: Puzzle,
-        words: WordSet,
-        directions: DirectionSet,
-        secret_directions: DirectionSet,
-        validators: Iterable[Validator] | None,
-        *args,
-        **kwargs,
-    ) -> Puzzle:
+    def generate(self, game: Game) -> Puzzle:
         """Generate a puzzle.
 
         Args:
-            size (int): WordSearch size.
-            mask (Puzzle): Current WordSearch mask.
-            words (WordSet): WordSearch words to use for generation.
-            directions (DirectionSet): Direction for hidden words.
-            secret_directions (DirectionSet): Directions for secret words.
-            validators (Iterable[Validator] | None, optional): Word validators.
+            game: The base `Game` object.
 
         Returns:
-            Puzzle: Generated puzzle.
+            The generated puzzle.
         """

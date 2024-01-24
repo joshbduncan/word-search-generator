@@ -4,7 +4,7 @@ from contextlib import redirect_stdout
 import pytest
 
 from word_search_generator import WordSearch
-from word_search_generator.game.game import EmptyPuzzleError
+from word_search_generator.core.game import EmptyPuzzleError
 from word_search_generator.mask import shapes
 
 

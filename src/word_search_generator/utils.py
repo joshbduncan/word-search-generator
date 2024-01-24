@@ -2,38 +2,17 @@ from __future__ import annotations
 
 import math
 import random
-from math import log2
-from typing import TYPE_CHECKING, Any, Sized
+from typing import TYPE_CHECKING
 
-from . import config
 from .words import WORD_LIST
 
 if TYPE_CHECKING:  # pragma: no cover
-    from .game.game import DirectionSet, Key, Puzzle
-    from .word import WordSet
+    from .core.game import DirectionSet, Key, Puzzle, WordSet
 
 
-def calc_puzzle_size(words: WordSet, level: Sized, size: int | None = None) -> int:
-    """Calculate the puzzle grid size."""
-    all_words = [word.text for word in words]
-    longest_word_length = len(max(all_words, key=len))
-    if not size:
-        longest = max(10, longest_word_length)
-        # calculate multiplier for larger word lists so that most have room to fit
-        multiplier = len(all_words) / 15 if len(all_words) > 15 else 1
-        # level lengths in config.py are nice multiples of 2
-        l_size = log2(len(level)) if level else 1  # protect against log(0) in tests
-        size = min(round(longest + l_size * 2 * multiplier), config.max_puzzle_size)
-    return size
-
-
-def build_puzzle(size: int, char: str) -> Puzzle:
-    return [[char] * size for _ in range(size)]
-
-
-def round_half_up(n: float, decimals: int = 0) -> float | Any:  # mypy 0.95+ weirdness
+def round_half_up(n: float, decimals: int = 0) -> float:
     """Round numbers in a consistent and familiar format."""
-    multiplier = 10**decimals
+    multiplier: int = 10**decimals
     return math.floor(n * multiplier + 0.5) / multiplier
 
 
@@ -69,7 +48,8 @@ def in_bounds(x: int, y: int, width: int, height: int) -> bool:
 
 
 def find_bounding_box(
-    grid: list[list[str]], edge: str = config.ACTIVE
+    grid: list[list[str]],
+    edge: str,
 ) -> tuple[tuple[int, int], tuple[int, int]]:
     """Bounding box of the masked area as a rectangle defined
     by a tuple of (top-left edge as x, y, bottom-right edge as x, y)"""
@@ -98,10 +78,6 @@ def find_bounding_box(
     return ((min_x, min_y), (max_x, max_y))
 
 
-def direction_set_repr(ds: DirectionSet) -> str:
-    return ("'" + ",".join(d.name for d in ds) + "'") if ds else "None"
-
-
 def stringify(puzzle: Puzzle, bbox: tuple[tuple[int, int], tuple[int, int]]) -> str:
     """Convert puzzle array of nested lists into a string."""
     min_x, min_y = bbox[0]
@@ -115,11 +91,11 @@ def stringify(puzzle: Puzzle, bbox: tuple[tuple[int, int], tuple[int, int]]) -> 
     return "\n".join(output)
 
 
-def get_level_dirs_str(level: DirectionSet) -> str:
+def get_LEVEL_DIRS_str(level: DirectionSet) -> str:
     """Return possible directions for specified level as a string."""
-    level_dirs_str = [d.name for d in level]
-    level_dirs_str.insert(-1, "and")
-    return ", ".join(level_dirs_str)
+    LEVEL_DIRS_str = [d.name for d in level]
+    LEVEL_DIRS_str.insert(-1, "and")
+    return ", ".join(LEVEL_DIRS_str)
 
 
 def get_word_list_str(key: Key) -> str:

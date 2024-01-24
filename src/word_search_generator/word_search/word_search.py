@@ -1,10 +1,14 @@
 from typing import TypeAlias
 
-from ... import utils
-from ...config import max_puzzle_words, min_puzzle_words
-from ...game.game import Game
-from ...validator import NoPalindromes, NoPunctuation, NoSingleLetterWords, NoSubwords
-from ...word import Direction, KeyInfo, KeyInfoJson
+from .. import utils
+from ..core.game import Game
+from ..core.validator import (
+    NoPalindromes,
+    NoPunctuation,
+    NoSingleLetterWords,
+    NoSubwords,
+)
+from ..core.word import Direction, KeyInfo, KeyInfoJson
 from ._formatter import WordSearchFormatter
 from ._generator import WordSearchGenerator
 
@@ -47,15 +51,15 @@ class WordSearch(Game):
 
         Raises:
             TypeError: Must be an integer.
-            ValueError: Must be greater than `config.min_puzzle_words` and
-            less than `config.max_puzzle_words`.
+            ValueError: Must be greater than `self.MIN_PUZZLE_SIZE` and
+            less than `self.MAX_PUZZLE_SIZE`.
         """
         if not isinstance(count, int):
             raise TypeError("Size must be an integer.")
-        if not min_puzzle_words <= count <= max_puzzle_words:
+        if not Game.MIN_PUZZLE_WORDS <= count <= Game.MAX_PUZZLE_WORDS:
             raise ValueError(
-                f"Requested random words must be >= {min_puzzle_words}"
-                + f" and <= {max_puzzle_words}."
+                f"Requested random words must be >= {Game.MIN_PUZZLE_SIZE}"
+                + f" and <= {Game.MAX_PUZZLE_WORDS}."
             )
         if not isinstance(action, str):
             raise TypeError("Action must be a string.")

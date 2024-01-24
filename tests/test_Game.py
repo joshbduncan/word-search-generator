@@ -2,14 +2,15 @@ from pathlib import Path
 
 import pytest
 
-from word_search_generator import WordSearch, config
-from word_search_generator.game.game import (
+from word_search_generator import WordSearch
+from word_search_generator.core.directions import LEVEL_DIRS
+from word_search_generator.core.game import (
     Game,
     MissingFormatterError,
     MissingGeneratorError,
 )
-from word_search_generator.games.word_search._generator import WordSearchGenerator
-from word_search_generator.word import Direction, Word
+from word_search_generator.core.word import Direction, Word
+from word_search_generator.word_search._generator import WordSearchGenerator
 
 
 def test_empty_object(empty_game: Game):
@@ -19,13 +20,13 @@ def test_empty_object(empty_game: Game):
 @pytest.mark.parametrize(
     "level,expected",
     [
-        (1, config.level_dirs[1]),
-        (2, config.level_dirs[2]),
-        (3, config.level_dirs[3]),
-        (4, config.level_dirs[4]),
-        (5, config.level_dirs[5]),
-        (7, config.level_dirs[7]),
-        (8, config.level_dirs[8]),
+        (1, LEVEL_DIRS[1]),
+        (2, LEVEL_DIRS[2]),
+        (3, LEVEL_DIRS[3]),
+        (4, LEVEL_DIRS[4]),
+        (5, LEVEL_DIRS[5]),
+        (7, LEVEL_DIRS[7]),
+        (8, LEVEL_DIRS[8]),
         ("n", Direction.N),
         ("NE", Direction.NE),
         ("e", Direction.E),
@@ -44,13 +45,13 @@ def test_set_puzzle_level(level: int | str, expected: set[Direction]):
 @pytest.mark.parametrize(
     "level,expected",
     [
-        (1, config.level_dirs[1]),
-        (2, config.level_dirs[2]),
-        (3, config.level_dirs[3]),
-        (4, config.level_dirs[4]),
-        (5, config.level_dirs[5]),
-        (7, config.level_dirs[7]),
-        (8, config.level_dirs[8]),
+        (1, LEVEL_DIRS[1]),
+        (2, LEVEL_DIRS[2]),
+        (3, LEVEL_DIRS[3]),
+        (4, LEVEL_DIRS[4]),
+        (5, LEVEL_DIRS[5]),
+        (7, LEVEL_DIRS[7]),
+        (8, LEVEL_DIRS[8]),
         ("n", Direction.N),
         ("NE", Direction.NE),
         ("e", Direction.E),
@@ -91,10 +92,10 @@ def test_manual_level_control(ws: WordSearch):
 @pytest.mark.parametrize(
     "size,expected_size",
     [
-        (config.min_puzzle_size, config.min_puzzle_size),
+        (Game.MIN_PUZZLE_SIZE, Game.MIN_PUZZLE_SIZE),
         (15, 15),
         (25, 25),
-        (config.max_puzzle_size, config.max_puzzle_size),
+        (Game.MAX_PUZZLE_SIZE, Game.MAX_PUZZLE_SIZE),
     ],
 )
 def test_puzzle_size(ws: WordSearch, size: int, expected_size: int):
@@ -129,12 +130,12 @@ def test_invalid_puzzle_size(ws: WordSearch, size, expected_size):
     ],
 )
 def test_cleanup_input(ws: WordSearch, words: str, ct: int):
-    assert len(ws.cleanup_input(words)) == ct
+    assert len(ws._cleanup_input(words, False, max_words=50)) == ct
 
 
 def test_invalid_cleanup_input(ws: WordSearch):
     with pytest.raises(TypeError):
-        ws.cleanup_input(1)  # type: ignore
+        ws._cleanup_input(1, False, 10)  # type: ignore
 
 
 def test_invalid_level_direction_type(ws: WordSearch):

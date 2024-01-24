@@ -6,17 +6,17 @@ from pathlib import Path
 import pytest
 
 from word_search_generator import WordSearch, utils
-from word_search_generator.config import level_dirs
-from word_search_generator.game.game import (
+from word_search_generator.core.directions import LEVEL_DIRS
+from word_search_generator.core.game import (
     EmptyWordlistError,
     Key,
     MissingWordError,
     Puzzle,
     PuzzleSizeError,
 )
-from word_search_generator.games.word_search._formatter import WordSearchFormatter
+from word_search_generator.core.validator import NoSingleLetterWords
 from word_search_generator.mask.polygon import Rectangle
-from word_search_generator.validator import NoSingleLetterWords
+from word_search_generator.word_search._formatter import WordSearchFormatter
 
 formatter = WordSearchFormatter()
 
@@ -159,7 +159,7 @@ def test_clearing_secret_directions(words):
 
 def test_get_level(ws: WordSearch):
     ws.level = 2
-    assert ws.level == level_dirs[2]  # type: ignore
+    assert ws.level == LEVEL_DIRS[2]  # type: ignore
 
 
 def test_add_words_with_resize(ws: WordSearch):

@@ -10,9 +10,9 @@ import pdfplumber
 import pytest
 from pypdf import PdfReader
 
-from word_search_generator import WordSearch, config, utils
-from word_search_generator.game.game import EmptyPuzzleError
-from word_search_generator.word import Direction, Word
+from word_search_generator import WordSearch, utils
+from word_search_generator.core.game import EmptyPuzzleError
+from word_search_generator.core.word import Direction, Word
 
 
 def check_chars(puzzle, word) -> bool:
@@ -153,10 +153,10 @@ def test_export_pdf_puzzles(iterations, tmp_path: Path):
     puzzles = []
     pages = set()
     for _ in range(iterations):
-        size = random.randint(config.min_puzzle_size, config.max_puzzle_size)
+        size = random.randint(WordSearch.MIN_PUZZLE_SIZE, WordSearch.MAX_PUZZLE_SIZE)
         words = ",".join(
             utils.get_random_words(
-                random.randint(config.min_puzzle_words, config.max_puzzle_words)
+                random.randint(WordSearch.MIN_PUZZLE_WORDS, WordSearch.MAX_PUZZLE_WORDS)
             )
         )
         level = random.randint(1, 3)
@@ -176,10 +176,12 @@ def test_export_pdf_puzzle_with_solution(iterations, tmp_path: Path):
     puzzles = []
     pages = set()
     for _ in range(iterations):
-        size = random.choice(range(config.min_puzzle_size, config.max_puzzle_size))
+        size = random.choice(
+            range(WordSearch.MIN_PUZZLE_SIZE, WordSearch.MAX_PUZZLE_SIZE)
+        )
         words = ",".join(
             utils.get_random_words(
-                random.randint(config.min_puzzle_words, config.max_puzzle_words)
+                random.randint(WordSearch.MIN_PUZZLE_WORDS, WordSearch.MAX_PUZZLE_WORDS)
             )
         )
         level = random.randint(1, 3)

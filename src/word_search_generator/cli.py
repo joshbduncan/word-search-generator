@@ -4,16 +4,11 @@ import sys
 from importlib.metadata import version
 from typing import Sequence
 
-from .config import (
-    level_dirs,
-    max_puzzle_size,
-    max_puzzle_words,
-    min_puzzle_size,
-    min_puzzle_words,
-)
+from .core.directions import LEVEL_DIRS
+from .core.game import Game
+from .core.word import Direction
 from .mask import shapes
 from .utils import get_random_words
-from .word import Direction
 
 BUILTIN_MASK_SHAPES_OBJECTS = shapes.get_shape_objects()
 
@@ -22,8 +17,8 @@ class RandomAction(argparse.Action):
     """Restrict argparse `-r`, `--random` inputs."""
 
     def __call__(self, parser, namespace, values, option_string=None):
-        min_val = min_puzzle_words
-        max_val = max_puzzle_words
+        min_val = Game.MIN_PUZZLE_WORDS
+        max_val = Game.MAX_PUZZLE_WORDS
         if values < min_val or values > max_val:
             parser.error(f"{option_string} must be >={min_val} and <={max_val}")
         setattr(namespace, self.dest, values)
@@ -41,7 +36,7 @@ class DifficultyAction(argparse.Action):
                     parser.error(
                         f"{option_string} must be \
 either numeric levels \
-({', '.join([str(i) for i in level_dirs])}) or accepted \
+({', '.join([str(i) for i in LEVEL_DIRS])}) or accepted \
 cardinal directions ({', '.join([d.name for d in Direction])})."
                     )
             setattr(namespace, self.dest, values)
@@ -51,8 +46,8 @@ class SizeAction(argparse.Action):
     """Restrict argparse `-s`, `--size` inputs."""
 
     def __call__(self, parser, namespace, values, option_string=None):
-        min_val = min_puzzle_size
-        max_val = max_puzzle_size
+        min_val = Game.MIN_PUZZLE_SIZE
+        max_val = Game.MAX_PUZZLE_SIZE
         if values < min_val or values > max_val:
             parser.error(f"{option_string} must be >={min_val} and <={max_val}")
         setattr(namespace, self.dest, values)
@@ -71,7 +66,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         description=f"""Generate Word Search Puzzles! \
 
 
-Valid Levels: {', '.join([str(i) for i in level_dirs])}
+Valid Levels: {', '.join([str(i) for i in LEVEL_DIRS])}
 Valid Directions: {', '.join([d.name for d in Direction])}
 * Directions are to be provided as a comma-separated list.""",
         epilog="Copyright 2024 Josh Duncan (joshbduncan.com)",
@@ -182,7 +177,7 @@ If all words can't be placed, and exception will be raised.",
         "--size",
         action=SizeAction,
         type=int,
-        help=f"{min_puzzle_size} <= puzzle size <= {max_puzzle_size}",
+        help=f"{Game.MIN_PUZZLE_SIZE} <= puzzle size <= {Game.MIN_PUZZLE_SIZE}",
     )
     secret_words_group.add_argument(
         "-x",
@@ -247,7 +242,7 @@ secret puzzle words can go. See valid arguments above.",
         return 1
 
     # create a new puzzle object from provided arguments
-    from .games.word_search import WordSearch
+    from .word_search import WordSearch
 
     puzzle = WordSearch(
         words,

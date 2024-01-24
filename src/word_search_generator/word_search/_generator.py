@@ -2,17 +2,14 @@ from __future__ import annotations
 
 import random
 import string
-from typing import TYPE_CHECKING, Iterable, TypeAlias
+from typing import TYPE_CHECKING, TypeAlias
 
-from ...config import ACTIVE, INACTIVE, max_puzzle_words
-from ...generator import Generator
-from ...generator.generator import WordFitError, retry
-from ...utils import build_puzzle, in_bounds
-from ...word import Direction, Word, WordSet
+from ..core.generator import Generator, WordFitError, retry
+from ..core.word import Direction, Word
+from ..utils import in_bounds
 
 if TYPE_CHECKING:  # pragma: no cover
-    from ...game.game import DirectionSet, Puzzle
-    from ...validator import Validator
+    from ..core.game import Game, Puzzle
 
 
 Fit: TypeAlias = tuple[str, list[tuple[int, int]]]
@@ -25,26 +22,15 @@ ALPHABET = list(string.ascii_uppercase)
 class WordSearchGenerator(Generator):
     """Default generator for standard WordSearch puzzles."""
 
-    def generate(
-        self,
-        size: int,
-        mask: Puzzle,
-        words: WordSet,
-        directions: DirectionSet,
-        secret_directions: DirectionSet,
-        validators: Iterable[Validator] | None,
-        *args,
-        **kwargs,
-    ) -> Puzzle:
-        self.size = size
-        self.mask = mask
-        self.words = words
-        self.directions = directions
-        self.secret_directions = secret_directions
-        self.validators = validators
-        self.puzzle = build_puzzle(self.size, "")
+    def __init__(self) -> None:
+        self.puzzle: Puzzle = []
+        super().__init__()
+
+    def generate(self, game: Game) -> Puzzle:
+        self.game = game
+        self.puzzle = game._build_puzzle(game.size, "")
         self.fill_words()
-        if any(word.placed for word in self.words):
+        if any(word.placed for word in game.words):
             self.fill_blanks()
         return self.puzzle
 
@@ -54,7 +40,7 @@ class WordSearchGenerator(Generator):
         """Make sure that adding `char` at `position` will not create a
         duplicate of any word already placed in the puzzle."""
         placed_word_strings = []
-        for word in self.words:
+        for word in self.game.words:
             if word.placed:
                 if current_word and (
                     current_word in word.text or word.text in current_word
@@ -86,7 +72,7 @@ class WordSearchGenerator(Generator):
     def capture_fragments(self, radius: int, position: tuple[int, int]) -> list[str]:
         row, col = position
         fragments = []
-        height, width = len(self.puzzle), len(self.puzzle[0])
+        height = width = self.game.size
 
         # cardinal direction ranges to capture
         ranges = [
@@ -133,7 +119,7 @@ class WordSearchGenerator(Generator):
             if not in_bounds(col, row, len(self.puzzle), len(self.puzzle)):
                 return []
             # first check if the spot is inactive on the mask
-            if self.mask[row][col] == INACTIVE:
+            if self.game.mask[row][col] == self.game.INACTIVE:
                 return []
             # if the current puzzle space is empty or if letters don't match
             if self.puzzle[row][col] != "" and self.puzzle[row][col] != char:
@@ -148,7 +134,7 @@ class WordSearchGenerator(Generator):
         """Look for random place in the puzzle where `word` fits."""
         fits: Fits = []
         # check all directions for level
-        for d in self.secret_directions if word.secret else self.directions:
+        for d in self.game.secret_directions if word.secret else self.game.directions:
             coords = self.test_a_fit(word.text, position, d)
             if coords:
                 fits.append((Direction(d).name, coords))
@@ -162,16 +148,18 @@ class WordSearchGenerator(Generator):
         Some words will be skipped if they don't fit."""
         # try to place each word on the puzzle
         placed_words: list[str] = []
-        hidden_words = [word for word in self.words if not word.secret]
-        secret_words = [word for word in self.words if word.secret]
+        hidden_words = [word for word in self.game.words if not word.secret]
+        secret_words = [word for word in self.game.words if word.secret]
         # try to place each secret word on the puzzle first before hidden words
         for word in hidden_words + secret_words:
-            if self.validators and not word.validate(self.validators, placed_words):
+            if self.game.validators and not word.validate(
+                self.game.validators, placed_words
+            ):
                 continue
             fit = self.try_to_fit_word(word)
             if fit:
                 placed_words.append(word.text)
-            if len(placed_words) == max_puzzle_words:
+            if len(placed_words) == self.game.MAX_PUZZLE_WORDS:
                 break
 
     @retry()
@@ -184,7 +172,7 @@ class WordSearchGenerator(Generator):
         # no need to continue if random coordinate isn't available
         if self.puzzle[row][col] != "" and self.puzzle[row][col] != word.text[0]:
             raise WordFitError
-        if self.mask[row][col] == INACTIVE:
+        if self.game.mask[row][col] == self.game.INACTIVE:
             raise WordFitError
 
         # try and find a directional fit using the starting coordinates if not INACTIVE
@@ -225,7 +213,10 @@ class WordSearchGenerator(Generator):
         for row in range(size):
             for col in range(size):
                 # if the current spot is empty fill with random character
-                if self.puzzle[row][col] == "" and self.mask[row][col] == ACTIVE:
+                if (
+                    self.puzzle[row][col] == ""
+                    and self.game.mask[row][col] == self.game.ACTIVE
+                ):
                     while True:
                         random_char = random.choice(ALPHABET)
                         if self.no_duped_words(random_char, (row, col)):

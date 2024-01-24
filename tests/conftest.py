@@ -1,9 +1,9 @@
 import pytest
 
 from word_search_generator import WordSearch
-from word_search_generator.game.game import Game
+from word_search_generator.core.game import Game
+from word_search_generator.core.word import Direction, Word
 from word_search_generator.mask import shapes
-from word_search_generator.word import Direction, Word
 
 
 @pytest.fixture
@@ -38,17 +38,6 @@ def builtin_mask_shapes():
 
 
 @pytest.fixture
-def generator_test_puzzle():
-    return [
-        ["B", "", "", "", "R"],
-        ["", "A", "", "", "A"],
-        ["", "", "T", "", "T"],
-        ["", "", "", "", ""],
-        ["", "", "C", "A", "B"],
-    ]
-
-
-@pytest.fixture
 def placed_words():
     BAT = Word("bat")
     BAT.start_row = 0
@@ -68,6 +57,26 @@ def placed_words():
     RAT.direction = Direction.S
     RAT.secret = False
     return {BAT, CAB, RAT}
+
+
+@pytest.fixture
+def generator_test_puzzle():
+    return [
+        ["B", "", "", "", "R"],
+        ["", "A", "", "", "A"],
+        ["", "", "T", "", "T"],
+        ["", "", "", "", ""],
+        ["", "", "C", "A", "B"],
+    ]
+
+
+@pytest.fixture
+def generator_test_game(generator_test_puzzle, placed_words):
+    game = WordSearch()
+    game._size = 5
+    game._puzzle = generator_test_puzzle
+    game._words = placed_words
+    return game
 
 
 @pytest.fixture

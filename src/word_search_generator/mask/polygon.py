@@ -1,6 +1,5 @@
 import math
 
-from ..config import ACTIVE
 from ..utils import in_bounds, round_half_up
 from . import Mask, MaskNotGenerated
 
@@ -56,7 +55,7 @@ class Polygon(Mask):
     def generate(self, puzzle_size: int) -> None:
         """Generate a new mask at `puzzle_size`."""
         self.puzzle_size = puzzle_size
-        self._mask = self.build_mask(self.puzzle_size)
+        self._mask = self.build_mask(self.puzzle_size, self.INACTIVE)
         self._draw()
 
     def _draw(self) -> None:  # doesn't draw evenly on second half pf point (going up)
@@ -65,8 +64,8 @@ class Polygon(Mask):
         for i in range(len(self.points)):
             p1 = self.points[i]
             p2 = self.points[(i + 1) % len(self.points)]
-            self._connect_points(p1, p2)
-        self._fill_shape()
+            self._connect_points(p1, p2, self.ACTIVE)
+        self._fill_shape(self.ACTIVE)
 
     def _draw_in_halves(self) -> None:
         """Starting with the first coordinate in `.points`, connect the first
@@ -79,12 +78,10 @@ class Polygon(Mask):
             for i in range(len(points) - 1):
                 p1 = points[i]
                 p2 = points[i + 1]
-                self._connect_points(p1, p2)
-        self._fill_shape()
+                self._connect_points(p1, p2, self.ACTIVE)
+        self._fill_shape(self.ACTIVE)
 
-    def _connect_points(
-        self, p1: tuple[int, int], p2: tuple[int, int], c: str = ACTIVE
-    ) -> None:
+    def _connect_points(self, p1: tuple[int, int], p2: tuple[int, int], c: str) -> None:
         """Connect two points within a grid using Bresenham's line algorithm.
         The line will be drawn using the single character string `c`."""
         if not self.puzzle_size:
@@ -121,7 +118,7 @@ class Polygon(Mask):
             if in_bounds(x, y, self.puzzle_size, self.puzzle_size):
                 self.mask[y][x] = c
 
-    def _fill_shape(self, c: str = ACTIVE) -> None:
+    def _fill_shape(self, c: str) -> None:
         """Fill the interior of a polygon using the single character string `c`."""
 
         def ray_casting(point, polygon):
@@ -232,7 +229,7 @@ class RegularPolygon(Polygon):
 
     def generate(self, puzzle_size: int) -> None:
         self.puzzle_size = puzzle_size
-        self._mask = self.build_mask(self.puzzle_size)
+        self._mask = self.build_mask(self.puzzle_size, self.INACTIVE)
         radius = (
             self.radius
             if self.radius
@@ -331,7 +328,7 @@ class Star(Polygon):
 
     def generate(self, puzzle_size: int) -> None:
         self.puzzle_size = puzzle_size
-        self._mask = self.build_mask(self.puzzle_size)
+        self._mask = self.build_mask(self.puzzle_size, self.INACTIVE)
         puzzle_radius = (
             self.puzzle_size // 2 - 1 if puzzle_size % 2 == 0 else self.puzzle_size // 2
         )

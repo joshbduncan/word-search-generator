@@ -4,7 +4,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from word_search_generator.word import Direction, Word
+from word_search_generator.core.word import Direction, Word
 
 
 def test_entrypoint():
