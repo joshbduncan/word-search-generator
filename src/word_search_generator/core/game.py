@@ -130,11 +130,16 @@ class Game:
         )
 
         # setup words
-        # in case of dupes, add secret words first so they are overwritten
-        if secret_words:
-            self.add_words(secret_words, secret=True)
         if words:
-            self.add_words(words)
+            self._words.update(self._process_input(words))
+        if secret_words:
+            self._words.update(self._process_input(secret_words, secret=True))
+
+        # in case of dupes, add secret words first so they are overwritten
+        # if secret_words:
+        #     self.add_words(secret_words, secret=True, regenerate_puzzle=False)
+        # if words:
+        #     self.add_words(words, regenerate_puzzle=False)
 
         # setup required defaults
         if not self.generator:
@@ -368,8 +373,6 @@ class Game:
         Args:
             value: Game word validators.
         """
-        if not isinstance(value, Iterable):
-            raise TypeError("Argument must be an `Iterable` of `Validator`s.")
         if not all(isinstance(v, Validator) for v in value):
             raise TypeError("All validators must be derived from `Validator`.")
         self._validators = value
@@ -468,7 +471,6 @@ class Game:
             if not self.DEFAULT_GENERATOR:
                 raise MissingGeneratorError()
             self.generator = self.DEFAULT_GENERATOR
-        self._puzzle = []
         if not self.words:
             raise EmptyWordlistError("No words have been added to the puzzle.")
         if not self.size or reset_size:
@@ -518,7 +520,10 @@ class Game:
         return size
 
     def add_words(
-        self, words: str, secret: bool = False, reset_size: bool = False
+        self,
+        words: str,
+        secret: bool = False,
+        reset_size: bool = False,
     ) -> None:
         """Add words to the puzzle.
 

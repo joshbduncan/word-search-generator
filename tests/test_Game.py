@@ -282,3 +282,13 @@ def test_missing_default_formatter(tmp_path: Path):
 
 def test_empty_puzzle_str(empty_game: Game):
     assert str(empty_game) == "Empty puzzle."
+
+
+def test_invalid_validator_iterable(empty_game: Game):
+    with pytest.raises(TypeError):
+        empty_game.validators = "cat"  # type: ignore
+
+
+def test_invalid_validator(empty_game: Game):
+    with pytest.raises(TypeError):
+        empty_game.validators = ["cat"]  # type: ignore
