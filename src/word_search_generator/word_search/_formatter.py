@@ -82,9 +82,9 @@ class WordSearchFormatter(Formatter):
         word_list = utils.get_word_list_list(game.key)
         puzzle = self.hide_filler_characters(game) if solution else game.cropped_puzzle
         LEVEL_DIRS_str = utils.get_LEVEL_DIRS_str(game.level)
-        key_intro = (
-            "Answer Key (*Secret Words)" if game.placed_secret_words else "Answer Key"
-        )
+        key_intro = "Answer Key"
+        if hasattr(game, "placed_secret_words"):
+            key_intro += " (*Secret Words)"
         answer_key_list = utils.get_answer_key_list(
             game.placed_words, game.bounding_box
         )
@@ -232,11 +232,9 @@ class WordSearchFormatter(Formatter):
             # collect puzzle information
             word_list_str = utils.get_word_list_str(game.key)
             LEVEL_DIRS_str = utils.get_LEVEL_DIRS_str(game.level)
-            key_intro = (
-                "Answer Key (*Secret Words)"
-                if game.placed_secret_words
-                else "Answer Key"
-            )
+            key_intro = "Answer Key"
+            if hasattr(game, "placed_secret_words"):
+                key_intro += " (*Secret Words)"
             answer_key_str = utils.get_answer_key_str(
                 game.placed_words, game.bounding_box
             )
@@ -334,9 +332,9 @@ class WordSearchFormatter(Formatter):
         header = hr + "\n" + f"{'WORD SEARCH':^{header_width}}" + "\n" + hr
         puzzle_str = utils.stringify(puzzle_list, game.bounding_box)
         LEVEL_DIRS_str = utils.get_LEVEL_DIRS_str(game.level)
-        key_intro = (
-            "Answer Key (*Secret Words)" if game.placed_secret_words else "Answer Key"
-        )
+        key_intro = "Answer Key"
+        if hasattr(game, "placed_secret_words"):
+            key_intro += " (*Secret Words)"
         answer_key_str = utils.get_answer_key_str(game.placed_words, game.bounding_box)
 
         # lower case was requested change case or letters for puzzle, words, and key

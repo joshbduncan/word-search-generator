@@ -1,7 +1,10 @@
+from pathlib import Path
+
 import pytest
 
 from word_search_generator import WordSearch
-from word_search_generator.core.game import Game
+from word_search_generator.core import Formatter, Game, Generator, Validator
+from word_search_generator.core.game import Puzzle
 from word_search_generator.core.word import Direction, Word
 from word_search_generator.mask import shapes
 
@@ -14,6 +17,59 @@ def iterations():
 @pytest.fixture
 def empty_game():
     return Game()
+
+
+@pytest.fixture
+def empty_generator():
+    class G(Generator):
+        def generate(self, game: Game) -> Puzzle:
+            puzzle = []
+            for word in game.words:
+                word.start_column = word.start_row = 1
+                word.direction = Direction.N
+                puzzle.append([word.text])
+            return [[word.text for word in game.placed_words]]
+
+    return G()
+
+
+@pytest.fixture
+def empty_formatter(tmp_path: Path):
+    class F(Formatter):
+        def show(self, game: Game, *args, **kwargs) -> str:
+            return ""
+
+        def save(
+            self,
+            game: Game,
+            path: str | Path,
+            format: str = "PDF",
+            solution: bool = False,
+            *args,
+            **kwargs,
+        ) -> Path:
+            return tmp_path
+
+    return F()
+
+
+@pytest.fixture
+def empty_validator():
+    class V(Validator):
+        def validate(self, value: str, *args, **kwargs) -> bool:
+            return True
+
+    return V()
+
+
+@pytest.fixture
+def base_game(words, empty_generator, empty_formatter, empty_validator):
+    return Game(
+        words=words,
+        generator=empty_generator,
+        formatter=empty_formatter,
+        validators=[empty_formatter],
+    )
 
 
 @pytest.fixture

@@ -8,6 +8,7 @@ import pytest
 from word_search_generator import WordSearch, utils
 from word_search_generator.core.directions import LEVEL_DIRS
 from word_search_generator.core.game import (
+    EmptyPuzzleError,
     EmptyWordlistError,
     Key,
     MissingWordError,
@@ -59,13 +60,13 @@ def test_puzzle_repr(ws: WordSearch):
     assert eval(repr(ws)) == ws
 
 
-def test_puzzle_equal(words):
+def test_puzzle_equality(words):
     ws1 = WordSearch(words, size=10)
     ws2 = WordSearch(words, size=10)
     assert ws1 == ws2
 
 
-def test_puzzle_invalid_equality(words):
+def test_puzzle_inequality(words):
     ws1 = WordSearch(words, size=10)
     ws2 = ["testing"]
     assert ws1 != ws2
@@ -121,6 +122,13 @@ def test_puzzle_show_hide_fillers_output(ws: WordSearch, capsys):
     capture2 = capsys.readouterr()
     assert capture1.out == capture2.out
     assert "\x1b" not in capture2.out
+
+
+def test_json_empty_puzzle_error(ws: WordSearch):
+    assert ws
+    ws._puzzle = []
+    with pytest.raises(EmptyPuzzleError):
+        ws.json
 
 
 def test_json_output_property_for_puzzle():
@@ -417,4 +425,4 @@ def test_validator_setter_invalid_validator(words):
 def test_no_words_to_generate(ws: WordSearch):
     ws._words = set()
     with pytest.raises(EmptyWordlistError):
-        ws._generate()
+        ws.generate()

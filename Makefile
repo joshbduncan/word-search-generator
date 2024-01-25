@@ -43,7 +43,7 @@ organize: ## runs cleaners
 polish: cleanup test  ## cleans and lints before running the test suite
 
 ##@ Build
-build: cleanup ## build the app package
+build: cleanup test ## build the app package
 	$(BIN)/python -m build
 
 check_descr: ## check the app long description

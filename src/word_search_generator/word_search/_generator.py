@@ -134,7 +134,10 @@ class WordSearchGenerator(Generator):
         """Look for random place in the puzzle where `word` fits."""
         fits: Fits = []
         # check all directions for level
-        for d in self.game.secret_directions if word.secret else self.game.directions:
+        directions = secret_directions = self.game.directions
+        if hasattr(self.game, "secret_directions"):
+            secret_directions = self.game.secret_directions
+        for d in secret_directions if word.secret else directions:
             coords = self.test_a_fit(word.text, position, d)
             if coords:
                 fits.append((Direction(d).name, coords))

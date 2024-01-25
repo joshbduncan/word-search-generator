@@ -79,75 +79,48 @@ class Game:
 
     def __init__(
         self,
-        words: str | None = None,
+        words: str | WordSet | None = None,
         level: int | str | None = None,
         size: int | None = None,
-        secret_words: str | None = None,
-        secret_level: int | str | None = None,
-        *,
         require_all_words: bool = False,
         generator: Generator | None = None,
         formatter: Formatter | None = None,
-        validators: Iterable[Validator] | None = DEFAULT_VALIDATORS,
+        validators: Iterable[Validator] | None = None,
     ):
-        """Initialize a game.
-
-        Args:
-            words: A string of words separated by spaces, commas, or new lines.
-                Will be trimmed if more. Defaults to None.
-            level: Difficulty level or potential word directions. Defaults to 2.
-            size: Puzzle size. Defaults to None.
-            secret_words: A string of words separated by spaces, commas, or new lines.
-                Words will be 'secret' meaning they will not be included in the
-                word list. Defaults to None.
-            secret_level: Difficulty level or potential word directions for
-                'secret' words. Defaults to None.
-            require_all_words: Raises an error when `generator` cannot place all of
-                the words.  Secret words are not included in this check.
-            generator: Puzzle generator. Defaults to None.
-            formatter: Game formatter. Defaults to None.
-            validators: An iterable of validators that puzzle words will be checked
-                against during puzzle generation. Provide an empty iterable to disable
-                word validation. Defaults to `DEFAULT_VALIDATORS`.
-        """
         # setup puzzle
         self._words: WordSet = set()
+        self._level: DirectionSet = set()
+        self._size: int = size if size else 0
+        self.require_all_words: bool = require_all_words
+
         self._puzzle: Puzzle = []
-        self._size: int = 0
         self._masks: list[Mask] = []
         self._mask: Puzzle = []
-        self.require_all_words: bool = require_all_words
+
         self.generator: Generator | None = generator
         self.formatter: Formatter | None = formatter
         self._validators: Iterable[Validator] | None = validators
-
-        # determine valid word directions
-        self._directions: DirectionSet = (
-            self.validate_level(level) if level else self.validate_level(2)
-        )
-        self._secret_directions: DirectionSet = (
-            self.validate_level(secret_level) if secret_level else self.directions
-        )
-
-        # setup words
-        if words:
-            self._words.update(self._process_input(words))
-        if secret_words:
-            self._words.update(self._process_input(secret_words, secret=True))
-
-        # in case of dupes, add secret words first so they are overwritten
-        # if secret_words:
-        #     self.add_words(secret_words, secret=True, regenerate_puzzle=False)
-        # if words:
-        #     self.add_words(words, regenerate_puzzle=False)
 
         # setup required defaults
         if not self.generator:
             self.generator = self.DEFAULT_GENERATOR
         if not self.formatter:
             self.formatter = self.DEFAULT_FORMATTER
+        if not self.validators:
+            self._validators = self.DEFAULT_VALIDATORS
 
-        # generate puzzle
+        # set game words
+        if words:
+            self._words = (
+                self._process_input(words) if isinstance(words, str) else words
+            )
+
+        # determine valid word directions
+        self._directions: DirectionSet = (
+            self.validate_level(level) if level else self.validate_level(2)
+        )
+
+        # calculate puzzle size
         if size:
             if not isinstance(size, int):
                 raise TypeError("Size must be an integer.")
@@ -157,9 +130,9 @@ class Game:
                     + f" and <= {self.MAX_PUZZLE_SIZE}."
                 )
             self._size = size
+
         if self.words:
-            self._size = self._calc_puzzle_size(self.words, self.directions, self.size)
-            self._generate()
+            self.generate()
 
     # **************************************************** #
     # ******************** PROPERTIES ******************** #
@@ -179,36 +152,6 @@ class Game:
     def unplaced_words(self) -> WordSet:
         """Words of any type not currently placed in the puzzle."""
         return {word for word in self.words if not word.placed}
-
-    @property
-    def hidden_words(self) -> WordSet:
-        """Words of type "hidden"."""
-        return {word for word in self.words if not word.secret}
-
-    @property
-    def placed_hidden_words(self) -> WordSet:
-        """Words of type "hidden" currently placed in the puzzle."""
-        return {word for word in self.placed_words if not word.secret}
-
-    @property
-    def unplaced_hidden_words(self) -> WordSet:
-        """Words of type "hidden" not currently placed in the puzzle."""
-        return self.hidden_words - self.placed_hidden_words
-
-    @property
-    def secret_words(self) -> WordSet:
-        """Words of type "secret"."""
-        return {word for word in self.words if word.secret}
-
-    @property
-    def placed_secret_words(self) -> WordSet:
-        """Words of type "secret" currently placed in the puzzle."""
-        return {word for word in self.placed_words if word.secret}
-
-    @property
-    def unplaced_secret_words(self) -> WordSet:
-        """Words of type "secret" not currently placed in the puzzle."""
-        return self.secret_words - self.placed_secret_words
 
     @property
     def puzzle(self) -> Puzzle:
@@ -261,14 +204,13 @@ class Game:
 
     @property
     def json(self) -> str:
-        """The current puzzle, words, and answer key in JSON."""
+        """The current puzzle, and words in JSON."""
+        if not self.puzzle or not self.placed_words:
+            raise EmptyPuzzleError()
         return json.dumps(
             {
                 "puzzle": self.cropped_puzzle,
                 "words": [word.text for word in self.placed_words],
-                "key": {
-                    word.text: word.key_info_json for word in self.words if word.placed
-                },
             }
         )
 
@@ -291,7 +233,7 @@ class Game:
                 from the Direction object.
         """
         self._directions = self.validate_level(value)
-        self._generate()
+        self.generate()
 
     @property
     def direction_set_repr(self) -> str:
@@ -314,23 +256,6 @@ class Game:
         return self.directions
 
     level = property(_get_level, _set_level, None, "Numeric setter for the level.")
-
-    @property
-    def secret_directions(self) -> DirectionSet:
-        """Valid directions for secret puzzle words."""
-        return self._secret_directions
-
-    @secret_directions.setter
-    def secret_directions(self, value: int | str | Iterable[str]):
-        """Possible directions for secret puzzle words.
-
-        Args:
-            val: Either a preset puzzle level (int), cardinal directions
-                as a comma separated string, or an iterable of valid directions
-                from the Direction object.
-        """
-        self._secret_directions = self.validate_level(value)
-        self._generate()
 
     @property
     def size(self) -> int:
@@ -359,7 +284,7 @@ class Game:
         if self.size != value:
             self._size = value
             self._reapply_masks()
-            self._generate()
+            self.generate()
 
     @property
     def validators(self) -> Iterable[Validator] | None:
@@ -373,10 +298,8 @@ class Game:
         Args:
             value: Game word validators.
         """
-        if not all(isinstance(v, Validator) for v in value):
-            raise TypeError("All validators must be derived from `Validator`.")
         self._validators = value
-        self._generate()
+        self.generate()
 
     # ************************************************* #
     # ******************** METHODS ******************** #
@@ -401,9 +324,7 @@ class Game:
             MissingFormatterError: No puzzle formatter set.
         """
         if not self.formatter:
-            if not self.DEFAULT_FORMATTER:
-                raise MissingFormatterError()
-            self.formatter = self.DEFAULT_FORMATTER
+            raise MissingFormatterError()
         print(
             self.formatter.show(
                 self, solution, hide_fillers, lowercase, *args, **kwargs
@@ -436,9 +357,7 @@ class Game:
         if not self.puzzle:
             raise EmptyPuzzleError()
         if not self.formatter:
-            if not self.DEFAULT_FORMATTER:
-                raise MissingFormatterError()
-            self.formatter = self.DEFAULT_FORMATTER
+            raise MissingFormatterError()
         return str(
             self.formatter.save(
                 self, path, format, solution, lowercase, *args, **kwargs
@@ -454,7 +373,7 @@ class Game:
         """Build an empty nested list/puzzle grid."""
         return [[char] * size for _ in range(size)]
 
-    def _generate(self, reset_size: bool = False) -> None:
+    def generate(self, reset_size: bool = False) -> None:
         """Generate the puzzle grid.
 
         Args:
@@ -468,9 +387,7 @@ class Game:
             MissingWordError: Not all game words could be placed by the generator.
         """
         if not self.generator:
-            if not self.DEFAULT_GENERATOR:
-                raise MissingGeneratorError()
-            self.generator = self.DEFAULT_GENERATOR
+            raise MissingGeneratorError()
         if not self.words:
             raise EmptyWordlistError("No words have been added to the puzzle.")
         if not self.size or reset_size:
@@ -487,13 +404,11 @@ class Game:
         if not self.mask or len(self.mask) != self.size:
             self._mask = self._build_puzzle(self.size, self.ACTIVE)
         self._puzzle = self.generator.generate(self)
-        if self.require_all_words and self.unplaced_hidden_words:
+        if self.require_all_words and self.unplaced_words:
             raise MissingWordError("All words could not be placed in the puzzle.")
 
     def _process_input(self, words: str, secret: bool = False) -> WordSet:
-        clean_words = self._cleanup_input(
-            words, secret=secret, max_words=self.MAX_PUZZLE_WORDS
-        )
+        clean_words = self._cleanup_input(words, secret=secret)
         return clean_words
 
     @staticmethod
@@ -521,7 +436,7 @@ class Game:
 
     def add_words(
         self,
-        words: str,
+        words: str | WordSet,
         secret: bool = False,
         reset_size: bool = False,
     ) -> None:
@@ -533,15 +448,15 @@ class Game:
             reset_size: Reset the puzzle size based on the updated words.
                 Defaults to False.
         """
-        new_words = self._process_input(words, secret)
+        if isinstance(words, str):
+            words = self._process_input(words, secret)
 
         # remove all new words first so any updates are reflected in the word list
-        self._words.symmetric_difference_update(new_words)
-        self._words.update(new_words)
+        self._words.symmetric_difference_update(words)
+        self._words.update(words)
+        self.generate(reset_size=reset_size)
 
-        self._generate(reset_size=reset_size)
-
-    def remove_words(self, words: str, reset_size: bool = False) -> None:
+    def remove_words(self, words: str | WordSet, reset_size: bool = False) -> None:
         """Remove words from the puzzle.
 
         Args:
@@ -549,14 +464,14 @@ class Game:
             reset_size: Reset the puzzle size based on the updated words.
                 Defaults to False.
         """
-        words_to_remove = self._process_input(words)
+        if isinstance(words, str):
+            words = self._process_input(words)
 
-        self._words.difference_update(words_to_remove)
-
-        self._generate(reset_size=reset_size)
+        self._words.difference_update(words)
+        self.generate(reset_size=reset_size)
 
     def replace_words(
-        self, words: str, secret: bool = False, reset_size: bool = False
+        self, words: str | WordSet, secret: bool = False, reset_size: bool = False
     ) -> None:
         """Replace all words from the puzzle.
 
@@ -566,15 +481,14 @@ class Game:
             reset_size: Reset the puzzle size based on the updated words.
                 Defaults to False.
         """
-        replacement_words = self._process_input(words, secret)
+        if isinstance(words, str):
+            words = self._process_input(words, secret)
 
         self._words.clear()
-        self._words.update(replacement_words)
+        self._words.update(words)
+        self.generate(reset_size=reset_size)
 
-        self._generate(reset_size=reset_size)
-
-    @staticmethod
-    def _cleanup_input(words: str, secret: bool, max_words: int) -> WordSet:
+    def _cleanup_input(self, words: str, secret: bool = False) -> WordSet:
         """Cleanup provided input string."""
         if not isinstance(words, str):
             raise TypeError(
@@ -586,7 +500,7 @@ class Game:
         word_list = ",".join(words.split(" ")).split(",")
         # iterate through all words and pick first set that match criteria
         word_set: WordSet = set()
-        while word_list and len(word_set) <= max_words:
+        while word_list and len(word_set) <= self.MAX_PUZZLE_WORDS:
             word = word_list.pop(0)
             if word:
                 word_set.add(Word(word, secret=secret))
@@ -662,7 +576,7 @@ class Game:
         if mask not in self.masks:
             self.masks.append(mask)
         # fill in the puzzle
-        self._generate()
+        self.generate()
 
     def apply_masks(self, masks: Iterable[Mask]) -> None:
         """Apply a group of masks to the puzzle."""
@@ -684,31 +598,31 @@ class Game:
             [self.ACTIVE if c == self.INACTIVE else self.INACTIVE for c in row]
             for row in self.mask
         ]
-        self._generate()
+        self.generate()
 
     def flip_mask_horizontal(self) -> None:
         """Flip the current puzzle mask along the vertical axis (left to right).
         Has no effect on the actual mask(s) found in `WordSearch.mask`."""
         self._mask = [r[::-1] for r in self.mask]
-        self._generate()
+        self.generate()
 
     def flip_mask_vertical(self) -> None:
         """Flip the current puzzle mask along the horizontal axis (top to bottom).
         Has no effect on the actual mask(s) found in `WordSearch.mask`."""
         self._mask = self.mask[::-1]
-        self._generate()
+        self.generate()
 
     def transpose_mask(self) -> None:
         """Interchange each row with the corresponding column
         of the current puzzle mask. Has no effect on the actual
         mask(s) found in `WordSearch.mask`."""
         self._mask = list(map(list, zip(*self.mask)))
-        self._generate()
+        self.generate()
 
     def remove_masks(self) -> None:
         self._masks = []
         self._mask = self._build_puzzle(self.size, self.ACTIVE)
-        self._generate()
+        self.generate()
 
     def remove_static_masks(self) -> None:
         self._masks = [mask for mask in self.masks if not mask.static]
@@ -732,8 +646,6 @@ class Game:
                     self.words == __o.words,
                     self.directions == __o.directions,
                     self.size == __o.size,
-                    self.secret_words == __o.secret_words,
-                    self.secret_directions == __o.secret_directions,
                 )
             )
         return False
@@ -741,11 +653,9 @@ class Game:
     def __repr__(self) -> str:
         return (
             f"{self.__class__.__name__}"
-            + f"(words='{','.join([word.text for word in self.hidden_words])}', "
+            + f"(words='{','.join([word.text for word in self.words])}', "
             + f"level={self.direction_set_repr}, "
             + f"size={self.size}, "
-            + f"secret_words='{','.join([word.text for word in self.secret_words])}', "
-            + f"secret_level={self.direction_set_repr}, "
             + f"require_all_words={self.require_all_words})"
         )
 
