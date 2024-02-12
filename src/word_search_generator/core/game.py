@@ -106,8 +106,6 @@ class Game:
             self.generator = self.DEFAULT_GENERATOR
         if not self.formatter:
             self.formatter = self.DEFAULT_FORMATTER
-        if not self.validators:
-            self._validators = self.DEFAULT_VALIDATORS
 
         # set game words
         if words:
