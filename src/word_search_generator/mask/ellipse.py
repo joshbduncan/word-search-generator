@@ -42,9 +42,11 @@ class Ellipse(Bitmap):
         self.points = Ellipse.calculate_ellipse_points(
             self.width if self.width else self.puzzle_size,
             self.height if self.height else self.puzzle_size,
-            self.center
-            if self.center
-            else (self.puzzle_size // 2, self.puzzle_size // 2),
+            (
+                self.center
+                if self.center
+                else (self.puzzle_size // 2, self.puzzle_size // 2)
+            ),
             puzzle_size,
         )
         self._draw()

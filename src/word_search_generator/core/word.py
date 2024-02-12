@@ -95,9 +95,11 @@ class Word:
         and a familiar (x, y) coordinate system"""
         return Position(
             self.start_row + 1 if self.start_row is not None else self.start_row,
-            self.start_column + 1
-            if self.start_column is not None
-            else self.start_column,
+            (
+                self.start_column + 1
+                if self.start_column is not None
+                else self.start_column
+            ),
         )
 
     @property
@@ -155,12 +157,16 @@ class Word:
                 puzzle bounding box.
         """
         return Position(
-            self.start_column + 1 - bbox[0][0]
-            if self.start_column is not None
-            else self.start_column,
-            self.start_row + 1 - bbox[0][1]
-            if self.start_row is not None
-            else self.start_row,
+            (
+                self.start_column + 1 - bbox[0][0]
+                if self.start_column is not None
+                else self.start_column
+            ),
+            (
+                self.start_row + 1 - bbox[0][1]
+                if self.start_row is not None
+                else self.start_row
+            ),
         )
 
     def offset_coordinates(
