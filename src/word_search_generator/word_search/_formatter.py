@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from fpdf import FPDF
+from fpdf import FPDF, drawing
 
 from .. import utils
 from ..core.formatter import Formatter
@@ -14,6 +14,8 @@ from ..core.game import Game
 
 if TYPE_CHECKING:  # pragma: no cover
     from ..core.game import Puzzle
+    from ..core.word import Word
+    from .word_search import WordSearch
 
 
 class WordSearchFormatter(Formatter):
@@ -44,7 +46,12 @@ class WordSearchFormatter(Formatter):
             hide_fillers: Hide filler letters (show only words). Defaults to False.
             lowercase: Change letters to lower case. Defaults to False.
         """
-        return self.format_puzzle_for_show(game, solution, hide_fillers, lowercase)
+        return self.format_puzzle_for_show(
+            game,  # type: ignore
+            solution,
+            hide_fillers,
+            lowercase,
+        )
 
     def save(
         self,
@@ -62,18 +69,33 @@ class WordSearchFormatter(Formatter):
         if isinstance(path, str):
             path = Path(path)
         if format.upper() == "CSV":
-            saved_file = self.write_csv_file(path, game, solution, lowercase)
+            saved_file = self.write_csv_file(
+                path,
+                game,  # type: ignore
+                solution,
+                lowercase,
+            )
         elif format.upper() == "JSON":
-            saved_file = self.write_json_file(path, game, solution, lowercase)
+            saved_file = self.write_json_file(
+                path,
+                game,  # type: ignore
+                solution,
+                lowercase,
+            )
         else:
-            saved_file = self.write_pdf_file(path, game, solution, lowercase)
+            saved_file = self.write_pdf_file(
+                path,
+                game,  # type: ignore
+                solution,
+                lowercase,
+            )
         # return saved file path
         return saved_file
 
     def write_csv_file(
         self,
         path: Path,
-        game: Game,
+        game: WordSearch,
         solution: bool = False,
         lowercase: bool = False,
         *args,
@@ -120,7 +142,7 @@ class WordSearchFormatter(Formatter):
     def write_json_file(
         self,
         path: Path,
-        game: Game,
+        game: WordSearch,
         solution: bool = False,
         lowercase: bool = False,
         *args,
@@ -154,13 +176,15 @@ class WordSearchFormatter(Formatter):
     def write_pdf_file(
         self,
         path: Path,
-        game: Game,
+        game: WordSearch,
         solution: bool = False,
         lowercase: bool = False,
         *args,
         **kwargs,
     ) -> Path:
-        def draw_puzzle_page(pdf: FPDF, game: Game, solution: bool = False) -> FPDF:
+        def draw_puzzle_page(
+            pdf: FPDF, game: WordSearch, solution: bool = False
+        ) -> FPDF:
             """Draw the puzzle information on a FPDF PDF page.
 
             Args:
@@ -181,7 +205,7 @@ class WordSearchFormatter(Formatter):
             title = "WORD SEARCH" if not solution else "WORD SEARCH (SOLUTION)"
             pdf.set_font("Helvetica", "B", self.PDF_FONT_SIZE_XXL)
             pdf.cell(pdf.epw, 0.25, title, new_y="NEXT", align="C", center=True)
-            pdf.ln(0.375)
+            pdf.ln(0.125)
 
             # calculate the puzzle size and letter font size
             pdf.set_left_margin(0.75)
@@ -195,39 +219,53 @@ class WordSearchFormatter(Formatter):
             ) * (6 / (Game.MAX_PUZZLE_WORDS - Game.MIN_PUZZLE_WORDS))
             pdf.set_font_size(font_size)
 
+            # get start position of puzzle
+            start_x = pdf.get_x()
+            start_y = pdf.get_y()
+
             # draw the puzzle
-            if solution:
-                placed_words_coordinates = {
-                    coord
-                    for coords in [
-                        word.offset_coordinates(game.bounding_box)
-                        for word in game.placed_words
-                    ]
-                    for coord in coords  # type: ignore
-                }  # type: ignore
-            else:
-                placed_words_coordinates = {}  # type: ignore
-            for y, row in enumerate(game.cropped_puzzle):
-                for x, char in enumerate(row):
-                    # change text color for correct letters if solution was requested
-                    if solution and (x + 1, y + 1) in placed_words_coordinates:
-                        pdf.set_text_color(255, 0, 0)
-                        pdf.cell(
-                            gsize,
-                            gsize,
-                            char.lower() if lowercase else char,
-                            align="C",
-                        )
-                        pdf.set_text_color(0, 0, 0)
-                    else:
-                        pdf.cell(
-                            gsize,
-                            gsize,
-                            char.lower() if lowercase else char,
-                            align="C",
-                        )
+            for row in game.cropped_puzzle:
+                for char in row:
+                    pdf.cell(
+                        gsize,
+                        gsize,
+                        char.lower() if lowercase else char,
+                        align="C",
+                    )
                 pdf.ln(gsize)
             pdf.ln(0.25)
+
+            # draw solution highlights
+            if solution:
+                for word in game.placed_words:
+                    word_start, *_, word_end = word.offset_coordinates(
+                        game.bounding_box
+                    )
+                    word_start_x, word_start_y = word_start
+                    word_end_x, word_end_y = word_end
+
+                    # mypy check for word position
+                    if (
+                        not word_start_x
+                        or not word_start_y
+                        or not word_end_x
+                        or not word_end_y
+                    ):
+                        continue  # pragma: no cover
+
+                    with pdf.new_path() as path:
+                        path.style.fill_color = None
+                        path.style.stroke_color = drawing.DeviceRGB(*word.color, 0.5)
+                        path.style.stroke_join_style = "round"
+                        path.style.stroke_width = pdf.font_size
+                        path.move_to(
+                            start_x + ((word_start_x - 1) * gsize) + (gsize / 2),
+                            start_y + ((word_start_y - 1) * gsize) + (gsize / 2),
+                        )
+                        path.line_to(
+                            start_x + ((word_end_x - 1) * gsize) + (gsize / 2),
+                            start_y + ((word_end_y - 1) * gsize) + (gsize / 2),
+                        )
 
             # collect puzzle information
             word_list_str = utils.get_word_list_str(game.key)
@@ -239,7 +277,7 @@ class WordSearchFormatter(Formatter):
                 game.placed_words, game.bounding_box
             )
 
-            # lower case was requested change case or letters for puzzle, words, and key
+            # if lower case requested, change for letters for puzzle, words, and key
             if lowercase:
                 word_list_str = word_list_str.lower()
                 for word in game.placed_words:
@@ -255,7 +293,7 @@ class WordSearchFormatter(Formatter):
             pdf.set_font("Helvetica", "BU", size=info_font_size)
             pdf.cell(
                 pdf.epw,
-                txt=f"Find words going {LEVEL_DIRS_str}:",
+                text=f"Find words going {LEVEL_DIRS_str}:",
                 align="C",
                 new_y="NEXT",
             )
@@ -264,23 +302,71 @@ class WordSearchFormatter(Formatter):
             # write word list
             pdf.set_font("Helvetica", "B", size=info_font_size)
             pdf.set_font_size(info_font_size)
-            pdf.multi_cell(
-                pdf.epw,
-                info_font_size / 72 * 1.125,
-                word_list_str,
-                align="C",
-                new_y="NEXT",
-            )
+            pdf.set_char_spacing(0.5)
+
+            sorted_words = sorted(game.placed_words, key=lambda w: w.text)
+            lines: list[tuple[float, list[Word]]] = []
+            line_width = 0.0
+            line: list[Word] = []
+            for word in sorted_words:
+                if word.secret and not solution:
+                    continue
+                word_cell_width = pdf.get_string_width(word.text) + pdf.c_margin * 4
+                if line_width + word_cell_width > pdf.epw:
+                    lines.append((line_width, line))
+                    line_width = 0.0
+                    line = []
+                line_width += word_cell_width
+                line.append(word)
+            if line:
+                lines.append((line_width, line))
+
+            for line_width, words in lines:
+                line_offset = (pdf.epw - line_width) / 2
+                pdf.set_x(pdf.get_x() + line_offset)
+                for word in words:
+                    if word.secret and not solution:  # pragma: no cover
+                        continue
+                    start_x = pdf.get_x()
+                    start_y = pdf.get_y()
+                    word_cell_width = pdf.get_string_width(word.text) + pdf.c_margin * 4
+                    pdf.cell(
+                        w=word_cell_width,
+                        text=word.text.lower() if lowercase else word.text,
+                        align="C",
+                    )
+                    if solution:
+                        with pdf.new_path() as path:
+                            path.style.fill_color = None
+                            path.style.stroke_color = drawing.DeviceRGB(
+                                *word.color, 0.5
+                            )
+                            path.style.stroke_join_style = "round"
+                            path.style.stroke_width = pdf.font_size
+                            path.move_to(
+                                start_x + pdf.c_margin * 2.75,
+                                start_y + (pdf.font_size / 2),
+                            )
+                            path.line_to(
+                                pdf.get_x() - pdf.c_margin * 2.75,
+                                pdf.get_y() + (pdf.font_size / 2),
+                            )
+
+                pdf.ln(pdf.font_size * 1.25)
+
+            if not lines and not solution:
+                pdf.cell(text="<ALL SECRET WORDS>", align="C", center=True)
 
             # write the puzzle answer key
             # resetting the margin before rotating makes layout easier to figure
             pdf.set_margin(0)
+            pdf.set_char_spacing(0)
             # rotate the page to write answer key upside down
             with pdf.rotation(angle=180, x=pdf.epw / 2, y=pdf.eph / 2):
                 pdf.set_xy(pdf.epw - pdf.epw, 0)
                 pdf.set_margin(0.25)
                 pdf.set_font("Helvetica", size=self.PDF_FONT_SIZE_S)
-                pdf.write(txt=f"{key_intro}: {answer_key_str}")
+                pdf.write(text=f"{key_intro}: {answer_key_str}")
 
             return pdf
 
@@ -311,7 +397,7 @@ class WordSearchFormatter(Formatter):
 
     def format_puzzle_for_show(
         self,
-        game: Game,
+        game: WordSearch,
         show_solution: bool = False,
         hide_fillers: bool = False,
         lowercase: bool = False,
@@ -356,7 +442,7 @@ class WordSearchFormatter(Formatter):
         output += f"{key_intro}: {answer_key_str}"
         return output
 
-    def highlight_solution(self, game: Game) -> Puzzle:
+    def highlight_solution(self, game: WordSearch) -> Puzzle:
         """Add highlighting to puzzle solution."""
         output: Puzzle = copy.deepcopy(game.puzzle)
         for word in game.placed_words:
@@ -376,7 +462,7 @@ class WordSearchFormatter(Formatter):
 
     def hide_filler_characters(
         self,
-        game: Game,
+        game: WordSearch,
     ) -> Puzzle:
         """Remove filler characters from a puzzle."""
         output: Puzzle = copy.deepcopy(game.puzzle)
