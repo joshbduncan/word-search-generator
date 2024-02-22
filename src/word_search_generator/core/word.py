@@ -1,3 +1,5 @@
+import colorsys
+import random
 from typing import Iterable, NamedTuple, TypedDict
 
 from .game import Direction
@@ -37,6 +39,11 @@ class Word:
         self.coordinates: list[tuple[int, int]] = []
         self.direction: Direction | None = None
         self.secret = secret
+        self.color = colorsys.hsv_to_rgb(
+            random.random(),
+            random.randint(42, 98) / 100,
+            random.randint(40, 90) / 100,
+        )
 
     def validate(
         self, validators: Iterable[Validator], placed_words: list[str]

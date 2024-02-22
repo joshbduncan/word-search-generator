@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Tests updated and added for new functionality
 - `require_all_words` has been added to `Game.init()`. When set to `True` a `MissingWordError` will be raised if all provided "hidden" words can't be placed successfully. This does not take into account "secret" words. Also added to CLI as `-rall, --require-all-words`.
 - `lowercase` argument added to `show` and `save` methods which outputs all puzzle letters in lowercase (as opposed to the UPPERCASE default). Added `-lc, --lowercase` flag to CLI as well. Issue #58
+- all words get assigned a random color on initialization (for solution)
 
 ### Fixed
 
@@ -33,6 +34,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dependencies updated and tested on latest release
     - Updated word search puzzle export to work with fpdf2 v2.7.5 changes
 - None now allowed as `Game` or `Generator` validator.
+- PDF output now highlights puzzle words in color "bubbles" (Issue #54)
+- Updated PDF layout and formatting to better work with the new solution highlighting
+- "secret" words are now highlighted and included in the word list on the solution page
 
 ### Removed
 
