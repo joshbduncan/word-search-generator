@@ -441,15 +441,29 @@ def test_pdf_output_words(iterations, tmp_path: Path):
         lowercase = random.choice([True, False])
         ws.save(fp, lowercase=lowercase)
 
+        # extract both pages
         pages = pdfplumber.open(fp).pages
-        wordlist_list = utils.get_word_list_list(ws.key)
-        if lowercase:
-            wordlist_list = [w.lower() for w in wordlist_list]
-        for page in pages:
-            extracted_words = [
-                word for word in page.extract_words() if word["text"] in wordlist_list
+
+        # extract wordlist
+        placed_words = [word.text for word in ws.placed_words]
+
+        # find where wordlist should start
+        for i, page in enumerate(pages):
+            start = 2 + ws.size**2  # "WORD SEARCH" == 2 then add puzzle size
+            if i == 1:
+                start += 1  # addition "(SOLUTION)" word
+            extracted_words = page.extract_words()
+            for i, word in enumerate(extracted_words[start:]):
+                if ":" in word["text"]:
+                    start += i + 1
+                    break
+            end = start + len(placed_words)
+            extracted_wordlist = [
+                word
+                for word in extracted_words[start:end]
+                if word["text"].upper() in placed_words
             ]
-            assert len(extracted_words) == len(ws.placed_hidden_words)
+            assert len(ws.placed_words) == len(extracted_wordlist)
 
 
 def test_pdf_output_words_secret_only(iterations, tmp_path: Path):
@@ -578,13 +592,13 @@ def test_pdf_output_solution_highlighting(iterations, tmp_path: Path):
         placed_words = [word.text for word in ws.placed_words]
 
         # find where wordlist should start
-        start = 2 + ws.size**2  # "WORD SEARCH" == 2 then add puzzle size *
+        start = 3 + ws.size**2  # "WORD SEARCH (SOLUTION)" == 3 then add puzzle size *
         extracted_words = page.extract_words()
         for i, word in enumerate(extracted_words[start:]):
             if ":" in word["text"]:
-                start += i
+                start += i + 1
                 break
-        end = start + len(placed_words) + 1
+        end = start + len(placed_words)
         extracted_wordlist = [
             word
             for word in extracted_words[start:end]
