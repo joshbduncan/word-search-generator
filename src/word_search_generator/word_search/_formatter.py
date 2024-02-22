@@ -257,7 +257,7 @@ class WordSearchFormatter(Formatter):
                         path.style.fill_color = None
                         path.style.stroke_color = drawing.DeviceRGB(*word.color, 0.5)
                         path.style.stroke_join_style = "round"
-                        path.style.stroke_width = pdf.font_size
+                        path.style.stroke_width = pdf.font_size * 0.875
                         path.move_to(
                             start_x + ((word_start_x - 1) * gsize) + (gsize / 2),
                             start_y + ((word_start_y - 1) * gsize) + (gsize / 2),
@@ -279,7 +279,6 @@ class WordSearchFormatter(Formatter):
 
             # if lower case requested, change for letters for puzzle, words, and key
             if lowercase:
-                word_list_str = word_list_str.lower()
                 for word in game.placed_words:
                     answer_key_str = answer_key_str.replace(
                         word.text, word.text.lower()
@@ -342,7 +341,7 @@ class WordSearchFormatter(Formatter):
                                 *word.color, 0.5
                             )
                             path.style.stroke_join_style = "round"
-                            path.style.stroke_width = pdf.font_size
+                            path.style.stroke_width = pdf.font_size * 0.875
                             path.move_to(
                                 start_x + pdf.c_margin * 2.75,
                                 start_y + (pdf.font_size / 2),

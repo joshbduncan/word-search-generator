@@ -117,25 +117,57 @@ def line_rect_intersect(
     return any([left, right, top, bottom])
 
 
-def extract_pdf_page_highlight_lines(
-    page: Page,
-) -> tuple[list[list[float]], list[list[float]]]:
-    puzzle_lines: list[list[float]] = []
-    wordlist_lines: list[list[float]] = []
-    for i, line in enumerate(page.lines):
+def rect_contains_line(
+    lx1: float,
+    ly1: float,
+    lx2: float,
+    ly2: float,
+    rx1: float,
+    ry1: float,
+    rx2: float,
+    ry2: float,
+) -> bool:
+    """Determine if a line is completely contained inside of a rectangle.
+
+    Args:
+        lx1: Line point 1 x position.
+        ly1: Line point 1 y position.
+        lx2: Line point 2 x position.
+        ly2: Line point 2 y position.
+        rx1: Rectangle point 1 x position.
+        ry1: Rectangle point 1 y position.
+        rx2: Rectangle point 2 x position.
+        ry2: Rectangle point 2 y position.
+
+    Returns:
+        Line intersects rectangle.
+    """
+    return (
+        min(rx1, rx2) <= min(lx1, lx2)
+        and max(rx1, rx2) >= max(lx1, lx2)
+        and min(ry1, ry2) <= min(ly1, ly2)
+        and max(ry1, ry2) >= max(ly1, ly2)
+    )
+
+
+def extract_puzzle_highlight_lines(page: Page) -> list[list[float]]:
+    lines: list[list[float]] = []
+    for line in page.lines[: len(page.lines) // 2]:
         # ignore any non highlight lines
-        if len(line["pts"]) > 2:
-            continue
         pts: list[float] = []
         for pt in line["pts"]:
             x, y = pt
             y = page.height - y  # flip y for testing
             pts.extend([x, y])
-        if i < len(page.lines) // 2:
-            puzzle_lines.append(pts)
-        else:
-            wordlist_lines.append(pts)
-    return (puzzle_lines, wordlist_lines)
+        lines.append(pts)
+    return lines
+
+
+def extract_wordlist_highlight_lines(page: Page) -> list[list[float]]:
+    lines: list[list[float]] = []
+    for line in page.lines[len(page.lines) // 2 :]:
+        lines.append([pt for line_pt in line["pts"] for pt in line_pt])
+    return lines
 
 
 def test_export_csv(words, tmp_path: Path):
@@ -477,33 +509,33 @@ def test_pdf_output_puzzle_size(iterations, tmp_path: Path):
 def test_pdf_output_solution_highlighting(iterations, tmp_path: Path):
     def validate_puzzle_highlighting(
         ws: WordSearch,
-        extracted_puzzle: list[dict[str, Any]],
-        extracted_lines: list[list[float]],
+        puzzle: list[dict[str, Any]],
+        lines: list[list[float]],
     ):
         for word in ws.placed_hidden_words:
             for y, x in word.coordinates:
-                char = extracted_puzzle[y * ws.size + x]
+                char = puzzle[y * ws.size + x]
                 rx, ry, rw, rh = char["x0"], char["y1"], char["width"], char["height"]
                 intersection = False
-                for x1, y1, x2, y2 in extracted_lines:
+                for x1, y1, x2, y2 in lines:
                     if line_rect_intersect(x1, y1, x2, y2, rx, ry, rw, rh):
                         intersection = True
                         break
                 assert intersection
 
     def validate_wordlist_highlighting(
-        ws: WordSearch,
-        wordlist_chars: list[dict[str, Any]],
-        extracted_lines: list[list[float]],
+        words: list[dict[str, Any]],
+        lines: list[list[float]],
     ):
-        for char in wordlist_chars:
-            rx, ry, rw, rh = char["x0"], char["y1"], char["width"], char["height"]
-            intersection = False
-            for x1, y1, x2, y2 in extracted_lines:
-                if line_rect_intersect(x1, y1, x2, y2, rx, ry, rw, rh):
-                    intersection = True
-                    break
-            assert intersection
+        for i, word in enumerate(words):
+            lx1, ly1, lx2, ly2 = lines[i]
+            rx1, ry1, rx2, ry2 = (
+                word["x0"],
+                word["top"],
+                word["x1"],
+                word["bottom"],
+            )
+            assert rect_contains_line(lx1, ly1, lx2, ly2, rx1, ry1, rx2, ry2)
 
     for _ in range(iterations):
         ws = WordSearch(size=random.randint(8, 21))
@@ -515,10 +547,14 @@ def test_pdf_output_solution_highlighting(iterations, tmp_path: Path):
         page = pdfplumber.open(fp).pages[1]
         assert page
 
-        # split puzzle line and wordlist lines
-        puzzle_lines, wordlist_lines = extract_pdf_page_highlight_lines(page)
+        # extract puzzle line and wordlist lines
+        puzzle_lines = extract_puzzle_highlight_lines(page)
         assert puzzle_lines
+        assert len(puzzle_lines) == len(page.lines) // 2
+
+        wordlist_lines = extract_wordlist_highlight_lines(page)
         assert wordlist_lines
+        assert len(wordlist_lines) == len(page.lines) // 2
 
         # find positions of puzzle and wordlist characters
         chars_str = "".join(c["text"] for c in page.chars)
@@ -526,27 +562,38 @@ def test_pdf_output_solution_highlighting(iterations, tmp_path: Path):
         level_dirs = re.search(r"Find.*?:", chars_str)
         answer_key = re.search("Answer Key", chars_str)
 
-        assert title
-        assert level_dirs
-        assert answer_key
+        assert title and level_dirs and answer_key
 
         puzzle_start = title.end()
-        puzzle_end, wordlist_start = level_dirs.span()
-        wordlist_end = answer_key.start()
+        puzzle_end = level_dirs.start()
 
-        # rebuild puzzle
+        # extract puzzle
         extracted_puzzle = page.chars[puzzle_start:puzzle_end]
         assert ws.size == int(math.sqrt(len(extracted_puzzle)))
 
         # validate puzzle highlighting
         validate_puzzle_highlighting(ws, extracted_puzzle, puzzle_lines)
 
-        # rebuild wordlist
-        wordlist_chars = page.chars[wordlist_start:wordlist_end]
-        assert sum(len(word) for word in ws.placed_hidden_words) == len(wordlist_chars)
+        # extract wordlist
+        placed_words = [word.text for word in ws.placed_words]
+
+        # find where wordlist should start
+        start = 2 + ws.size**2  # "WORD SEARCH" == 2 then add puzzle size *
+        extracted_words = page.extract_words()
+        for i, word in enumerate(extracted_words[start:]):
+            if ":" in word["text"]:
+                start += i
+                break
+        end = start + len(placed_words) + 1
+        extracted_wordlist = [
+            word
+            for word in extracted_words[start:end]
+            if word["text"].upper() in placed_words
+        ]
+        assert len(ws.placed_words) == len(extracted_wordlist)
 
         # check all wordlist characters are highlighted
-        validate_wordlist_highlighting(ws, wordlist_chars, wordlist_lines)
+        validate_wordlist_highlighting(extracted_wordlist, wordlist_lines)
 
 
 def test_pdf_output_solution_character_placement(iterations, tmp_path: Path):
@@ -562,24 +609,21 @@ def test_pdf_output_solution_character_placement(iterations, tmp_path: Path):
         assert page
 
         # split puzzle line and wordlist lines
-        puzzle_lines, wordlist_lines = extract_pdf_page_highlight_lines(page)
+        puzzle_lines = extract_puzzle_highlight_lines(page)
         assert puzzle_lines
-        assert wordlist_lines
 
         # find positions of puzzle and wordlist characters
         chars_str = "".join(c["text"] for c in page.chars)
         title = re.search(r"WORD.*\(SOLUTION\)", chars_str)
         level_dirs = re.search(r"Find.*?:", chars_str)
-        answer_key = re.search("Answer Key", chars_str)
 
         assert title
         assert level_dirs
-        assert answer_key
 
         puzzle_start = title.end()
         puzzle_end = level_dirs.start()
 
-        # rebuild puzzle
+        # extract puzzle
         extracted_puzzle = page.chars[puzzle_start:puzzle_end]
         assert ws.size == int(math.sqrt(len(extracted_puzzle)))
 
