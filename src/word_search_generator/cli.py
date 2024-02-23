@@ -13,6 +13,9 @@ from .utils import get_random_words
 BUILTIN_MASK_SHAPES_OBJECTS = shapes.get_shape_objects()
 
 
+# TODO: add `--no-pretty` flag
+
+
 class RandomAction(argparse.Action):
     """Restrict argparse `-r`, `--random` inputs."""
 

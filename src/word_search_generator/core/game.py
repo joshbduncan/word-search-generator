@@ -303,64 +303,35 @@ class Game:
     # ******************** METHODS ******************** #
     # ************************************************* #
 
-    def show(
-        self,
-        solution: bool = False,
-        hide_fillers: bool = False,
-        lowercase: bool = False,
-        *args,
-        **kwargs,
-    ) -> None:
+    def show(self, *args, **kwargs) -> None:
         """Show the current puzzle with or without the solution.
-
-        Args:
-            solution: Highlight the puzzle solution. Defaults to False.
-            hide_fillers: Hide filler letters (show only words). Defaults to False.
-            lowercase: Change letters to lower case. Defaults to False.
 
         Raises:
             MissingFormatterError: No puzzle formatter set.
         """
         if not self.formatter:
             raise MissingFormatterError()
-        print(
-            self.formatter.show(
-                self, solution, hide_fillers, lowercase, *args, **kwargs
-            )
-        )
+        print(self.formatter.show(self, *args, **kwargs))
 
-    def save(
-        self,
-        path: str | Path,
-        format: str = "PDF",
-        solution: bool = False,
-        lowercase: bool = False,
-        *args,
-        **kwargs,
-    ) -> str:
+    def save(self, path: str | Path, format: str = "PDF", *args, **kwargs) -> str:
         """Save the current puzzle to a file.
 
         Args:
             path: File save path.
             format: Type of file to save ("CSV", "JSON", "PDF"). Defaults to "PDF".
-            solution: Include solution with the saved file.
-                For CSV and JSON files, only placed word characters will be included.
-                For PDF, a separate solution page will be included with word
-                characters highlighted in red. Defaults to False.
-            lowercase: Change letters to lower case. Defaults to False.
+
+        Raises:
+            EmptyPuzzleError: Puzzle not yet generated.
+            MissingFormatterError: No puzzle formatter set.
 
         Returns:
-            str: Final save path of the file.
+            Final save path of the file.
         """
         if not self.puzzle:
             raise EmptyPuzzleError()
         if not self.formatter:
             raise MissingFormatterError()
-        return str(
-            self.formatter.save(
-                self, path, format, solution, lowercase, *args, **kwargs
-            )
-        )
+        return str(self.formatter.save(self, path, format, *args, **kwargs))
 
     # *************************************************************** #
     # ******************** PROCESSING/GENERATION ******************** #

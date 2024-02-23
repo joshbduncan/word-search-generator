@@ -18,6 +18,7 @@ from ..core.formatter import Formatter
 from ..core.game import Game
 
 if TYPE_CHECKING:  # pragma: no cover
+    from ..core import GameType
     from ..core.game import Puzzle
     from ..core.word import Word
     from .word_search import WordSearch
@@ -37,7 +38,7 @@ class WordSearchFormatter(Formatter):
 
     def show(
         self,
-        game: Game,
+        game: GameType,
         solution: bool = False,
         hide_fillers: bool = False,
         lowercase: bool = False,
@@ -51,6 +52,8 @@ class WordSearchFormatter(Formatter):
             hide_fillers: Hide filler letters (show only words). Defaults to False.
             lowercase: Change letters to lower case. Defaults to False.
         """
+        # TODO: implement `hide_fillers`
+
         pcopy: list[list[Any]] = copy.deepcopy(game.puzzle)
         wordlist = []
 
@@ -113,13 +116,11 @@ class WordSearchFormatter(Formatter):
 
     def save(
         self,
-        game: Game,
+        game: GameType,
         path: str | Path,
         format: str = "PDF",
         solution: bool = False,
         lowercase: bool = False,
-        *args,
-        **kwargs,
     ) -> Path:
         if format.upper() not in ["CSV", "JSON", "PDF"]:
             raise ValueError('Save file format must be either "CSV", "JSON", or "PDF".')
@@ -246,13 +247,12 @@ class WordSearchFormatter(Formatter):
             """Draw the puzzle information on a FPDF PDF page.
 
             Args:
-                pdf (FPDF): FPDF PDF document.
-                game (Game): Current Word Search puzzle.
-                solution (bool, optional): Highlight the puzzle solution.
-                Defaults to False.
+                pdf: FPDF PDF document.
+                game: Current Word Search puzzle.
+                solution: Highlight the puzzle solution.. Defaults to False.
 
             Returns:
-                FPDF: FPDF PDF with drawn puzzle page.
+                FPDF PDF with drawn puzzle page.
             """
 
             # add a new page and setup the margins

@@ -69,6 +69,13 @@ class Word:
         return True
 
     @property
+    def lowercase(self) -> str:
+        """Return lowercase version of the word."""
+        if not self.placed:
+            return ""
+        return self.text.lower()
+
+    @property
     def placed(self) -> bool:
         """Is the word currently placed in a puzzle.
 
@@ -152,15 +159,15 @@ class Word:
                 the puzzle has been masked and is no longer it's original
                 size.
         """
-        if self.placed:
-            col, row = self.offset_position_xy(bbox)
-            return (
-                f"{'*' if self.secret else ''}"
-                + f"{self.text.lower() if lowercase else self.text} "
-                + f"{self.direction.name if self.direction else self.direction}"
-                + f" @ {(col, row)}"
-            )
-        return ""
+        if not self.placed:
+            return ""
+        col, row = self.offset_position_xy(bbox)
+        return (
+            f"{'*' if self.secret else ''}"
+            + f"{self.lowercase if lowercase else self.text} "
+            + f"{self.direction.name if self.direction else self.direction}"
+            + f" @ {(col, row)}"
+        )
 
     def offset_position_xy(
         self, bbox: tuple[tuple[int, int], tuple[int, int]]
