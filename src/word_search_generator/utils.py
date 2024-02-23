@@ -109,7 +109,9 @@ def get_word_list_list(key: Key) -> list[str]:
 
 
 def get_answer_key_list(
-    words: WordSet, bbox: tuple[tuple[int, int], tuple[int, int]]
+    words: WordSet,
+    bbox: tuple[tuple[int, int], tuple[int, int]],
+    lowercase: bool = False,
 ) -> list[str]:
     """Return a easy to read answer key for display/export. Resulting coordinates
     will be offset by the supplied values. Used for masked puzzles.
@@ -119,7 +121,9 @@ def get_answer_key_list(
         bbox (tuple[int, int, int, int]): Puzzle mask bounding box
         coordinates should be offset by.
     """
-    return [w.key_string(bbox) for w in sorted(words, key=lambda word: word.text)]
+    return [
+        w.key_string(bbox, lowercase) for w in sorted(words, key=lambda word: word.text)
+    ]
 
 
 def get_answer_key_str(

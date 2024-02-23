@@ -4,11 +4,16 @@ import copy
 import csv
 import json
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from fpdf import FPDF, drawing
+from rich import box
+from rich.style import Style
+from rich.table import Table
+from rich.text import Text
 
 from .. import utils
+from ..console import console
 from ..core.formatter import Formatter
 from ..core.game import Game
 
@@ -38,7 +43,7 @@ class WordSearchFormatter(Formatter):
         lowercase: bool = False,
         *args,
         **kwargs,
-    ) -> str:
+    ):
         """Return a string representation of the game.
 
         Args:
@@ -46,12 +51,65 @@ class WordSearchFormatter(Formatter):
             hide_fillers: Hide filler letters (show only words). Defaults to False.
             lowercase: Change letters to lower case. Defaults to False.
         """
-        return self.format_puzzle_for_show(
-            game,  # type: ignore
-            solution,
-            hide_fillers,
-            lowercase,
+        pcopy: list[list[Any]] = copy.deepcopy(game.puzzle)
+        wordlist = []
+
+        sorted_words = sorted(game.placed_words, key=lambda w: w.text)
+        for word in sorted_words:
+            # TODO: should "secret" words be highlighted and included in wordlist
+            if word.secret:
+                continue
+            style = word.rich_style if solution else Style()
+            wordlist.append(
+                Text(word.text.lower() if lowercase else word.text, style=style)
+            )
+            for r, c in word.coordinates:
+                pcopy[r][c] = Text(
+                    game.puzzle[r][c].lower() if lowercase else game.puzzle[r][c],
+                    style=style,
+                )
+
+        table = Table(
+            title="WORD SEARCH",
+            title_style="bold italic",
+            box=box.HORIZONTALS,
+            padding=0,
+            show_edge=True,
+            show_header=False,
+            show_lines=False,
         )
+
+        min_x, min_y = game.bounding_box[0]
+        max_x, max_y = game.bounding_box[1]
+
+        for _ in range(max_x - min_x + 1):
+            table.add_column(width=1, justify="center", vertical="middle", no_wrap=True)
+
+        for row in pcopy[min_y : max_y + 1]:
+            if lowercase:
+                row = [c.lower() if isinstance(c, str) else c for c in row]
+            table.add_row(*row[min_x : max_x + 1])
+
+        answer_key = "Answer Key"
+        if game.placed_secret_words:  # type:ignore [attr-defined]
+            answer_key += " (*Secret Words)"
+        answer_key += ":"
+
+        word_key_strings = utils.get_answer_key_list(
+            game.placed_words, game.bounding_box, lowercase
+        )
+        answer_key += ", ".join(
+            key_string.replace("(", "#").replace(")", "(").replace("#", ")")[::-1]
+            for key_string in word_key_strings
+        )
+
+        with console.capture() as capture:
+            console.print(table)
+            console.print(f"Find words going {utils.get_LEVEL_DIRS_str(game.level)}:")
+            console.print(*wordlist, sep=", ")
+            console.print()
+            console.print(answer_key)
+        return capture.get()
 
     def save(
         self,

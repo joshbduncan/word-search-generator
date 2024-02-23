@@ -2,6 +2,8 @@ import colorsys
 import random
 from typing import Iterable, NamedTuple, TypedDict
 
+from rich.style import Style
+
 from .game import Direction
 from .validator import Validator
 
@@ -110,6 +112,12 @@ class Word:
         )
 
     @property
+    def rich_style(self) -> Style:
+        """Returns a rich Style for outputting the word in the cli."""
+        r, g, b = (int(v * 255) for v in self.color)
+        return Style(color="white", bgcolor=f"rgb({r},{g},{b})", bold=True)
+
+    @property
     def key_info(self) -> KeyInfo:
         """Returns the Word placement information formatted
         correctly for a WordSearch puzzle key."""
@@ -130,7 +138,9 @@ class Word:
             "secret": self.secret,
         }
 
-    def key_string(self, bbox: tuple[tuple[int, int], tuple[int, int]]) -> str:
+    def key_string(
+        self, bbox: tuple[tuple[int, int], tuple[int, int]], lowercase: bool = False
+    ) -> str:
         """Returns a string representation of the Word placement
         information formatted correctly for a WordSearch puzzle key
         when the WordSearch object it output using the `print()` or
@@ -145,7 +155,8 @@ class Word:
         if self.placed:
             col, row = self.offset_position_xy(bbox)
             return (
-                f"{'*' if self.secret else ''}{self.text} "
+                f"{'*' if self.secret else ''}"
+                + f"{self.text.lower() if lowercase else self.text} "
                 + f"{self.direction.name if self.direction else self.direction}"
                 + f" @ {(col, row)}"
             )
