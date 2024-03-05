@@ -1,4 +1,4 @@
-name: Linting, Typechecking, and Tests
+name: Linting, Typing, and Tests
 
 on:
   pull_request:
