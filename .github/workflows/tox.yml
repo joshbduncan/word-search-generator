@@ -1,4 +1,4 @@
-name: Tests
+name: Linting, Typing, and Testing with Tox
 
 on:
   pull_request:
