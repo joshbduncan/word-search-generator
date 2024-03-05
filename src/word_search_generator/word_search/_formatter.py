@@ -52,9 +52,12 @@ class WordSearchFormatter(Formatter):
             hide_fillers: Hide filler letters (show only words). Defaults to False.
             lowercase: Change letters to lower case. Defaults to False.
         """
-        # TODO: implement `hide_fillers`
 
-        pcopy: list[list[Any]] = copy.deepcopy(game.puzzle)
+        pcopy: list[list[Any]] = (
+            self.hide_filler_characters(game)
+            if hide_fillers
+            else copy.deepcopy(game.puzzle)
+        )
         wordlist = []
 
         sorted_words = sorted(game.placed_words, key=lambda w: w.text)
@@ -96,15 +99,12 @@ class WordSearchFormatter(Formatter):
         answer_key = "Answer Key"
         if game.placed_secret_words:  # type:ignore [attr-defined]
             answer_key += " (*Secret Words)"
-        answer_key += ":"
+        answer_key += ": "
 
         word_key_strings = utils.get_answer_key_list(
             game.placed_words, game.bounding_box, lowercase
         )
-        answer_key += ", ".join(
-            key_string.replace("(", "#").replace(")", "(").replace("#", ")")[::-1]
-            for key_string in word_key_strings
-        )
+        answer_key += ", ".join(key_string for key_string in word_key_strings)
 
         with console.capture() as capture:
             console.print(table)
@@ -452,6 +452,7 @@ class WordSearchFormatter(Formatter):
             raise OSError(f"File could not be saved to '{path}'.")
         return path.absolute()
 
+    # TODO: remove method
     def format_puzzle_for_show(
         self,
         game: WordSearch,
@@ -499,7 +500,8 @@ class WordSearchFormatter(Formatter):
         output += f"{key_intro}: {answer_key_str}"
         return output
 
-    def highlight_solution(self, game: WordSearch) -> Puzzle:
+    @staticmethod
+    def highlight_solution(game: WordSearch) -> Puzzle:
         """Add highlighting to puzzle solution."""
         output: Puzzle = copy.deepcopy(game.puzzle)
         for word in game.placed_words:
@@ -517,9 +519,9 @@ class WordSearchFormatter(Formatter):
                 y += word.direction.r_move
         return output
 
+    @staticmethod
     def hide_filler_characters(
-        self,
-        game: WordSearch,
+        game: GameType,
     ) -> Puzzle:
         """Remove filler characters from a puzzle."""
         output: Puzzle = copy.deepcopy(game.puzzle)

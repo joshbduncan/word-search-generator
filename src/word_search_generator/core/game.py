@@ -392,12 +392,11 @@ class Game:
         Returns:
             Calculated puzzle size.
         """
-        all_words = [word.text for word in words]
-        longest_word_length = len(max(all_words, key=len))
+        longest_word_length = len(max(words, key=len))
         if not size:
             longest = max(10, longest_word_length)
             # calculate multiplier for larger word lists so that most have room to fit
-            multiplier = len(all_words) / 15 if len(all_words) > 15 else 1
+            multiplier = len(words) / 15 if len(words) > 15 else 1
             # level lengths in `core.directions` are nice multiples of 2
             l_size = log2(len(level)) if level else 1  # protect against log(0) in tests
             size = min(round(longest + l_size * 2 * multiplier), Game.MAX_PUZZLE_SIZE)

@@ -7,13 +7,10 @@ from typing import Sequence
 from .core.directions import LEVEL_DIRS
 from .core.game import Game
 from .core.word import Direction
-from .mask import shapes
+from .mask import Mask, shapes
 from .utils import get_random_words
 
 BUILTIN_MASK_SHAPES_OBJECTS = shapes.get_shape_objects()
-
-
-# TODO: add `--no-pretty` flag
 
 
 class RandomAction(argparse.Action):
@@ -205,13 +202,39 @@ secret puzzle words can go. See valid arguments above.",
 
     # check for mask preview first
     if args.preview_masks:
+        from rich import box
+        from rich.table import Table
+
+        from .console import console
+
         preview_size = 21
+
         for shape in BUILTIN_MASK_SHAPES_OBJECTS:
-            mask = eval(f"shapes.{shape}")()
+            mask: Mask = eval(f"shapes.{shape}")()
             mask.generate(preview_size)
-            print(f"{shape}")
-            mask.show(True)
-            print()
+            table = Table(
+                title=shape,
+                title_style="bold italic green",
+                box=box.SIMPLE_HEAD,
+                padding=0,
+                show_edge=True,
+                show_header=False,
+                show_lines=False,
+            )
+
+            assert mask.bounding_box
+            min_x, min_y = mask.bounding_box[0]
+            max_x, max_y = mask.bounding_box[1]
+
+            for _ in range(max_x - min_x + 1):
+                table.add_column(
+                    width=1, justify="center", vertical="middle", no_wrap=True
+                )
+
+            for row in mask.mask[min_y : max_y + 1]:
+                table.add_row(*[c if c == mask.ACTIVE else " " for c in row])
+
+            console.print(table)
         return 0
 
     # process puzzle words

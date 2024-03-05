@@ -12,7 +12,11 @@ __all__ = [
     "WordSearch",
 ]
 
+from rich.traceback import install
+
 from .word_search.word_search import WordSearch  # noqa: F401c
+
+install(show_locals=True)
 
 
 def __getattr__(name: str) -> str:

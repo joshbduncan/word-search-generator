@@ -286,9 +286,9 @@ def test_export_pdf_puzzles(iterations, tmp_path: Path):
                 random.randint(WordSearch.MIN_PUZZLE_WORDS, WordSearch.MAX_PUZZLE_WORDS)
             )
         )
-        longest_word_length = len(max(words, key=len))
-        if size < longest_word_length:
-            size = longest_word_length
+        shortest_word_length = len(min(words, key=len))
+        if size < shortest_word_length:
+            size = shortest_word_length
         level = random.randint(1, 3)
         puzzle = WordSearch(words, level=level, size=size)
         fp = Path.joinpath(tmp_path, f"{uuid.uuid4()}.pdf")

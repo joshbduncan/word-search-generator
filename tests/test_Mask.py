@@ -83,12 +83,14 @@ def test_mask_property_puzzle_size_setter_invalid_type():
 
 
 def test_mask_property_bounding_box():
-    m = Mask([(1, 2), (3, 4)])
+    m = Bitmap([(1, 2), (3, 4)])
+    m.generate(5)
     assert m.bounding_box == ((1, 2), (3, 4))
 
 
 def test_mask_property_bounding_box_unsorted():
-    m = Mask([(3, 4), (1, 2)])
+    m = Bitmap([(3, 4), (1, 2)])
+    m.generate(5)
     assert m.bounding_box == ((1, 2), (3, 4))
 
 
@@ -119,13 +121,13 @@ def test_show_not_generated():
 
 
 def test_show(capsys):
-    m = Mask([(1, 2), (3, 4)])
+    m = Bitmap([(1, 2), (3, 4)])
     m.generate(5)
     match = """# # # # #
 # # # # #
+# * # # #
 # # # # #
-# # # # #
-# # # # #
+# # # * #
 """
     m.show()
     capture = capsys.readouterr()
@@ -212,10 +214,11 @@ def test_compound_mask_add_mask():
 
 
 def test_compound_mask_bounding_box():
-    size = 11
-    cm = CompoundMask()
-    cm.generate(size)
-    assert cm.bounding_box == ((0, 0), (size - 1, size - 1))
+    bm = Bitmap([(1, 2), (3, 4)])
+    bm.generate(5)
+    cm = CompoundMask([bm])
+    cm.generate(bm.puzzle_size)
+    assert cm.bounding_box == ((1, 2), (3, 4))
 
 
 def test_compound_mask_generate():
