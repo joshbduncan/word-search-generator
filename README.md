@@ -13,9 +13,17 @@ Word-Search-Generator is a Python module for generating fun [Word Search Puzzles
 
 ## Installation
 
-Install Word-Search-Generator with `pip`:
+You can install Word-Search-Generator with [pipx](https://pypa.github.io/pipx/)...
 
-    $ pip install word-search-generator
+```
+pipx install word-search-generator
+```
+
+Or, for a universal install, you can use `pip`.
+
+```
+pip install word-search-generator
+```
 
 ## Usage
 
