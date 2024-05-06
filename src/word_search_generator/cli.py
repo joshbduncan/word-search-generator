@@ -290,9 +290,9 @@ secret puzzle words can go. See valid arguments above.",
         puzzle.apply_mask(mask)
 
     if args.image_mask:
-        from .mask.bitmap import Image
+        from .mask.bitmap import BitmapImage
 
-        puzzle.apply_mask(Image(args.image_mask))
+        puzzle.apply_mask(BitmapImage(args.image_mask))
 
     # show the result
     if args.output or args.format:

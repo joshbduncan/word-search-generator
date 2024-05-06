@@ -1,7 +1,6 @@
 from pathlib import Path
 
-from PIL import Image as PILImage
-from PIL import ImageChops
+from PIL import Image, ImageChops
 
 from ..utils import in_bounds
 from . import Mask, MaskNotGenerated
@@ -49,7 +48,7 @@ class Bitmap(Mask):
                 self._mask[y][x] = self.ACTIVE
 
 
-class Image(Bitmap):
+class BitmapImage(Bitmap):
     """This class represents a subclass of the Bitmap object
     and generates a mask a mask from a raster image."""
 
@@ -78,24 +77,25 @@ class Image(Bitmap):
         """Generate a new mask at `puzzle_size` from a raster image."""
         self.puzzle_size = puzzle_size
         self._mask = self.build_mask(self.puzzle_size, self.INACTIVE)
-        self.points = Image.process_image(
-            PILImage.open(self.fp, formats=("BMP", "JPEG", "PNG")),
-            self.puzzle_size,
-            Image.threshold,
+        img = Image.open(self.fp, formats=("BMP", "JPEG", "PNG"))
+        self.points = BitmapImage.process_image(
+            img, self.puzzle_size, BitmapImage.threshold
         )
         if not self.points:
             raise ContrastError("The provided image lacked enough contrast.")
         self._draw()
 
     @staticmethod
-    def process_image(image: PILImage, size: int, threshold: int = 200) -> PILImage:
+    def process_image(
+        image: Image.Image, size: int, threshold: int = 200
+    ) -> list[tuple[int, int]]:
         """Take a `PIL.Image` object, convert it to black-and-white, trim any
         excess pixels from the edges, resize it, and return all of the black
         pixels as a (x, y) coordinates."""
         image = image.convert("L").point(
-            lambda px: 255 if px > Image.threshold else 0, mode="1"
+            lambda px: 255 if px > BitmapImage.threshold else 0, mode="1"
         )
-        diff = ImageChops.difference(image, PILImage.new("L", image.size, (255)))
+        diff = ImageChops.difference(image, Image.new("L", image.size, (255)))
         bbox = diff.getbbox()
         image = image.crop(bbox)
         image.thumbnail((size, size), resample=0)

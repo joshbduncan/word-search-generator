@@ -280,7 +280,7 @@ class CompoundMask(Mask):
 # Import all base masks shapes for easier access
 # (eg. `mask.Star` vs. `mask.polygon.Star`)
 from .bitmap import Bitmap as Bitmap  # noqa: F401, E402
-from .bitmap import Image as Image  # noqa: F401, E402
+from .bitmap import BitmapImage as BitmapImage  # noqa: F401, E402
 from .ellipse import Ellipse as Ellipse  # noqa: F401, E402
 from .polygon import Polygon as Polygon  # noqa: F401, E402
 from .polygon import Rectangle as Rectangle  # noqa: F401, E402
