@@ -45,7 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - add [Rich](https://github.com/Textualize/rich) to dependencies for cli highlighting
 - CLI output now defaults to a 'pretty' version using rich (can be disabled with the `--no-pretty` flag)
     - solution flag now highlights puzzle words using same coloring as PDF output
-    - answer key text reversed to obfuscate (like PDF output)
+    - answer key text reversed to obfuscate (like PDF output) when not using '-c' flag
 - `hide_fillers` argument added to the base `WordSearch.show()` method.
 
 ### Removed

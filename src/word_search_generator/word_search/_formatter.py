@@ -42,8 +42,7 @@ class WordSearchFormatter(Formatter):
         solution: bool = False,
         hide_fillers: bool = False,
         lowercase: bool = False,
-        *args,
-        **kwargs,
+        reversed_letters=False,
     ):
         """Return a string representation of the game.
 
@@ -102,7 +101,7 @@ class WordSearchFormatter(Formatter):
         answer_key += ": "
 
         word_key_strings = utils.get_answer_key_list(
-            game.placed_words, game.bounding_box, lowercase
+            game.placed_words, game.bounding_box, lowercase, reversed_letters
         )
         answer_key += ", ".join(key_string for key_string in word_key_strings)
 

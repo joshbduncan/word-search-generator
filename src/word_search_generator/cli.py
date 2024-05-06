@@ -310,7 +310,11 @@ secret puzzle words can go. See valid arguments above.",
         print(f"Puzzle saved: {foutput}")
 
     else:
-        puzzle.show(solution=args.cheat, lowercase=args.lowercase)
+        puzzle.show(
+            solution=args.cheat,
+            lowercase=args.lowercase,
+            reversed_letters=not args.cheat,
+        )
 
     return 0
 

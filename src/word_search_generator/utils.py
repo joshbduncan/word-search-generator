@@ -112,17 +112,23 @@ def get_answer_key_list(
     words: WordSet,
     bbox: tuple[tuple[int, int], tuple[int, int]],
     lowercase: bool = False,
+    reversed_letters: bool = False,
 ) -> list[str]:
     """Return a easy to read answer key for display/export. Resulting coordinates
     will be offset by the supplied values. Used for masked puzzles.
 
     Args:
-        words (WordSet): A list of `Word` objects.
-        bbox (tuple[int, int, int, int]): Puzzle mask bounding box
-        coordinates should be offset by.
+        words: A list of `Word` objects.
+        bbox: Puzzle mask bounding box
+        lowercase: Should words be lowercase. Defaults to False.
+        reversed_letters: Should words letters be reversed. Defaults to False.
+
+    Returns:
+        List of placed words with their placement information.
     """
     return [
-        w.key_string(bbox, lowercase) for w in sorted(words, key=lambda word: word.text)
+        w.key_string(bbox, lowercase, reversed_letters)
+        for w in sorted(words, key=lambda word: word.text)
     ]
 
 

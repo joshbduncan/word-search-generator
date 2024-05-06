@@ -180,6 +180,7 @@ class WordSearch(Game):
         solution: bool = False,
         hide_fillers: bool = False,
         lowercase: bool = False,
+        reversed_letters: bool = False,
         *args,
         **kwargs,
     ):
@@ -187,6 +188,7 @@ class WordSearch(Game):
             solution=solution,
             hide_fillers=hide_fillers,
             lowercase=lowercase,
+            reversed_letters=reversed_letters,
         )
 
     def save(

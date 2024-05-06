@@ -146,25 +146,34 @@ class Word:
         }
 
     def key_string(
-        self, bbox: tuple[tuple[int, int], tuple[int, int]], lowercase: bool = False
+        self,
+        bbox: tuple[tuple[int, int], tuple[int, int]],
+        lowercase: bool = False,
+        reversed_letters: bool = False,
     ) -> str:
-        """Returns a string representation of the Word placement
+        """Return a string representation of the Word placement
         information formatted correctly for a WordSearch puzzle key
         when the WordSearch object it output using the `print()` or
         `.show()` method.
 
         Args:
-            bbox (tuple[tuple[int, int], tuple[int, int]]): The current
-                puzzle bounding box. Used to offset the coordinates when
-                the puzzle has been masked and is no longer it's original
-                size.
+            bbox: The current puzzle bounding box.
+            lowercase: Should words be lowercase. Defaults to False.
+            reversed_letters: Should words letters be reversed. Defaults to False.
+
+
+        Returns:
+            Word placement information.
         """
         if not self.placed:
             return ""
         col, row = self.offset_position_xy(bbox)
+        word_text = self.lowercase if lowercase else self.text
+        if reversed_letters:
+            word_text = word_text[::-1]
         return (
             f"{'*' if self.secret else ''}"
-            + f"{self.lowercase if lowercase else self.text} "
+            + f"{word_text} "
             + f"{self.direction.name if self.direction else self.direction}"
             + f" @ {(col, row)}"
         )
