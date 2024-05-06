@@ -5,7 +5,8 @@ from functools import wraps
 from typing import TYPE_CHECKING, TypeAlias
 
 if TYPE_CHECKING:  # pragma: no cover
-    from .game import Game, Puzzle
+    from . import GameType
+    from .game import Puzzle
 
 
 Fit: TypeAlias = tuple[str, list[tuple[int, int]]]
@@ -53,7 +54,7 @@ class Generator(ABC):
     """
 
     @abstractmethod
-    def generate(self, game: Game) -> Puzzle:
+    def generate(self, game: GameType) -> Puzzle:
         """Generate a puzzle.
 
         Args:

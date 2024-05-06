@@ -5,7 +5,7 @@ from PIL import Image as PILImage
 
 from word_search_generator import WordSearch
 from word_search_generator.mask import CompoundMask, Mask, MaskNotGenerated
-from word_search_generator.mask.bitmap import Bitmap, ContrastError, Image
+from word_search_generator.mask.bitmap import Bitmap, BitmapImage, ContrastError
 from word_search_generator.mask.ellipse import Ellipse
 from word_search_generator.mask.polygon import Polygon, RegularPolygon, Star
 from word_search_generator.mask.shapes import Circle, Heart
@@ -83,12 +83,14 @@ def test_mask_property_puzzle_size_setter_invalid_type():
 
 
 def test_mask_property_bounding_box():
-    m = Mask([(1, 2), (3, 4)])
+    m = Bitmap([(1, 2), (3, 4)])
+    m.generate(5)
     assert m.bounding_box == ((1, 2), (3, 4))
 
 
 def test_mask_property_bounding_box_unsorted():
-    m = Mask([(3, 4), (1, 2)])
+    m = Bitmap([(3, 4), (1, 2)])
+    m.generate(5)
     assert m.bounding_box == ((1, 2), (3, 4))
 
 
@@ -119,13 +121,13 @@ def test_show_not_generated():
 
 
 def test_show(capsys):
-    m = Mask([(1, 2), (3, 4)])
+    m = Bitmap([(1, 2), (3, 4)])
     m.generate(5)
     match = """# # # # #
 # # # # #
+# * # # #
 # # # # #
-# # # # #
-# # # # #
+# # # * #
 """
     m.show()
     capture = capsys.readouterr()
@@ -212,10 +214,11 @@ def test_compound_mask_add_mask():
 
 
 def test_compound_mask_bounding_box():
-    size = 11
-    cm = CompoundMask()
-    cm.generate(size)
-    assert cm.bounding_box == ((0, 0), (size - 1, size - 1))
+    bm = Bitmap([(1, 2), (3, 4)])
+    bm.generate(5)
+    cm = CompoundMask([bm])
+    cm.generate(bm.puzzle_size)
+    assert cm.bounding_box == ((1, 2), (3, 4))
 
 
 def test_compound_mask_generate():
@@ -310,7 +313,7 @@ def test_bitmap_mask_draw_exception():
 def test_image_mask_init(tmp_path: Path):
     name = "test_image.jpg"
     path = Path.joinpath(tmp_path, name)
-    im = Image(path, method=2, static=False)
+    im = BitmapImage(path, method=2, static=False)
     assert isinstance(im, Mask)
     assert im.fp == path
     assert im.method == 2
@@ -323,7 +326,7 @@ def test_image_mask_solid_black(tmp_path: Path):
     img_path = Path.joinpath(tmp_path, name)
     test_img.save(img_path, "JPEG")
     size = 11
-    im = Image(img_path)
+    im = BitmapImage(img_path)
     im.generate(size)
     assert im.mask == [[im.ACTIVE] * size] * size
 
@@ -334,7 +337,7 @@ def test_image_mask_contrast_exception(tmp_path: Path):
     img_path = Path.joinpath(tmp_path, name)
     test_img.save(img_path, "PNG")
     size = 11
-    im = Image(img_path)
+    im = BitmapImage(img_path)
     with pytest.raises(ContrastError):
         im.generate(size)
 

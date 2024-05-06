@@ -303,64 +303,35 @@ class Game:
     # ******************** METHODS ******************** #
     # ************************************************* #
 
-    def show(
-        self,
-        solution: bool = False,
-        hide_fillers: bool = False,
-        lowercase: bool = False,
-        *args,
-        **kwargs,
-    ) -> None:
+    def show(self, *args, **kwargs) -> None:
         """Show the current puzzle with or without the solution.
-
-        Args:
-            solution: Highlight the puzzle solution. Defaults to False.
-            hide_fillers: Hide filler letters (show only words). Defaults to False.
-            lowercase: Change letters to lower case. Defaults to False.
 
         Raises:
             MissingFormatterError: No puzzle formatter set.
         """
         if not self.formatter:
             raise MissingFormatterError()
-        print(
-            self.formatter.show(
-                self, solution, hide_fillers, lowercase, *args, **kwargs
-            )
-        )
+        print(self.formatter.show(self, *args, **kwargs))
 
-    def save(
-        self,
-        path: str | Path,
-        format: str = "PDF",
-        solution: bool = False,
-        lowercase: bool = False,
-        *args,
-        **kwargs,
-    ) -> str:
+    def save(self, path: str | Path, format: str = "PDF", *args, **kwargs) -> str:
         """Save the current puzzle to a file.
 
         Args:
             path: File save path.
             format: Type of file to save ("CSV", "JSON", "PDF"). Defaults to "PDF".
-            solution: Include solution with the saved file.
-                For CSV and JSON files, only placed word characters will be included.
-                For PDF, a separate solution page will be included with word
-                characters highlighted in red. Defaults to False.
-            lowercase: Change letters to lower case. Defaults to False.
+
+        Raises:
+            EmptyPuzzleError: Puzzle not yet generated.
+            MissingFormatterError: No puzzle formatter set.
 
         Returns:
-            str: Final save path of the file.
+            Final save path of the file.
         """
         if not self.puzzle:
             raise EmptyPuzzleError()
         if not self.formatter:
             raise MissingFormatterError()
-        return str(
-            self.formatter.save(
-                self, path, format, solution, lowercase, *args, **kwargs
-            )
-        )
+        return str(self.formatter.save(self, path, format, *args, **kwargs))
 
     # *************************************************************** #
     # ******************** PROCESSING/GENERATION ******************** #
@@ -421,12 +392,11 @@ class Game:
         Returns:
             Calculated puzzle size.
         """
-        all_words = [word.text for word in words]
-        longest_word_length = len(max(all_words, key=len))
+        longest_word_length = len(max(words, key=len))
         if not size:
             longest = max(10, longest_word_length)
             # calculate multiplier for larger word lists so that most have room to fit
-            multiplier = len(all_words) / 15 if len(all_words) > 15 else 1
+            multiplier = len(words) / 15 if len(words) > 15 else 1
             # level lengths in `core.directions` are nice multiples of 2
             l_size = log2(len(level)) if level else 1  # protect against log(0) in tests
             size = min(round(longest + l_size * 2 * multiplier), Game.MAX_PUZZLE_SIZE)

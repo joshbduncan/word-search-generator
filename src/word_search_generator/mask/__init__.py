@@ -119,20 +119,9 @@ class Mask:
         for filling mask shapes so it needs to know the actual mask bounds no
         matter where lie."""
 
-        if not self.points:
+        if not self.mask:
             return None
-        min_x, min_y = self.points[0]
-        max_x, max_y = self.points[0]
-        for x, y in self.points:
-            if x < min_x:
-                min_x = x
-            elif x > max_x:
-                max_x = x
-            if y < min_y:
-                min_y = y
-            elif y > max_y:
-                max_y = y
-        return ((min_x, min_y), (max_x, max_y))
+        return find_bounding_box(self._mask, self.ACTIVE)
 
     @staticmethod
     def build_mask(size: int, char: str) -> list[list[str]]:
@@ -179,14 +168,14 @@ class Mask:
         Raises:
             MaskNotGenerated: Mask has not yet been generated.
         """
-        if not self.puzzle_size or not self.bounding_box:
+        if not self.mask:
             raise MaskNotGenerated(
                 "Please use `object.generate()` before calling `object.show()`."
             )
         if active_only:
-            ((min_x, min_y), (max_x, max_y)) = find_bounding_box(
-                self._mask, self.ACTIVE
-            )
+            assert self.bounding_box
+            min_x, min_y = self.bounding_box[0]
+            max_x, max_y = self.bounding_box[1]
         else:
             ((min_x, min_y), (max_x, max_y)) = (
                 (0, 0),
@@ -242,19 +231,6 @@ class CompoundMask(Mask):
         super().__init__(method=method, static=static)
         self.masks = masks if masks else []
 
-    @property
-    def bounding_box(self) -> tuple[tuple[int, int], tuple[int, int]]:
-        """Bounding box of the masked area as a rectangle defined
-        by a tuple of (top-left edge as x, y, bottom-right edge as x, y).
-
-        Note: This is a special implementation of the `bounding.box` property
-        in use just for the `CompoundMask` object. Normally the `bounding_box`
-        property on a mask is not confined to the puzzle bounds since it is mainly
-        used in the calculation of filling the shapes. Since a `CompoundMask` is
-        really just a collection of `Masks` the `bounding_box` is limited by the
-        puzzle bounds."""
-        return find_bounding_box(self._mask, self.ACTIVE)
-
     def add_mask(self, mask: Mask) -> None:
         self.masks.append(mask)
 
@@ -304,7 +280,7 @@ class CompoundMask(Mask):
 # Import all base masks shapes for easier access
 # (eg. `mask.Star` vs. `mask.polygon.Star`)
 from .bitmap import Bitmap as Bitmap  # noqa: F401, E402
-from .bitmap import Image as Image  # noqa: F401, E402
+from .bitmap import BitmapImage as BitmapImage  # noqa: F401, E402
 from .ellipse import Ellipse as Ellipse  # noqa: F401, E402
 from .polygon import Polygon as Polygon  # noqa: F401, E402
 from .polygon import Rectangle as Rectangle  # noqa: F401, E402

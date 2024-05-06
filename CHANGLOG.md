@@ -19,6 +19,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `require_all_words` has been added to `Game.init()`. When set to `True` a `MissingWordError` will be raised if all provided "hidden" words can't be placed successfully. This does not take into account "secret" words. Also added to CLI as `-rall, --require-all-words`.
 - `lowercase` argument added to `show` and `save` methods which outputs all puzzle letters in lowercase (as opposed to the UPPERCASE default). Added `-lc, --lowercase` flag to CLI as well. Issue #58
 - all words get assigned a random color on initialization (for solution)
+- custom iPython profile
+    - to use first make a custom profile `ipython --profile word-search-generator`
+    - then copy the include config file to your new profile `cp ipython_config.py ~/.ipython/profile_word-search-generator`
+    - finally load iPython with the custom profile `ipython --profile word-search-generator`
+- added pretty printed traceback via Rich
 
 ### Fixed
 
@@ -37,6 +42,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - PDF output now highlights puzzle words in color "bubbles" (Issue #54)
 - Updated PDF layout and formatting to better work with the new solution highlighting
 - "secret" words are now highlighted and included in the word list on the solution page
+- add [Rich](https://github.com/Textualize/rich) to dependencies for cli highlighting
+- CLI output now defaults to a 'pretty' version using rich (can be disabled with the `--no-pretty` flag)
+    - solution flag now highlights puzzle words using same coloring as PDF output
+    - answer key text reversed to obfuscate (like PDF output) when not using '-c' flag
+- `hide_fillers` argument added to the base `WordSearch.show()` method.
 
 ### Removed
 

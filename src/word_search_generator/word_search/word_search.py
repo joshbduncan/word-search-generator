@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 from typing import Iterable
 
 from .. import utils
@@ -23,12 +24,6 @@ from ..core.validator import (
 )
 from ._formatter import WordSearchFormatter
 from ._generator import WordSearchGenerator
-
-# Puzzle: TypeAlias = list[list[str]]
-# DirectionSet: TypeAlias = set[Direction]
-# Key: TypeAlias = dict[str, KeyInfo]
-# KeyJson: TypeAlias = dict[str, KeyInfoJson]
-# WordSet: TypeAlias = set[Word]
 
 
 class WordSearch(Game):
@@ -175,6 +170,39 @@ class WordSearch(Game):
         """
         self._secret_directions = self.validate_level(value)
         self.generate()
+
+    # ************************************************* #
+    # ******************** METHODS ******************** #
+    # ************************************************* #
+
+    def show(
+        self,
+        solution: bool = False,
+        hide_fillers: bool = False,
+        lowercase: bool = False,
+        reversed_letters: bool = False,
+        *args,
+        **kwargs,
+    ):
+        return super().show(
+            solution=solution,
+            hide_fillers=hide_fillers,
+            lowercase=lowercase,
+            reversed_letters=reversed_letters,
+        )
+
+    def save(
+        self,
+        path: str | Path,
+        format: str = "PDF",
+        solution: bool = False,
+        lowercase: bool = False,
+        *args,
+        **kwargs,
+    ) -> str:
+        return super().save(
+            path=path, format=format, solution=solution, lowercase=lowercase
+        )
 
     # *************************************************************** #
     # ******************** PROCESSING/GENERATION ******************** #

@@ -2,6 +2,8 @@ import colorsys
 import random
 from typing import Iterable, NamedTuple, TypedDict
 
+from rich.style import Style
+
 from .game import Direction
 from .validator import Validator
 
@@ -67,6 +69,13 @@ class Word:
         return True
 
     @property
+    def lowercase(self) -> str:
+        """Return lowercase version of the word."""
+        if not self.placed:
+            return ""
+        return self.text.lower()
+
+    @property
     def placed(self) -> bool:
         """Is the word currently placed in a puzzle.
 
@@ -110,6 +119,12 @@ class Word:
         )
 
     @property
+    def rich_style(self) -> Style:
+        """Returns a rich Style for outputting the word in the cli."""
+        r, g, b = (int(v * 255) for v in self.color)
+        return Style(color="white", bgcolor=f"rgb({r},{g},{b})", bold=True)
+
+    @property
     def key_info(self) -> KeyInfo:
         """Returns the Word placement information formatted
         correctly for a WordSearch puzzle key."""
@@ -130,26 +145,38 @@ class Word:
             "secret": self.secret,
         }
 
-    def key_string(self, bbox: tuple[tuple[int, int], tuple[int, int]]) -> str:
-        """Returns a string representation of the Word placement
+    def key_string(
+        self,
+        bbox: tuple[tuple[int, int], tuple[int, int]],
+        lowercase: bool = False,
+        reversed_letters: bool = False,
+    ) -> str:
+        """Return a string representation of the Word placement
         information formatted correctly for a WordSearch puzzle key
         when the WordSearch object it output using the `print()` or
         `.show()` method.
 
         Args:
-            bbox (tuple[tuple[int, int], tuple[int, int]]): The current
-                puzzle bounding box. Used to offset the coordinates when
-                the puzzle has been masked and is no longer it's original
-                size.
+            bbox: The current puzzle bounding box.
+            lowercase: Should words be lowercase. Defaults to False.
+            reversed_letters: Should words letters be reversed. Defaults to False.
+
+
+        Returns:
+            Word placement information.
         """
-        if self.placed:
-            col, row = self.offset_position_xy(bbox)
-            return (
-                f"{'*' if self.secret else ''}{self.text} "
-                + f"{self.direction.name if self.direction else self.direction}"
-                + f" @ {(col, row)}"
-            )
-        return ""
+        if not self.placed:
+            return ""
+        col, row = self.offset_position_xy(bbox)
+        word_text = self.lowercase if lowercase else self.text
+        if reversed_letters:
+            word_text = word_text[::-1]
+        return (
+            f"{'*' if self.secret else ''}"
+            + f"{word_text} "
+            + f"{self.direction.name if self.direction else self.direction}"
+            + f" @ {(col, row)}"
+        )
 
     def offset_position_xy(
         self, bbox: tuple[tuple[int, int], tuple[int, int]]

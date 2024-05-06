@@ -9,7 +9,8 @@ from ..core.word import Direction, Word
 from ..utils import in_bounds
 
 if TYPE_CHECKING:  # pragma: no cover
-    from ..core.game import Game, Puzzle
+    from ..core import GameType
+    from ..core.game import Puzzle
 
 
 Fit: TypeAlias = tuple[str, list[tuple[int, int]]]
@@ -26,7 +27,7 @@ class WordSearchGenerator(Generator):
         self.puzzle: Puzzle = []
         super().__init__()
 
-    def generate(self, game: Game) -> Puzzle:
+    def generate(self, game: GameType) -> Puzzle:
         self.game = game
         self.puzzle = game._build_puzzle(game.size, "")
         self.fill_words()
