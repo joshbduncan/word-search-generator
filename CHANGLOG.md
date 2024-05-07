@@ -25,6 +25,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - finally load iPython with the custom profile `ipython --profile word-search-generator`
 - added pretty printed traceback via Rich
 - custom alphabet can now be specified for generators (used for puzzle filler characters)
+- added `-hk`, `--hide-key` to cli and `WordSearch.show()`, and `WordSearch.save()` methods, allowing user to hide the answer key during output
+    - only applies to cli output and saved PDF files
+    - the answer key will always be output on the solution page of a pdf
 
 ### Fixed
 

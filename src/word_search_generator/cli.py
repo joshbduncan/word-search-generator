@@ -114,6 +114,12 @@ puzzle words can go. See valid arguments above.",
 (choices: "CSV", "JSON", "PDF").',
     )
     parser.add_argument(
+        "-hk",
+        "--hide-key",
+        action="store_true",
+        help="Hide the answer key from output.",
+    )
+    parser.add_argument(
         "-lc",
         "--lowercase",
         action="store_true",
@@ -305,7 +311,11 @@ secret puzzle words can go. See valid arguments above.",
             else f"WordSearchPuzzle {datetime.now()}.{format.lower()}"
         )
         foutput = puzzle.save(
-            path=path, format=format, solution=args.cheat, lowercase=args.lowercase
+            path=path,
+            format=format,
+            solution=args.cheat,
+            lowercase=args.lowercase,
+            hide_key=args.hide_key,
         )
         print(f"Puzzle saved: {foutput}")
 
@@ -314,6 +324,7 @@ secret puzzle words can go. See valid arguments above.",
             solution=args.cheat,
             lowercase=args.lowercase,
             reversed_letters=not args.cheat,
+            hide_key=args.hide_key,
         )
 
     return 0
