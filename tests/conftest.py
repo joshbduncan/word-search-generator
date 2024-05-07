@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from word_search_generator import WordSearch
-from word_search_generator.core import Formatter, Game, Generator, Validator
+from word_search_generator.core import Formatter, Game, GameType, Generator, Validator
 from word_search_generator.core.game import Puzzle
 from word_search_generator.core.word import Direction, Word
 from word_search_generator.mask import shapes
@@ -22,7 +22,7 @@ def empty_game():
 @pytest.fixture
 def empty_generator():
     class G(Generator):
-        def generate(self, game: Game) -> Puzzle:
+        def generate(self, game: GameType) -> Puzzle:
             puzzle = []
             for word in game.words:
                 word.start_column = word.start_row = 1
@@ -36,12 +36,12 @@ def empty_generator():
 @pytest.fixture
 def empty_formatter(tmp_path: Path):
     class F(Formatter):
-        def show(self, game: Game, *args, **kwargs) -> str:
+        def show(self, game: GameType, *args, **kwargs) -> str:
             return ""
 
         def save(
             self,
-            game: Game,
+            game: GameType,
             path: str | Path,
             format: str = "PDF",
             solution: bool = False,

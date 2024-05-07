@@ -97,15 +97,14 @@ class Game:
         self._masks: list[Mask] = []
         self._mask: Puzzle = []
 
-        self.generator: Generator | None = generator
-        self.formatter: Formatter | None = formatter
-        self._validators: Iterable[Validator] | None = validators
-
         # setup required defaults
-        if not self.generator:
-            self.generator = self.DEFAULT_GENERATOR
-        if not self.formatter:
-            self.formatter = self.DEFAULT_FORMATTER
+        self.generator: Generator | None = (
+            generator if generator is not None else self.DEFAULT_GENERATOR
+        )
+        self.formatter: Formatter | None = (
+            formatter if formatter is not None else self.DEFAULT_FORMATTER
+        )
+        self._validators: Iterable[Validator] | None = validators
 
         # set game words
         if words:
