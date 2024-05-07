@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - then copy the include config file to your new profile `cp ipython_config.py ~/.ipython/profile_word-search-generator`
     - finally load iPython with the custom profile `ipython --profile word-search-generator`
 - added pretty printed traceback via Rich
+- custom alphabet can now be specified for generators (used for puzzle filler characters)
 
 ### Fixed
 

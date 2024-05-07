@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import random
-import string
 from typing import TYPE_CHECKING, TypeAlias
 
 from ..core.generator import Generator, WordFitError, retry
@@ -17,15 +16,8 @@ Fit: TypeAlias = tuple[str, list[tuple[int, int]]]
 Fits: TypeAlias = list[tuple[str, list[tuple[int, int]]]]
 
 
-ALPHABET = list(string.ascii_uppercase)
-
-
 class WordSearchGenerator(Generator):
     """Default generator for standard WordSearch puzzles."""
-
-    def __init__(self) -> None:
-        self.puzzle: Puzzle = []
-        super().__init__()
 
     def generate(self, game: GameType) -> Puzzle:
         self.game = game
@@ -222,7 +214,7 @@ class WordSearchGenerator(Generator):
                     and self.game.mask[row][col] == self.game.ACTIVE
                 ):
                     while True:
-                        random_char = random.choice(ALPHABET)
+                        random_char = random.choice(self.alphabet)
                         if self.no_duped_words(random_char, (row, col)):
                             self.puzzle[row][col] = random_char
                             break
