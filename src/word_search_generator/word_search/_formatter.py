@@ -42,6 +42,7 @@ class WordSearchFormatter(Formatter):
         solution: bool = False,
         hide_fillers: bool = False,
         lowercase: bool = False,
+        hide_key: bool = False,
         reversed_letters=False,
     ):
         """Return a string representation of the game.
@@ -110,7 +111,8 @@ class WordSearchFormatter(Formatter):
             console.print(f"Find words going {utils.get_LEVEL_DIRS_str(game.level)}:")
             console.print(*wordlist, sep=", ")
             console.print()
-            console.print(answer_key)
+            if not hide_key:
+                console.print(answer_key)
         return capture.get()
 
     def save(
@@ -120,6 +122,7 @@ class WordSearchFormatter(Formatter):
         format: str = "PDF",
         solution: bool = False,
         lowercase: bool = False,
+        hide_key: bool = False,
     ) -> Path:
         if format.upper() not in ["CSV", "JSON", "PDF"]:
             raise ValueError('Save file format must be either "CSV", "JSON", or "PDF".')
@@ -141,12 +144,7 @@ class WordSearchFormatter(Formatter):
                 lowercase,
             )
         else:
-            saved_file = self.write_pdf_file(
-                path,
-                game,  # type: ignore
-                solution,
-                lowercase,
-            )
+            saved_file = self.write_pdf_file(path, game, solution, lowercase, hide_key)
         # return saved file path
         return saved_file
 
@@ -234,14 +232,13 @@ class WordSearchFormatter(Formatter):
     def write_pdf_file(
         self,
         path: Path,
-        game: WordSearch,
+        game: GameType,
         solution: bool = False,
         lowercase: bool = False,
-        *args,
-        **kwargs,
+        hide_key: bool = False,
     ) -> Path:
         def draw_puzzle_page(
-            pdf: FPDF, game: WordSearch, solution: bool = False
+            pdf: FPDF, game: GameType, solution: bool = False, hide_key: bool = False
         ) -> FPDF:
             """Draw the puzzle information on a FPDF PDF page.
 
@@ -413,16 +410,17 @@ class WordSearchFormatter(Formatter):
             if not lines and not solution:
                 pdf.cell(text="<ALL SECRET WORDS>", align="C", center=True)
 
-            # write the puzzle answer key
-            # resetting the margin before rotating makes layout easier to figure
-            pdf.set_margin(0)
-            pdf.set_char_spacing(0)
-            # rotate the page to write answer key upside down
-            with pdf.rotation(angle=180, x=pdf.epw / 2, y=pdf.eph / 2):
-                pdf.set_xy(pdf.epw - pdf.epw, 0)
-                pdf.set_margin(0.25)
-                pdf.set_font("Helvetica", size=self.PDF_FONT_SIZE_S)
-                pdf.write(text=f"{key_intro}: {answer_key_str}")
+            if not hide_key:
+                # write the puzzle answer key
+                # resetting the margin before rotating makes layout easier to figure
+                pdf.set_margin(0)
+                pdf.set_char_spacing(0)
+                # rotate the page to write answer key upside down
+                with pdf.rotation(angle=180, x=pdf.epw / 2, y=pdf.eph / 2):
+                    pdf.set_xy(pdf.epw - pdf.epw, 0)
+                    pdf.set_margin(0.25)
+                    pdf.set_font("Helvetica", size=self.PDF_FONT_SIZE_S)
+                    pdf.write(text=f"{key_intro}: {answer_key_str}")
 
             return pdf
 
@@ -434,7 +432,7 @@ class WordSearchFormatter(Formatter):
         pdf.set_line_width(pdf.line_width * 2)
 
         # draw initial puzzle page
-        pdf = draw_puzzle_page(pdf, game)
+        pdf = draw_puzzle_page(pdf, game, False, hide_key)
 
         # add puzzle solution page if requested
         if solution:
