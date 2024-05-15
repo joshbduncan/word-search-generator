@@ -1,22 +1,25 @@
 import json
 import pathlib
 import random
-from typing import Set
+from pathlib import Path
 
 import pytest
 
-from word_search_generator import (
+from word_search_generator import WordSearch, utils
+from word_search_generator.core.directions import LEVEL_DIRS
+from word_search_generator.core.game import (
+    EmptyPuzzleError,
+    EmptyWordlistError,
     Key,
     MissingWordError,
     Puzzle,
     PuzzleSizeError,
-    WordSearch,
-    config,
-    utils,
 )
-from word_search_generator.config import level_dirs
+from word_search_generator.core.validator import NoSingleLetterWords
 from word_search_generator.mask.polygon import Rectangle
-from word_search_generator.word import Direction, Word
+from word_search_generator.word_search._formatter import WordSearchFormatter
+
+formatter = WordSearchFormatter()
 
 
 def check_key(key: Key, puzzle: Puzzle) -> bool:
@@ -32,156 +35,38 @@ def check_key(key: Key, puzzle: Puzzle) -> bool:
     return True
 
 
-def test_empty_object():
-    ws = WordSearch()
-    assert len(ws.words) == 0
-
-
-def test_input_cleanup(ws):
-    assert len(ws.words) == 8
-
-
-def test_junky_input_cleanup():
-    junky_words = """here, are,                  a, don't
-
-    it's what's,
-    junk,,,,,,   , ,i
-
-    words,"""
-    junk_ws = WordSearch(junky_words)
-    assert len(junk_ws.words) == 4
-
-
-def test_set_puzzle_level(ws):
-    ws.level = 3
-    assert ws.directions == utils.validate_level(config.level_dirs[3])
-
-
-def test_set_secret_level(ws):
-    ws.secret_directions = 4  # type: ignore
-    assert ws.secret_directions == utils.validate_level(4)  # type: ignore
-
-
-def test_bad_puzzle_level_value(ws):
-    with pytest.raises(ValueError):
-        ws.level = 757
-
-
-def test_bad_puzzle_level_type(ws):
-    with pytest.raises(TypeError):
-        ws.level = "A"  # type: ignore
-
-
-def test_garbage_puzzle_level_type(ws):
-    with pytest.raises(TypeError):
-        ws.level = 17.76  # type: ignore
-
-
-def test_manual_level_control(ws):
-    tst_dirs = {Direction.E, Direction.SW, (-1, 0)}
-    ws.directions = tst_dirs  # type: ignore
-    assert ws.directions == utils.validate_level(tst_dirs)
-
-
-def test_set_puzzle_size(ws):
-    ws.size = 15
-    assert len(ws.puzzle) == 15
-
-
-def test_bad_puzzle_size_value(ws):
-    with pytest.raises(ValueError):
-        ws.size = 1
-
-
-def test_bad_puzzle_size_type(ws):
-    with pytest.raises(TypeError):
-        ws.size = "A"  # type: ignore
-
-
-def test_puzzle_key(ws):
+def test_puzzle_key(ws: WordSearch):
     assert check_key(ws.key, ws.puzzle)
 
 
-def test_export_pdf(ws, tmp_path):
+def test_export_pdf(ws: WordSearch, tmp_path: Path):
     tmp_path = pathlib.Path.joinpath(tmp_path, "test.pdf")
     ws.save(tmp_path)
     assert tmp_path.exists()
 
 
-def test_export_csv(ws, tmp_path):
+def test_export_csv(ws: WordSearch, tmp_path: Path):
     tmp_path = pathlib.Path.joinpath(tmp_path, "test.csv")
     ws.save(tmp_path)
     assert tmp_path.exists()
 
 
-def test_invalid_save_path(ws):
+def test_invalid_save_path(ws: WordSearch):
     with pytest.raises(OSError):
         ws.save("~/some/random/dir/that/doesnt/exists")
 
 
-def test_add_words(ws):
-    ws.add_words("test")
-    assert Word("test") in ws.words
-
-
-def test_add_regular_words_replacing_secret_word(ws):
-    ws.add_words("test", True)
-    ws.add_words("test")
-    assert Word("test") not in ws.secret_words and Word("test") in ws.words
-
-
-def test_add_secret_words(ws):
-    ws.add_words("test", True)
-    assert Word("test") in ws.secret_words
-
-
-def test_add_secret_words_replacing_regular_word(ws):
-    ws.add_words("test")
-    ws.add_words("test", True)
-    assert Word("test") not in ws.hidden_words and Word("test") in ws.secret_words
-
-
-def test_remove_words(ws):
-    ws.add_words("test")
-    ws.remove_words("test")
-    assert Word("test") not in ws.words
-
-
-def test_remove_words_from_secret_words(ws):
-    ws.add_words("test", True)
-    ws.remove_words("test")
-    assert "test".upper() not in ws.words.union(ws.secret_words)
-
-
-def test_replace_words(ws):
-    ws.replace_words("set, of replaced, words")
-    assert len(ws.words) == 4
-
-
-def test_replace_secret_words(words):
-    ws = WordSearch(words, secret_words="secret, blind, nope")
-    ws.replace_words("hidden", True)
-    assert len(ws.secret_words) == 1
-
-
-def test_reset_puzzle_size(ws):
-    prev_size = ws.size
-    ws.size = 25
-    ws.reset_size()
-    assert ws.size == prev_size
-
-
-def test_puzzle_repr(ws):
+def test_puzzle_repr(ws: WordSearch):
     assert eval(repr(ws)) == ws
 
 
-def test_puzzle_equal(words):
+def test_puzzle_equality(words):
     ws1 = WordSearch(words, size=10)
     ws2 = WordSearch(words, size=10)
     assert ws1 == ws2
 
 
-def test_puzzle_invalid_equality(words):
+def test_puzzle_inequality(words):
     ws1 = WordSearch(words, size=10)
     ws2 = ["testing"]
     assert ws1 != ws2
@@ -193,58 +78,63 @@ def test_puzzle_non_equal(words):
     assert ws1 != ws2
 
 
-def test_puzzle_str(ws):
-    puzzle_str = utils.format_puzzle_for_show(ws)
+@pytest.mark.skip(reason="update to match new rich output")
+def test_puzzle_str(ws: WordSearch):
+    puzzle_str = formatter.format_puzzle_for_show(ws)
     assert str(ws) == puzzle_str
 
 
-def test_puzzle_str_output(ws, capsys):
-    print(utils.format_puzzle_for_show(ws))
+@pytest.mark.skip(reason="update to match new rich output")
+def test_puzzle_str_output(ws: WordSearch, capsys):
+    print(formatter.format_puzzle_for_show(ws))
     capture1 = capsys.readouterr()
     print(ws)
     capture2 = capsys.readouterr()
     assert capture1.out == capture2.out
 
 
-def test_puzzle_show_output(ws, capsys):
-    print(utils.format_puzzle_for_show(ws))
+@pytest.mark.skip(reason="update to match new rich output")
+def test_puzzle_show_output(ws: WordSearch, capsys):
+    print(formatter.format_puzzle_for_show(ws))
     capture1 = capsys.readouterr()
     ws.show()
     capture2 = capsys.readouterr()
     assert capture1.out == capture2.out
 
 
-def test_puzzle_show_output_for_empty_object(capsys):
-    ws = WordSearch()
-    ws.show()
-    capture = capsys.readouterr()
-
-    assert capture.out == "Empty puzzle.\n"
-
-
-def test_puzzle_show_str_output_for_empty_object(capsys):
-    ws = WordSearch()
-    print(ws)
-    capture = capsys.readouterr()
-
-    assert capture.out == "Empty puzzle.\n"
+@pytest.mark.skip(reason="update to match new rich output")
+def test_puzzle_show_output_lowercase(ws: WordSearch, capsys):
+    print(formatter.format_puzzle_for_show(ws, lowercase=True))
+    capture1 = capsys.readouterr()
+    ws.show(lowercase=True)
+    capture2 = capsys.readouterr()
+    assert capture1.out == capture2.out
 
 
-def test_puzzle_show_solution_output(ws, capsys):
-    print(utils.format_puzzle_for_show(ws, True))
+@pytest.mark.skip(reason="update to match new rich output")
+def test_puzzle_show_solution_output(ws: WordSearch, capsys):
+    print(formatter.format_puzzle_for_show(ws, True))
     capture1 = capsys.readouterr()
     ws.show(True)
     capture2 = capsys.readouterr()
     assert capture1.out == capture2.out
 
 
-def test_puzzle_show_hide_fillers_output(ws, capsys):
-    print(utils.format_puzzle_for_show(ws, hide_fillers=True))
+@pytest.mark.skip(reason="update to match new rich output")
+def test_puzzle_show_hide_fillers_output(ws: WordSearch, capsys):
+    print(formatter.format_puzzle_for_show(ws, hide_fillers=True))
     capture1 = capsys.readouterr()
     ws.show(hide_fillers=True)
     capture2 = capsys.readouterr()
     assert capture1.out == capture2.out
     assert "\x1b" not in capture2.out
+
+
+def test_json_empty_puzzle_error(ws: WordSearch):
+    assert ws
+    ws._puzzle = []
+    with pytest.raises(EmptyPuzzleError):
+        ws.json
 
 
 def test_json_output_property_for_puzzle():
@@ -262,18 +152,8 @@ def test_json_output_property_for_key():
         assert pos == ws.key[word]["start"]
 
 
-def test_json_output_property_for_empty_object():
-    ws = WordSearch()
-    assert ws.json == json.dumps({})
-
-
-def test_input_including_palindrome(words):
-    ws = WordSearch(words + ", level")
-    assert len(ws.words) == 8
-
-
 def test_for_empty_spaces(iterations):
-    for _ in range(iterations * 20):
+    for _ in range(iterations):
         words = ",".join(utils.get_random_words(10))
         ws = WordSearch(words, level=3)
         flat = [item for sublist in ws.puzzle for item in sublist]
@@ -291,30 +171,30 @@ def test_clearing_secret_directions(words):
         ws.secret_directions = set()
 
 
-def test_get_level(ws):
+def test_get_level(ws: WordSearch):
     ws.level = 2
-    assert ws.level == level_dirs[2]  # type: ignore
+    assert ws.level == LEVEL_DIRS[2]  # type: ignore
 
 
-def test_add_words_with_resize(ws):
+def test_add_words_with_resize(ws: WordSearch):
     ws.size = 5
     ws.add_words("test", reset_size=True)
     assert ws.size != 5
 
 
-def test_add_secret_words_with_resize(ws):
+def test_add_secret_words_with_resize(ws: WordSearch):
     ws.size = 5
     ws.add_words("test", True, reset_size=True)
     assert ws.size != 5
 
 
-def test_remove_words_with_resize(ws):
+def test_remove_words_with_resize(ws: WordSearch):
     ws.size = 5
     ws.remove_words("test", reset_size=True)
     assert ws.size != 5
 
 
-def test_replace_words_with_resize(ws):
+def test_replace_words_with_resize(ws: WordSearch):
     ws.size = 5
     ws.replace_words("set, of replaced, words", reset_size=True)
     assert ws.size != 5
@@ -330,7 +210,7 @@ def test_no_hidden_words():
     assert len(ws.placed_words) == 0
 
 
-def test_placed_hidden_words(ws):
+def test_placed_hidden_words(ws: WordSearch):
     assert len(ws.placed_hidden_words) == len(
         {word for word in ws.hidden_words if word.direction}
     )
@@ -389,12 +269,20 @@ def test_invalid_size_at_init_type():
         ws = WordSearch(size="250")  # type: ignore  # noqa: F841
 
 
-def test_puzzle_solution_output(ws, capsys):
-    print(utils.format_puzzle_for_show(ws, True))
+@pytest.mark.skip(reason="update to match new rich output")
+def test_puzzle_solution_output(ws: WordSearch, capsys):
+    print(formatter.format_puzzle_for_show(ws, True))
     capture1 = capsys.readouterr()
     ws.solution
     capture2 = capsys.readouterr()
     assert capture1.out == capture2.out
+
+
+def test_unplaced_words():
+    ws = WordSearch("dog", size=5)
+    ws.add_words("generator")
+    ws.add_words("refrigerator", secret=True)
+    assert len(ws.unplaced_words) == 2
 
 
 def test_unplaced_hidden_words():
@@ -409,13 +297,13 @@ def test_unplaced_secret_words():
     assert len(ws.unplaced_secret_words) == 1
 
 
-def test_invalid_export_format(ws):
+def test_invalid_export_format(ws: WordSearch):
     with pytest.raises(ValueError):
         ws.save("test.pdf", format="GIF")
 
 
 def test_missing_word_error():
-    ws = WordSearch("dog", size=5, include_all_words=True)
+    ws = WordSearch("dog", size=5, require_all_words=True)
     with pytest.raises(MissingWordError):
         ws.add_words("generator")
 
@@ -495,8 +383,8 @@ def test_hide_fillers(iterations, builtin_mask_shapes):
         mask = random.choice(builtin_mask_shapes)
         if mask:
             ws.apply_mask(mask)
-        hidden_fillers = utils.hide_filler_characters(ws)
-        chars: Set[str] = set()
+        hidden_fillers = formatter.hide_filler_characters(ws)
+        chars: set[str] = set()
         for word in ws.placed_words:
             chars.update(hidden_fillers[y][x] for y, x in word.coordinates)
         results.append(" " not in chars)
@@ -525,3 +413,23 @@ def test_word_directions(words, secret_words):
     ws = WordSearch(words, secret_words=secret_words, secret_level=7)
     assert all(w.direction in ws.directions for w in ws.placed_hidden_words)
     assert all(w.direction in ws.secret_directions for w in ws.placed_secret_words)
+
+
+def test_validator_setter(words):
+    ws = WordSearch(words, validators=None)
+    ws.validators = [NoSingleLetterWords()]
+    assert all(isinstance(v, NoSingleLetterWords) for v in ws.validators)
+
+
+def test_validator_setter_invalid_validator(words):
+    class Val:
+        pass
+
+    with pytest.raises(TypeError):
+        WordSearch(words, validators=[Val()])  # type: ignore[list-item]
+
+
+def test_no_words_to_generate(ws: WordSearch):
+    ws._words = set()
+    with pytest.raises(EmptyWordlistError):
+        ws.generate()

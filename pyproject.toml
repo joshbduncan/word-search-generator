@@ -4,10 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "word-search-generator"
+version = "3.5.1"
 authors = [{ name = "Josh Duncan", email = "joshbduncan@gmail.com" }]
 description = "Make awesome Word Search puzzles"
-readme = "README.md"
 requires-python = ">=3.7"
+readme = "README.md"
 keywords = ["puzzles", "games", "word-search"]
 license = { text = "MIT License" }
 classifiers = [
@@ -17,18 +18,13 @@ classifiers = [
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Topic :: Games/Entertainment :: Puzzle Games",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Typing :: Typed",
 ]
+
 dependencies = ["fpdf2==2.4.2", "pillow==9.5.0", "typing_extensions"]
 dynamic = ["version"]
-
-[tool.setuptools.dynamic]
-version = { attr = "word_search_generator.__version__" }
 
 [project.urls]
 homepage = "https://github.com/joshbduncan/word-search-generator"
@@ -89,17 +85,17 @@ warn_redundant_casts = true
 warn_return_any = true
 warn_unreachable = true
 warn_unused_configs = true
-no_implicit_reexport = true
+implicit_reexport = true
 
 [tool.ruff]
 exclude = [".venv"]
 extend-select = ["C4", "I", "SIM", "TCH"]
 fixable = ["B", "I"]
-format = "grouped"
+output-format = "grouped"
 line-length = 88
 show-fixes = true
 src = ["src", "test"]
-target-version = "py37"
+target-version = "py310"
 
 [tool.ruff.per-file-ignores]
 # Ignore `E402` (import violations) in all `__init__.py`.

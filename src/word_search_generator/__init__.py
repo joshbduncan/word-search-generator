@@ -1,11 +1,9 @@
-from __future__ import annotations
-
 """
     Word Search
     -----------
     Generate Word Search puzzles with Python.
     -----------
-    :copyright: (c) 2021 Josh Duncan.
+    :copyright: (c) 2024 Josh Duncan.
     :license: MIT, see LICENSE for more details.
 """
 
@@ -584,53 +582,3 @@ or set the puzzle `size` before applying a mask."
         mask(s) found in `WordSearch.mask`."""
         self._mask = list(map(list, zip(*self.mask)))
         self._generate()
-
-    def remove_masks(self) -> None:
-        """"""
-        self._masks = []
-        self._mask = utils.build_puzzle(self.size, ACTIVE)
-        self._generate()
-
-    def remove_static_masks(self) -> None:
-        self._masks = [mask for mask in self.masks if not mask.static]
-
-    def _reapply_masks(self) -> None:
-        """Reapply all current masks to the puzzle."""
-        self._mask = utils.build_puzzle(self.size, ACTIVE)
-        for mask in self.masks:
-            if mask.static and mask.puzzle_size != self.size:
-                continue
-            self.apply_mask(mask)
-
-    # ******************************************************** #
-    # ******************** DUNDER METHODS ******************** #
-    # ******************************************************** #
-
-    def __eq__(self, __o: object) -> bool:
-        if isinstance(__o, WordSearch):
-            return all(
-                (
-                    self.words == __o.words,
-                    self.directions == __o.directions,
-                    self.size == __o.size,
-                    self.secret_words == __o.secret_words,
-                    self.secret_directions == __o.secret_directions,
-                )
-            )
-        return False
-
-    def __repr__(self):
-        return (
-            f"{self.__class__.__name__}"
-            + f"('{','.join([word.text for word in self.hidden_words])}', "
-            + f"{utils.direction_set_repr(self.directions)}, "
-            + f"{self.size}, "
-            + f"'{','.join([word.text for word in self.secret_words])}',"
-            + f"{utils.direction_set_repr(self.secret_directions)})"
-        )
-
-    def __str__(self):
-        if self.key:
-            return utils.format_puzzle_for_show(self)
-        else:
-            return "Empty puzzle."

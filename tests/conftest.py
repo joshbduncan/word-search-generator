@@ -1,12 +1,75 @@
+from pathlib import Path
+
 import pytest
 
 from word_search_generator import WordSearch
+from word_search_generator.core import Formatter, Game, GameType, Generator, Validator
+from word_search_generator.core.game import Puzzle
+from word_search_generator.core.word import Direction, Word
 from word_search_generator.mask import shapes
 
 
 @pytest.fixture
 def iterations():
-    return 5
+    return 10
+
+
+@pytest.fixture
+def empty_game():
+    return Game()
+
+
+@pytest.fixture
+def empty_generator():
+    class G(Generator):
+        def generate(self, game: GameType) -> Puzzle:
+            puzzle = []
+            for word in game.words:
+                word.start_column = word.start_row = 1
+                word.direction = Direction.N
+                puzzle.append([word.text])
+            return [[word.text for word in game.placed_words]]
+
+    return G()
+
+
+@pytest.fixture
+def empty_formatter(tmp_path: Path):
+    class F(Formatter):
+        def show(self, game: GameType, *args, **kwargs) -> str:
+            return ""
+
+        def save(
+            self,
+            game: GameType,
+            path: str | Path,
+            format: str = "PDF",
+            solution: bool = False,
+            *args,
+            **kwargs,
+        ) -> Path:
+            return tmp_path
+
+    return F()
+
+
+@pytest.fixture
+def empty_validator():
+    class V(Validator):
+        def validate(self, value: str, *args, **kwargs) -> bool:
+            return True
+
+    return V()
+
+
+@pytest.fixture
+def base_game(words, empty_generator, empty_formatter, empty_validator):
+    return Game(
+        words=words,
+        generator=empty_generator,
+        formatter=empty_formatter,
+        validators=[empty_formatter],
+    )
 
 
 @pytest.fixture
@@ -28,6 +91,48 @@ def ws(words):
 @pytest.fixture
 def builtin_mask_shapes():
     return [eval(f"shapes.{shape}")() for shape in shapes.BUILTIN_MASK_SHAPES]
+
+
+@pytest.fixture
+def placed_words():
+    BAT = Word("bat")
+    BAT.start_row = 0
+    BAT.start_column = 0
+    BAT.direction = Direction.SE
+    BAT.secret = False
+
+    CAB = Word("cab")
+    CAB.start_row = 4
+    CAB.start_column = 2
+    CAB.direction = Direction.SE
+    CAB.secret = False
+
+    RAT = Word("rat")
+    RAT.start_row = 0
+    RAT.start_column = 4
+    RAT.direction = Direction.S
+    RAT.secret = False
+    return {BAT, CAB, RAT}
+
+
+@pytest.fixture
+def generator_test_puzzle():
+    return [
+        ["B", "", "", "", "R"],
+        ["", "A", "", "", "A"],
+        ["", "", "T", "", "T"],
+        ["", "", "", "", ""],
+        ["", "", "C", "A", "B"],
+    ]
+
+
+@pytest.fixture
+def generator_test_game(generator_test_puzzle, placed_words):
+    game = WordSearch()
+    game._size = 5
+    game._puzzle = generator_test_puzzle
+    game._words = placed_words
+    return game
 
 
 @pytest.fixture

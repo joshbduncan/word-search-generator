@@ -2,7 +2,7 @@
 
 Word-Search-Generator is a Python module for generating fun [Word Search Puzzles](https://en.wikipedia.org/wiki/Word_search).
 
-[![Tests](https://github.com/joshbduncan/word-search-generator/actions/workflows/tests.yml/badge.svg)](https://github.com/joshbduncan/word-search-generator/actions/workflows/tests.yml) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/word-search-generator) [![PyPI version](https://badge.fury.io/py/word-search-generator.svg)](https://badge.fury.io/py/word-search-generator)
+[![Tests](https://github.com/joshbduncan/word-search-generator/actions/workflows/tox.yml/badge.svg)](https://github.com/joshbduncan/word-search-generator/actions/workflows/tox.yml) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/word-search-generator) [![PyPI version](https://badge.fury.io/py/word-search-generator.svg)](https://badge.fury.io/py/word-search-generator)
 
 ![WordSearch Generator](https://user-images.githubusercontent.com/44387852/209227303-4289957f-ade1-44d9-a0c7-5b860ef446cf.gif)
 
@@ -13,9 +13,17 @@ Word-Search-Generator is a Python module for generating fun [Word Search Puzzles
 
 ## Installation
 
-Install Word-Search-Generator with `pip`:
+You can install Word-Search-Generator with [pipx](https://pypa.github.io/pipx/)...
 
-    $ pip install word-search-generator
+```
+pipx install word-search-generator
+```
+
+Or, for a universal install, you can use `pip`.
+
+```
+pip install word-search-generator
+```
 
 ## Usage
 
