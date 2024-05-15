@@ -4,11 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "word-search-generator"
-version = "3.5.0"
+version = "3.5.1"
 authors = [{ name = "Josh Duncan", email = "joshbduncan@gmail.com" }]
 description = "Make awesome Word Search puzzles"
+requires-python = ">=3.7"
 readme = "README.md"
-requires-python = ">=3.10"
 keywords = ["puzzles", "games", "word-search"]
 license = { text = "MIT License" }
 classifiers = [
@@ -22,7 +22,9 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Typing :: Typed",
 ]
-dependencies = ["fpdf2==2.7.8", "Pillow==10.3.0", "rich==13.6.0"]
+
+dependencies = ["fpdf2==2.4.2", "pillow==9.5.0", "typing_extensions"]
+dynamic = ["version"]
 
 [project.urls]
 homepage = "https://github.com/joshbduncan/word-search-generator"
@@ -32,23 +34,15 @@ changelog = "https://github.com/joshbduncan/word-search-generator/blob/main/CHAN
 bug-tracker = "https://github.com/joshbduncan/word-search-generator/issues"
 
 [project.optional-dependencies]
-tests = [
-    "pdfplumber>=0.10.2",
-    "pypdf>=3.16.2",
-    "pytest>=7.4.2",
-    "pytest-cov>=4.1.0",
-    "pytest-asyncio>=0.21.0",
-]
+tests = ["pypdf>=3.1.0", "pytest>=6.2.5", "pytest-cov>=3.0.0"]
 dev = [
-    "black>=23.9.1",
-    "flake8>=6.1.0",
-    "isort>=5.12.0",
-    "mypy>=1.5.1",
-    "pdfplumber>=0.10.2",
-    "pre-commit>=3.4.0",
-    "pypdf>=3.16.2",
-    "ruff>=0.0.291",
-    "tox>=4.11.3",
+    "black>=21.12b0",
+    "flake8>=4.0.1",
+    "isort>=5.10.1",
+    "mypy>=0.931",
+    "pdfplumber>=0.9.0",
+    "ruff>=0.0.254",
+    "tox>=3.24.5",
 ]
 
 [tool.setuptools.packages.find]
