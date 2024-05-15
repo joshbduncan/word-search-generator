@@ -180,7 +180,6 @@ class WordSearch(Game):
         solution: bool = False,
         hide_fillers: bool = False,
         lowercase: bool = False,
-        hide_key: bool = False,
         reversed_letters: bool = False,
         *args,
         **kwargs,
@@ -189,7 +188,6 @@ class WordSearch(Game):
             solution=solution,
             hide_fillers=hide_fillers,
             lowercase=lowercase,
-            hide_key=hide_key,
             reversed_letters=reversed_letters,
         )
 
@@ -199,16 +197,11 @@ class WordSearch(Game):
         format: str = "PDF",
         solution: bool = False,
         lowercase: bool = False,
-        hide_key: bool = False,
         *args,
         **kwargs,
     ) -> str:
         return super().save(
-            path=path,
-            format=format,
-            solution=solution,
-            lowercase=lowercase,
-            hide_key=hide_key,
+            path=path, format=format, solution=solution, lowercase=lowercase
         )
 
     # *************************************************************** #
