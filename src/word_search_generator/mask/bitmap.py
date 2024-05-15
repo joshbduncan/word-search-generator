@@ -10,7 +10,7 @@ from . import Mask, MaskNotGenerated
 
 
 class ContrastError(Exception):
-    ...
+    pass
 
 
 class Bitmap(Mask):

@@ -208,9 +208,11 @@ secret puzzle words can go. See valid arguments above.",
     secret_words = (
         args.secret_words
         if args.secret_words
-        else ",".join(utils.get_random_words(args.random_secret_words))
-        if args.random_secret_words
-        else ""
+        else (
+            ",".join(utils.get_random_words(args.random_secret_words))
+            if args.random_secret_words
+            else ""
+        )
     )
 
     # if not words were found exit the script
