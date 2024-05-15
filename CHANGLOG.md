@@ -4,6 +4,59 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+## [Unreleased]
+
+### Added
+
+- OOP and ABC all the way down
+    - Most key parts of this package have been extracted out into separate units allowing for more extensibility.
+    - All games now derive from a base `Game` object. Each `Game` can have custom a `Generator` for generating the puzzle, a `Formatter` for displaying/outputting the puzzle, and custom word `Validator`s (e.g. no palindromes, no punctuation, no single letter words, no subwords) for validating puzzle words.
+- Validators: Previously, all word validation was done during the `WordSearch` object initialization (and also after making any changes to the puzzle words). Now, the default validation (no single letter words, no palindromes, no words that fit inside of other words or encase other words) has been abstracted away. Each validator is now based on a `Validator()` abstract base class, allowing users to create their own or disable the defaults. This thought has come up before but because of issue #45 I decided to tackle. Normally in a standard word search puzzle you don't want single-letter words, calindromes, or words that are part of other words, as each of these situations could potentially lead to multiple solutions for the same puzzle.
+    - `validators` argument added to `WordSearch` object
+    - `--no-validators` added to cli arguments to disable default validators
+    - Tests updated and added for new functionality
+- `require_all_words` has been added to `Game.init()`. When set to `True` a `MissingWordError` will be raised if all provided "hidden" words can't be placed successfully. This does not take into account "secret" words. Also added to CLI as `-rall, --require-all-words`.
+- `lowercase` argument added to `show` and `save` methods which outputs all puzzle letters in lowercase (as opposed to the UPPERCASE default). Added `-lc, --lowercase` flag to CLI as well. Issue #58
+- all words get assigned a random color on initialization (for solution)
+- custom iPython profile
+    - to use first make a custom profile `ipython --profile word-search-generator`
+    - then copy the include config file to your new profile `cp ipython_config.py ~/.ipython/profile_word-search-generator`
+    - finally load iPython with the custom profile `ipython --profile word-search-generator`
+- added pretty printed traceback via Rich
+- custom alphabet can now be specified for generators (used for puzzle filler characters)
+- added `-hk`, `--hide-key` to cli and `WordSearch.show()`, and `WordSearch.save()` methods, allowing user to hide the answer key during output
+    - only applies to cli output and saved PDF files
+    - the answer key will always be output on the solution page of a pdf
+
+### Fixed
+
+- Bug creating false negatives in `WordSearchGenerator.no_duped_words()` method that is used when placing new words and filler characters
+
+### Changed
+
+- Minimum Python version updated to 3.10
+    - Updating all typing to use the new format (instead of importing from typing)
+- Tox config
+- `max_fit_tries` raised to 1000 to help more words fitting within smaller puzzles
+- `get_random_words()` now accepts a `max_length` argument, helpful when working with puzzles of a smaller size
+- Dependencies updated and tested on latest release
+    - Updated word search puzzle export to work with fpdf2 v2.7.5 changes
+- None now allowed as `Game` or `Generator` validator.
+- PDF output now highlights puzzle words in color "bubbles" (Issue #54)
+- Updated PDF layout and formatting to better work with the new solution highlighting
+- "secret" words are now highlighted and included in the word list on the solution page
+- add [Rich](https://github.com/Textualize/rich) to dependencies for cli highlighting
+- CLI output now defaults to a 'pretty' version using rich (can be disabled with the `--no-pretty` flag)
+    - solution flag now highlights puzzle words using same coloring as PDF output
+    - answer key text reversed to obfuscate (like PDF output) when not using '-c' flag
+- `hide_fillers` argument added to the base `WordSearch.show()` method.
+
+### Removed
+
+- `reset_size()` function no longer needed as it is included inside of `_generate()` now
+- removed `__version__` from init. Version info is loaded from [pyproject.toml](pyproject.toml) using `importlib.metadata.version`
+
 ## [3.5.1] 2024-05-15
 
 ### Fixed

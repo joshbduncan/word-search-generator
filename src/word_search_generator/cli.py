@@ -264,7 +264,7 @@ secret puzzle words can go. See valid arguments above.",
         args.secret_words
         if args.secret_words
         else (
-            ",".join(utils.get_random_words(args.random_secret_words))
+            ",".join(get_random_words(args.random_secret_words))
             if args.random_secret_words
             else ""
         )
