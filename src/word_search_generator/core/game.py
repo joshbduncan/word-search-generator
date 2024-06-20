@@ -48,6 +48,12 @@ class EmptyWordlistError(Exception):
     pass
 
 
+class NoValidWordsError(Exception):
+    """For when a `Game` object has no valid words."""
+
+    pass
+
+
 class MissingWordError(Exception):
     """For when a `Game` object cannot place all of its words."""
 
@@ -352,6 +358,7 @@ class Game:
             MissingGeneratorError: No set puzzle generator.
             EmptyWordlistError: No game words.
             PuzzleSizeError: Invalid puzzle size.
+            NoValidWordsError: No valid game words.
             MissingWordError: Not all game words could be placed by the generator.
         """
         if not self.generator:
@@ -372,6 +379,8 @@ class Game:
         if not self.mask or len(self.mask) != self.size:
             self._mask = self._build_puzzle(self.size, self.ACTIVE)
         self._puzzle = self.generator.generate(self)
+        if not self.masked and not self.placed_words:
+            raise NoValidWordsError("No valid words have been added to the puzzle.")
         if self.require_all_words and self.unplaced_words:
             raise MissingWordError("All words could not be placed in the puzzle.")
 

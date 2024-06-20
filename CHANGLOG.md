@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - added `-hk`, `--hide-key` to cli and `WordSearch.show()`, and `WordSearch.save()` methods, allowing user to hide the answer key during output
     - only applies to cli output and saved PDF files
     - the answer key will always be output on the solution page of a pdf
+- `NoValidWordsError` for when a puzzle is generated but no valid words are available
 
 ### Fixed
 
