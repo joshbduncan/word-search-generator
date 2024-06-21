@@ -315,7 +315,7 @@ class Game:
             EmptyPuzzleError: Puzzle not yet generated or puzzle has no placed words.
             MissingFormatterError: No puzzle formatter set.
         """
-        if not self.puzzle:
+        if not self.puzzle or not self.placed_words:
             raise EmptyPuzzleError()
         if not self.formatter:
             raise MissingFormatterError()
@@ -335,7 +335,7 @@ class Game:
         Returns:
             Final save path of the file.
         """
-        if not self.puzzle:
+        if not self.puzzle or not self.placed_words:
             raise EmptyPuzzleError()
         if not self.formatter:
             raise MissingFormatterError()
