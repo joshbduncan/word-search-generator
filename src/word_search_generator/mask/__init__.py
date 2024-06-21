@@ -1,4 +1,4 @@
-from ..utils import find_bounding_box
+from ..utils import BoundingBox, find_bounding_box
 
 
 class MaskNotGenerated(Exception):
@@ -112,7 +112,7 @@ class Mask:
             self.reset_points()
 
     @property
-    def bounding_box(self) -> tuple[tuple[int, int], tuple[int, int]] | None:
+    def bounding_box(self) -> BoundingBox | None:
         """Bounding box of the masked area as a rectangle defined
         by a tuple of (top-left edge as x, y, bottom-right edge as x, y). Returned
         points may lie outside of the puzzle bounds. This property is used

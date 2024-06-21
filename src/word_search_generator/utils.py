@@ -2,12 +2,15 @@ from __future__ import annotations
 
 import math
 import random
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeAlias
 
 from .words import WORD_LIST
 
 if TYPE_CHECKING:  # pragma: no cover
     from .core.game import DirectionSet, Key, Puzzle, WordSet
+
+
+BoundingBox: TypeAlias = tuple[tuple[int, int], tuple[int, int]]
 
 
 def round_half_up(n: float, decimals: int = 0) -> float:
@@ -50,7 +53,7 @@ def in_bounds(x: int, y: int, width: int, height: int) -> bool:
 def find_bounding_box(
     grid: list[list[str]],
     edge: str,
-) -> tuple[tuple[int, int], tuple[int, int]]:
+) -> BoundingBox:
     """Bounding box of the masked area as a rectangle defined
     by a tuple of (top-left edge as x, y, bottom-right edge as x, y)"""
     size = len(grid)
@@ -78,7 +81,7 @@ def find_bounding_box(
     return ((min_x, min_y), (max_x, max_y))
 
 
-def stringify(puzzle: Puzzle, bbox: tuple[tuple[int, int], tuple[int, int]]) -> str:
+def stringify(puzzle: Puzzle, bbox: BoundingBox) -> str:
     """Convert puzzle array of nested lists into a string."""
     min_x, min_y = bbox[0]
     max_x, max_y = bbox[1]
@@ -110,7 +113,7 @@ def get_word_list_list(key: Key) -> list[str]:
 
 def get_answer_key_list(
     words: WordSet,
-    bbox: tuple[tuple[int, int], tuple[int, int]],
+    bbox: BoundingBox,
     lowercase: bool = False,
     reversed_letters: bool = False,
 ) -> list[str]:
@@ -132,9 +135,7 @@ def get_answer_key_list(
     ]
 
 
-def get_answer_key_str(
-    words: WordSet, bbox: tuple[tuple[int, int], tuple[int, int]]
-) -> str:
+def get_answer_key_str(words: WordSet, bbox: BoundingBox) -> str:
     """Return a easy to read answer key for display. Resulting coordinates
     will be offset by the supplied values. Used for masked puzzles.
 

@@ -4,6 +4,7 @@ from typing import Iterable, NamedTuple, TypedDict
 
 from rich.style import Style
 
+from ..utils import BoundingBox
 from .game import Direction
 from .validator import Validator
 
@@ -53,13 +54,14 @@ class Word:
         """Validate the word against a list of validators.
 
         Args:
-            validators (list[Validator]): Validators to test.
+            validators: Validators to test.
+            placed_words: Currently placed puzzle words.
 
         Raises:
             TypeError: Incorrect validator type provided.
 
         Returns:
-            bool: Word passes all validators.
+            Word passes all validators.
         """
         for validator in validators:
             if not isinstance(validator, Validator):
@@ -100,7 +102,7 @@ class Word:
         """Set the start position of the Word in the puzzle.
 
         Args:
-            val (Position): Tuple of (row, column)
+            value: Tuple of (row, column)
         """
         self.start_row = value.row
         self.start_column = value.column
@@ -147,7 +149,7 @@ class Word:
 
     def key_string(
         self,
-        bbox: tuple[tuple[int, int], tuple[int, int]],
+        bbox: BoundingBox,
         lowercase: bool = False,
         reversed_letters: bool = False,
     ) -> str:
@@ -160,7 +162,6 @@ class Word:
             bbox: The current puzzle bounding box.
             lowercase: Should words be lowercase. Defaults to False.
             reversed_letters: Should words letters be reversed. Defaults to False.
-
 
         Returns:
             Word placement information.
@@ -178,16 +179,14 @@ class Word:
             + f" @ {(col, row)}"
         )
 
-    def offset_position_xy(
-        self, bbox: tuple[tuple[int, int], tuple[int, int]]
-    ) -> Position:
+    def offset_position_xy(self, bbox: BoundingBox) -> Position:
         """Returns a string representation of the word position with
         1-based indexing and a familiar (x, y) coordinate system. The
         position will be offset by the puzzle bounding box when a puzzle
         has been masked.
 
         Args:
-            bbox (tuple[tuple[int, int], tuple[int, int]]): The current
+            bbox (BoundingBox): The current
                 puzzle bounding box.
         """
         return Position(
@@ -203,14 +202,12 @@ class Word:
             ),
         )
 
-    def offset_coordinates(
-        self, bbox: tuple[tuple[int, int], tuple[int, int]]
-    ) -> list[Position]:
+    def offset_coordinates(self, bbox: BoundingBox) -> list[Position]:
         """Returns a list of the Word letter coordinates, offset
         by the puzzle bounding box.
 
         Args:
-            bbox (tuple[tuple[int, int], tuple[int, int]]): The current
+            bbox (BoundingBox): The current
                 puzzle bounding box.
         """
         return [

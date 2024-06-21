@@ -3,10 +3,10 @@ from math import log2
 from pathlib import Path
 from typing import Iterable, Sized, TypeAlias
 
-from .. import utils
 from ..core.formatter import Formatter
 from ..core.generator import Generator
 from ..mask import CompoundMask, Mask
+from ..utils import BoundingBox, find_bounding_box
 from .directions import LEVEL_DIRS, Direction
 from .validator import Validator
 from .word import KeyInfo, KeyInfoJson, Word
@@ -182,10 +182,10 @@ class Game:
         return bool(self.masks)
 
     @property
-    def bounding_box(self) -> tuple[tuple[int, int], tuple[int, int]]:
+    def bounding_box(self) -> BoundingBox:
         """Bounding box of the active puzzle area as a rectangle defined
         by a tuple of (top-left edge as x, y, bottom-right edge as x, y)"""
-        return utils.find_bounding_box(self.mask, self.ACTIVE)
+        return find_bounding_box(self.mask, self.ACTIVE)
 
     @property
     def cropped_puzzle(self) -> Puzzle:
@@ -312,8 +312,11 @@ class Game:
         """Show the current puzzle with or without the solution.
 
         Raises:
+            EmptyPuzzleError: Puzzle not yet generated or puzzle has no placed words.
             MissingFormatterError: No puzzle formatter set.
         """
+        if not self.puzzle:
+            raise EmptyPuzzleError()
         if not self.formatter:
             raise MissingFormatterError()
         print(self.formatter.show(self, *args, **kwargs))
@@ -326,7 +329,7 @@ class Game:
             format: Type of file to save ("CSV", "JSON", "PDF"). Defaults to "PDF".
 
         Raises:
-            EmptyPuzzleError: Puzzle not yet generated.
+            EmptyPuzzleError: Puzzle not yet generated or puzzle has no placed words.
             MissingFormatterError: No puzzle formatter set.
 
         Returns:

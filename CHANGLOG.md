@@ -28,11 +28,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - added `-hk`, `--hide-key` to cli and `WordSearch.show()`, and `WordSearch.save()` methods, allowing user to hide the answer key during output
     - only applies to cli output and saved PDF files
     - the answer key will always be output on the solution page of a pdf
-- `NoValidWordsError` for when a puzzle is generated but no valid words are available
 
 ### Fixed
 
 - Bug creating false negatives in `WordSearchGenerator.no_duped_words()` method that is used when placing new words and filler characters
+- Empty puzzle shown with the `show` method was called on a puzzle that has not been generated yet, or a puzzle with no placed/valid words.
 
 ### Changed
 

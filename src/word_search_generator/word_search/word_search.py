@@ -11,7 +11,6 @@ from ..core.game import (
     Game,
     MissingGeneratorError,
     MissingWordError,
-    NoValidWordsError,
     PuzzleSizeError,
     WordSet,
 )
@@ -183,8 +182,6 @@ class WordSearch(Game):
         lowercase: bool = False,
         hide_key: bool = False,
         reversed_letters: bool = False,
-        *args,
-        **kwargs,
     ):
         return super().show(
             solution=solution,
@@ -296,8 +293,6 @@ class WordSearch(Game):
         if not self.mask or len(self.mask) != self.size:
             self._mask = self._build_puzzle(self.size, self.ACTIVE)
         self._puzzle = self.generator.generate(self)
-        if not self.masked and not self.placed_words:
-            raise NoValidWordsError("No valid words have been added to the puzzle.")
         if self.require_all_words and self.unplaced_hidden_words:
             raise MissingWordError("All words could not be placed in the puzzle.")
 
