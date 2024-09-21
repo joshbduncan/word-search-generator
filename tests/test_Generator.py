@@ -88,4 +88,4 @@ def test_custom_get_attr():
     import word_search_generator
 
     with pytest.raises(AttributeError):
-        word_search_generator.__ver__
+        word_search_generator.__ver__  # noqa: B018

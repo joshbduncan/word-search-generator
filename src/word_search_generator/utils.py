@@ -67,7 +67,8 @@ def find_bounding_box(
         if edge in r:
             max_y = size - 1 - i
             break
-    cols = [list(c) for c in zip(*grid)]  # mypy not playing nice w/ `list(zip(*grid))``
+    # mypy not playing nice w/ `list(zip(*grid))`
+    cols = [list(c) for c in zip(*grid, strict=False)]
     min_x = 0
     for i, r in enumerate(cols):
         if edge in r:

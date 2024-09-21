@@ -203,7 +203,7 @@ class Mask:
 
     def transpose(self) -> None:
         """Reverse/permute the axes of the mask."""
-        self._mask = list(map(list, zip(*self.mask)))
+        self._mask = list(map(list, zip(*self.mask, strict=False)))
 
     def reset_points(self) -> None:
         """Reset all mask coordinate points."""

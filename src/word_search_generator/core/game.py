@@ -1,7 +1,8 @@
 import json
+from collections.abc import Iterable, Sized
 from math import log2
 from pathlib import Path
-from typing import Iterable, Sized, TypeAlias
+from typing import TypeAlias
 
 from ..core.formatter import Formatter
 from ..core.generator import Generator
@@ -487,7 +488,7 @@ class Game:
 
     @staticmethod
     def _validate_direction_iterable(
-        d: Iterable[str | tuple[int, int] | Direction]
+        d: Iterable[str | tuple[int, int] | Direction],
     ) -> DirectionSet:
         """Validates that all the directions in d are found as keys to
         directions.dir_moves and therefore are valid directions."""
@@ -501,8 +502,8 @@ class Game:
                 continue
             try:
                 o.add(Direction[direction.upper().strip()])
-            except KeyError:
-                raise ValueError(f"'{direction}' is not a valid direction.")
+            except KeyError as err:
+                raise ValueError(f"'{direction}' is not a valid direction.") from err
         return o
 
     def validate_level(self, d) -> DirectionSet:
@@ -510,11 +511,11 @@ class Game:
         if isinstance(d, int):  # traditional numeric level
             try:
                 return LEVEL_DIRS[d]
-            except KeyError:
+            except KeyError as err:
                 raise ValueError(
                     f"{d} is not a valid difficulty number"
                     + f"[{', '.join([str(i) for i in LEVEL_DIRS])}]"
-                )
+                ) from err
         if isinstance(d, str):  # comma-delimited list
             return self._validate_direction_iterable(d.split(","))
         if isinstance(d, Iterable):  # probably used by external code
@@ -531,7 +532,7 @@ class Game:
         """Apply a singular mask object to the puzzle."""
         if not self.puzzle:
             raise EmptyPuzzleError()
-        if not isinstance(mask, (Mask, CompoundMask)):
+        if not isinstance(mask, Mask | CompoundMask):
             raise TypeError("Please provide a Mask object.")
         if mask.puzzle_size != self.size:
             mask.generate(self.size)
@@ -595,7 +596,7 @@ class Game:
         """Interchange each row with the corresponding column
         of the current puzzle mask. Has no effect on the actual
         mask(s) found in `WordSearch.mask`."""
-        self._mask = list(map(list, zip(*self.mask)))
+        self._mask = list(map(list, zip(*self.mask, strict=False)))
         self.generate()
 
     def remove_masks(self) -> None:

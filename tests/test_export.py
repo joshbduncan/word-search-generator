@@ -467,7 +467,7 @@ def test_pdf_output_words(iterations, tmp_path: Path):
 
 
 def test_pdf_output_words_secret_only(iterations, tmp_path: Path):
-    for i in range(iterations):
+    for _ in range(iterations):
         words = "cat bat rat hat mat"
         ws = WordSearch(secret_words=words, size=random.randint(8, 21))
         fp = Path.joinpath(tmp_path, f"{uuid.uuid4()}.pdf")
@@ -513,9 +513,7 @@ def test_pdf_output_puzzle_size(iterations, tmp_path: Path):
         reader = PdfReader(fp)
         page = reader.pages[0]
         puzzle = parse_puzzle(page.extract_text(0))
-        results.append(
-            ws.size == len(puzzle) and ws.size == len(puzzle[0])
-        )  # type: ignore
+        results.append(ws.size == len(puzzle) and ws.size == len(puzzle[0]))  # type: ignore
 
     assert all(results)
 
@@ -671,8 +669,6 @@ def test_csv_output_puzzle_size(iterations, tmp_path: Path):
         fp = Path.joinpath(tmp_path, f"{uuid.uuid4()}.pdf")
         ws.save(fp, format="CSV")
         puzzle = parse_puzzle(fp)
-        results.append(
-            ws.size == len(puzzle) and ws.size == len(puzzle[0])
-        )  # type: ignore
+        results.append(ws.size == len(puzzle) and ws.size == len(puzzle[0]))  # type: ignore
 
     assert all(results)

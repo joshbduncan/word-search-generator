@@ -134,7 +134,7 @@ def test_json_empty_puzzle_error(ws: WordSearch):
     assert ws
     ws._puzzle = []
     with pytest.raises(EmptyPuzzleError):
-        ws.json
+        ws.json  # noqa: B018
 
 
 def test_json_output_property_for_puzzle():
@@ -273,7 +273,7 @@ def test_invalid_size_at_init_type():
 def test_puzzle_solution_output(ws: WordSearch, capsys):
     print(formatter.format_puzzle_for_show(ws, True))
     capture1 = capsys.readouterr()
-    ws.solution
+    ws.solution  # noqa: B018
     capture2 = capsys.readouterr()
     assert capture1.out == capture2.out
 

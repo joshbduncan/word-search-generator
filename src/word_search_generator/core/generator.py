@@ -3,9 +3,11 @@ from __future__ import annotations
 import string
 from abc import ABC, abstractmethod
 from functools import wraps
-from typing import TYPE_CHECKING, Iterable, TypeAlias
+from typing import TYPE_CHECKING, TypeAlias
 
 if TYPE_CHECKING:  # pragma: no cover
+    from collections.abc import Iterable
+
     from . import GameType
     from .game import Puzzle
 

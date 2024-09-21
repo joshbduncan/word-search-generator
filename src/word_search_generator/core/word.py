@@ -1,6 +1,7 @@
 import colorsys
 import random
-from typing import Iterable, NamedTuple, TypedDict
+from collections.abc import Iterable
+from typing import NamedTuple, TypedDict
 
 from rich.style import Style
 

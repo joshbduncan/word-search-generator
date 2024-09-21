@@ -58,9 +58,7 @@ class WordSearchGenerator(Generator):
                     before_ct += 1
                 if word_text in after or word_text[::-1] in after:
                     after_ct += 1
-        if before_ct == after_ct:
-            return True
-        return False
+        return before_ct == after_ct
 
     def capture_fragments(self, radius: int, position: tuple[int, int]) -> list[str]:
         row, col = position
@@ -89,7 +87,7 @@ class WordSearchGenerator(Generator):
 
         for row_range, col_range in ranges:
             fragment = ""
-            for r, c in zip(row_range, col_range):
+            for r, c in zip(row_range, col_range, strict=False):
                 if not in_bounds(c, r, width, height):
                     continue
                 fragment += "*" if (r, c) == (row, col) else self.puzzle[r][c]

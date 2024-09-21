@@ -1,7 +1,6 @@
 import inspect
 import math
 import sys
-from typing import Tuple
 
 from . import Bitmap, CompoundMask
 from .ellipse import Ellipse
@@ -104,7 +103,7 @@ class Donut(CompoundMask):
             self._apply_mask(mask)
 
     @staticmethod
-    def calculate_golden_donut_ratio(puzzle_size: int) -> Tuple[int, int]:
+    def calculate_golden_donut_ratio(puzzle_size: int) -> tuple[int, int]:
         donut = puzzle_size - 1 if puzzle_size % 2 == 0 else puzzle_size
         hole = int(math.pow(puzzle_size - 2, 2) // (3 * (puzzle_size - 1)))
         if hole % 2 == 0:

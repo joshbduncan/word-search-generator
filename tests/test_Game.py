@@ -25,21 +25,21 @@ def test_empty_object(empty_game: Game):
 @pytest.mark.parametrize(
     "level,expected",
     [
-        (1, LEVEL_DIRS[1]),
-        (2, LEVEL_DIRS[2]),
-        (3, LEVEL_DIRS[3]),
-        (4, LEVEL_DIRS[4]),
-        (5, LEVEL_DIRS[5]),
-        (7, LEVEL_DIRS[7]),
-        (8, LEVEL_DIRS[8]),
-        ("n", Direction.N),
-        ("NE", Direction.NE),
-        ("e", Direction.E),
-        ("SE", Direction.SE),
-        ("s", Direction.S),
-        ("SW", Direction.SW),
-        ("w", Direction.W),
-        ("NW", Direction.NW),
+        (1, set(LEVEL_DIRS[1])),
+        (2, set(LEVEL_DIRS[2])),
+        (3, set(LEVEL_DIRS[3])),
+        (4, set(LEVEL_DIRS[4])),
+        (5, set(LEVEL_DIRS[5])),
+        (7, set(LEVEL_DIRS[7])),
+        (8, set(LEVEL_DIRS[8])),
+        ("n", {Direction.N}),
+        ("NE", {Direction.NE}),
+        ("e", {Direction.E}),
+        ("SE", {Direction.SE}),
+        ("s", {Direction.S}),
+        ("SW", {Direction.SW}),
+        ("w", {Direction.W}),
+        ("NW", {Direction.NW}),
     ],
 )
 def test_set_puzzle_level(
@@ -52,33 +52,33 @@ def test_set_puzzle_level(
     g = Game(
         words=words, level=level, generator=empty_generator, formatter=empty_formatter
     )
-    g.directions == expected
+    assert g.directions == expected
 
 
 @pytest.mark.parametrize(
     "level,expected",
     [
-        (1, LEVEL_DIRS[1]),
-        (2, LEVEL_DIRS[2]),
-        (3, LEVEL_DIRS[3]),
-        (4, LEVEL_DIRS[4]),
-        (5, LEVEL_DIRS[5]),
-        (7, LEVEL_DIRS[7]),
-        (8, LEVEL_DIRS[8]),
-        ("n", Direction.N),
-        ("NE", Direction.NE),
-        ("e", Direction.E),
-        ("SE", Direction.SE),
-        ("s", Direction.S),
-        ("SW", Direction.SW),
-        ("w", Direction.W),
-        ("NW", Direction.NW),
+        (1, set(LEVEL_DIRS[1])),
+        (2, set(LEVEL_DIRS[2])),
+        (3, set(LEVEL_DIRS[3])),
+        (4, set(LEVEL_DIRS[4])),
+        (5, set(LEVEL_DIRS[5])),
+        (7, set(LEVEL_DIRS[7])),
+        (8, set(LEVEL_DIRS[8])),
+        ("n", {Direction.N}),
+        ("NE", {Direction.NE}),
+        ("e", {Direction.E}),
+        ("SE", {Direction.SE}),
+        ("s", {Direction.S}),
+        ("SW", {Direction.SW}),
+        ("w", {Direction.W}),
+        ("NW", {Direction.NW}),
     ],
 )
 def test_set_secret_level(words, level: int, expected: set[Direction]):
     ws = WordSearch(words)
     ws.secret_directions = level  # type: ignore[assignment]
-    ws.directions == expected
+    assert ws.secret_directions == expected
 
 
 @pytest.mark.parametrize(
@@ -295,7 +295,7 @@ def test_json_empty_puzzle_error(base_game: Game):
     assert base_game
     base_game._puzzle = []
     with pytest.raises(EmptyPuzzleError):
-        base_game.json
+        base_game.json  # noqa: B018
 
 
 def test_empty_word_list_error(base_game: Game):

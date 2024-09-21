@@ -1,8 +1,8 @@
 import argparse
 import pathlib
 import sys
+from collections.abc import Sequence
 from importlib.metadata import version
-from typing import Sequence
 
 from .core.directions import LEVEL_DIRS
 from .core.game import Game
