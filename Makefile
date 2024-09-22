@@ -34,6 +34,10 @@ format: ## runs cleaners
 
 polish: cleanup test  ## cleans and lints before running the test suite
 
+tox: ## runs linting, typechecking, and tests on all specified envs via tox
+	@echo "🎯 tox..."
+	uv run tox -p
+
 ##@ Build
 build: cleanup test ## build the app package
 	uv build
