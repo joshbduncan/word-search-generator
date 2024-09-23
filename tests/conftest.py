@@ -85,7 +85,10 @@ def secret_words():
 
 @pytest.fixture
 def preprocessed_words():
-    return {Word("Zebra", False, {Direction.NW}, 4, "A striped horse.")}
+    return {
+        Word("Zebra", False, {Direction.NW}, 1, "A striped horse."),
+        Word("llama", True, {Direction.W}, 1, "likely to spit on you"),
+    }
 
 
 @pytest.fixture
