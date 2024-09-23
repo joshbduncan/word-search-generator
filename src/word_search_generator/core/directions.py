@@ -1,7 +1,7 @@
-from enum import Enum, unique
+from enum import Enum
+from typing import Callable, Iterable, TypeAlias
 
 
-@unique
 class Direction(Enum):
     """
     If you want custom directions, like `"skipE": (0, 2)`, this is the
@@ -11,16 +11,18 @@ class Direction(Enum):
     it easier to use with the Puzzle = list[list[chr]] format
     """
 
-    # is there a better way to specify typing here?
-    # without hints here, the linter gets upset with my definitions of r/c_move
-    N: tuple[int, int] = (-1, 0)  # type: ignore
-    NE: tuple[int, int] = (-1, 1)  # type: ignore
-    E: tuple[int, int] = (0, 1)  # type: ignore
-    SE: tuple[int, int] = (1, 1)  # type: ignore
-    S: tuple[int, int] = (1, 0)  # type: ignore
-    SW: tuple[int, int] = (1, -1)  # type: ignore
-    W: tuple[int, int] = (0, -1)  # type: ignore
-    NW: tuple[int, int] = (-1, -1)  # type: ignore
+    N = (-1, 0)
+    NE = (-1, 1)
+    E = (0, 1)
+    SE = (1, 1)
+    S = (1, 0)
+    SW = (1, -1)
+    W = (0, -1)
+    NW = (-1, -1)
+
+    # Crossword directions
+    ACROSS = (0, 1)
+    DOWN = (1, 0)
 
     @property
     def r_move(self) -> int:
@@ -30,21 +32,23 @@ class Direction(Enum):
     def c_move(self) -> int:
         return self.value[1]
 
+    @property
+    def is_cardinal(self) -> bool:
+        """Cardinal directions have 0 movement in one direction"""
+        return not self.r_move or not self.c_move
 
-# puzzle difficulty levels
-LEVEL_DIRS: dict[int, set[Direction]] = {
-    -1: set(),  # no valid directions
-    1: {  # right or down
-        Direction.E,
-        Direction.S,
-    },
-    2: {  # right-facing or down
-        Direction.NE,
-        Direction.E,
-        Direction.SE,
-        Direction.S,
-    },
-    3: {  # any direction
+    @property
+    def is_diagonal(self) -> bool:
+        return not self.is_cardinal
+
+    @property
+    def opposite(self) -> "Direction":
+        return Direction((-self.r_move, -self.c_move))
+
+
+DirectionSet: TypeAlias = set[Direction] | frozenset[Direction]
+_ALL_DIRECTIONS = frozenset(
+    {
         Direction.N,
         Direction.NE,
         Direction.E,
@@ -53,7 +57,48 @@ LEVEL_DIRS: dict[int, set[Direction]] = {
         Direction.SW,
         Direction.W,
         Direction.NW,
-    },
+    }
+)
+
+
+def invert_ds(ds: DirectionSet, freeze: bool = False) -> DirectionSet:
+    """Essentially DirectionSet.__not__()"""
+    s: Callable[..., DirectionSet] = frozenset if freeze else set
+    return s(_ALL_DIRECTIONS - ds)
+
+
+def reverse_directions(
+    ds: Iterable[Direction], output_type: Callable[..., Iterable[Direction]] = set
+) -> Iterable[Direction]:
+    return output_type(d.opposite for d in ds)
+
+
+class NamedDirectionSet:
+    CROSSWORD = frozenset({Direction.ACROSS, Direction.DOWN})
+    ALL = _ALL_DIRECTIONS
+    ANY = reverse_directions(_ALL_DIRECTIONS, frozenset)
+    NONE = invert_ds(_ALL_DIRECTIONS, True)
+    ZERO = reverse_directions(NONE, frozenset)
+    FORWARD = frozenset(
+        {  # right-facing or down
+            Direction.NE,
+            Direction.E,
+            Direction.SE,
+            Direction.S,
+        }
+    )
+    BACKWARD = reverse_directions(FORWARD, frozenset)
+    DIAGONAL = frozenset(d for d in _ALL_DIRECTIONS if d.is_diagonal)
+    CARDINAL = frozenset(d for d in _ALL_DIRECTIONS if d.is_cardinal)
+
+
+NDS = NamedDirectionSet
+# puzzle difficulty levels
+LEVEL_DIRS: dict[int, DirectionSet] = {
+    -1: NDS.NONE,  # no valid directions
+    1: NDS.CROSSWORD,  # right or down
+    2: NDS.FORWARD,
+    3: _ALL_DIRECTIONS,
     4: {  # no E or S for better hiding
         Direction.N,
         Direction.NE,
@@ -71,16 +116,6 @@ LEVEL_DIRS: dict[int, set[Direction]] = {
         Direction.W,
         Direction.NW,
     },
-    7: {  # diagonals only
-        Direction.NE,
-        Direction.SE,
-        Direction.NW,
-        Direction.SW,
-    },
-    8: {  # no diagonals
-        Direction.N,
-        Direction.E,
-        Direction.W,
-        Direction.S,
-    },
+    7: NDS.DIAGONAL,
+    8: NDS.CARDINAL,
 }

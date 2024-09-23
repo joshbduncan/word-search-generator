@@ -7,7 +7,7 @@ from ..core.formatter import Formatter
 from ..core.generator import Generator
 from ..mask import CompoundMask, Mask
 from ..utils import BoundingBox, find_bounding_box
-from .directions import LEVEL_DIRS, Direction
+from .directions import LEVEL_DIRS, Direction, DirectionSet
 from .validator import Validator
 from .word import KeyInfo, KeyInfoJson, Word
 
@@ -61,7 +61,6 @@ class MissingWordError(Exception):
 
 
 Puzzle: TypeAlias = list[list[str]]
-DirectionSet: TypeAlias = set[Direction]
 Key: TypeAlias = dict[str, KeyInfo]
 KeyJson: TypeAlias = dict[str, KeyInfoJson]
 WordSet: TypeAlias = set[Word]
