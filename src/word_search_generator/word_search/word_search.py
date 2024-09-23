@@ -52,6 +52,7 @@ class WordSearch(Game):
         secret_words: str | None = None,
         secret_level: int | str | None = None,
         *,
+        preprocessed_words: WordSet | None = None,
         require_all_words: bool = False,
         generator: Generator | None = None,
         formatter: Formatter | None = None,
@@ -78,18 +79,15 @@ class WordSearch(Game):
                 word validation. Defaults to `DEFAULT_VALIDATORS`.
         """
         # determine valid word directions
-        self._secret_directions: DirectionSet = (
-            self.validate_level(secret_level)
-            if secret_level
-            else (self.validate_level(level) if level else self.validate_level(2))
-        )
+        dirs = self.validate_level(level, self.DEFAULT_DIRECTIONS)
+        self._secret_directions: DirectionSet = self.validate_level(secret_level, dirs)
 
         # setup words
-        word_set = set()
+        word_set = set() if preprocessed_words is None else preprocessed_words
         if words:
-            word_set.update(self._process_input(words))
+            word_set |= self._process_input(words, False, dirs)
         if secret_words:
-            word_set.update(self._process_input(secret_words, secret=True))
+            word_set |= self._process_input(secret_words, True, self.secret_directions)
 
         super().__init__(
             words=word_set,

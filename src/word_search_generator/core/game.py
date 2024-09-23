@@ -1,4 +1,5 @@
 import json
+import random
 from math import log2
 from pathlib import Path
 from typing import Iterable, Sized, TypeAlias
@@ -78,6 +79,11 @@ class Game:
     DEFAULT_GENERATOR: Generator | None = None
     DEFAULT_FORMATTER: Formatter | None = None
     DEFAULT_VALIDATORS: Iterable[Validator] = []
+    # these next two aren't strictly necessary, as Word.__lt__ sorts secret words
+    # after regular words.  However, adding these here adds better hooks for subclasses.
+    DEFAULT_SECRET_PRIORITY: int = 4
+    DEFAULT_WORD_PRIORITY: int = 2
+    DEFAULT_DIRECTIONS = LEVEL_DIRS[2]
 
     ACTIVE = "*"
     INACTIVE = "#"
@@ -91,6 +97,7 @@ class Game:
         generator: Generator | None = None,
         formatter: Formatter | None = None,
         validators: Iterable[Validator] | None = None,
+        generate_on_init: bool = True,
     ):
         # setup puzzle
         self._words: WordSet = set()
@@ -119,7 +126,7 @@ class Game:
 
         # determine valid word directions
         self._directions: DirectionSet = (
-            self.validate_level(level) if level else self.validate_level(2)
+            self.validate_level(level) if level else self.DEFAULT_DIRECTIONS
         )
 
         # calculate puzzle size
@@ -133,7 +140,7 @@ class Game:
                 )
             self._size = size
 
-        if self.words:
+        if self.words and generate_on_init:
             self.generate()
 
     # **************************************************** #
@@ -196,7 +203,7 @@ class Game:
     @property
     def cropped_size(self) -> tuple[int, int]:
         """Size (in characters) of `self.cropped_puzzle` as a (width, height) tuple."""
-        return (len(self.cropped_puzzle[0]), len(self.cropped_puzzle))
+        return len(self.cropped_puzzle[0]), len(self.cropped_puzzle)
 
     @property
     def key(self) -> Key:
@@ -386,10 +393,6 @@ class Game:
         if self.require_all_words and self.unplaced_words:
             raise MissingWordError("All words could not be placed in the puzzle.")
 
-    def _process_input(self, words: str, secret: bool = False) -> WordSet:
-        clean_words = self._cleanup_input(words, secret=secret)
-        return clean_words
-
     @staticmethod
     def _calc_puzzle_size(words: WordSet, level: Sized, size: int | None = None) -> int:
         """Calculate the puzzle grid size.
@@ -466,28 +469,57 @@ class Game:
         self._words.update(words)
         self.generate(reset_size=reset_size)
 
-    def _cleanup_input(self, words: str, secret: bool = False) -> WordSet:
-        """Cleanup provided input string."""
+    def _process_input(
+        self,
+        words: str,
+        secret: bool = False,
+        allowed_directions: DirectionSet | None = None,
+    ) -> WordSet:
+        """Cleanup provided input string.  Should be overridden by subclasses."""
         if not isinstance(words, str):
             raise TypeError(
                 "Words must be a string separated by spaces, commas, or new lines"
             )
-        # remove new lines
-        words = words.replace("\n", ",")
-        # remove excess spaces and commas
-        word_list = ",".join(words.split(" ")).split(",")
-        # iterate through all words and pick first set that match criteria
-        word_set: WordSet = set()
-        while word_list and len(word_set) <= self.MAX_PUZZLE_WORDS:
-            word = word_list.pop(0)
-            if word:
-                word_set.add(Word(word, secret=secret))
-        return word_set
+        word_set = {
+            Word(
+                w,
+                secret,
+                self.DEFAULT_DIRECTIONS
+                if allowed_directions is None
+                else allowed_directions,
+                self.DEFAULT_SECRET_PRIORITY if secret else self.DEFAULT_WORD_PRIORITY,
+            )
+            for w in ",".join(words.replace("\n", ",").split(" ")).split(",")
+            if w.strip()
+        }
+        if len(word_set) <= self.MAX_PUZZLE_WORDS:
+            return word_set  # all done!
+        # trim to MAX_PUZZLE_WORDS
+        return set(random.sample(list(word_set), self.MAX_PUZZLE_WORDS))
+
+    _cleanup_input = _process_input  # alias, perhaps refactor later
 
     @staticmethod
-    def _validate_direction_iterable(
-        d: Iterable[str | tuple[int, int] | Direction]
-    ) -> DirectionSet:
+    def validate_level(d, default: DirectionSet | None = None) -> DirectionSet:
+        """Given a d, try to turn it into a list of valid moves."""
+        if isinstance(d, int):  # traditional numeric level
+            try:
+                return LEVEL_DIRS[d]
+            except KeyError:
+                raise ValueError(
+                    f"{d} is not a valid difficulty number"
+                    + f"[{', '.join([str(i) for i in LEVEL_DIRS])}]"
+                )
+        if not isinstance(d, Iterable):
+            if default:
+                return default
+            raise TypeError(f"{type(d)} given, not str, int, or Iterable[str]\n{d}")
+        if not d:
+            if default:
+                return default
+            raise ValueError("Empty iterable provided.")
+        if isinstance(d, str):  # comma-delimited list
+            d = d.split(",")
         """Validates that all the directions in d are found as keys to
         directions.dir_moves and therefore are valid directions."""
         o = set()
@@ -503,24 +535,6 @@ class Game:
             except KeyError:
                 raise ValueError(f"'{direction}' is not a valid direction.")
         return o
-
-    def validate_level(self, d) -> DirectionSet:
-        """Given a d, try to turn it into a list of valid moves."""
-        if isinstance(d, int):  # traditional numeric level
-            try:
-                return LEVEL_DIRS[d]
-            except KeyError:
-                raise ValueError(
-                    f"{d} is not a valid difficulty number"
-                    + f"[{', '.join([str(i) for i in LEVEL_DIRS])}]"
-                )
-        if isinstance(d, str):  # comma-delimited list
-            return self._validate_direction_iterable(d.split(","))
-        if isinstance(d, Iterable):  # probably used by external code
-            if not d:
-                raise ValueError("Empty iterable provided.")
-            return self._validate_direction_iterable(d)
-        raise TypeError(f"{type(d)} given, not str, int, or Iterable[str]\n{d}")
 
     # ************************************************* #
     # ******************** MASKING ******************** #

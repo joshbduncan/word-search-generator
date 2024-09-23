@@ -433,3 +433,12 @@ def test_no_words_to_generate(ws: WordSearch):
     ws._words = set()
     with pytest.raises(EmptyWordlistError):
         ws.generate()
+
+
+def test_word_search_too_many_words(words, preprocessed_words):
+    class ShortWS(WordSearch):
+        MAX_PUZZLE_WORDS = 7
+
+    ws = ShortWS(level="", secret_words=words, preprocessed_words=preprocessed_words)
+    assert len(ws.placed_words) == 7
+    assert "zebra" in ",".join(w.lowercase for w in ws.placed_hidden_words)
