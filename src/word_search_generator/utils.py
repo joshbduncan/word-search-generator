@@ -47,7 +47,7 @@ def distance(x: int, y: int, ratio: float) -> float:
 
 def in_bounds(x: int, y: int, width: int, height: int) -> bool:
     """Validate position (x, y) is within the supplied bounds."""
-    return x >= 0 and x < width and y >= 0 and y < height
+    return 0 <= x < width and 0 <= y < height
 
 
 def find_bounding_box(
@@ -78,7 +78,7 @@ def find_bounding_box(
         if edge in r:
             max_x = size - 1 - i
             break
-    return ((min_x, min_y), (max_x, max_y))
+    return (min_x, min_y), (max_x, max_y)
 
 
 def stringify(puzzle: Puzzle, bbox: BoundingBox) -> str:
@@ -117,14 +117,14 @@ def get_answer_key_list(
     lowercase: bool = False,
     reversed_letters: bool = False,
 ) -> list[str]:
-    """Return a easy to read answer key for display/export. Resulting coordinates
+    """Return an easy-to-read answer key for display/export. Resulting coordinates
     will be offset by the supplied values. Used for masked puzzles.
 
     Args:
         words: A list of `Word` objects.
         bbox: Puzzle mask bounding box
         lowercase: Should words be lowercase. Defaults to False.
-        reversed_letters: Should words letters be reversed. Defaults to False.
+        reversed_letters: Should word's letters be reversed? Defaults to False.
 
     Returns:
         List of placed words with their placement information.
@@ -136,7 +136,7 @@ def get_answer_key_list(
 
 
 def get_answer_key_str(words: WordSet, bbox: BoundingBox) -> str:
-    """Return a easy to read answer key for display. Resulting coordinates
+    """Return an easy-to-read answer key for display. Resulting coordinates
     will be offset by the supplied values. Used for masked puzzles.
 
     Args:
@@ -147,8 +147,14 @@ def get_answer_key_str(words: WordSet, bbox: BoundingBox) -> str:
     return ", ".join(get_answer_key_list(words, bbox))
 
 
-def get_random_words(n: int, max_length: int | None = None) -> list[str]:
+def get_random_words(
+    n: int, max_length: int | None = None, min_length: int | None = None
+) -> list[str]:
     """Return a list of random dictionary words."""
-    if max_length:
-        return random.sample([word for word in WORD_LIST if len(word) <= max_length], n)
-    return random.sample(WORD_LIST, n)
+    if not max_length or max_length < 1:
+        max_length = 999
+    if not min_length or min_length < 1:
+        min_length = 2  # can't have 1-char words
+    return random.sample(
+        [word for word in WORD_LIST if min_length <= len(word) <= max_length], n
+    )

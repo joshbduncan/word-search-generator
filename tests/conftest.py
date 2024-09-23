@@ -68,7 +68,7 @@ def base_game(words, empty_generator, empty_formatter, empty_validator):
         words=words,
         generator=empty_generator,
         formatter=empty_formatter,
-        validators=[empty_formatter],
+        validators=[empty_validator],
     )
 
 
@@ -81,6 +81,11 @@ def words():
 def secret_words():
     # "tortoise" not included in because it is 8 characters long (everything else at 6)
     return "rabbit, mule, bunny, ram, kitten, puppy, foal"
+
+
+@pytest.fixture
+def preprocessed_words():
+    return {Word("Zebra", False, {Direction.NW}, 4, "A striped horse.")}
 
 
 @pytest.fixture

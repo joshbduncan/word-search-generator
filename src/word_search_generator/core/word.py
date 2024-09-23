@@ -5,6 +5,7 @@ from typing import Iterable, NamedTuple, TypedDict
 from rich.style import Style
 
 from ..utils import BoundingBox
+from .directions import NDS, DirectionSet
 from .game import Direction
 from .validator import Validator
 
@@ -34,6 +35,9 @@ class Word:
         self,
         text: str,
         secret: bool = False,
+        allowed_directions: DirectionSet = NDS.FORWARD,
+        priority: int = 3,
+        description: str = "",  # should this be moved to a future CrosswordWord?
     ) -> None:
         """Initialize a Word Search puzzle Word."""
         self.text = text.upper().strip()
@@ -47,6 +51,11 @@ class Word:
             random.randint(42, 98) / 100,
             random.randint(40, 90) / 100,
         )
+        self.allowed_directions = allowed_directions
+        self.priority = priority
+        # The following two are for future Crossword use, perhaps move to subclass
+        self.description = description.strip()
+        self.number: int = 0
 
     def validate(
         self, validators: Iterable[Validator], placed_words: list[str]
@@ -230,15 +239,38 @@ class Word:
         Should always return true, except for the null word."""
         return bool(self.text)
 
+    # implement and, or, & xor?
+    # would have use for merging duplicate words, but I don't know why it'd be needed
+
     def __eq__(self, __o: object) -> bool:
         """Returns True if both instances have the same text."""
         if not isinstance(__o, Word):
             return False
-        return self.text == __o.text
+        # .description comparison to allow for duplicate Crossword words
+        # if used to sneak duplicate words into a WordSearch, that's a user error
+        return self.text == __o.text and self.description == __o.description
+
+    def __lt__(self, __o: "Word") -> bool:
+        """
+        Sort. The lesser word sort first in a list.
+
+        1. Lowest priority
+        2. Shortest length
+        3. Secrets go last
+        4. All else equal, reverse alphabetical
+        """
+        if self.priority != __o.priority:
+            return self.priority < __o.priority
+        if len(self) != len(__o):
+            return len(self) > len(__o)
+        if self.secret != __o.secret:
+            return not self.secret  # secret words sort last
+        return self.text > __o.text  # reverse alpha order
 
     def __hash__(self) -> int:
         """Returns the hashes value of the word text."""
-        return hash(self.text)
+        # description appended to allow duplicate Crossword words
+        return hash(self.text + self.description)
 
     def __len__(self) -> int:
         """Returns the length of the word text."""
@@ -251,5 +283,4 @@ class Word:
         return self.text
 
 
-# in the future, add allowed_directions = set() and priority = 999
-NULL_WORD = Word("", True)
+NULL_WORD = Word("", True, allowed_directions=NDS.NONE, priority=999)
