@@ -70,6 +70,7 @@ def invert_ds(ds: DirectionSet, freeze: bool = False) -> DirectionSet:
 def reverse_directions(
     ds: Iterable[Direction], output_type: Callable[..., Iterable[Direction]] = set
 ) -> Iterable[Direction]:
+    """Makes all the directions in the Iterable point the other way."""
     return output_type(d.opposite for d in ds)
 
 

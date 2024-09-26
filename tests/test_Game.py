@@ -152,7 +152,7 @@ def test_cleanup_input(base_game: Game, words: str, ct: int):
 
 def test_invalid_level_direction_type(base_game: Game):
     with pytest.raises(TypeError):
-        base_game.validate_level(None)
+        base_game.validate_level(base_game)
 
 
 def test_missing_generator():

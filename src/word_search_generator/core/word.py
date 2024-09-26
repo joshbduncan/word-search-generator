@@ -15,6 +15,11 @@ class Position(NamedTuple):
     column: int | None
 
 
+class Bearing(NamedTuple):
+    position: Position
+    direction: Direction
+
+
 class KeyInfo(TypedDict):
     start: Position | None
     direction: Direction | None
@@ -37,9 +42,18 @@ class Word:
         secret: bool = False,
         allowed_directions: DirectionSet = NDS.FORWARD,
         priority: int = 3,
-        description: str = "",  # should this be moved to a future CrosswordWord?
+        description: str = "",
     ) -> None:
-        """Initialize a Word Search puzzle Word."""
+        """
+        Initialize a Word Search puzzle Word.
+
+        text: the word to display
+        secret: is this word intended to be included in the list of words to find?
+        allowed_directions: available directions for placement
+        priority: used when deciding which words to place first
+        description: the hint for Crossword words.  Can also cheat and sneak
+            duplicate words into a Word Search.
+        """
         self.text = text.upper().strip()
         self.start_row: int | None = None
         self.start_column: int | None = None
@@ -117,8 +131,19 @@ class Word:
         self.start_column = value.column
 
     @property
+    def bearing(self) -> Bearing | None:
+        if not self.direction or not self.position:
+            return None
+        return Bearing(self.position, self.direction)
+
+    @bearing.setter
+    def bearing(self, b: Bearing):
+        self.position = b.position
+        self.direction = b.direction
+
+    @property
     def position_xy(self) -> Position:
-        """Returns a the word position with 1-based indexing
+        """Returns the word position with 1-based indexing
         and a familiar (x, y) coordinate system"""
         return Position(
             self.start_row + 1 if self.start_row is not None else self.start_row,
@@ -240,7 +265,8 @@ class Word:
         return bool(self.text)
 
     # implement and, or, & xor?
-    # would have use for merging duplicate words, but I don't know why it'd be needed
+    # would have use for merging duplicate words, but I don't know why
+    # I wrote the word_merge function in the first draft
 
     def __eq__(self, __o: object) -> bool:
         """Returns True if both instances have the same text."""
@@ -270,6 +296,7 @@ class Word:
     def __hash__(self) -> int:
         """Returns the hashes value of the word text."""
         # description appended to allow duplicate Crossword words
+        # set uses __eq__, not __hash__ to compare; this is for Words as keys for dicts
         return hash(self.text + self.description)
 
     def __len__(self) -> int:

@@ -1,3 +1,4 @@
+import contextlib
 import json
 import random
 from math import log2
@@ -97,11 +98,8 @@ class Game:
         generator: Generator | None = None,
         formatter: Formatter | None = None,
         validators: Iterable[Validator] | None = None,
-        generate_on_init: bool = True,
     ):
         # setup puzzle
-        self._words: WordSet = set()
-        self._level: DirectionSet = set()
         self._size: int = size if size else 0
         self.require_all_words: bool = require_all_words
 
@@ -119,14 +117,11 @@ class Game:
         self._validators: Iterable[Validator] | None = validators
 
         # set game words
-        if words:
-            self._words = (
-                self._process_input(words) if isinstance(words, str) else words
-            )
+        self._words = self._process_input(words)
 
         # determine valid word directions
-        self._directions: DirectionSet = (
-            self.validate_level(level) if level else self.DEFAULT_DIRECTIONS
+        self._directions: DirectionSet = self.validate_level(
+            level, self.DEFAULT_DIRECTIONS
         )
 
         # calculate puzzle size
@@ -140,7 +135,7 @@ class Game:
                 )
             self._size = size
 
-        if self.words and generate_on_init:
+        if self.words:
             self.generate()
 
     # **************************************************** #
@@ -471,11 +466,21 @@ class Game:
 
     def _process_input(
         self,
-        words: str,
+        words: str | WordSet | None,
         secret: bool = False,
         allowed_directions: DirectionSet | None = None,
     ) -> WordSet:
-        """Cleanup provided input string.  Should be overridden by subclasses."""
+        """
+        Cleanup provided input string.  Should be overridden by subclasses.
+
+        words: a string of words to turn into Word objects
+        secret: are these words to be suppressed on the list of words to find?
+        allowed_directions: the set of valid directions for each word
+        """
+        if not words:  # blank input
+            return set()
+        if isinstance(words, set):  # assume it's a WordSet, no further action required
+            return words
         if not isinstance(words, str):
             raise TypeError(
                 "Words must be a string separated by spaces, commas, or new lines"
@@ -492,6 +497,7 @@ class Game:
             for w in ",".join(words.replace("\n", ",").split(" ")).split(",")
             if w.strip()
         }
+        # length check at the end in case duplicates shrink a too-long list to fit
         if len(word_set) <= self.MAX_PUZZLE_WORDS:
             return word_set  # all done!
         # trim to MAX_PUZZLE_WORDS
@@ -501,7 +507,24 @@ class Game:
 
     @staticmethod
     def validate_level(d, default: DirectionSet | None = None) -> DirectionSet:
-        """Given a d, try to turn it into a list of valid moves."""
+        """
+        Given a d, try to turn it into a list of valid moves.
+
+        If d is not valid, return the default set.  If default is None,
+        throw an error.
+        """
+
+        def return_default(error: Exception) -> DirectionSet:
+            # raises an error if no default set
+            if not default:
+                raise error
+            return default
+
+        if not d:
+            return return_default(ValueError(f"Empty iterable ({repr(d)}) provided."))
+        if isinstance(d, str):
+            with contextlib.suppress(ValueError):
+                d = int(d)
         if isinstance(d, int):  # traditional numeric level
             try:
                 return LEVEL_DIRS[d]
@@ -511,13 +534,9 @@ class Game:
                     + f"[{', '.join([str(i) for i in LEVEL_DIRS])}]"
                 )
         if not isinstance(d, Iterable):
-            if default:
-                return default
-            raise TypeError(f"{type(d)} given, not str, int, or Iterable[str]\n{d}")
-        if not d:
-            if default:
-                return default
-            raise ValueError("Empty iterable provided.")
+            return return_default(
+                TypeError(f"{type(d)} given, not str, int, or Iterable[str]\n{d}")
+            )
         if isinstance(d, str):  # comma-delimited list
             d = d.split(",")
         """Validates that all the directions in d are found as keys to
@@ -533,6 +552,8 @@ class Game:
             try:
                 o.add(Direction[direction.upper().strip()])
             except KeyError:
+                if not direction:
+                    continue  # don't error out for empty directions
                 raise ValueError(f"'{direction}' is not a valid direction.")
         return o
 

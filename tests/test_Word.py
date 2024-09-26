@@ -1,4 +1,4 @@
-from word_search_generator.core.word import Direction, Position, Word
+from word_search_generator.core.word import Bearing, Direction, Position, Word
 
 
 def test_empty_start_row():
@@ -75,3 +75,18 @@ def test_word_bool_true():
 def test_word_bool_false():
     w = Word("")
     assert not w
+
+
+def test_set_bearing():
+    w = Word("test")
+    w.bearing = Bearing(Position(3, 2), Direction.S)
+    assert w.direction == Direction.S
+    assert w.position.row == 3
+
+
+def test_read_bearing():
+    w = Word("test")
+    w.position = Position(11, 18)
+    assert w.bearing is None
+    w.direction = Direction.W
+    assert hasattr(w.bearing, "position")

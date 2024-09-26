@@ -150,11 +150,17 @@ def get_answer_key_str(words: WordSet, bbox: BoundingBox) -> str:
 def get_random_words(
     n: int, max_length: int | None = None, min_length: int | None = None
 ) -> list[str]:
-    """Return a list of random dictionary words."""
+    """Return a list of n random dictionary words matching the requested lengths.
+    If there are fewer matching words than n, return all matching words."""
     if not max_length or max_length < 1:
         max_length = 999
     if not min_length or min_length < 1:
-        min_length = 2  # can't have 1-char words
-    return random.sample(
-        [word for word in WORD_LIST if min_length <= len(word) <= max_length], n
+        min_length = 1  # could just as easily be 0 or -23
+    words = (
+        WORD_LIST
+        if max_length == 999 and min_length == 1
+        else [word for word in WORD_LIST if min_length <= len(word) <= max_length]
     )
+    if len(words) <= n:
+        return words  # prevent ValueError
+    return random.sample(words, n)

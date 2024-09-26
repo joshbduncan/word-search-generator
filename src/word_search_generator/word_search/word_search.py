@@ -70,8 +70,10 @@ class WordSearch(Game):
                 word list. Defaults to None.
             secret_level: Difficulty level or potential word directions for
                 'secret' words. Defaults to None.
-            require_all_words: Raises an error when `generator` cannot place all of
-                the words.  Secret words are not included in this check.
+            preprocessed_words: A set of Words that have already been created.
+                Used when WordSearch is used as a dependency for something else.
+            require_all_words: Raises an error when `generator` cannot place all
+                 the words.  Secret words are not included in this check.
             generator: Puzzle generator. Defaults to None.
             formatter: Game formatter. Defaults to None.
             validators: An iterable of validators that puzzle words will be checked
