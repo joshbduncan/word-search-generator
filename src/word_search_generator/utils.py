@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import math
 import random
-from typing import TYPE_CHECKING, TypeAlias
+from typing import TYPE_CHECKING, TypeAlias, Sized, TypeVar, Iterable
 
 from .words import WORD_LIST
 
@@ -147,6 +147,19 @@ def get_answer_key_str(words: WordSet, bbox: BoundingBox) -> str:
     return ", ".join(get_answer_key_list(words, bbox))
 
 
+S = TypeVar("S", bound=Sized)
+T = TypeVar
+
+
+def limit(i: S, n: int) -> S:
+    """
+    Limits the size of the input iterable to n.  Truncation is randomly chosen.
+    """
+    if len(i) <= n:
+        return i
+    return type(i)(random.sample(i, n))
+
+
 def get_random_words(
     n: int, max_length: int | None = None, min_length: int | None = None
 ) -> list[str]:
@@ -156,11 +169,11 @@ def get_random_words(
         max_length = 999
     if not min_length or min_length < 1:
         min_length = 1  # could just as easily be 0 or -23
-    words = (
-        WORD_LIST
-        if max_length == 999 and min_length == 1
-        else [word for word in WORD_LIST if min_length <= len(word) <= max_length]
+    return limit(
+        (
+            WORD_LIST
+            if max_length == 999 and min_length == 1
+            else [word for word in WORD_LIST if min_length <= len(word) <= max_length]
+        ),
+        n,
     )
-    if len(words) <= n:
-        return words  # prevent ValueError
-    return random.sample(words, n)
