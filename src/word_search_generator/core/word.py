@@ -1,6 +1,6 @@
 import colorsys
 import random
-from typing import Iterable, NamedTuple, TypedDict
+from typing import Iterable, NamedTuple, TypeAlias, TypedDict
 
 from rich.style import Style
 
@@ -92,6 +92,24 @@ class Word:
             if not validator.validate(self.text, placed_words=placed_words):
                 return False
         return True
+
+    @classmethod
+    def bulk_create(
+        cls,
+        words: str,
+        allowed_directions: DirectionSet,
+        secret: bool = False,
+        priority: int = 3,
+    ) -> "WordSet":
+        """
+        Returns a set[Word] for all unique words contained in a string delimited with
+        commas, spaces, or newlines.
+        """
+        return {
+            cls(w, secret, allowed_directions, priority)
+            for w in words.replace(",", "\t").split()
+            if w.strip()
+        }
 
     @property
     def lowercase(self) -> str:
@@ -311,3 +329,4 @@ class Word:
 
 
 NULL_WORD = Word("", True, allowed_directions=NDS.NONE, priority=999)
+WordSet: TypeAlias = set[Word]

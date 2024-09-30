@@ -1,6 +1,5 @@
 import contextlib
 import json
-import random
 from math import log2
 from pathlib import Path
 from typing import Iterable, Sized, TypeAlias
@@ -11,7 +10,7 @@ from ..mask import CompoundMask, Mask
 from ..utils import BoundingBox, find_bounding_box, limit
 from .directions import LEVEL_DIRS, Direction, DirectionSet
 from .validator import Validator
-from .word import KeyInfo, KeyInfoJson, Word
+from .word import KeyInfo, KeyInfoJson, Word, WordSet
 
 
 class EmptyPuzzleError(Exception):
@@ -65,7 +64,6 @@ class MissingWordError(Exception):
 Puzzle: TypeAlias = list[list[str]]
 Key: TypeAlias = dict[str, KeyInfo]
 KeyJson: TypeAlias = dict[str, KeyInfoJson]
-WordSet: TypeAlias = set[Word]
 
 
 class Game:
@@ -486,20 +484,12 @@ class Game:
                 "Words must be a string separated by spaces, commas, or new lines"
             )
         return limit(
-            {
-                Word(
-                    w,
-                    secret,
-                    self.DEFAULT_DIRECTIONS
-                    if allowed_directions is None
-                    else allowed_directions,
-                    self.DEFAULT_SECRET_PRIORITY
-                    if secret
-                    else self.DEFAULT_WORD_PRIORITY,
-                )
-                for w in ",".join(words.replace("\n", ",").split(" ")).split(",")
-                if w.strip()
-            },
+            Word.bulk_create(
+                words,
+                allowed_directions if allowed_directions else self.DEFAULT_DIRECTIONS,
+                secret,
+                self.DEFAULT_SECRET_PRIORITY if secret else self.DEFAULT_WORD_PRIORITY,
+            ),
             self.MAX_PUZZLE_WORDS,
         )
 
