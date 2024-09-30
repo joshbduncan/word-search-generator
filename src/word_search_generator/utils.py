@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import math
 import random
-from typing import TYPE_CHECKING, TypeAlias, Sized, TypeVar, Iterable
+from typing import TYPE_CHECKING, Any, TypeAlias, TypeVar
 
 from .words import WORD_LIST
 
@@ -147,8 +147,8 @@ def get_answer_key_str(words: WordSet, bbox: BoundingBox) -> str:
     return ", ".join(get_answer_key_list(words, bbox))
 
 
-S = TypeVar("S", bound=Sized)
-T = TypeVar
+# set is NOT a superclass of frozenset, FYI
+S = TypeVar("S", bound=list[Any] | set[Any] | frozenset[Any])
 
 
 def limit(i: S, n: int) -> S:
@@ -157,7 +157,10 @@ def limit(i: S, n: int) -> S:
     """
     if len(i) <= n:
         return i
-    return type(i)(random.sample(i, n))
+    # type check ignored for now
+    # https://github.com/python/mypy/issues/13042
+    # https://stackoverflow.com/a/79037646/5544691
+    return type(i)(random.sample(list(i), n))  # type: ignore[return-value]
 
 
 def get_random_words(

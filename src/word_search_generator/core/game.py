@@ -8,7 +8,7 @@ from typing import Iterable, Sized, TypeAlias
 from ..core.formatter import Formatter
 from ..core.generator import Generator
 from ..mask import CompoundMask, Mask
-from ..utils import BoundingBox, find_bounding_box
+from ..utils import BoundingBox, find_bounding_box, limit
 from .directions import LEVEL_DIRS, Direction, DirectionSet
 from .validator import Validator
 from .word import KeyInfo, KeyInfoJson, Word
@@ -485,23 +485,23 @@ class Game:
             raise TypeError(
                 "Words must be a string separated by spaces, commas, or new lines"
             )
-        word_set = {
-            Word(
-                w,
-                secret,
-                self.DEFAULT_DIRECTIONS
-                if allowed_directions is None
-                else allowed_directions,
-                self.DEFAULT_SECRET_PRIORITY if secret else self.DEFAULT_WORD_PRIORITY,
-            )
-            for w in ",".join(words.replace("\n", ",").split(" ")).split(",")
-            if w.strip()
-        }
-        # length check at the end in case duplicates shrink a too-long list to fit
-        if len(word_set) <= self.MAX_PUZZLE_WORDS:
-            return word_set  # all done!
-        # trim to MAX_PUZZLE_WORDS
-        return set(random.sample(list(word_set), self.MAX_PUZZLE_WORDS))
+        return limit(
+            {
+                Word(
+                    w,
+                    secret,
+                    self.DEFAULT_DIRECTIONS
+                    if allowed_directions is None
+                    else allowed_directions,
+                    self.DEFAULT_SECRET_PRIORITY
+                    if secret
+                    else self.DEFAULT_WORD_PRIORITY,
+                )
+                for w in ",".join(words.replace("\n", ",").split(" ")).split(",")
+                if w.strip()
+            },
+            self.MAX_PUZZLE_WORDS,
+        )
 
     _cleanup_input = _process_input  # alias, perhaps refactor later
 
