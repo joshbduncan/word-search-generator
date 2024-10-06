@@ -14,6 +14,12 @@ class Position(NamedTuple):
     row: int | None
     column: int | None
 
+    def __add__(self, other) -> "Position":
+        return Position(self.row + other[0], self.column + other[1])
+
+    def __sub__(self, other) -> "Position":
+        return Position(self.row - other[0], self.column - other[1])
+
 
 class KeyInfo(TypedDict):
     start: Position | None
@@ -29,7 +35,22 @@ class KeyInfoJson(TypedDict):
 
 
 class Word:
-    """This class represents a Word within a WordSearch puzzle."""
+    """
+    This class represents a Word within a WordSearch puzzle.
+
+    List of attributes
+    ------------------
+    text (str): the contents of the word
+        always stripped and uppercased by default
+    secret (bool): in a WordSearch, is it listed as a word available to find?
+    allowed_directions: which directions may the generator consider when
+        deciding placement?
+    priority (int): helps in determining placement order
+        used by different Games in different ways
+    mandatory (bool): when False, suppresses errors if the word is unplaced and
+        Game.require_all_words is True.  True by default.
+    description (str): hint in a Crossword.  May be used differently by other Games.
+    """
 
     def __init__(
         self,
@@ -37,13 +58,13 @@ class Word:
         secret: bool = False,
         allowed_directions: DirectionSet = NDS.FORWARD,
         priority: int = 3,
+        mandatory: bool = True,
         description: str = "",  # should this be moved to a future CrosswordWord?
     ) -> None:
         """Initialize a Word Search puzzle Word."""
         self.text = text.upper().strip()
         self.start_row: int | None = None
         self.start_column: int | None = None
-        self.coordinates: list[tuple[int, int]] = []
         self.direction: Direction | None = None
         self.secret = secret
         self.color = colorsys.hsv_to_rgb(
@@ -53,6 +74,7 @@ class Word:
         )
         self.allowed_directions = allowed_directions
         self.priority = priority
+        self.mandatory = mandatory
         # The following two are for future Crossword use, perhaps move to subclass
         self.description = description.strip()
         self.number: int = 0
@@ -101,6 +123,12 @@ class Word:
         )
 
     @property
+    def coordinates(self) -> list[Position]:
+        if not self.direction or not self.position:
+            return []
+        return [self.position + self.direction * i for i in range(len(self))]
+
+    @property
     def position(self) -> Position:
         """Current start position of the word in the puzzle
         as (start_row, start_column)."""
@@ -118,7 +146,7 @@ class Word:
 
     @property
     def position_xy(self) -> Position:
-        """Returns a the word position with 1-based indexing
+        """Returns the word's position with 1-based indexing
         and a familiar (x, y) coordinate system"""
         return Position(
             self.start_row + 1 if self.start_row is not None else self.start_row,
@@ -231,7 +259,6 @@ class Word:
         """Remove word placement details when a puzzle is reset."""
         self.start_row = None
         self.start_column = None
-        self.coordinates = []
         self.direction = None
 
     def __bool__(self) -> bool:

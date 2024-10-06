@@ -1,5 +1,6 @@
 import json
 import random
+from collections import defaultdict
 from math import log2
 from pathlib import Path
 from typing import Iterable, Sized, TypeAlias
@@ -10,7 +11,7 @@ from ..mask import CompoundMask, Mask
 from ..utils import BoundingBox, find_bounding_box
 from .directions import LEVEL_DIRS, Direction, DirectionSet
 from .validator import Validator
-from .word import KeyInfo, KeyInfoJson, Word
+from .word import KeyInfo, KeyInfoJson, Word, Position
 
 
 class EmptyPuzzleError(Exception):
@@ -223,6 +224,29 @@ class Game:
             }
         )
 
+    # not actually a property, but functions like one
+    def words_by_position(
+        self, *, include_secret: bool = False
+    ) -> dict[Position, list[Word]]:
+        d: dict[Position, list[Word]] = defaultdict(list)
+        for w in self.placed_words:
+            if w.secret and not include_secret:
+                continue  # skip this one
+            d[w.position].append(w)
+        return d
+
+    def occupied_cells(self, include_secret: bool = True) -> set[Position]:
+        return set.union(
+            *(
+                w.coordinates
+                for w in self.placed_words
+                if include_secret or not w.secret
+            )
+        )
+
+    def word_heads(self, include_secret: bool = False) -> set[Position]:
+        return {w.position for w in self.placed_words if include_secret or not w.secret}
+
     # ********************************************************* #
     # ******************** GETTERS/SETTERS ******************** #
     # ********************************************************* #
@@ -390,7 +414,7 @@ class Game:
         self._puzzle = self.generator.generate(self)
         if not self.masked and not self.placed_words:
             raise NoValidWordsError("No valid words have been added to the puzzle.")
-        if self.require_all_words and self.unplaced_words:
+        if self.require_all_words and any(w.mandatory for w in self.unplaced_words):
             raise MissingWordError("All words could not be placed in the puzzle.")
 
     @staticmethod
@@ -535,6 +559,18 @@ class Game:
             except KeyError:
                 raise ValueError(f"'{direction}' is not a valid direction.")
         return o
+
+    def number_words(self, *, number_secrets: bool = False) -> None:
+        """
+        1-indexed numbering of words according to their placement, starting in the
+        top left.  Used heavily by Crosswords.
+        """
+
+        for idx, (_, words) in enumerate(
+            self.words_by_position(include_secret=number_secrets)
+        ):
+            for word in words:
+                word.number = idx + 1
 
     # ************************************************* #
     # ******************** MASKING ******************** #

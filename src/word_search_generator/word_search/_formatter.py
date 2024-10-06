@@ -519,14 +519,19 @@ class WordSearchFormatter(Formatter):
     @staticmethod
     def hide_filler_characters(
         game: GameType,
+        hide_secret_words: bool = False,
     ) -> Puzzle:
         """Remove filler characters from a puzzle."""
         output: Puzzle = copy.deepcopy(game.puzzle)
         word_coords = {
             coord
-            for coords in [word.coordinates for word in game.placed_words]
+            for coords in [
+                word.coordinates
+                for word in game.placed_words
+                if not (hide_secret_words and word.secret)
+            ]
             for coord in coords
-        }
+        }  # TODO replace with Game.occupied_cells()
         for row in range(game.size):
             for col in range(game.size):
                 if (col, row) not in word_coords:

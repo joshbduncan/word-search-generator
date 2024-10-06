@@ -45,6 +45,9 @@ class Direction(Enum):
     def opposite(self) -> "Direction":
         return Direction((-self.r_move, -self.c_move))
 
+    def __mul__(self, other: int) -> tuple[int, int]:
+        return self.r_move * other, self.c_move * other
+
 
 DirectionSet: TypeAlias = set[Direction] | frozenset[Direction]
 _ALL_DIRECTIONS = frozenset(

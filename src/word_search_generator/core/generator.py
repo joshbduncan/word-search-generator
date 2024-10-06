@@ -30,6 +30,7 @@ class WordFitError(Exception):
     pass
 
 
+#  should this be moved to utils.py?
 def retry(retries: int = 1000):
     """Custom retry decorator for retrying a function `retries` times.
 
@@ -41,12 +42,15 @@ def retry(retries: int = 1000):
         @wraps(func)
         def wrapper(*args, **kwargs):
             attempt = 0
-            while attempt < retries:
+            while True:
                 try:
                     return func(*args, **kwargs)
-                except Exception:
+                except Exception as e:
+                    if attempt > retries:
+                        raise RuntimeError(
+                            f"Tried {func.__name__} {retries} times without success"
+                        ) from e
                     attempt += 1
-            return
 
         return wrapper
 
