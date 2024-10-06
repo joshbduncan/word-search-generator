@@ -15,6 +15,10 @@ class Position(NamedTuple):
     column: int | None
 
 
+PositionSet: TypeAlias = set[Position]
+PositionList: TypeAlias = list[Position]
+
+
 class Bearing(NamedTuple):
     position: Position
     direction: Direction
@@ -330,3 +334,4 @@ class Word:
 
 NULL_WORD = Word("", True, allowed_directions=NDS.NONE, priority=999)
 WordSet: TypeAlias = set[Word]
+WordList: TypeAlias = list[Word]

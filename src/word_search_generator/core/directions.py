@@ -47,6 +47,7 @@ class Direction(Enum):
 
 
 DirectionSet: TypeAlias = set[Direction] | frozenset[Direction]
+DirectionList: TypeAlias = list[Direction]
 _ALL_DIRECTIONS = frozenset(
     {
         Direction.N,
