@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import string
 from abc import ABC, abstractmethod
-from functools import wraps
 from typing import TYPE_CHECKING, Iterable, TypeAlias
 
 if TYPE_CHECKING:  # pragma: no cover
     from . import GameType
-    from .game import Puzzle
+
+from ..utils import Puzzle
 
 
 Fit: TypeAlias = tuple[str, list[tuple[int, int]]]
@@ -28,29 +28,6 @@ class EmptyAlphabetError(Exception):
 
 class WordFitError(Exception):
     pass
-
-
-def retry(retries: int = 1000):
-    """Custom retry decorator for retrying a function `retries` times.
-
-    Args:
-        retries (int, optional): Retry attempts. Defaults to 1000.
-    """
-
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            attempt = 0
-            while attempt < retries:
-                try:
-                    return func(*args, **kwargs)
-                except Exception:
-                    attempt += 1
-            return
-
-        return wrapper
-
-    return decorator
 
 
 class Generator(ABC):

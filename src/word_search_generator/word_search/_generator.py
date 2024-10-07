@@ -3,9 +3,9 @@ from __future__ import annotations
 import random
 from typing import TYPE_CHECKING, TypeAlias
 
-from ..core.generator import Generator, WordFitError, retry
+from ..core.generator import Generator, WordFitError
 from ..core.word import Direction, Word
-from ..utils import in_bounds
+from ..utils import in_bounds, retry
 
 if TYPE_CHECKING:  # pragma: no cover
     from ..core import GameType

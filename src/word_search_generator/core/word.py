@@ -97,24 +97,6 @@ class Word:
                 return False
         return True
 
-    @classmethod
-    def bulk_create(
-        cls,
-        words: str,
-        allowed_directions: DirectionSet,
-        secret: bool = False,
-        priority: int = 3,
-    ) -> "WordSet":
-        """
-        Returns a set[Word] for all unique words contained in a string delimited with
-        commas, spaces, or newlines.
-        """
-        return {
-            cls(w, secret, allowed_directions, priority)
-            for w in words.replace(",", "\t").split()
-            if w.strip()
-        }
-
     @property
     def lowercase(self) -> str:
         """Return lowercase version of the word."""
@@ -335,3 +317,21 @@ class Word:
 NULL_WORD = Word("", True, allowed_directions=NDS.NONE, priority=999)
 WordSet: TypeAlias = set[Word]
 WordList: TypeAlias = list[Word]
+
+
+def make_many_words(
+    words: str,
+    allowed_directions: DirectionSet,
+    secret: bool = False,
+    priority: int = 3,
+) -> WordSet:
+    """
+    Returns a set[Word] for all unique words contained in a string delimited with
+    commas, spaces, or newlines.
+    """
+    # TODO in the Crossword branch, add the field for Mandatory
+    return {
+        Word(w, secret, allowed_directions, priority)
+        for w in words.replace(",", "\t").split()
+        if w.strip()
+    }

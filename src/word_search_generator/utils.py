@@ -3,14 +3,16 @@ from __future__ import annotations
 import math
 import random
 from typing import TYPE_CHECKING, Any, TypeAlias, TypeVar
+from functools import wraps
 
 from .words import WORD_LIST
 
 if TYPE_CHECKING:  # pragma: no cover
-    from .core.game import DirectionSet, Key, Puzzle, WordSet
+    from .core.game import DirectionSet, Key, WordSet
 
 
 BoundingBox: TypeAlias = tuple[tuple[int, int], tuple[int, int]]
+Puzzle: TypeAlias = tuple[int, int]
 
 
 def round_half_up(n: float, decimals: int = 0) -> float:
@@ -51,7 +53,7 @@ def in_bounds(x: int, y: int, width: int, height: int) -> bool:
 
 
 def find_bounding_box(
-    grid: list[list[str]],
+    grid: Puzzle,
     edge: str,
 ) -> BoundingBox:
     """Bounding box of the masked area as a rectangle defined
@@ -180,3 +182,26 @@ def get_random_words(
         ),
         n,
     )
+
+
+def retry(retries: int = 1000):
+    """Custom retry decorator for retrying a function `retries` times.
+
+    Args:
+        retries (int, optional): Retry attempts. Defaults to 1000.
+    """
+
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            attempt = 0
+            while attempt < retries:
+                try:
+                    return func(*args, **kwargs)
+                except Exception:
+                    attempt += 1
+            return
+
+        return wrapper
+
+    return decorator

@@ -5,12 +5,12 @@ from pathlib import Path
 from typing import Iterable, Sized, TypeAlias
 
 from ..core.formatter import Formatter
-from ..core.generator import Generator
+from ..core.generator import Generator, Puzzle
 from ..mask import CompoundMask, Mask
 from ..utils import BoundingBox, find_bounding_box, limit
 from .directions import LEVEL_DIRS, Direction, DirectionSet
 from .validator import Validator
-from .word import KeyInfo, KeyInfoJson, Word, WordSet
+from .word import KeyInfo, KeyInfoJson, Word, WordSet, make_many_words
 
 
 class EmptyPuzzleError(Exception):
@@ -61,7 +61,6 @@ class MissingWordError(Exception):
     pass
 
 
-Puzzle: TypeAlias = list[list[str]]
 Key: TypeAlias = dict[str, KeyInfo]
 KeyJson: TypeAlias = dict[str, KeyInfoJson]
 
@@ -484,7 +483,7 @@ class Game:
                 "Words must be a string separated by spaces, commas, or new lines"
             )
         return limit(
-            Word.bulk_create(
+            make_many_words(
                 words,
                 allowed_directions if allowed_directions else self.DEFAULT_DIRECTIONS,
                 secret,

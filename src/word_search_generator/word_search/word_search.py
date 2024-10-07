@@ -29,12 +29,6 @@ from ._generator import WordSearchGenerator
 class WordSearch(Game):
     """This class represents a WordSearch object."""
 
-    MIN_PUZZLE_SIZE = 5
-    MAX_PUZZLE_SIZE = 50
-    MIN_PUZZLE_WORDS = 1
-    MAX_PUZZLE_WORDS = 100
-    MAX_FIT_TRIES = 1000
-
     DEFAULT_GENERATOR = WordSearchGenerator()
     DEFAULT_FORMATTER = WordSearchFormatter()
     DEFAULT_VALIDATORS = [
