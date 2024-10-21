@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 
 from . import WordSearch, __app_name__, __version__, config, utils
 from .mask import shapes
-from .mask.bitmap import Image
+from .mask.bitmap import BitmapImage
 from .word import Direction
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -236,7 +236,7 @@ secret puzzle words can go. See valid arguments above.",
             puzzle.size = mask.min_size
         puzzle.apply_mask(mask)
     if args.image_mask:
-        puzzle.apply_mask(Image(args.image_mask))
+        puzzle.apply_mask(BitmapImage(args.image_mask))
 
     # show the result
     if args.output or args.format:

@@ -1,8 +1,7 @@
 from pathlib import Path
 from typing import List, Optional, Tuple, Union
 
-from PIL import Image as PILImage
-from PIL import ImageChops
+from PIL import Image, ImageChops
 
 from ..config import ACTIVE
 from ..utils import in_bounds
@@ -51,7 +50,7 @@ class Bitmap(Mask):
                 self._mask[y][x] = ACTIVE
 
 
-class Image(Bitmap):
+class BitmapImage(Bitmap):
     """This class represents a subclass of the Bitmap object
     and generates a mask a mask from a raster image."""
 
@@ -82,27 +81,29 @@ class Image(Bitmap):
         """Generate a new mask at `puzzle_size` from a raster image."""
         self.puzzle_size = puzzle_size
         self._mask = self.build_mask(self.puzzle_size)
-        self.points = Image.process_image(
-            PILImage.open(self.fp, formats=("BMP", "JPEG", "PNG")),
+        self.points = BitmapImage.process_image(
+            Image.open(self.fp, formats=("BMP", "JPEG", "PNG")),
             self.puzzle_size,
-            Image.threshold,
+            BitmapImage.threshold,
         )
         if not self.points:
             raise ContrastError("The provided image lacked enough contrast.")
         self._draw()
 
     @staticmethod
-    def process_image(image: PILImage, size: int, threshold: int = 200) -> PILImage:
+    def process_image(
+        image: Image.Image, size: int, threshold: int = 200
+    ) -> list[tuple[int, int]]:
         """Take a `PIL.Image` object, convert it to black-and-white, trim any
         excess pixels from the edges, resize it, and return all of the black
         pixels as a (x, y) coordinates."""
         image = image.convert("L").point(
-            lambda px: 255 if px > Image.threshold else 0, mode="1"
+            lambda px: 255 if px > BitmapImage.threshold else 0, mode="1"
         )
-        diff = ImageChops.difference(image, PILImage.new("L", image.size, (255)))
+        diff = ImageChops.difference(image, Image.new("L", image.size, (255)))
         bbox = diff.getbbox()
         image = image.crop(bbox)
-        image.thumbnail((size, size), resample=0)
+        image.thumbnail((size, size))
         w, _ = image.size
         return [
             (0 if i == 0 else i % w, i // w)

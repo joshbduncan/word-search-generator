@@ -10,7 +10,7 @@ from __future__ import annotations
 """
 
 __app_name__ = "word-search"
-__version__ = "3.5.1"
+__version__ = "3.5.2"
 
 
 import json

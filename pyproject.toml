@@ -24,7 +24,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Typing :: Typed",
 ]
-dependencies = ["fpdf2==2.4.2", "pillow==9.5.0", "typing_extensions"]
+dependencies = ["fpdf2==2.4.2", "pillow==11.0.0", "typing_extensions"]
 dynamic = ["version"]
 
 [tool.setuptools.dynamic]
