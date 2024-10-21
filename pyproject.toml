@@ -16,6 +16,8 @@ classifiers = [
     "Topic :: Games/Entertainment :: Puzzle Games",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Typing :: Typed",
 ]
 dependencies = ["fpdf2==2.7.8", "Pillow==11.0.0", "rich==13.6.0"]
