@@ -1,9 +1,7 @@
 import inspect
 import math
 import sys
-from typing import Tuple
 
-from ..config import ACTIVE
 from . import Bitmap, CompoundMask
 from .ellipse import Ellipse
 from .polygon import Polygon, Rectangle, RegularPolygon, Star
@@ -37,7 +35,7 @@ for a {self.__class__.__name__} mask."
             )
 
         self.puzzle_size = puzzle_size
-        self._mask = self.build_mask(puzzle_size, ACTIVE)
+        self._mask = self.build_mask(puzzle_size, self.ACTIVE)
 
         center = self.puzzle_size // 2
         center_offset = self.puzzle_size % 2 - 1
@@ -94,7 +92,7 @@ class Donut(CompoundMask):
 
     def generate(self, puzzle_size: int) -> None:
         self.puzzle_size = puzzle_size
-        self._mask = self.build_mask(puzzle_size, ACTIVE)
+        self._mask = self.build_mask(puzzle_size, self.ACTIVE)
         donut, hole = Donut.calculate_golden_donut_ratio(self.puzzle_size)
         self.masks = [
             Ellipse(donut, donut),
@@ -105,7 +103,7 @@ class Donut(CompoundMask):
             self._apply_mask(mask)
 
     @staticmethod
-    def calculate_golden_donut_ratio(puzzle_size: int) -> Tuple[int, int]:
+    def calculate_golden_donut_ratio(puzzle_size: int) -> tuple[int, int]:
         donut = puzzle_size - 1 if puzzle_size % 2 == 0 else puzzle_size
         hole = int(math.pow(puzzle_size - 2, 2) // (3 * (puzzle_size - 1)))
         if hole % 2 == 0:
@@ -127,7 +125,7 @@ for a {self.__class__.__name__} mask."
             )
 
         self.puzzle_size = puzzle_size
-        self._mask = self.build_mask(puzzle_size, ACTIVE)
+        self._mask = self.build_mask(puzzle_size, self.ACTIVE)
 
         center = self.puzzle_size // 2
         body_width = int(self.puzzle_size // 1.25)
@@ -177,7 +175,7 @@ for a {self.__class__.__name__} mask."
             )
 
         self.puzzle_size = puzzle_size
-        self._mask = self.build_mask(puzzle_size, ACTIVE)
+        self._mask = self.build_mask(puzzle_size, self.ACTIVE)
 
         flower_size = self.puzzle_size - (self.puzzle_size - 1) % 2
         center_wide_size = flower_size // 2 - (flower_size // 2 - 1) % 2
@@ -211,7 +209,7 @@ for a {self.__class__.__name__} mask."
             )
 
         self.puzzle_size = puzzle_size
-        self._mask = self.build_mask(puzzle_size, ACTIVE)
+        self._mask = self.build_mask(puzzle_size, self.ACTIVE)
 
         # calculate both top ellipses
         even_odd_offset = self.puzzle_size % 2
@@ -245,7 +243,7 @@ for a {self.__class__.__name__} mask."
         y1 = max(
             y
             for y in range(len(left_ellipse.mask))
-            if left_ellipse.mask[y][x1] == ACTIVE
+            if left_ellipse.mask[y][x1] == self.ACTIVE
         )
         x2 = left_ellipse.bounding_box[1][1] if left_ellipse.bounding_box else 0
         y2 = right_ellipse.bounding_box[1][1] * 2 if right_ellipse.bounding_box else 0
@@ -256,7 +254,7 @@ for a {self.__class__.__name__} mask."
         y4 = min(
             y
             for y in range(len(left_ellipse.mask))
-            if left_ellipse.mask[y][x4] == ACTIVE
+            if left_ellipse.mask[y][x4] == self.ACTIVE
         )
         poly = Polygon(
             [(x1, y1), (x2, y2), (x3, y3), (x4, y4)],
@@ -299,7 +297,7 @@ for a {self.__class__.__name__} mask."
             )
 
         self.puzzle_size = puzzle_size
-        self._mask = self.build_mask(puzzle_size, ACTIVE)
+        self._mask = self.build_mask(puzzle_size, self.ACTIVE)
 
         center = self.puzzle_size // 2
         center_offset = self.puzzle_size % 2 - 1
@@ -387,7 +385,7 @@ class Tree(CompoundMask):
 
     def generate(self, puzzle_size: int) -> None:
         self.puzzle_size = puzzle_size
-        self._mask = self.build_mask(puzzle_size, ACTIVE)
+        self._mask = self.build_mask(puzzle_size, self.ACTIVE)
         # build the tree top
         tree_top = RegularPolygon(vertices=3)
         tree_top.generate(self.puzzle_size)

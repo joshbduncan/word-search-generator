@@ -1,9 +1,7 @@
 from pathlib import Path
-from typing import List, Optional, Tuple, Union
 
 from PIL import Image, ImageChops
 
-from ..config import ACTIVE
 from ..utils import in_bounds
 from . import Mask, MaskNotGenerated
 
@@ -18,14 +16,14 @@ class Bitmap(Mask):
 
     def __init__(
         self,
-        points: Optional[List[Tuple[int, int]]] = None,
+        points: list[tuple[int, int]] | None = None,
         method: int = 1,
         static: bool = True,
     ) -> None:
         """Initialize a WordSearch puzzle bitmap mask object.
 
         Args:
-            points (Optional[List[Tuple[int, int]]], optional): Coordinate points
+            points (list[tuple[int, int]] | None, optional): Coordinate points
                 used to build the mask. Defaults to None.
             method (int, optional): How Mask is applied to the puzzle
                 (1=Standard (Intersection), 2=Additive, 3=Subtractive). Defaults to 1.
@@ -36,7 +34,7 @@ class Bitmap(Mask):
 
     def _draw(self) -> None:
         """Set each coordinate point from `object.points` as
-        `config.ACTIVE` in `Object._mask`.
+        `ACTIVE` in `Object._mask`.
 
         Raises:
             MaskNotGenerated: Mask has not yet been generated.
@@ -47,7 +45,7 @@ class Bitmap(Mask):
             )
         for x, y in self.points:
             if in_bounds(x, y, self.puzzle_size, self.puzzle_size):
-                self._mask[y][x] = ACTIVE
+                self._mask[y][x] = self.ACTIVE
 
 
 class BitmapImage(Bitmap):
@@ -56,9 +54,7 @@ class BitmapImage(Bitmap):
 
     threshold = 200  # normalization contrast point
 
-    def __init__(
-        self, fp: Union[str, Path], method: int = 1, static: bool = False
-    ) -> None:
+    def __init__(self, fp: str | Path, method: int = 1, static: bool = False) -> None:
         """Generate a bitmap mask from a raster image.
 
         Note: Ideally, the raster image should be a single color (dark) on a solid
@@ -67,7 +63,7 @@ class BitmapImage(Bitmap):
         to grayscale first.
 
         Args:
-            fp (Union[str, Path]): A filepath (string) or `pathlib.Path` object
+            fp (str | Path): A filepath (string) or `pathlib.Path` object
                 to the raster image the mask will be generated from.
             method (int, optional): How Mask is applied to the puzzle
                 (1=Standard (Intersection), 2=Additive, 3=Subtractive). Defaults to 1.
@@ -80,11 +76,10 @@ class BitmapImage(Bitmap):
     def generate(self, puzzle_size: int) -> None:
         """Generate a new mask at `puzzle_size` from a raster image."""
         self.puzzle_size = puzzle_size
-        self._mask = self.build_mask(self.puzzle_size)
+        self._mask = self.build_mask(self.puzzle_size, self.INACTIVE)
+        img = Image.open(self.fp, formats=("BMP", "JPEG", "PNG"))
         self.points = BitmapImage.process_image(
-            Image.open(self.fp, formats=("BMP", "JPEG", "PNG")),
-            self.puzzle_size,
-            BitmapImage.threshold,
+            img, self.puzzle_size, BitmapImage.threshold
         )
         if not self.points:
             raise ContrastError("The provided image lacked enough contrast.")
