@@ -16,7 +16,7 @@ dev: ## build a virtual environment for development
 
 cleanup: format lint typing ## format, lint, and type check
 
-lint: ## lint the app using flake8 and ruff
+lint: ## lint the app using ruff
 	@echo "📝 linting..."
 	uv run ruff check --fix
 

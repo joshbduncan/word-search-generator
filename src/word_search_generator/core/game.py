@@ -538,20 +538,21 @@ class Game:
             mask.generate(self.size)
         for y in range(self.size):
             for x in range(self.size):
-                if mask.method == 1:
-                    if (
-                        mask.mask[y][x] == self.ACTIVE
-                        and self.mask[y][x] == self.ACTIVE
-                    ):
-                        self.mask[y][x] = self.ACTIVE
-                    else:
-                        self.mask[y][x] = self.INACTIVE
-                elif mask.method == 2:
-                    if mask.mask[y][x] == self.ACTIVE:
-                        self.mask[y][x] = self.ACTIVE
-                else:
-                    if mask.mask[y][x] == self.ACTIVE:
-                        self.mask[y][x] = self.INACTIVE
+                self.mask[y][x] = self.mask[y][x]
+                mask.mask[y][x] = mask.mask[y][x]
+                match mask.method:
+                    case 1:
+                        self.mask[y][x] = (
+                            self.ACTIVE
+                            if mask.mask[y][x] == self.mask[y][x] == self.ACTIVE
+                            else self.INACTIVE
+                        )
+                    case 2:
+                        if mask.mask[y][x] == self.ACTIVE:
+                            self.mask[y][x] = self.ACTIVE
+                    case 3:
+                        if mask.mask[y][x] == self.ACTIVE:
+                            self.mask[y][x] = self.INACTIVE
         # add mask to puzzle instance for later reference
         if mask not in self.masks:
             self.masks.append(mask)

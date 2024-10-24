@@ -2,6 +2,7 @@ __all__ = [
     "Formatter",
     "Game",
     "Generator",
+    "Puzzle",
     "Validator",
     "Word",
 ]
@@ -9,7 +10,7 @@ __all__ = [
 from typing import TypeVar
 
 from .formatter import Formatter
-from .game import Game
+from .game import Game, Puzzle
 from .generator import Generator
 from .validator import Validator
 from .word import Word

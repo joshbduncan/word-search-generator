@@ -1,8 +1,8 @@
 import argparse
-import pathlib
 import sys
 from collections.abc import Sequence
 from importlib.metadata import version
+from pathlib import Path
 
 from .core.directions import LEVEL_DIRS
 from .core.game import Game
@@ -53,15 +53,7 @@ class SizeAction(argparse.Action):
         setattr(namespace, self.dest, values)
 
 
-def main(argv: Sequence[str] | None = None) -> int:
-    """Word Search Generator CLI.
-
-    Args:
-        argv (Sequence[str] | None, optional): Command line arguments. Defaults to None.
-
-    Returns:
-        int: Exit status.
-    """
+def create_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=f"""Generate Word Search Puzzles! \
 
@@ -85,7 +77,7 @@ Valid Directions: {', '.join([d.name for d in Direction])}
     words_group.add_argument(
         "-i",
         "--input",
-        type=pathlib.Path,
+        type=Path,
         help="Text file to load puzzle words from.",
     )
     parser.add_argument(
@@ -128,7 +120,7 @@ puzzle words can go. See valid arguments above.",
     mask_group.add_argument(
         "-im",
         "--image-mask",
-        type=pathlib.Path,
+        type=Path,
         help="Mask the puzzle to a provided image \
 (accepts: BMP, JPEG, PNG).",
     )
@@ -148,7 +140,7 @@ puzzle words can go. See valid arguments above.",
     parser.add_argument(
         "-o",
         "--output",
-        type=pathlib.Path,
+        type=Path,
         help="Output path for the saved puzzle.",
     )
     parser.add_argument(
@@ -204,46 +196,44 @@ secret puzzle words can go. See valid arguments above.",
         action="version",
         version=f"%(prog)s {version('word_search_generator')}",
     )
-    args = parser.parse_args(argv)
+    return parser
 
-    # check for mask preview first
-    if args.preview_masks:
-        from rich import box
-        from rich.table import Table
 
-        from .console import console
+def preview_masks() -> None:
+    from rich import box
+    from rich.table import Table
 
-        preview_size = 21
+    from .console import console
 
-        for shape in BUILTIN_MASK_SHAPES_OBJECTS:
-            mask: Mask = eval(f"shapes.{shape}")()
-            mask.generate(preview_size)
-            table = Table(
-                title=shape,
-                title_style="bold italic green",
-                box=box.SIMPLE_HEAD,
-                padding=0,
-                show_edge=True,
-                show_header=False,
-                show_lines=False,
-            )
+    preview_size = 21
 
-            assert mask.bounding_box
-            min_x, min_y = mask.bounding_box[0]
-            max_x, max_y = mask.bounding_box[1]
+    for shape in BUILTIN_MASK_SHAPES_OBJECTS:
+        mask: Mask = eval(f"shapes.{shape}")()
+        mask.generate(preview_size)
+        table = Table(
+            title=shape,
+            title_style="bold italic green",
+            box=box.SIMPLE_HEAD,
+            padding=0,
+            show_edge=True,
+            show_header=False,
+            show_lines=False,
+        )
 
-            for _ in range(max_x - min_x + 1):
-                table.add_column(
-                    width=1, justify="center", vertical="middle", no_wrap=True
-                )
+        assert mask.bounding_box
+        min_x, min_y = mask.bounding_box[0]
+        max_x, max_y = mask.bounding_box[1]
 
-            for row in mask.mask[min_y : max_y + 1]:
-                table.add_row(*[c if c == mask.ACTIVE else " " for c in row])
+        for _ in range(max_x - min_x + 1):
+            table.add_column(width=1, justify="center", vertical="middle", no_wrap=True)
 
-            console.print(table)
-        return 0
+        for row in mask.mask[min_y : max_y + 1]:
+            table.add_row(*[c if c == mask.ACTIVE else " " for c in row])
 
-    # process puzzle words
+        console.print(table)
+
+
+def process_words(args: argparse.Namespace) -> str:
     words = ""
     if args.random:
         words = ",".join(
@@ -258,17 +248,44 @@ secret puzzle words can go. See valid arguments above.",
         # disable interactive tty which can be confusing
         # but still process words were piped in from the shell
         words = args.words.read().rstrip()
+    return words
+
+
+def process_secret_words(args: argparse.Namespace) -> str:
+    secret_words = ""
+    if args.secret_words:
+        secret_words = args.secret_words
+    elif args.random_secret_words:
+        secret_words = ",".join(get_random_words(args.random_secret_words))
+    return secret_words
+
+
+def build_puzzle(args: argparse.Namespace):
+    pass
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    """Word Search Generator CLI.
+
+    Args:
+        argv (Sequence[str] | None, optional): Command line arguments. Defaults to None.
+
+    Returns:
+        int: Exit status.
+    """
+    parser = create_parser()
+    args = parser.parse_args(argv)
+
+    # check for mask preview first
+    if args.preview_masks:
+        preview_masks()
+        return 0
+
+    # process puzzle words
+    words = process_words(args)
 
     # process secret puzzle words
-    secret_words = (
-        args.secret_words
-        if args.secret_words
-        else (
-            ",".join(get_random_words(args.random_secret_words))
-            if args.random_secret_words
-            else ""
-        )
-    )
+    secret_words = process_secret_words(args)
 
     # if not words were found exit the script
     if not words and not secret_words:
