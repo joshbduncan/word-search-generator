@@ -1,0 +1,2 @@
+[build.targets.wheel]
+packages = ["src/word_search_generator"]
