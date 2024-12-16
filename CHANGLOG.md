@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixes
 
+- Output file name error on windows (fixes #80)
+
+## [3.5.2] 2024-10-21
+
+### Fixes
+
 - Updated Pillow to v11.0.0 since it was breaking during install on Python 3.13
 
 ## [3.5.1] 2024-05-15
