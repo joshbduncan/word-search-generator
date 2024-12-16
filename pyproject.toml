@@ -1,6 +1,6 @@
 [project]
 name = "word-search-generator"
-version = "3.5.1"
+version = "3.5.3"
 authors = [{ name = "Josh Duncan", email = "joshbduncan@gmail.com" }]
 description = "Make awesome Word Search puzzles"
 readme = "README.md"
@@ -35,3 +35,21 @@ word-search = "word_search_generator.cli:main"
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.uv]
+dev-dependencies = [
+    "mypy>=1.11.2",
+    "pdfplumber>=0.11.4",
+    "pre-commit>=3.8.0",
+    "pypdf>=5.0.0",
+    "pytest>=8.3.3",
+    "pytest-asyncio>=0.24.0",
+    "pytest-cov>=5.0.0",
+    "ruff>=0.6.6",
+    "pre-commit-uv>=4.1.2",
+    "tox>=4.20.0",
+    "tox-uv>=1.13.0",
+]
+
+[tool.uv.sources]
+word-search-generator = { workspace = true }

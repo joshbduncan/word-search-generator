@@ -372,10 +372,9 @@ def test_pdf_output_puzzle_lowercase(iterations, tmp_path: Path):
             elif line.startswith("Find words going"):
                 break
             else:
-                puzzle.append(list(line))
+                puzzle.append(list(line.replace(" ", "")))
         return puzzle
 
-    results = []
     for _ in range(iterations):
         ws = WordSearch(size=random.randint(8, 21))
         ws.random_words(random.randint(5, 21))
@@ -386,11 +385,9 @@ def test_pdf_output_puzzle_lowercase(iterations, tmp_path: Path):
         puzzle = parse_puzzle(page.extract_text(0))
 
         # convert puzzle to lowercase for testing
-        lowercase_puzzle = [[c.lower() for c in line] for line in ws.puzzle]
+        lowercase_puzzle = [[c.lower() for c in line if c] for line in ws.puzzle]
 
-        results.append(puzzle == lowercase_puzzle)
-
-    assert all(results)
+        assert puzzle == lowercase_puzzle
 
 
 def test_pdf_output_key(iterations, tmp_path: Path):
@@ -402,7 +399,7 @@ def test_pdf_output_key(iterations, tmp_path: Path):
             elif line.startswith("Find words going"):
                 break
             else:
-                puzzle.append(list(line))
+                puzzle.append(list(line.replace(" ", "")))
         return puzzle
 
     def parse_words(extraction):
@@ -418,7 +415,6 @@ def test_pdf_output_key(iterations, tmp_path: Path):
             words.add(word)
         return words
 
-    results = []
     for _ in range(iterations):
         ws = WordSearch(size=random.randint(8, 21))
         ws.random_words(random.randint(5, 21))
@@ -428,9 +424,7 @@ def test_pdf_output_key(iterations, tmp_path: Path):
         page = reader.pages[0]
         puzzle = parse_puzzle(page.extract_text(0))
         words = parse_words(page.extract_text(180))
-        results.append(all(check_chars(puzzle, word) for word in words))  # type: ignore
-
-    assert all(results)
+        assert all(check_chars(puzzle, word) for word in words)  # type: ignore
 
 
 def test_pdf_output_words(iterations, tmp_path: Path):
@@ -501,10 +495,9 @@ def test_pdf_output_puzzle_size(iterations, tmp_path: Path):
             elif line.startswith("Find words going"):
                 break
             else:
-                puzzle.append(list(line))
+                puzzle.append(list(line.replace(" ", "")))
         return puzzle
 
-    results = []
     for _ in range(iterations):
         ws = WordSearch(size=random.randint(8, 21))
         ws.random_words(random.randint(5, 21))
@@ -513,9 +506,8 @@ def test_pdf_output_puzzle_size(iterations, tmp_path: Path):
         reader = PdfReader(fp)
         page = reader.pages[0]
         puzzle = parse_puzzle(page.extract_text(0))
-        results.append(ws.size == len(puzzle) and ws.size == len(puzzle[0]))  # type: ignore
-
-    assert all(results)
+        assert ws.size == len(puzzle)
+        assert ws.size == len(puzzle[0])
 
 
 def test_pdf_output_solution_highlighting(iterations, tmp_path: Path):
@@ -662,13 +654,11 @@ def test_csv_output_puzzle_size(iterations, tmp_path: Path):
                     puzzle.append(row)
         return puzzle
 
-    results = []
     for _ in range(iterations):
         ws = WordSearch(size=random.randint(8, 21))
         ws.random_words(random.randint(5, 21))
         fp = Path.joinpath(tmp_path, f"{uuid.uuid4()}.pdf")
         ws.save(fp, format="CSV")
         puzzle = parse_puzzle(fp)
-        results.append(ws.size == len(puzzle) and ws.size == len(puzzle[0]))  # type: ignore
-
-    assert all(results)
+        assert ws.size == len(puzzle)
+        assert ws.size == len(puzzle[0])

@@ -322,10 +322,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         from datetime import datetime
 
         format = args.format if args.format else "PDF"
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S").replace(":", "")
         path = (
             args.output
             if args.output
-            else f"WordSearchPuzzle {datetime.now()}.{format.lower()}"
+            else f"WordSearchPuzzle {timestamp}.{format.lower()}"
         )
         foutput = puzzle.save(
             path=path,
