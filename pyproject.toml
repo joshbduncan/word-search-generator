@@ -38,7 +38,7 @@ build-backend = "hatchling.build"
 
 [tool.uv]
 dev-dependencies = [
-    "mypy>=1.11.2",
+    "mypy>=1.15.0",
     "pdfplumber>=0.11.4",
     "pre-commit>=3.8.0",
     "pypdf>=5.0.0",

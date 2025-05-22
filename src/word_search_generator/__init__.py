@@ -14,7 +14,7 @@ __all__ = [
 
 from rich.traceback import install
 
-from .word_search.word_search import WordSearch  # noqa: F401c
+from .word_search.word_search import WordSearch  # noqa: F401
 
 install(show_locals=True)
 
