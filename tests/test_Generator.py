@@ -2,6 +2,7 @@ import pytest
 
 from word_search_generator import WordSearch
 from word_search_generator.core.directions import LEVEL_DIRS
+from word_search_generator.core.generator import EmptyAlphabetError
 from word_search_generator.utils import get_random_words
 from word_search_generator.word_search._generator import WordSearchGenerator
 
@@ -89,3 +90,8 @@ def test_custom_get_attr():
 
     with pytest.raises(AttributeError):
         word_search_generator.__ver__  # noqa: B018
+
+
+def test_empty_alphabet():
+    with pytest.raises(EmptyAlphabetError):
+        bad_generator = WordSearchGenerator("1")  # noqa: F841

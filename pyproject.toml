@@ -1,6 +1,6 @@
 [project]
 name = "word-search-generator"
-version = "3.5.3"
+version = "4.0.0"
 authors = [{ name = "Josh Duncan", email = "joshbduncan@gmail.com" }]
 description = "Make awesome Word Search puzzles"
 readme = "README.md"

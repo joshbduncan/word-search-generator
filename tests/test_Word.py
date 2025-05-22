@@ -1,3 +1,5 @@
+from rich.style import Style
+
 from word_search_generator.core.word import Direction, Position, Word
 
 
@@ -75,3 +77,8 @@ def test_word_bool_true():
 def test_word_bool_false():
     w = Word("")
     assert not w
+
+
+def test_rich_style():
+    w = Word("fancy")
+    assert isinstance(w.rich_style, Style)

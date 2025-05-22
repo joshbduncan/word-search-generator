@@ -347,20 +347,36 @@ def test_export_json_overwrite_file_error(tmp_path: Path):
         puzzle.save(fp, format="JSON")
 
 
-@pytest.mark.skipif(os.name == "nt", reason="need to figure out")
 def test_export_pdf_os_error(words):
-    """Try to export a puzzle to a place you don't have access to."""
+    """Try to export a puzzle to a place you don't have access to, regardless of OS."""
     puzzle = WordSearch(words)
+
+    # Pick a path that will trigger an OSError on each platform
+    if os.name == "nt":  # Windows
+        # "CON" is a reserved name in Windows and cannot be used as a filename
+        forbidden_path = "CON\\test.pdf"
+    else:  # posix (macOS, Linux)
+        # Attempting to write directly to root or /sys should fail without root
+        forbidden_path = "/this/should/not/exist/test.pdf"
+
     with pytest.raises(OSError):
-        puzzle.save("/test.pdf")
+        puzzle.save(forbidden_path)
 
 
-@pytest.mark.skipif(os.name == "nt", reason="need to figure out")
 def test_export_csv_os_error(words):
-    """Try to export a puzzle to a place you don't have access to."""
+    """Try to export a puzzle to a place you don't have access to, regardless of OS."""
     puzzle = WordSearch(words)
+
+    # Pick a path that will trigger an OSError on each platform
+    if os.name == "nt":  # Windows
+        # "CON" is a reserved name in Windows and cannot be used as a filename
+        forbidden_path = "CON\\test.csv"
+    else:  # posix (macOS, Linux)
+        # Attempting to write directly to root or /sys should fail without root
+        forbidden_path = "/this/should/not/exist/test.csv"
+
     with pytest.raises(OSError):
-        puzzle.save("/test.csv")
+        puzzle.save(forbidden_path)
 
 
 def test_pdf_output_puzzle_lowercase(iterations, tmp_path: Path):
