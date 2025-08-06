@@ -182,6 +182,7 @@ class WordSearch(Game):
         lowercase: bool = False,
         hide_key: bool = False,
         reversed_letters: bool = False,
+        no_sort_words: bool = False,
     ):
         return super().show(
             solution=solution,
@@ -189,6 +190,7 @@ class WordSearch(Game):
             lowercase=lowercase,
             hide_key=hide_key,
             reversed_letters=reversed_letters,
+            no_sort_words=no_sort_words,
         )
 
     def save(
@@ -198,6 +200,7 @@ class WordSearch(Game):
         solution: bool = False,
         lowercase: bool = False,
         hide_key: bool = False,
+        no_sort_words: bool = False,
         *args,
         **kwargs,
     ) -> str:
@@ -207,6 +210,7 @@ class WordSearch(Game):
             solution=solution,
             lowercase=lowercase,
             hide_key=hide_key,
+            no_sort_words=no_sort_words,
         )
 
     # *************************************************************** #

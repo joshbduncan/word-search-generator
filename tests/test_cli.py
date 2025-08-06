@@ -238,3 +238,11 @@ def test_input_file(tmp_path: Path):
     file_to_read.write_text("dog, pig\nmoose,horse,cat,    mouse, newt\ngoose")
     result = subprocess.run(f"word-search -i {file_to_read.absolute()}", shell=True)
     assert result.returncode == 0
+
+
+def test_no_sort_words():
+    """Test that --no-sort-words preserves the original word order."""
+    result = subprocess.run("word-search hello world test --no-sort-words", shell=True)
+    assert result.returncode == 0
+
+

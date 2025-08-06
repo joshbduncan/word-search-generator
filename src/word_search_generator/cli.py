@@ -138,6 +138,11 @@ puzzle words can go. See valid arguments above.",
         help="Disable default word validators.",
     )
     parser.add_argument(
+        "--no-sort-words",
+        action="store_true",
+        help="Display words in original order rather than sorted alphabetically.",
+    )
+    parser.add_argument(
         "-o",
         "--output",
         type=Path,
@@ -334,6 +339,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             solution=args.cheat,
             lowercase=args.lowercase,
             hide_key=args.hide_key,
+            no_sort_words=args.no_sort_words,
         )
         print(f"Puzzle saved: {foutput}")
 
@@ -343,6 +349,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             lowercase=args.lowercase,
             reversed_letters=not args.cheat,
             hide_key=args.hide_key,
+            no_sort_words=args.no_sort_words,
         )
 
     return 0
