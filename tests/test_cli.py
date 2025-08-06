@@ -242,7 +242,20 @@ def test_input_file(tmp_path: Path):
 
 def test_no_sort_words():
     """Test that --no-sort-words preserves the original word order."""
-    result = subprocess.run("word-search hello world test --no-sort-words", shell=True)
+    words = "hello world test"
+    result = subprocess.run(
+        f"word-search {words} --no-sort-words",
+        shell=True,
+        capture_output=True,
+        text=True,
+    )
     assert result.returncode == 0
+    # find the line with the word list
+    for line in result.stdout.splitlines():
+        if line.startswith("Word List:"):
+            # extract the words from the line
+            found_words = line.replace("Word List: ", "").split(", ")
+            assert found_words == words.split()
+            break
 
 
