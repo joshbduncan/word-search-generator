@@ -4,6 +4,8 @@ import random
 from pathlib import Path
 
 import pytest
+from rich.color import ColorSystem
+from rich.console import Console
 
 from word_search_generator import WordSearch, utils
 from word_search_generator.core.directions import LEVEL_DIRS
@@ -53,7 +55,7 @@ def test_export_csv(ws: WordSearch, tmp_path: Path):
 
 def test_invalid_save_path(ws: WordSearch):
     with pytest.raises(OSError):
-        ws.save("~/some/random/dir/that/doesnt/exists")
+        ws.save("~/some/random/dir/that/does/not/exists")
 
 
 def test_puzzle_repr(ws: WordSearch):
@@ -78,51 +80,59 @@ def test_puzzle_non_equal(words):
     assert ws1 != ws2
 
 
-@pytest.mark.skip(reason="update to match new rich output")
 def test_puzzle_str(ws: WordSearch):
-    puzzle_str = formatter.format_puzzle_for_show(ws)
+    puzzle_str = formatter.show(ws)
     assert str(ws) == puzzle_str
 
 
-@pytest.mark.skip(reason="update to match new rich output")
 def test_puzzle_str_output(ws: WordSearch, capsys):
-    print(formatter.format_puzzle_for_show(ws))
+    print(formatter.show(ws))
     capture1 = capsys.readouterr()
     print(ws)
     capture2 = capsys.readouterr()
     assert capture1.out == capture2.out
 
 
-@pytest.mark.skip(reason="update to match new rich output")
 def test_puzzle_show_output(ws: WordSearch, capsys):
-    print(formatter.format_puzzle_for_show(ws))
+    print(formatter.show(ws))
     capture1 = capsys.readouterr()
     ws.show()
     capture2 = capsys.readouterr()
     assert capture1.out == capture2.out
 
 
-@pytest.mark.skip(reason="update to match new rich output")
 def test_puzzle_show_output_lowercase(ws: WordSearch, capsys):
-    print(formatter.format_puzzle_for_show(ws, lowercase=True))
+    print(formatter.show(ws, lowercase=True))
     capture1 = capsys.readouterr()
     ws.show(lowercase=True)
     capture2 = capsys.readouterr()
     assert capture1.out == capture2.out
 
 
-@pytest.mark.skip(reason="update to match new rich output")
 def test_puzzle_show_solution_output(ws: WordSearch, capsys):
-    print(formatter.format_puzzle_for_show(ws, True))
-    capture1 = capsys.readouterr()
+    print(formatter.show(ws, solution=True))
+
+    captured_1 = capsys.readouterr()
+    stdout_1 = captured_1.out
+    stderr_1 = captured_1.err
+
+    assert stdout_1
+    assert not stderr_1
+
     ws.show(True)
-    capture2 = capsys.readouterr()
-    assert capture1.out == capture2.out
+
+    captured_2 = capsys.readouterr()
+    stdout_2 = captured_2.out
+    stderr_2 = captured_2.err
+
+    assert stdout_2
+    assert not stderr_2
+
+    assert stdout_1 == stdout_2
 
 
-@pytest.mark.skip(reason="update to match new rich output")
 def test_puzzle_show_hide_fillers_output(ws: WordSearch, capsys):
-    print(formatter.format_puzzle_for_show(ws, hide_fillers=True))
+    print(formatter.show(ws, hide_fillers=True))
     capture1 = capsys.readouterr()
     ws.show(hide_fillers=True)
     capture2 = capsys.readouterr()
@@ -269,13 +279,27 @@ def test_invalid_size_at_init_type():
         ws = WordSearch(size="250")  # type: ignore  # noqa: F841
 
 
-@pytest.mark.skip(reason="update to match new rich output")
-def test_puzzle_solution_output(ws: WordSearch, capsys):
-    print(formatter.format_puzzle_for_show(ws, True))
-    capture1 = capsys.readouterr()
-    ws.solution  # noqa: B018
-    capture2 = capsys.readouterr()
-    assert capture1.out == capture2.out
+# @pytest.mark.skip(reason="update to match new rich output")
+def test_puzzle_solution_output(iterations, builtin_mask_shapes, capsys):
+    for _ in range(100):
+        ws = WordSearch(size=random.randint(21, 35))
+        ws.random_words(random.randint(5, 21))
+        mask = random.choice(builtin_mask_shapes)
+        if mask:
+            ws.apply_mask(mask)
+        ws.formatter.CONSOLE = Console(force_terminal=True)
+        ws.show(solution=True)
+
+        captured = capsys.readouterr()
+        stdout = captured.out
+        stderr = captured.err
+
+        assert not stderr
+        assert "\x1b[" in stdout
+        assert all(
+            word.rich_style._make_ansi_codes(ColorSystem.TRUECOLOR) in stdout
+            for word in ws.placed_words
+        )
 
 
 def test_unplaced_words():
