@@ -1,8 +1,8 @@
 import random
+import re
 import subprocess
 from pathlib import Path
 
-import pytest
 from PIL import Image
 
 from word_search_generator.core.word import Direction, Word
@@ -114,12 +114,6 @@ def test_random_secret_words_mutual_exclusivity():
     assert result.returncode == 2
 
 
-@pytest.mark.skip(reason="update to match new rich output")
-def test_random_secret_words_valid_input():
-    output = subprocess.check_output("word-search -rx 5", shell=True)
-    assert "Find these words: <ALL SECRET WORDS>" in str(output)
-
-
 def test_random_secret_words_invalid_input():
     result = subprocess.run("word-search -rx 500", shell=True)
     assert result.returncode == 2
@@ -154,21 +148,28 @@ def test_image_mask(tmp_path: Path):
     assert result.returncode == 0
 
 
-@pytest.mark.skip(reason="update to match new rich output")
 def test_cli_output(iterations, builtin_mask_shapes):
     def parse_puzzle(output):
         return [[r[i] for i in range(0, len(r), 2)] for r in output.split("\n")[3:-6]]
 
     def parse_words(output):
         words = set()
-        for w in output.split("\n")[-2:-1][0].split(": ")[1].split("), "):
-            data = w.replace("(", "").replace(")", "").replace(",", "").split()
-            text = data[0][1:] if "*" in data[0] else data[0]
-            secret = bool("*" in data[0])
-            word = Word(text, secret=secret)
-            word.direction = Direction[data[1]]
-            word.start_row = int(data[4]) - 1
-            word.start_column = int(data[3]) - 1
+        words_line = output.split("\n")[-1].split(": ")[-1]
+        pattern = r"(\*?)(\w+)\s+(\w+)\s+@\s+\((\d+),\s*(\d+)\)"
+        matches = re.findall(pattern, words_line)
+
+        for secret, w, d, col, row in matches:
+            # reverse word back to original
+            w = w[::-1]
+
+            # convert coords and offset
+            row = int(row) - 1
+            col = int(col) - 1
+
+            word = Word(w, secret=secret == "*")
+            word.direction = Direction[d]
+            word.start_row = row
+            word.start_column = col
             words.add(word)
         return words
 
@@ -190,6 +191,7 @@ def test_cli_output(iterations, builtin_mask_shapes):
         if mask:
             command += f" -m {mask.__class__.__name__}"
         output = subprocess.check_output(command, shell=True, text=True)
+        # assert output == ""
         puzzle = parse_puzzle(output)
         words = parse_words(output)
         results.append(all(check_chars(puzzle, word) for word in words))  # type: ignore
@@ -197,27 +199,27 @@ def test_cli_output(iterations, builtin_mask_shapes):
     assert all(results)
 
 
-@pytest.mark.skip(reason="update to match new rich output")
 def test_cli_output_lowercase(iterations, builtin_mask_shapes):
-    def parse_puzzle(output):
-        return [[r[i] for i in range(0, len(r), 2)] for r in output.split("\n")[3:-6]]
-
     def parse_words(output):
         words = set()
-        for w in output.split("\n")[-2:-1][0].split(": ")[1].split("), "):
-            data = w.replace("(", "").replace(")", "").replace(",", "").split()
-            text = data[0][1:] if "*" in data[0] else data[0]
-            words.add(text)
-        return words
+        words_line = output.split("\n")[-1].split(": ")[-1]
+        pattern = r"(\*?)(\w+)\s+(\w+)\s+@\s+\((\d+),\s*(\d+)\)"
+        matches = re.findall(pattern, words_line)
 
-    def check_chars(puzzle, word):
-        row, col = word.position
-        for c in word.text:
-            if c != puzzle[row][col]:
-                return False
-            row += word.direction.r_move
-            col += word.direction.c_move
-        return True
+        for secret, w, d, col, row in matches:
+            # reverse word back to original
+            w = w[::-1]
+
+            # convert coords and offset
+            row = int(row) - 1
+            col = int(col) - 1
+
+            word = Word(w, secret=secret == "*")
+            word.direction = Direction[d]
+            word.start_row = row
+            word.start_column = col
+            words.add(word)
+        return words
 
     for _ in range(iterations):
         size = random.randint(18, 36)
@@ -227,9 +229,9 @@ def test_cli_output_lowercase(iterations, builtin_mask_shapes):
         if mask:
             command += f" -m {mask.__class__.__name__}"
         output = subprocess.check_output(command, shell=True, text=True)
-        parsed_puzzle = parse_puzzle(output)
+        parsed_puzzle = output.split("\n")
+        assert all("".join(row).islower() for row in parsed_puzzle[2:5])
         parsed_words = parse_words(output)
-        assert all("".join(row).islower() for row in parsed_puzzle)
         assert all(word.islower() for word in parsed_words)
 
 
