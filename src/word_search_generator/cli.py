@@ -192,6 +192,11 @@ If all words can't be placed, and exception will be raised.",
 secret puzzle words can go. See valid arguments above.",
     )
     parser.add_argument(
+        "--no-sort-words",
+        action="store_true",
+        help="Maintain original word order instead of alphabetical sorting in output.",
+    )
+    parser.add_argument(
         "--version",
         action="version",
         version=f"%(prog)s {version('word_search_generator')}",
@@ -334,6 +339,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             solution=args.cheat,
             lowercase=args.lowercase,
             hide_key=args.hide_key,
+            sort_words=not args.no_sort_words,
         )
         print(f"Puzzle saved: {foutput}")
 
@@ -343,6 +349,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             lowercase=args.lowercase,
             reversed_letters=not args.cheat,
             hide_key=args.hide_key,
+            sort_words=not args.no_sort_words,
         )
 
     return 0

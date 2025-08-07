@@ -489,3 +489,95 @@ def test_word_order_preservation_placed_words():
     
     # All placed words should have been found in order
     assert placed_index == len(placed_texts)
+
+
+def test_word_search_show_with_sorting(capsys):
+    """Test WordSearch.show() with default sorting behavior."""
+    ws = WordSearch("zebra,apple,cat")
+    ws.show(sort_words=True)
+    
+    # Capture the printed output
+    captured = capsys.readouterr()
+    # Check that words appear in alphabetical order in output
+    assert "APPLE, CAT, ZEBRA" in captured.out
+
+
+def test_word_search_show_without_sorting(capsys):
+    """Test WordSearch.show() with sorting disabled."""
+    ws = WordSearch("zebra,apple,cat")
+    ws.show(sort_words=False)
+    
+    # Capture the printed output
+    captured = capsys.readouterr()
+    # Check that words appear in original order in output
+    assert "ZEBRA, APPLE, CAT" in captured.out
+
+
+def test_word_search_save_csv_with_sorting(tmp_path):
+    """Test WordSearch.save() CSV format with sorting."""
+    ws = WordSearch("zebra,apple,cat")
+    csv_file = tmp_path / "test_sorted.csv"
+    
+    ws.save(csv_file, format="CSV", sort_words=True)
+    assert csv_file.exists()
+    
+    content = csv_file.read_text()
+    lines = content.split('\n')
+    
+    # Find the word list line
+    word_line = None
+    for line in lines:
+        if 'APPLE' in line and 'ZEBRA' in line and 'CAT' in line:
+            word_line = line
+            break
+    
+    assert word_line is not None
+    # Should be in alphabetical order
+    apple_pos = word_line.find('APPLE')
+    cat_pos = word_line.find('CAT')
+    zebra_pos = word_line.find('ZEBRA')
+    assert apple_pos < cat_pos < zebra_pos
+
+
+def test_word_search_save_csv_without_sorting(tmp_path):
+    """Test WordSearch.save() CSV format without sorting."""
+    ws = WordSearch("zebra,apple,cat")
+    csv_file = tmp_path / "test_unsorted.csv"
+    
+    ws.save(csv_file, format="CSV", sort_words=False)
+    assert csv_file.exists()
+    
+    content = csv_file.read_text()
+    lines = content.split('\n')
+    
+    # Find the word list line
+    word_line = None
+    for line in lines:
+        if 'APPLE' in line and 'ZEBRA' in line and 'CAT' in line:
+            word_line = line
+            break
+    
+    assert word_line is not None
+    # Should be in original order
+    zebra_pos = word_line.find('ZEBRA')
+    apple_pos = word_line.find('APPLE')
+    cat_pos = word_line.find('CAT')
+    assert zebra_pos < apple_pos < cat_pos
+
+
+def test_word_search_save_json_with_sorting(tmp_path):
+    """Test WordSearch.save() JSON format with sorting."""
+    ws = WordSearch("dog,cat,bat")
+    json_file = tmp_path / "test_sorted.json"
+    
+    ws.save(json_file, format="JSON", sort_words=True)
+    assert json_file.exists()
+    
+    import json
+    with open(json_file, 'r') as f:
+        data = json.load(f)
+    
+    words = data.get('words', [])
+    # Should contain all words
+    assert len(words) == 3
+    # Words should be present (order in JSON might depend on how words were placed)

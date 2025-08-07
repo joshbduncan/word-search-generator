@@ -41,6 +41,7 @@ class WordSearchFormatter(Formatter):
         lowercase: bool = False,
         hide_key: bool = False,
         reversed_letters=False,
+        sort_words: bool = True,
     ):
         """Return a string representation of the game.
 
@@ -57,7 +58,7 @@ class WordSearchFormatter(Formatter):
         )
         wordlist = []
 
-        sorted_words = sorted(game.placed_words, key=lambda w: w.text)
+        sorted_words = utils.sort_words_if_needed(game.placed_words, sort_words, key_func=lambda w: w.text)
         for word in sorted_words:
             # TODO: should "secret" words be highlighted and included in wordlist
             if word.secret:
@@ -99,7 +100,7 @@ class WordSearchFormatter(Formatter):
         answer_key += ": "
 
         word_key_strings = utils.get_answer_key_list(
-            game.placed_words, game.bounding_box, lowercase, reversed_letters
+            game.placed_words, game.bounding_box, lowercase, reversed_letters, sort_words
         )
         answer_key += ", ".join(key_string for key_string in word_key_strings)
 
@@ -120,6 +121,7 @@ class WordSearchFormatter(Formatter):
         solution: bool = False,
         lowercase: bool = False,
         hide_key: bool = False,
+        sort_words: bool = True,
     ) -> Path:
         if format.upper() not in ["CSV", "JSON", "PDF"]:
             raise ValueError('Save file format must be either "CSV", "JSON", or "PDF".')
@@ -132,6 +134,7 @@ class WordSearchFormatter(Formatter):
                 game,  # type: ignore
                 solution,
                 lowercase,
+                sort_words,
             )
         elif format.upper() == "JSON":
             saved_file = self.write_json_file(
@@ -139,9 +142,10 @@ class WordSearchFormatter(Formatter):
                 game,  # type: ignore
                 solution,
                 lowercase,
+                sort_words,
             )
         else:
-            saved_file = self.write_pdf_file(path, game, solution, lowercase, hide_key)
+            saved_file = self.write_pdf_file(path, game, solution, lowercase, hide_key, sort_words)
         # return saved file path
         return saved_file
 
@@ -151,17 +155,18 @@ class WordSearchFormatter(Formatter):
         game: WordSearch,
         solution: bool = False,
         lowercase: bool = False,
+        sort_words: bool = True,
         *args,
         **kwargs,
     ) -> Path:
-        word_list = utils.get_word_list_list(game.key)
+        word_list = utils.get_word_list_list(game.key, sort_words)
         puzzle = self.hide_filler_characters(game) if solution else game.cropped_puzzle
         LEVEL_DIRS_str = utils.get_LEVEL_DIRS_str(game.level)
         key_intro = "Answer Key"
         if hasattr(game, "placed_secret_words"):
             key_intro += " (*Secret Words)"
         answer_key_list = utils.get_answer_key_list(
-            game.placed_words, game.bounding_box
+            game.placed_words, game.bounding_box, sort_words=sort_words
         )
 
         # lower case was requested change case or letters for puzzle, words, and key
@@ -198,10 +203,11 @@ class WordSearchFormatter(Formatter):
         game: WordSearch,
         solution: bool = False,
         lowercase: bool = False,
+        sort_words: bool = True,
         *args,
         **kwargs,
     ) -> Path:
-        word_list = utils.get_word_list_list(game.key)
+        word_list = utils.get_word_list_list(game.key, sort_words)
         puzzle = self.hide_filler_characters(game) if solution else game.cropped_puzzle
 
         # lower case was requested change case or letters for puzzle, words, and key
@@ -233,6 +239,7 @@ class WordSearchFormatter(Formatter):
         solution: bool = False,
         lowercase: bool = False,
         hide_key: bool = False,
+        sort_words: bool = True,
     ) -> Path:
         # setup the PDF document
         pdf = FPDF(orientation="P", unit="in", format="Letter")
@@ -242,11 +249,11 @@ class WordSearchFormatter(Formatter):
         pdf.set_line_width(pdf.line_width * 2)
 
         # draw initial puzzle page
-        draw_puzzle_page(self, pdf, game, False, lowercase, hide_key)
+        draw_puzzle_page(self, pdf, game, False, lowercase, hide_key, sort_words)
 
         # add puzzle solution page if requested
         if solution:
-            draw_puzzle_page(self, pdf, game, True, lowercase)
+            draw_puzzle_page(self, pdf, game, True, lowercase, sort_words=sort_words)
 
         # check the provided path since fpdf doesn't offer context manager
         if path.exists():
@@ -398,6 +405,7 @@ def draw_word_list(
     info_font_size: float,
     solution: bool = False,
     lowercase: bool = False,
+    sort_words: bool = True,
 ):
     LEVEL_DIRS_str = utils.get_LEVEL_DIRS_str(game.level)
     pdf.set_font("Helvetica", "BU", size=info_font_size)
@@ -414,7 +422,7 @@ def draw_word_list(
     pdf.set_font_size(info_font_size)
     pdf.set_char_spacing(0.5)
 
-    sorted_words = sorted(game.placed_words, key=lambda w: w.text)
+    sorted_words = utils.sort_words_if_needed(game.placed_words, sort_words, key_func=lambda w: w.text)
     lines: list[tuple[float, list[Word]]] = []
     line_width = 0.0
     line: list[Word] = []
@@ -498,6 +506,7 @@ def draw_puzzle_page(
     solution: bool = False,
     lowercase: bool = False,
     hide_key: bool = False,
+    sort_words: bool = True,
 ) -> None:
     """Draw the puzzle information on a FPDF PDF page.
 
@@ -549,7 +558,7 @@ def draw_puzzle_page(
     if not word_list_str:
         word_list_str = "<ALL SECRET WORDS>"
 
-    draw_word_list(pdf, game, info_font_size, solution, lowercase)
+    draw_word_list(pdf, game, info_font_size, solution, lowercase, sort_words)
 
     if not hide_key:
         draw_puzzle_key(formatter, pdf, game, lowercase)
