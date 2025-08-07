@@ -14,6 +14,7 @@ from word_search_generator.core.game import (
     MissingWordError,
     Puzzle,
     PuzzleSizeError,
+    WordSet,
 )
 from word_search_generator.core.validator import NoSingleLetterWords
 from word_search_generator.mask.polygon import Rectangle
@@ -430,6 +431,61 @@ def test_validator_setter_invalid_validator(words):
 
 
 def test_no_words_to_generate(ws: WordSearch):
-    ws._words = set()
+    ws._words = WordSet()
     with pytest.raises(EmptyWordlistError):
         ws.generate()
+
+
+def test_word_order_preservation():
+    """Test that words maintain their original insertion order."""
+    # Test with non-alphabetical order
+    words = "zebra,apple,python,banana,xray,cherry,moon,date,ocean,forest"
+    ws = WordSearch(words)
+    
+    # Extract word texts in order
+    word_texts = [word.text for word in ws.words]
+    expected_order = ["ZEBRA", "APPLE", "PYTHON", "BANANA", "XRAY", 
+                     "CHERRY", "MOON", "DATE", "OCEAN", "FOREST"]
+    
+    # Verify order is preserved (not alphabetical)
+    assert word_texts == expected_order
+    assert word_texts != sorted(word_texts)  # Confirm it's not alphabetical
+
+
+def test_word_order_preservation_with_operations():
+    """Test that word order is preserved through various operations."""
+    # Start with some words
+    ws = WordSearch("first,second")
+    
+    # Add more words
+    ws.add_words("third,fourth")
+    word_texts = [word.text for word in ws.words]
+    assert word_texts == ["FIRST", "SECOND", "THIRD", "FOURTH"]
+    
+    # Test hidden vs secret words maintain separate order
+    ws2 = WordSearch("regular1,regular2", secret_words="secret1,secret2")
+    hidden_texts = [word.text for word in ws2.hidden_words]
+    secret_texts = [word.text for word in ws2.secret_words] 
+    
+    assert hidden_texts == ["REGULAR1", "REGULAR2"]
+    assert secret_texts == ["SECRET1", "SECRET2"]
+
+
+def test_word_order_preservation_placed_words():
+    """Test that placed words maintain order."""
+    words = "cat,dog,bird,fish,mouse"
+    ws = WordSearch(words)
+    ws.generate()
+    
+    # Get placed words in order
+    placed_texts = [word.text for word in ws.placed_words]
+    original_texts = [word.text for word in ws.words]
+    
+    # Placed words should be a subset in the same relative order
+    placed_index = 0
+    for word_text in original_texts:
+        if placed_index < len(placed_texts) and word_text == placed_texts[placed_index]:
+            placed_index += 1
+    
+    # All placed words should have been found in order
+    assert placed_index == len(placed_texts)

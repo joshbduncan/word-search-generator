@@ -4,6 +4,8 @@ from math import log2
 from pathlib import Path
 from typing import TypeAlias
 
+from ordered_set import OrderedSet
+
 from ..core.formatter import Formatter
 from ..core.generator import Generator
 from ..mask import CompoundMask, Mask
@@ -65,7 +67,7 @@ Puzzle: TypeAlias = list[list[str]]
 DirectionSet: TypeAlias = set[Direction]
 Key: TypeAlias = dict[str, KeyInfo]
 KeyJson: TypeAlias = dict[str, KeyInfoJson]
-WordSet: TypeAlias = set[Word]
+WordSet: TypeAlias = OrderedSet[Word]
 
 
 class Game:
@@ -95,7 +97,7 @@ class Game:
         validators: Iterable[Validator] | None = None,
     ):
         # setup puzzle
-        self._words: WordSet = set()
+        self._words: WordSet = OrderedSet()
         self._level: DirectionSet = set()
         self._size: int = size if size else 0
         self.require_all_words: bool = require_all_words
@@ -145,17 +147,17 @@ class Game:
     @property
     def words(self) -> WordSet:
         """All puzzle words."""
-        return set(self._words)
+        return self._words.copy()
 
     @property
     def placed_words(self) -> WordSet:
         """Words of any type currently placed in the puzzle."""
-        return {word for word in self.words if word.placed}
+        return OrderedSet(word for word in self.words if word.placed)
 
     @property
     def unplaced_words(self) -> WordSet:
         """Words of any type not currently placed in the puzzle."""
-        return {word for word in self.words if not word.placed}
+        return OrderedSet(word for word in self.words if not word.placed)
 
     @property
     def puzzle(self) -> Puzzle:
@@ -479,7 +481,7 @@ class Game:
         # remove excess spaces and commas
         word_list = ",".join(words.split(" ")).split(",")
         # iterate through all words and pick first set that match criteria
-        word_set: WordSet = set()
+        word_set: WordSet = OrderedSet()
         while word_list and len(word_set) <= self.MAX_PUZZLE_WORDS:
             word = word_list.pop(0)
             if word:

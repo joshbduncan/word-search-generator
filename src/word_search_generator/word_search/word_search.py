@@ -85,7 +85,7 @@ class WordSearch(Game):
         )
 
         # setup words
-        word_set = set()
+        word_set = WordSet()
         if words:
             word_set.update(self._process_input(words))
         if secret_words:
@@ -108,12 +108,12 @@ class WordSearch(Game):
     @property
     def hidden_words(self) -> WordSet:
         """Words of type "hidden"."""
-        return {word for word in self.words if not word.secret}
+        return WordSet(word for word in self.words if not word.secret)
 
     @property
     def placed_hidden_words(self) -> WordSet:
         """Words of type "hidden" currently placed in the puzzle."""
-        return {word for word in self.placed_words if not word.secret}
+        return WordSet(word for word in self.placed_words if not word.secret)
 
     @property
     def unplaced_hidden_words(self) -> WordSet:
@@ -123,12 +123,12 @@ class WordSearch(Game):
     @property
     def secret_words(self) -> WordSet:
         """Words of type "secret"."""
-        return {word for word in self.words if word.secret}
+        return WordSet(word for word in self.words if word.secret)
 
     @property
     def placed_secret_words(self) -> WordSet:
         """Words of type "secret" currently placed in the puzzle."""
-        return {word for word in self.placed_words if word.secret}
+        return WordSet(word for word in self.placed_words if word.secret)
 
     @property
     def unplaced_secret_words(self) -> WordSet:
