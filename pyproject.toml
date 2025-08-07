@@ -6,7 +6,7 @@ description = "Make awesome Word Search puzzles"
 readme = "README.md"
 requires-python = ">=3.10"
 keywords = ["puzzles", "games", "word-search"]
-license = { text = "MIT License" }
+license = "MIT"
 classifiers = [
     "Intended Audience :: End Users/Desktop",
     "License :: OSI Approved :: MIT License",
