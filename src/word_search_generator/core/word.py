@@ -125,7 +125,7 @@ class Word:
     def rich_style(self) -> Style:
         """Returns a rich Style for outputting the word in the cli."""
         r, g, b = (int(v * 255) for v in self.color)
-        return Style(color="white", bgcolor=f"rgb({r},{g},{b})", bold=True)
+        return Style(bgcolor=f"rgb({r},{g},{b})", bold=True)
 
     @property
     def key_info(self) -> KeyInfo:

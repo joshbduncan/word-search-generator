@@ -1,6 +1,8 @@
+from rich.color import ColorSystem
 from rich.style import Style
 
 from word_search_generator.core.word import Direction, Position, Word
+from word_search_generator.utils import get_random_words
 
 
 def test_empty_start_row():
@@ -79,6 +81,19 @@ def test_word_bool_false():
     assert not w
 
 
-def test_rich_style():
-    w = Word("fancy")
-    assert isinstance(w.rich_style, Style)
+def test_rich_style(capsys):
+    words = get_random_words(25)
+    for w in words:
+        word = Word(w)
+        style_parameters = word.rich_style._make_ansi_codes(ColorSystem.TRUECOLOR)
+
+        assert isinstance(word.rich_style, Style)
+
+        word.rich_style.test(word.text)
+
+        captured = capsys.readouterr()
+        stdout = captured.out
+        stderr = captured.err
+
+        assert not stderr
+        assert stdout == f"\x1b[{style_parameters}m{word.text}\x1b[0m\n"
