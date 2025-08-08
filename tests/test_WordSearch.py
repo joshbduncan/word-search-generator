@@ -286,7 +286,7 @@ def test_puzzle_solution_output(builtin_mask_shapes, capsys):
     mask = random.choice(builtin_mask_shapes)
     if mask:
         ws.apply_mask(mask)
-    ws.formatter.CONSOLE = Console(force_terminal=True)  # type: ignore[union-attr]
+    ws.formatter.CONSOLE = Console(color_system="truecolor", force_terminal=True)  # type: ignore[union-attr]
     ws.show(solution=True)
 
     captured = capsys.readouterr()
