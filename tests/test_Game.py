@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 
 import pytest
+from ordered_set import OrderedSet
 
 from word_search_generator import WordSearch
 from word_search_generator.core import Formatter, Game, Generator
@@ -48,7 +49,7 @@ def test_set_puzzle_level(
     level: int | str,
     expected: set[Direction],
 ):
-    words = {Word("dog"), Word("cat"), Word("horse")}
+    words = OrderedSet([Word("dog"), Word("cat"), Word("horse")])
     g = Game(
         words=words, level=level, generator=empty_generator, formatter=empty_formatter
     )
@@ -157,7 +158,7 @@ def test_invalid_level_direction_type(base_game: Game):
 
 def test_missing_generator():
     with pytest.raises(MissingGeneratorError):
-        words = {Word("dog"), Word("cat"), Word("horse")}
+        words = OrderedSet([Word("dog"), Word("cat"), Word("horse")])
         Game(words)
 
 
@@ -266,7 +267,7 @@ def test_missing_generator_during_generate_method(words):
 
 
 def test_missing_formatter(tmp_path: Path):
-    words = {Word("dog"), Word("cat"), Word("horse")}
+    words = OrderedSet([Word("dog"), Word("cat"), Word("horse")])
     game = Game(words, generator=WordSearchGenerator())
     path = tmp_path.joinpath("test.pdf")
     with pytest.raises(MissingFormatterError):
@@ -276,7 +277,7 @@ def test_missing_formatter(tmp_path: Path):
 
 
 def test_missing_default_formatter(tmp_path: Path):
-    words = {Word("dog"), Word("cat"), Word("horse")}
+    words = OrderedSet([Word("dog"), Word("cat"), Word("horse")])
     game = Game(words, generator=WordSearchGenerator())
     game.formatter = game.DEFAULT_FORMATTER = None  # type: ignore[assignment]
     with pytest.raises(MissingFormatterError):
@@ -300,7 +301,7 @@ def test_json_empty_puzzle_error(base_game: Game):
 
 def test_empty_word_list_error(base_game: Game):
     assert base_game
-    base_game._words = set()
+    base_game._words = OrderedSet()
     with pytest.raises(EmptyWordlistError):
         base_game.generate()
 

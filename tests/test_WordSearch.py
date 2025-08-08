@@ -521,7 +521,7 @@ def test_word_order_preservation_placed_words():
 def test_word_search_show_with_sorting(capsys):
     """Test WordSearch.show() with default sorting behavior."""
     ws = WordSearch("zebra,apple,cat")
-    ws.show(sort_words=True)
+    ws.show(sort_word_list=True)
 
     # Capture the printed output
     captured = capsys.readouterr()
@@ -532,7 +532,7 @@ def test_word_search_show_with_sorting(capsys):
 def test_word_search_show_without_sorting(capsys):
     """Test WordSearch.show() with sorting disabled."""
     ws = WordSearch("zebra,apple,cat")
-    ws.show(sort_words=False)
+    ws.show(sort_word_list=False)
 
     # Capture the printed output
     captured = capsys.readouterr()
@@ -545,7 +545,7 @@ def test_word_search_save_csv_with_sorting(tmp_path):
     ws = WordSearch("zebra,apple,cat")
     csv_file = tmp_path / "test_sorted.csv"
 
-    ws.save(csv_file, format="CSV", sort_words=True)
+    ws.save(csv_file, format="CSV", sort_word_list=True)
     assert csv_file.exists()
 
     content = csv_file.read_text()
@@ -571,7 +571,7 @@ def test_word_search_save_csv_without_sorting(tmp_path):
     ws = WordSearch("zebra,apple,cat")
     csv_file = tmp_path / "test_unsorted.csv"
 
-    ws.save(csv_file, format="CSV", sort_words=False)
+    ws.save(csv_file, format="CSV", sort_word_list=False)
     assert csv_file.exists()
 
     content = csv_file.read_text()
@@ -597,7 +597,7 @@ def test_word_search_save_json_with_sorting(tmp_path):
     ws = WordSearch("dog,cat,bat")
     json_file = tmp_path / "test_sorted.json"
 
-    ws.save(json_file, format="JSON", sort_words=True)
+    ws.save(json_file, format="JSON", sort_word_list=True)
     assert json_file.exists()
 
     import json

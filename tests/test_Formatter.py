@@ -9,7 +9,7 @@ def test_formatter_show_with_sorting():
     ws = WordSearch("zebra,apple,cat")
     formatter = WordSearchFormatter()
 
-    output = formatter.show(ws, sort_words=True)
+    output = formatter.show(ws, sort_word_list=True)
 
     # Check that words appear in alphabetical order
     assert "APPLE, CAT, ZEBRA" in output
@@ -20,7 +20,7 @@ def test_formatter_show_without_sorting():
     ws = WordSearch("zebra,apple,cat")
     formatter = WordSearchFormatter()
 
-    output = formatter.show(ws, sort_words=False)
+    output = formatter.show(ws, sort_word_list=False)
 
     # Check that words appear in original order
     assert "ZEBRA, APPLE, CAT" in output
@@ -32,7 +32,7 @@ def test_formatter_save_csv_with_sorting(tmp_path):
     formatter = WordSearchFormatter()
     csv_file = tmp_path / "test.csv"
 
-    formatter.save(ws, csv_file, format="CSV", sort_words=True)
+    formatter.save(ws, csv_file, format="CSV", sort_word_list=True)
     assert csv_file.exists()
 
     content = csv_file.read_text()
@@ -50,7 +50,7 @@ def test_formatter_save_csv_without_sorting(tmp_path):
     formatter = WordSearchFormatter()
     csv_file = tmp_path / "test.csv"
 
-    formatter.save(ws, csv_file, format="CSV", sort_words=False)
+    formatter.save(ws, csv_file, format="CSV", sort_word_list=False)
     assert csv_file.exists()
 
     content = csv_file.read_text()
@@ -68,7 +68,7 @@ def test_formatter_save_json_with_sorting(tmp_path):
     formatter = WordSearchFormatter()
     json_file = tmp_path / "test.json"
 
-    formatter.save(ws, json_file, format="JSON", sort_words=True)
+    formatter.save(ws, json_file, format="JSON", sort_word_list=True)
     assert json_file.exists()
 
     import json
@@ -89,7 +89,7 @@ def test_formatter_save_json_without_sorting(tmp_path):
     formatter = WordSearchFormatter()
     json_file = tmp_path / "test.json"
 
-    formatter.save(ws, json_file, format="JSON", sort_words=False)
+    formatter.save(ws, json_file, format="JSON", sort_word_list=False)
     assert json_file.exists()
 
     import json
@@ -110,7 +110,7 @@ def test_formatter_save_pdf_with_sorting(tmp_path):
     formatter = WordSearchFormatter()
     pdf_file = tmp_path / "test.pdf"
 
-    saved_path = formatter.save(ws, pdf_file, format="PDF", sort_words=True)
+    saved_path = formatter.save(ws, pdf_file, format="PDF", sort_word_list=True)
     assert Path(saved_path).exists()
 
 
@@ -120,7 +120,7 @@ def test_formatter_save_pdf_without_sorting(tmp_path):
     formatter = WordSearchFormatter()
     pdf_file = tmp_path / "test.pdf"
 
-    saved_path = formatter.save(ws, pdf_file, format="PDF", sort_words=False)
+    saved_path = formatter.save(ws, pdf_file, format="PDF", sort_word_list=False)
     assert Path(saved_path).exists()
 
 
@@ -130,9 +130,9 @@ def test_formatter_answer_key_sorting():
     formatter = WordSearchFormatter()
 
     # Test with sorting
-    output_sorted = formatter.show(ws, sort_words=True)
+    output_sorted = formatter.show(ws, sort_word_list=True)
     # Test without sorting
-    output_unsorted = formatter.show(ws, sort_words=False)
+    output_unsorted = formatter.show(ws, sort_word_list=False)
 
     # Both outputs should contain all words but in different order
     for word in ["APPLE", "CAT", "ZEBRA"]:

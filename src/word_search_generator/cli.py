@@ -67,6 +67,7 @@ Valid Directions: {", ".join([d.name for d in Direction])}
     words_group = parser.add_mutually_exclusive_group()
     secret_words_group = parser.add_mutually_exclusive_group()
     mask_group = parser.add_mutually_exclusive_group()
+    sort_group = parser.add_mutually_exclusive_group()
     words_group.add_argument(
         "words",
         type=str,
@@ -191,16 +192,24 @@ If all words can't be placed, and exception will be raised.",
         help="Difficulty level (numeric) or cardinal directions \
 secret puzzle words can go. See valid arguments above.",
     )
-    parser.add_argument(
-        "--no-sort-words",
+    sort_group.add_argument(
+        "--sort-words",
+        dest="sort_words",
         action="store_true",
-        help="Maintain original word order instead of alphabetical sorting in output.",
+        help="Sort word list and answer key alphabetically in output.",
+    )
+    sort_group.add_argument(
+        "--no-sort-words",
+        dest="sort_words",
+        action="store_false",
+        help="Maintain original word order for word list and answer key in output.",
     )
     parser.add_argument(
         "--version",
         action="version",
         version=f"%(prog)s {version('word_search_generator')}",
     )
+    parser.set_defaults(sort_words=True)
     return parser
 
 
@@ -339,7 +348,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             solution=args.cheat,
             lowercase=args.lowercase,
             hide_key=args.hide_key,
-            sort_words=not args.no_sort_words,
+            sort_word_list=args.sort_words,
         )
         print(f"Puzzle saved: {foutput}")
 
@@ -347,9 +356,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         puzzle.show(
             solution=args.cheat,
             lowercase=args.lowercase,
-            reversed_letters=not args.cheat,
             hide_key=args.hide_key,
-            sort_words=not args.no_sort_words,
+            reversed_letters=not args.cheat,
+            sort_word_list=args.sort_words,
         )
 
     return 0

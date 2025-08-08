@@ -2,6 +2,8 @@ import json
 from collections.abc import Iterable
 from pathlib import Path
 
+from ordered_set import OrderedSet
+
 from .. import utils
 from ..core.formatter import Formatter
 from ..core.game import (
@@ -118,7 +120,7 @@ class WordSearch(Game):
     @property
     def unplaced_hidden_words(self) -> WordSet:
         """Words of type "hidden" not currently placed in the puzzle."""
-        return self.hidden_words - self.placed_hidden_words
+        return OrderedSet(self.hidden_words - self.placed_hidden_words)
 
     @property
     def secret_words(self) -> WordSet:
@@ -133,7 +135,7 @@ class WordSearch(Game):
     @property
     def unplaced_secret_words(self) -> WordSet:
         """Words of type "secret" not currently placed in the puzzle."""
-        return self.secret_words - self.placed_secret_words
+        return OrderedSet(self.secret_words - self.placed_secret_words)
 
     @property
     def json(self) -> str:
@@ -182,7 +184,7 @@ class WordSearch(Game):
         lowercase: bool = False,
         hide_key: bool = False,
         reversed_letters: bool = False,
-        sort_words: bool = True,
+        sort_word_list: bool = True,
     ):
         return super().show(
             solution=solution,
@@ -190,7 +192,7 @@ class WordSearch(Game):
             lowercase=lowercase,
             hide_key=hide_key,
             reversed_letters=reversed_letters,
-            sort_words=sort_words,
+            sort_word_list=sort_word_list,
         )
 
     def save(
@@ -200,7 +202,7 @@ class WordSearch(Game):
         solution: bool = False,
         lowercase: bool = False,
         hide_key: bool = False,
-        sort_words: bool = True,
+        sort_word_list: bool = True,
         *args,
         **kwargs,
     ) -> str:
@@ -210,7 +212,7 @@ class WordSearch(Game):
             solution=solution,
             lowercase=lowercase,
             hide_key=hide_key,
-            sort_words=sort_words,
+            sort_word_list=sort_word_list,
         )
 
     # *************************************************************** #
