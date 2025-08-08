@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, TypeAlias
 from .words import WORD_LIST
 
 if TYPE_CHECKING:  # pragma: no cover
-    from .core.game import DirectionSet, Key, Puzzle, WordSet
+    from .core.game import DirectionSet, Puzzle, Word, WordSet
 
 
 BoundingBox: TypeAlias = tuple[tuple[int, int], tuple[int, int]]
@@ -102,18 +102,18 @@ def get_LEVEL_DIRS_str(level: DirectionSet) -> str:
     return ", ".join(LEVEL_DIRS_str)
 
 
-def get_word_list_str(key: Key) -> str:
+def get_word_list_str(words: WordSet) -> str:
     """Return all placed puzzle words as a list (excluding secret words)."""
-    return ", ".join(get_word_list_list(key))
+    return ", ".join(word.text for word in get_word_list_list(words))
 
 
-def get_word_list_list(key: Key) -> list[str]:
+def get_word_list_list(words: WordSet) -> list[Word]:
     """Return all placed puzzle words as a list (excluding secret words)."""
-    return [k for k in sorted(key.keys()) if not key[k]["secret"]]
+    return [word for word in words if word.placed and not word.secret]
 
 
 def get_answer_key_list(
-    words: WordSet,
+    word_list: list[Word],
     bbox: BoundingBox,
     lowercase: bool = False,
     reversed_letters: bool = False,
@@ -122,7 +122,7 @@ def get_answer_key_list(
     will be offset by the supplied values. Used for masked puzzles.
 
     Args:
-        words: A list of `Word` objects.
+        word_list: A list of `Word` objects.
         bbox: Puzzle mask bounding box
         lowercase: Should words be lowercase. Defaults to False.
         reversed_letters: Should words letters be reversed. Defaults to False.
@@ -130,13 +130,10 @@ def get_answer_key_list(
     Returns:
         List of placed words with their placement information.
     """
-    return [
-        w.key_string(bbox, lowercase, reversed_letters)
-        for w in sorted(words, key=lambda word: word.text)
-    ]
+    return [w.key_string(bbox, lowercase, reversed_letters) for w in word_list]
 
 
-def get_answer_key_str(words: WordSet, bbox: BoundingBox) -> str:
+def get_answer_key_str(words: list[Word], bbox: BoundingBox) -> str:
     """Return a easy to read answer key for display. Resulting coordinates
     will be offset by the supplied values. Used for masked puzzles.
 

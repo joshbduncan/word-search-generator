@@ -458,6 +458,15 @@ wheels = [
 ]
 
 [[package]]
+name = "ordered-set"
+version = "4.1.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/4c/ca/bfac8bc689799bcca4157e0e0ced07e70ce125193fc2e166d2e685b7e2fe/ordered-set-4.1.0.tar.gz", hash = "sha256:694a8e44c87657c59292ede72891eb91d34131f6531463aab3009191c77364a8", size = 12826, upload-time = "2022-01-26T14:38:56.6Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/33/55/af02708f230eb77084a299d7b08175cff006dea4f2721074b92cdb0296c0/ordered_set-4.1.0-py3-none-any.whl", hash = "sha256:046e1132c71fcf3330438a539928932caf51ddbc582496833e23de611de14562", size = 7634, upload-time = "2022-01-26T14:38:48.677Z" },
+]
+
+[[package]]
 name = "packaging"
 version = "25.0"
 source = { registry = "https://pypi.org/simple" }
@@ -935,6 +944,7 @@ version = "4.0.0"
 source = { editable = "." }
 dependencies = [
     { name = "fpdf2" },
+    { name = "ordered-set" },
     { name = "pillow" },
     { name = "rich" },
 ]
@@ -958,6 +968,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "fpdf2", specifier = "==2.7.8" },
+    { name = "ordered-set", specifier = ">=4.0.0" },
     { name = "pillow", specifier = "==11.0.0" },
     { name = "rich", specifier = "==13.6.0" },
 ]

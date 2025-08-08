@@ -29,11 +29,9 @@ def test_stringify_offset():
 
 
 def test_answer_key_list(ws, words):
-    key_as_list = utils.get_answer_key_list(
-        ws.hidden_words.union(ws.secret_words), ws.bounding_box
-    )
+    word_list = utils.get_word_list_list(ws.words)
+    key_as_list = utils.get_answer_key_list(word_list, ws.bounding_box)
     assert len(key_as_list) == len(ws.key)
-    assert str(key_as_list[0]).lower().startswith(sorted(words.split(", "))[0].lower())
 
 
 def test_float_range():

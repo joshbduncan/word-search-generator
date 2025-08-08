@@ -2,6 +2,8 @@ import json
 from collections.abc import Iterable
 from pathlib import Path
 
+from ordered_set import OrderedSet
+
 from .. import utils
 from ..core.formatter import Formatter
 from ..core.game import (
@@ -85,7 +87,7 @@ class WordSearch(Game):
         )
 
         # setup words
-        word_set = set()
+        word_set = WordSet()
         if words:
             word_set.update(self._process_input(words))
         if secret_words:
@@ -108,32 +110,32 @@ class WordSearch(Game):
     @property
     def hidden_words(self) -> WordSet:
         """Words of type "hidden"."""
-        return {word for word in self.words if not word.secret}
+        return WordSet(word for word in self.words if not word.secret)
 
     @property
     def placed_hidden_words(self) -> WordSet:
         """Words of type "hidden" currently placed in the puzzle."""
-        return {word for word in self.placed_words if not word.secret}
+        return WordSet(word for word in self.placed_words if not word.secret)
 
     @property
     def unplaced_hidden_words(self) -> WordSet:
         """Words of type "hidden" not currently placed in the puzzle."""
-        return self.hidden_words - self.placed_hidden_words
+        return OrderedSet(self.hidden_words - self.placed_hidden_words)
 
     @property
     def secret_words(self) -> WordSet:
         """Words of type "secret"."""
-        return {word for word in self.words if word.secret}
+        return WordSet(word for word in self.words if word.secret)
 
     @property
     def placed_secret_words(self) -> WordSet:
         """Words of type "secret" currently placed in the puzzle."""
-        return {word for word in self.placed_words if word.secret}
+        return WordSet(word for word in self.placed_words if word.secret)
 
     @property
     def unplaced_secret_words(self) -> WordSet:
         """Words of type "secret" not currently placed in the puzzle."""
-        return self.secret_words - self.placed_secret_words
+        return OrderedSet(self.secret_words - self.placed_secret_words)
 
     @property
     def json(self) -> str:
@@ -182,6 +184,7 @@ class WordSearch(Game):
         lowercase: bool = False,
         hide_key: bool = False,
         reversed_letters: bool = False,
+        sort_word_list: bool = True,
     ):
         return super().show(
             solution=solution,
@@ -189,6 +192,7 @@ class WordSearch(Game):
             lowercase=lowercase,
             hide_key=hide_key,
             reversed_letters=reversed_letters,
+            sort_word_list=sort_word_list,
         )
 
     def save(
@@ -198,6 +202,7 @@ class WordSearch(Game):
         solution: bool = False,
         lowercase: bool = False,
         hide_key: bool = False,
+        sort_word_list: bool = True,
         *args,
         **kwargs,
     ) -> str:
@@ -207,6 +212,7 @@ class WordSearch(Game):
             solution=solution,
             lowercase=lowercase,
             hide_key=hide_key,
+            sort_word_list=sort_word_list,
         )
 
     # *************************************************************** #

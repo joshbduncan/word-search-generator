@@ -16,6 +16,7 @@ from word_search_generator.core.game import (
     MissingWordError,
     Puzzle,
     PuzzleSizeError,
+    WordSet,
 )
 from word_search_generator.core.validator import NoSingleLetterWords
 from word_search_generator.mask.polygon import Rectangle
@@ -447,6 +448,164 @@ def test_validator_setter_invalid_validator(words):
 
 
 def test_no_words_to_generate(ws: WordSearch):
-    ws._words = set()
+    ws._words = WordSet()
     with pytest.raises(EmptyWordlistError):
         ws.generate()
+
+
+def test_word_order_preservation():
+    """Test that words maintain their original insertion order."""
+    # Test with non-alphabetical order
+    words = "zebra,apple,python,banana,xray,cherry,moon,date,ocean,forest"
+    ws = WordSearch(words)
+
+    # Extract word texts in order
+    word_texts = [word.text for word in ws.words]
+    expected_order = [
+        "ZEBRA",
+        "APPLE",
+        "PYTHON",
+        "BANANA",
+        "XRAY",
+        "CHERRY",
+        "MOON",
+        "DATE",
+        "OCEAN",
+        "FOREST",
+    ]
+
+    # Verify order is preserved (not alphabetical)
+    assert word_texts == expected_order
+    assert word_texts != sorted(word_texts)  # Confirm it's not alphabetical
+
+
+def test_word_order_preservation_with_operations():
+    """Test that word order is preserved through various operations."""
+    # Start with some words
+    ws = WordSearch("first,second")
+
+    # Add more words
+    ws.add_words("third,fourth")
+    word_texts = [word.text for word in ws.words]
+    assert word_texts == ["FIRST", "SECOND", "THIRD", "FOURTH"]
+
+    # Test hidden vs secret words maintain separate order
+    ws2 = WordSearch("regular1,regular2", secret_words="secret1,secret2")
+    hidden_texts = [word.text for word in ws2.hidden_words]
+    secret_texts = [word.text for word in ws2.secret_words]
+
+    assert hidden_texts == ["REGULAR1", "REGULAR2"]
+    assert secret_texts == ["SECRET1", "SECRET2"]
+
+
+def test_word_order_preservation_placed_words():
+    """Test that placed words maintain order."""
+    words = "cat,dog,bird,fish,mouse"
+    ws = WordSearch(words)
+    ws.generate()
+
+    # Get placed words in order
+    placed_texts = [word.text for word in ws.placed_words]
+    original_texts = [word.text for word in ws.words]
+
+    # Placed words should be a subset in the same relative order
+    placed_index = 0
+    for word_text in original_texts:
+        if placed_index < len(placed_texts) and word_text == placed_texts[placed_index]:
+            placed_index += 1
+
+    # All placed words should have been found in order
+    assert placed_index == len(placed_texts)
+
+
+def test_word_search_show_with_sorting(capsys):
+    """Test WordSearch.show() with default sorting behavior."""
+    ws = WordSearch("zebra,apple,cat")
+    ws.show(sort_word_list=True)
+
+    # Capture the printed output
+    captured = capsys.readouterr()
+    # Check that words appear in alphabetical order in output
+    assert "APPLE, CAT, ZEBRA" in captured.out
+
+
+def test_word_search_show_without_sorting(capsys):
+    """Test WordSearch.show() with sorting disabled."""
+    ws = WordSearch("zebra,apple,cat")
+    ws.show(sort_word_list=False)
+
+    # Capture the printed output
+    captured = capsys.readouterr()
+    # Check that words appear in original order in output
+    assert "ZEBRA, APPLE, CAT" in captured.out
+
+
+def test_word_search_save_csv_with_sorting(tmp_path):
+    """Test WordSearch.save() CSV format with sorting."""
+    ws = WordSearch("zebra,apple,cat")
+    csv_file = tmp_path / "test_sorted.csv"
+
+    ws.save(csv_file, format="CSV", sort_word_list=True)
+    assert csv_file.exists()
+
+    content = csv_file.read_text()
+    lines = content.split("\n")
+
+    # Find the word list line
+    word_line = None
+    for line in lines:
+        if "APPLE" in line and "ZEBRA" in line and "CAT" in line:
+            word_line = line
+            break
+
+    assert word_line is not None
+    # Should be in alphabetical order
+    apple_pos = word_line.find("APPLE")
+    cat_pos = word_line.find("CAT")
+    zebra_pos = word_line.find("ZEBRA")
+    assert apple_pos < cat_pos < zebra_pos
+
+
+def test_word_search_save_csv_without_sorting(tmp_path):
+    """Test WordSearch.save() CSV format without sorting."""
+    ws = WordSearch("zebra,apple,cat")
+    csv_file = tmp_path / "test_unsorted.csv"
+
+    ws.save(csv_file, format="CSV", sort_word_list=False)
+    assert csv_file.exists()
+
+    content = csv_file.read_text()
+    lines = content.split("\n")
+
+    # Find the word list line
+    word_line = None
+    for line in lines:
+        if "APPLE" in line and "ZEBRA" in line and "CAT" in line:
+            word_line = line
+            break
+
+    assert word_line is not None
+    # Should be in original order
+    zebra_pos = word_line.find("ZEBRA")
+    apple_pos = word_line.find("APPLE")
+    cat_pos = word_line.find("CAT")
+    assert zebra_pos < apple_pos < cat_pos
+
+
+def test_word_search_save_json_with_sorting(tmp_path):
+    """Test WordSearch.save() JSON format with sorting."""
+    ws = WordSearch("dog,cat,bat")
+    json_file = tmp_path / "test_sorted.json"
+
+    ws.save(json_file, format="JSON", sort_word_list=True)
+    assert json_file.exists()
+
+    import json
+
+    with open(json_file) as f:
+        data = json.load(f)
+
+    words = data.get("words", [])
+    # Should contain all words
+    assert len(words) == 3
+    # Words should be present (order in JSON might depend on how words were placed)

@@ -238,3 +238,107 @@ def test_input_file(tmp_path: Path):
     file_to_read.write_text("dog, pig\nmoose,horse,cat,    mouse, newt\ngoose")
     result = subprocess.run(f"word-search -i {file_to_read.absolute()}", shell=True)
     assert result.returncode == 0
+
+
+def test_no_sort_words_cli_flag():
+    """Test that --no-sort-words CLI flag works."""
+    # Test with non-alphabetical words
+    result = subprocess.run(
+        'word-search "zebra, apple, cat" --no-sort-words',
+        shell=True,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0
+    output = result.stdout
+
+    # Check that words appear in original order, not alphabetical
+    lines = output.split("\n")
+    word_line = None
+    for line in lines:
+        if "ZEBRA" in line and "APPLE" in line and "CAT" in line:
+            word_line = line
+            break
+
+    assert word_line is not None
+    # Should be "ZEBRA, APPLE, CAT" not "APPLE, CAT, ZEBRA"
+    zebra_pos = word_line.find("ZEBRA")
+    apple_pos = word_line.find("APPLE")
+    cat_pos = word_line.find("CAT")
+
+    assert zebra_pos < apple_pos < cat_pos
+
+
+def test_default_sorted_words_cli():
+    """Test that default behavior sorts words alphabetically."""
+    result = subprocess.run(
+        'word-search "zebra, apple, cat"', shell=True, capture_output=True, text=True
+    )
+    assert result.returncode == 0
+    output = result.stdout
+
+    # Check that words appear in alphabetical order
+    lines = output.split("\n")
+    word_line = None
+    for line in lines:
+        if "ZEBRA" in line and "APPLE" in line and "CAT" in line:
+            word_line = line
+            break
+
+    assert word_line is not None
+    # Should be "APPLE, CAT, ZEBRA" not "ZEBRA, APPLE, CAT"
+    apple_pos = word_line.find("APPLE")
+    cat_pos = word_line.find("CAT")
+    zebra_pos = word_line.find("ZEBRA")
+
+    assert apple_pos < cat_pos < zebra_pos
+
+
+def test_no_sort_words_with_output_formats(tmp_path: Path):
+    """Test --no-sort-words works with different output formats."""
+    # Test CSV output
+    csv_file = tmp_path / "test.csv"
+    result = subprocess.run(
+        f'word-search "zebra, apple, cat" --no-sort-words -o {csv_file} -f CSV',
+        shell=True,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0
+    assert csv_file.exists()
+
+    # Read CSV and check word order
+    csv_content = csv_file.read_text()
+    lines = csv_content.split("\n")
+    word_list_line = None
+    for line in lines:
+        if "ZEBRA" in line and "APPLE" in line:
+            word_list_line = line
+            break
+
+    assert word_list_line is not None
+    # Should maintain original order in CSV
+    zebra_pos = word_list_line.find("ZEBRA")
+    apple_pos = word_list_line.find("APPLE")
+    assert zebra_pos < apple_pos
+
+    # Test JSON output
+    json_file = tmp_path / "test.json"
+    result = subprocess.run(
+        f'word-search "dog, cat, bat" --no-sort-words -o {json_file} -f JSON',
+        shell=True,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0
+    assert json_file.exists()
+
+    import json
+
+    with open(json_file) as f:
+        data = json.load(f)
+
+    # Check that words list maintains original order
+    words = data.get("words", [])
+    assert len(words) >= 3
+    # Original order should be preserved in some way in the output

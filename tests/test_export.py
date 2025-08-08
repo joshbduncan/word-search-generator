@@ -491,11 +491,16 @@ def test_pdf_output_words_secret_only(tmp_path: Path):
     assert "<ALL SECRET WORDS>" in "".join(c["text"] for c in page1.chars)
     if len(pages) == 2:
         page2 = pages[1]
-        wordlist_list = utils.get_word_list_list(ws.key)
-        if lowercase:
-            wordlist_list = [w.lower() for w in wordlist_list]
+        word_list = utils.get_word_list_list(ws.words)
+        word_list_as_strings = (
+            [w.text.lower() for w in word_list]
+            if lowercase
+            else [w.text for w in word_list]
+        )
         extracted_words = [
-            word for word in page2.extract_words() if word["text"] in wordlist_list
+            word
+            for word in page2.extract_words()
+            if word["text"] in word_list_as_strings
         ]
         assert len(extracted_words) == len(ws.placed_hidden_words)
 
