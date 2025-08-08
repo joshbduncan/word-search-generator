@@ -109,12 +109,12 @@ def get_word_list_str(key: Key) -> str:
 
 def sort_words_if_needed(words, sort: bool = True, key_func=None):
     """Sort words if requested, otherwise maintain original order.
-    
+
     Args:
         words: Iterable of words to potentially sort
         sort: Whether to sort the words alphabetically
         key_func: Optional function to extract comparison key from each word
-        
+
     Returns:
         List of words in original or sorted order
     """
@@ -125,7 +125,7 @@ def sort_words_if_needed(words, sort: bool = True, key_func=None):
 
 def get_word_list_list(key: Key, sort_words: bool = True) -> list[str]:
     """Return all placed puzzle words as a list (excluding secret words)."""
-    all_words = [k for k in key.keys() if not key[k]["secret"]]
+    all_words = [k for k in key if not key[k]["secret"]]
     return sort_words_if_needed(all_words, sort_words)
 
 
@@ -149,11 +149,10 @@ def get_answer_key_list(
     Returns:
         List of placed words with their placement information.
     """
-    sorted_words = sort_words_if_needed(words, sort_words, key_func=lambda word: word.text)
-    return [
-        w.key_string(bbox, lowercase, reversed_letters)
-        for w in sorted_words
-    ]
+    sorted_words = sort_words_if_needed(
+        words, sort_words, key_func=lambda word: word.text
+    )
+    return [w.key_string(bbox, lowercase, reversed_letters) for w in sorted_words]
 
 
 def get_answer_key_str(words: WordSet, bbox: BoundingBox) -> str:
