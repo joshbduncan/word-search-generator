@@ -3,6 +3,7 @@ import re
 import subprocess
 from pathlib import Path
 
+import pytest
 from PIL import Image
 
 from word_search_generator.core.word import Direction, Word
@@ -148,7 +149,8 @@ def test_image_mask(tmp_path: Path):
     assert result.returncode == 0
 
 
-def test_cli_output(iterations, builtin_mask_shapes):
+@pytest.mark.repeat(10)
+def test_cli_output(builtin_mask_shapes):
     def parse_puzzle(output):
         return [[r[i] for i in range(0, len(r), 2)] for r in output.split("\n")[3:-6]]
 
@@ -182,24 +184,21 @@ def test_cli_output(iterations, builtin_mask_shapes):
             col += word.direction.c_move
         return True
 
-    results = []
-    for _ in range(iterations):
-        size = random.randint(18, 36)
-        words = random.randint(5, 21)
-        mask = random.choice(builtin_mask_shapes)
-        command = f"word-search -r {words} -s {size}"
-        if mask:
-            command += f" -m {mask.__class__.__name__}"
-        output = subprocess.check_output(command, shell=True, text=True)
-        # assert output == ""
-        puzzle = parse_puzzle(output)
-        words = parse_words(output)
-        results.append(all(check_chars(puzzle, word) for word in words))  # type: ignore
-
-    assert all(results)
+    size = random.randint(18, 36)
+    words = random.randint(5, 21)
+    mask = random.choice(builtin_mask_shapes)
+    command = f"word-search -r {words} -s {size}"
+    if mask:
+        command += f" -m {mask.__class__.__name__}"
+    output = subprocess.check_output(command, shell=True, text=True)
+    # assert output == ""
+    puzzle = parse_puzzle(output)
+    words = parse_words(output)
+    assert all(check_chars(puzzle, word) for word in words)  # type: ignore
 
 
-def test_cli_output_lowercase(iterations, builtin_mask_shapes):
+@pytest.mark.repeat(10)
+def test_cli_output_lowercase(builtin_mask_shapes):
     def parse_words(output):
         words = set()
         words_line = output.split("\n")[-1].split(": ")[-1]
@@ -221,18 +220,17 @@ def test_cli_output_lowercase(iterations, builtin_mask_shapes):
             words.add(word)
         return words
 
-    for _ in range(iterations):
-        size = random.randint(18, 36)
-        words = random.randint(5, 21)
-        mask = random.choice(builtin_mask_shapes)
-        command = f"word-search -r {words} -s {size} -lc"
-        if mask:
-            command += f" -m {mask.__class__.__name__}"
-        output = subprocess.check_output(command, shell=True, text=True)
-        parsed_puzzle = output.split("\n")
-        assert all("".join(row).islower() for row in parsed_puzzle[2:5])
-        parsed_words = parse_words(output)
-        assert all(word.islower() for word in parsed_words)
+    size = random.randint(18, 36)
+    words = random.randint(5, 21)
+    mask = random.choice(builtin_mask_shapes)
+    command = f"word-search -r {words} -s {size} -lc"
+    if mask:
+        command += f" -m {mask.__class__.__name__}"
+    output = subprocess.check_output(command, shell=True, text=True)
+    parsed_puzzle = output.split("\n")
+    assert all("".join(row).islower() for row in parsed_puzzle[2:5])
+    parsed_words = parse_words(output)
+    assert all(word.islower() for word in parsed_words)
 
 
 def test_input_file(tmp_path: Path):

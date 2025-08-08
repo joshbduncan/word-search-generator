@@ -10,11 +10,6 @@ from word_search_generator.mask import shapes
 
 
 @pytest.fixture
-def iterations():
-    return 10
-
-
-@pytest.fixture
 def empty_game():
     return Game()
 

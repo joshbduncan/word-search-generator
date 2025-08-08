@@ -162,12 +162,12 @@ def test_json_output_property_for_key():
         assert pos == ws.key[word]["start"]
 
 
-def test_for_empty_spaces(iterations):
-    for _ in range(iterations):
-        words = ",".join(utils.get_random_words(10))
-        ws = WordSearch(words, level=3)
-        flat = [item for sublist in ws.puzzle for item in sublist]
-        assert ws.size * ws.size == len(flat)
+@pytest.mark.repeat(10)
+def test_for_empty_spaces():
+    words = ",".join(utils.get_random_words(10))
+    ws = WordSearch(words, level=3)
+    flat = [item for sublist in ws.puzzle for item in sublist]
+    assert ws.size * ws.size == len(flat)
 
 
 def test_puzzle_with_secret_words(words):
@@ -279,27 +279,26 @@ def test_invalid_size_at_init_type():
         ws = WordSearch(size="250")  # type: ignore  # noqa: F841
 
 
-# @pytest.mark.skip(reason="update to match new rich output")
-def test_puzzle_solution_output(iterations, builtin_mask_shapes, capsys):
-    for _ in range(100):
-        ws = WordSearch(size=random.randint(21, 35))
-        ws.random_words(random.randint(5, 21))
-        mask = random.choice(builtin_mask_shapes)
-        if mask:
-            ws.apply_mask(mask)
-        ws.formatter.CONSOLE = Console(force_terminal=True)
-        ws.show(solution=True)
+@pytest.mark.repeat(10)
+def test_puzzle_solution_output(builtin_mask_shapes, capsys):
+    ws = WordSearch(size=random.randint(21, 35))
+    ws.random_words(random.randint(5, 21))
+    mask = random.choice(builtin_mask_shapes)
+    if mask:
+        ws.apply_mask(mask)
+    ws.formatter.CONSOLE = Console(force_terminal=True)  # type: ignore[union-attr]
+    ws.show(solution=True)
 
-        captured = capsys.readouterr()
-        stdout = captured.out
-        stderr = captured.err
+    captured = capsys.readouterr()
+    stdout = captured.out
+    stderr = captured.err
 
-        assert not stderr
-        assert "\x1b[" in stdout
-        assert all(
-            word.rich_style._make_ansi_codes(ColorSystem.TRUECOLOR) in stdout
-            for word in ws.placed_words
-        )
+    assert not stderr
+    assert "\x1b[" in stdout
+    assert all(
+        word.rich_style._make_ansi_codes(ColorSystem.TRUECOLOR) in stdout
+        for word in ws.placed_words
+    )
 
 
 def test_unplaced_words():
@@ -372,7 +371,8 @@ def test_cropped_puzzle_masked_2(words):
     assert ws.puzzle[size - 10][size - 10] == ws.cropped_puzzle[size - 11][size - 11]
 
 
-def test_word_placement(iterations, builtin_mask_shapes):
+@pytest.mark.repeat(10)
+def test_word_placement(builtin_mask_shapes):
     def check_chars(puzzle, word):
         row, col = word.position
         for c in word.text:
@@ -382,15 +382,12 @@ def test_word_placement(iterations, builtin_mask_shapes):
             col += word.direction.c_move
         return True
 
-    results = []
-    for _ in range(iterations):
-        ws = WordSearch(size=random.randint(21, 35))
-        ws.random_words(random.randint(5, 21))
-        mask = random.choice(builtin_mask_shapes)
-        if mask:
-            ws.apply_mask(mask)
-        results.append(all(check_chars(ws.puzzle, word) for word in ws.placed_words))
-    assert all(results)
+    ws = WordSearch(size=random.randint(21, 35))
+    ws.random_words(random.randint(5, 21))
+    mask = random.choice(builtin_mask_shapes)
+    if mask:
+        ws.apply_mask(mask)
+    assert all(check_chars(ws.puzzle, word) for word in ws.placed_words)
 
 
 def test_puzzle_size_error():
@@ -399,33 +396,29 @@ def test_puzzle_size_error():
         ws.size = 5
 
 
-def test_hide_fillers(iterations, builtin_mask_shapes):
-    results = []
-    for _ in range(iterations):
-        ws = WordSearch(size=random.randint(21, 35))
-        ws.random_words(random.randint(5, 21))
-        mask = random.choice(builtin_mask_shapes)
-        if mask:
-            ws.apply_mask(mask)
-        hidden_fillers = formatter.hide_filler_characters(ws)
-        chars: set[str] = set()
-        for word in ws.placed_words:
-            chars.update(hidden_fillers[y][x] for y, x in word.coordinates)
-        results.append(" " not in chars)
-    assert all(results)
+@pytest.mark.repeat(10)
+def test_hide_fillers(builtin_mask_shapes):
+    ws = WordSearch(size=random.randint(21, 35))
+    ws.random_words(random.randint(5, 21))
+    mask = random.choice(builtin_mask_shapes)
+    if mask:
+        ws.apply_mask(mask)
+    hidden_fillers = formatter.hide_filler_characters(ws)
+    chars: set[str] = set()
+    for word in ws.placed_words:
+        chars.update(hidden_fillers[y][x] for y, x in word.coordinates)
+    assert " " not in chars
 
 
-def test_solution_plus_hide_fillers(iterations, builtin_mask_shapes):
-    results = []
-    for _ in range(iterations):
-        ws = WordSearch(size=random.randint(21, 35))
-        ws.random_words(random.randint(5, 21))
-        mask = random.choice(builtin_mask_shapes)
-        if mask:
-            ws.apply_mask(mask)
-        chars = {c for chars in ws.puzzle for c in chars}
-        results.append("\x1b" not in chars)
-    assert all(results)
+@pytest.mark.repeat(10)
+def test_solution_plus_hide_fillers(builtin_mask_shapes):
+    ws = WordSearch(size=random.randint(21, 35))
+    ws.random_words(random.randint(5, 21))
+    mask = random.choice(builtin_mask_shapes)
+    if mask:
+        ws.apply_mask(mask)
+    chars = {c for chars in ws.puzzle for c in chars}
+    assert "\x1b" not in chars
 
 
 def test_word_directions(words, secret_words):
