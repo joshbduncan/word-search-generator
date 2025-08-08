@@ -196,7 +196,7 @@ secret puzzle words can go. See valid arguments above.",
         "--sort-words",
         dest="sort_words",
         action="store_true",
-        help="Sort word list and answer key alphabetically in output.",
+        help="Sort word list and answer key alphabetically in output (default: true).",
     )
     sort_group.add_argument(
         "--no-sort-words",
