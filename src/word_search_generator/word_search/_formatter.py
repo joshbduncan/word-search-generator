@@ -59,7 +59,9 @@ class WordSearchFormatter(Formatter):
         )
         wordlist = []
 
-        sorted_words = utils.sort_words_if_needed(game.placed_words, sort_words, key_func=lambda w: w.text)
+        sorted_words = utils.sort_words_if_needed(
+            game.placed_words, sort_words, key_func=lambda w: w.text
+        )
         for word in sorted_words:
             # TODO: should "secret" words be highlighted and included in wordlist
             if word.secret:
@@ -101,7 +103,11 @@ class WordSearchFormatter(Formatter):
         answer_key += ": "
 
         word_key_strings = utils.get_answer_key_list(
-            game.placed_words, game.bounding_box, lowercase, reversed_letters, sort_words
+            game.placed_words,
+            game.bounding_box,
+            lowercase,
+            reversed_letters,
+            sort_words,
         )
         answer_key += ", ".join(key_string for key_string in word_key_strings)
 
@@ -148,7 +154,9 @@ class WordSearchFormatter(Formatter):
                 sort_words,
             )
         else:
-            saved_file = self.write_pdf_file(path, game, solution, lowercase, hide_key, sort_words)
+            saved_file = self.write_pdf_file(
+                path, game, solution, lowercase, hide_key, sort_words
+            )
         # return saved file path
         return saved_file
 
@@ -358,7 +366,9 @@ def draw_word_list(
     pdf.set_font_size(info_font_size)
     pdf.set_char_spacing(0.5)
 
-    sorted_words = utils.sort_words_if_needed(game.placed_words, sort_words, key_func=lambda w: w.text)
+    sorted_words = utils.sort_words_if_needed(
+        game.placed_words, sort_words, key_func=lambda w: w.text
+    )
     lines: list[tuple[float, list[Word]]] = []
     line_width = 0.0
     line: list[Word] = []
