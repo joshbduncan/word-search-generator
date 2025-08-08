@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Update Word cli rich styling for better contrast between text color and background
 
+### Fixed
+
+- Output test now account for Rich styling
+- Removed unused code
+
 ## [4.0.0] 2025-05-21
 
 ### Added

@@ -304,16 +304,18 @@ def test_export_pdf_puzzles(iterations, tmp_path: Path):
 def test_export_pdf_puzzle_with_solution(iterations, tmp_path: Path):
     """Make sure a pdf puzzle exported with the solution is 2 pages."""
     for _ in range(iterations):
-        size = random.choice(
-            range(WordSearch.MIN_PUZZLE_SIZE, WordSearch.MAX_PUZZLE_SIZE)
+        wordlist = utils.get_random_words(
+            random.randint(WordSearch.MIN_PUZZLE_WORDS, WordSearch.MAX_PUZZLE_WORDS)
         )
-        words = ",".join(
-            utils.get_random_words(
-                random.randint(WordSearch.MIN_PUZZLE_WORDS, WordSearch.MAX_PUZZLE_WORDS)
+        shortest_word_length = min(len(word) for word in wordlist)
+        size = random.choice(
+            range(
+                max(WordSearch.MIN_PUZZLE_SIZE, shortest_word_length),
+                WordSearch.MAX_PUZZLE_SIZE,
             )
         )
         level = random.randint(1, 3)
-        puzzle = WordSearch(words, level=level, size=size)
+        puzzle = WordSearch(",".join(wordlist), level=level, size=size)
         fp = Path.joinpath(tmp_path, f"{uuid.uuid4()}.pdf")
         puzzle.save(fp, solution=True)
         pages = pdfplumber.open(fp).pages
