@@ -4,7 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [4.1.0] 2025-08-08
+
+### Added
+
+- Output word list and answer key can now be output in the original order (no sorted alphabetically) [PR #86](https://github.com/joshbduncan/word-search-generator/pull/86). Thanks [Alex Schmelkin (apumapho)](https://github.com/apumapho).
+    - via the cli as `--no-sort-words`
+    - via the API `WordSearch().show(sort_word_list=False)`
+    - required adding [ordered-set](https://pypi.org/project/ordered-set/) to project dependencies
 
 ### Changed
 
@@ -12,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Output test now account for Rich styling
+- Output test now accounts for Rich styling
 - Removed unused code
 
 ## [4.0.0] 2025-05-21
