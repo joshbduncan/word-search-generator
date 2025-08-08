@@ -32,6 +32,7 @@ class WordSearchFormatter(Formatter):
     PDF_FONT_SIZE_M = 9
     PDF_FONT_SIZE_S = 5
     PDF_PUZZLE_WIDTH = 7  # inches
+    CONSOLE = console
 
     def show(
         self,
@@ -104,13 +105,15 @@ class WordSearchFormatter(Formatter):
         )
         answer_key += ", ".join(key_string for key_string in word_key_strings)
 
-        with console.capture() as capture:
-            console.print(table)
-            console.print(f"Find words going {utils.get_LEVEL_DIRS_str(game.level)}:")
-            console.print(*wordlist, sep=", ")
-            console.print()
+        with self.CONSOLE.capture() as capture:
+            self.CONSOLE.print(table)
+            self.CONSOLE.print(
+                f"Find words going {utils.get_LEVEL_DIRS_str(game.level)}:"
+            )
+            self.CONSOLE.print(*wordlist, sep=", ")
+            self.CONSOLE.print()
             if not hide_key:
-                console.print(answer_key)
+                self.CONSOLE.print(answer_key)
         return capture.get()
 
     def save(
@@ -265,73 +268,6 @@ class WordSearchFormatter(Formatter):
         except OSError as err:
             raise OSError(f"File could not be saved to '{path}'.") from err
         return path.absolute()
-
-    # TODO: remove method
-    def format_puzzle_for_show(
-        self,
-        game: WordSearch,
-        show_solution: bool = False,
-        hide_fillers: bool = False,
-        lowercase: bool = False,
-    ) -> str:
-        word_list_str = utils.get_word_list_str(game.key)
-        # prepare the correct version of the puzzle
-        if hide_fillers:
-            puzzle_list = self.hide_filler_characters(game)
-        elif show_solution:
-            puzzle_list = self.highlight_solution(game)
-        else:
-            puzzle_list = game.puzzle
-        # calculate header length based on cropped puzzle size to account for masks
-        header_width = max(
-            11, (game.bounding_box[1][0] - game.bounding_box[0][0] + 1) * 2 - 1
-        )
-        hr = "-" * header_width
-        header = hr + "\n" + f"{'WORD SEARCH':^{header_width}}" + "\n" + hr
-        puzzle_str = utils.stringify(puzzle_list, game.bounding_box)
-        LEVEL_DIRS_str = utils.get_LEVEL_DIRS_str(game.level)
-        key_intro = "Answer Key"
-        if hasattr(game, "placed_secret_words"):
-            key_intro += " (*Secret Words)"
-        answer_key_str = utils.get_answer_key_str(game.placed_words, game.bounding_box)
-
-        # lower case was requested change case or letters for puzzle, words, and key
-        if lowercase:
-            word_list_str = word_list_str.lower()
-            puzzle_str = puzzle_str.lower()
-            for word in game.placed_words:
-                answer_key_str = answer_key_str.replace(word.text, word.text.lower())
-
-        # catch case of all secret words
-        if not word_list_str:
-            word_list_str = "<ALL SECRET WORDS>"
-
-        output = ""
-        output += f"{header}\n"
-        output += f"{puzzle_str}\n\n"
-        output += f"Find these words: {word_list_str}\n"
-        output += f"* Words can go {LEVEL_DIRS_str}\n\n"
-        output += f"{key_intro}: {answer_key_str}"
-        return output
-
-    @staticmethod
-    def highlight_solution(game: WordSearch) -> Puzzle:
-        """Add highlighting to puzzle solution."""
-        output: Puzzle = copy.deepcopy(game.puzzle)
-        for word in game.placed_words:
-            if (
-                word.start_column is None
-                or word.start_row is None
-                or word.direction is None
-            ):  # only here for mypy
-                continue  # pragma: no cover
-            x = word.start_column
-            y = word.start_row
-            for char in word.text:
-                output[y][x] = f"\u001b[1m\u001b[31m{char}\u001b[0m"
-                x += word.direction.c_move
-                y += word.direction.r_move
-        return output
 
     @staticmethod
     def hide_filler_characters(

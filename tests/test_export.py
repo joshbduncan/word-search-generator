@@ -275,49 +275,47 @@ def test_export_empty_puzzle(tmp_path: Path, format):
         puzzle.save(fp, format=format)
 
 
-def test_export_pdf_puzzles(iterations, tmp_path: Path):
+@pytest.mark.repeat(10)
+def test_export_pdf_puzzles(tmp_path: Path):
     """Export a bunch of puzzles as PDF and make sure they are all 1-page."""
-    puzzles = []
-    pages = set()
-    for _ in range(iterations):
-        size = random.randint(WordSearch.MIN_PUZZLE_SIZE, WordSearch.MAX_PUZZLE_SIZE)
-        words = ",".join(
-            utils.get_random_words(
-                random.randint(WordSearch.MIN_PUZZLE_WORDS, WordSearch.MAX_PUZZLE_WORDS)
-            )
+    size = random.randint(WordSearch.MIN_PUZZLE_SIZE, WordSearch.MAX_PUZZLE_SIZE)
+    words = ",".join(
+        utils.get_random_words(
+            random.randint(WordSearch.MIN_PUZZLE_WORDS, WordSearch.MAX_PUZZLE_WORDS)
         )
-        shortest_word_length = len(min(words, key=len))
-        if size < shortest_word_length:
-            size = shortest_word_length
-        level = random.randint(1, 3)
-        puzzle = WordSearch(words, level=level, size=size)
-        fp = Path.joinpath(tmp_path, f"{uuid.uuid4()}.pdf")
-        puzzle.save(fp, format="pdf")
-        puzzles.append(fp)
-    for p in puzzles:
-        with open(p, "rb") as f:
-            pdf = PdfReader(f)
-            pages.add(len(pdf.pages))
-    assert pages == {1}
+    )
+    shortest_word_length = len(min(words, key=len))
+    if size < shortest_word_length:
+        size = shortest_word_length
+    level = random.randint(1, 3)
+    puzzle = WordSearch(words, level=level, size=size)
+    fp = Path.joinpath(tmp_path, f"{uuid.uuid4()}.pdf")
+    puzzle.save(fp, format="pdf")
+
+    with open(fp, "rb") as f:
+        pdf = PdfReader(f)
+        assert len(pdf.pages) == 1
 
 
-def test_export_pdf_puzzle_with_solution(iterations, tmp_path: Path):
+@pytest.mark.repeat(10)
+def test_export_pdf_puzzle_with_solution(tmp_path: Path):
     """Make sure a pdf puzzle exported with the solution is 2 pages."""
-    for _ in range(iterations):
-        size = random.choice(
-            range(WordSearch.MIN_PUZZLE_SIZE, WordSearch.MAX_PUZZLE_SIZE)
+    wordlist = utils.get_random_words(
+        random.randint(WordSearch.MIN_PUZZLE_WORDS, WordSearch.MAX_PUZZLE_WORDS)
+    )
+    shortest_word_length = min(len(word) for word in wordlist)
+    size = random.choice(
+        range(
+            max(WordSearch.MIN_PUZZLE_SIZE, shortest_word_length),
+            WordSearch.MAX_PUZZLE_SIZE,
         )
-        words = ",".join(
-            utils.get_random_words(
-                random.randint(WordSearch.MIN_PUZZLE_WORDS, WordSearch.MAX_PUZZLE_WORDS)
-            )
-        )
-        level = random.randint(1, 3)
-        puzzle = WordSearch(words, level=level, size=size)
-        fp = Path.joinpath(tmp_path, f"{uuid.uuid4()}.pdf")
-        puzzle.save(fp, solution=True)
-        pages = pdfplumber.open(fp).pages
-        assert len(pages) == 2
+    )
+    level = random.randint(1, 3)
+    puzzle = WordSearch(",".join(wordlist), level=level, size=size)
+    fp = Path.joinpath(tmp_path, f"{uuid.uuid4()}.pdf")
+    puzzle.save(fp, solution=True)
+    pages = pdfplumber.open(fp).pages
+    assert len(pages) == 2
 
 
 def test_export_pdf_overwrite_file_error(tmp_path: Path):
@@ -379,7 +377,8 @@ def test_export_csv_os_error(words):
         puzzle.save(forbidden_path)
 
 
-def test_pdf_output_puzzle_lowercase(iterations, tmp_path: Path):
+@pytest.mark.repeat(10)
+def test_pdf_output_puzzle_lowercase(tmp_path: Path):
     def parse_puzzle(extraction):
         puzzle = []
         for line in extraction.split("\n"):
@@ -391,22 +390,22 @@ def test_pdf_output_puzzle_lowercase(iterations, tmp_path: Path):
                 puzzle.append(list(line.replace(" ", "")))
         return puzzle
 
-    for _ in range(iterations):
-        ws = WordSearch(size=random.randint(8, 21))
-        ws.random_words(random.randint(5, 21))
-        fp = Path.joinpath(tmp_path, f"{uuid.uuid4()}.pdf")
-        ws.save(fp, lowercase=True)
-        reader = PdfReader(fp)
-        page = reader.pages[0]
-        puzzle = parse_puzzle(page.extract_text(0))
+    ws = WordSearch(size=random.randint(8, 21))
+    ws.random_words(random.randint(5, 21))
+    fp = Path.joinpath(tmp_path, f"{uuid.uuid4()}.pdf")
+    ws.save(fp, lowercase=True)
+    reader = PdfReader(fp)
+    page = reader.pages[0]
+    puzzle = parse_puzzle(page.extract_text(0))
 
-        # convert puzzle to lowercase for testing
-        lowercase_puzzle = [[c.lower() for c in line if c] for line in ws.puzzle]
+    # convert puzzle to lowercase for testing
+    lowercase_puzzle = [[c.lower() for c in line if c] for line in ws.puzzle]
 
-        assert puzzle == lowercase_puzzle
+    assert puzzle == lowercase_puzzle
 
 
-def test_pdf_output_key(iterations, tmp_path: Path):
+@pytest.mark.repeat(10)
+def test_pdf_output_key(tmp_path: Path):
     def parse_puzzle(extraction):
         puzzle = []
         for line in extraction.split("\n"):
@@ -431,78 +430,78 @@ def test_pdf_output_key(iterations, tmp_path: Path):
             words.add(word)
         return words
 
-    for _ in range(iterations):
-        ws = WordSearch(size=random.randint(8, 21))
-        ws.random_words(random.randint(5, 21))
-        fp = Path.joinpath(tmp_path, f"{uuid.uuid4()}.pdf")
-        ws.save(fp)
-        reader = PdfReader(fp)
-        page = reader.pages[0]
-        puzzle = parse_puzzle(page.extract_text(0))
-        words = parse_words(page.extract_text(180))
-        assert all(check_chars(puzzle, word) for word in words)  # type: ignore
+    ws = WordSearch(size=random.randint(8, 21))
+    ws.random_words(random.randint(5, 21))
+    fp = Path.joinpath(tmp_path, f"{uuid.uuid4()}.pdf")
+    ws.save(fp)
+    reader = PdfReader(fp)
+    page = reader.pages[0]
+    puzzle = parse_puzzle(page.extract_text(0))
+    words = parse_words(page.extract_text(180))
+    assert all(check_chars(puzzle, word) for word in words)  # type: ignore
 
 
-def test_pdf_output_words(iterations, tmp_path: Path):
-    for _ in range(iterations):
-        ws = WordSearch(size=random.randint(8, 21))
-        ws.random_words(random.randint(5, 21))
-        fp = Path.joinpath(tmp_path, f"{uuid.uuid4()}.pdf")
-        lowercase = random.choice([True, False])
-        ws.save(fp, lowercase=lowercase)
+@pytest.mark.repeat(10)
+def test_pdf_output_words(tmp_path: Path):
+    ws = WordSearch(size=random.randint(8, 21))
+    ws.random_words(random.randint(5, 21))
+    fp = Path.joinpath(tmp_path, f"{uuid.uuid4()}.pdf")
+    lowercase = random.choice([True, False])
+    ws.save(fp, lowercase=lowercase)
 
-        # extract both pages
-        pages = pdfplumber.open(fp).pages
+    # extract both pages
+    pages = pdfplumber.open(fp).pages
 
-        # extract wordlist
-        placed_words = [word.text for word in ws.placed_words]
+    # extract wordlist
+    placed_words = [word.text for word in ws.placed_words]
 
-        # find where wordlist should start
-        for i, page in enumerate(pages):
-            start = 2 + ws.size**2  # "WORD SEARCH" == 2 then add puzzle size
-            if i == 1:
-                start += 1  # addition "(SOLUTION)" word
-            extracted_words = page.extract_words()
-            for i, word in enumerate(extracted_words[start:]):
-                if ":" in word["text"]:
-                    start += i + 1
-                    break
-            end = start + len(placed_words)
-            extracted_wordlist = [
-                word
-                for word in extracted_words[start:end]
-                if word["text"].upper() in placed_words
-            ]
-            assert len(ws.placed_words) == len(extracted_wordlist)
-
-
-def test_pdf_output_words_secret_only(iterations, tmp_path: Path):
-    for _ in range(iterations):
-        words = "cat bat rat hat mat"
-        ws = WordSearch(secret_words=words, size=random.randint(8, 21))
-        fp = Path.joinpath(tmp_path, f"{uuid.uuid4()}.pdf")
-        lowercase = random.choice([True, False])
-        ws.save(
-            fp,
-            solution=random.choice([True, False]),
-            lowercase=lowercase,
-        )
-
-        pages = pdfplumber.open(fp).pages
-        page1 = pages[0]
-        assert "<ALL SECRET WORDS>" in "".join(c["text"] for c in page1.chars)
-        if len(pages) == 2:
-            page2 = pages[1]
-            wordlist_list = utils.get_word_list_list(ws.key)
-            if lowercase:
-                wordlist_list = [w.lower() for w in wordlist_list]
-            extracted_words = [
-                word for word in page2.extract_words() if word["text"] in wordlist_list
-            ]
-            assert len(extracted_words) == len(ws.placed_hidden_words)
+    # find where wordlist should start
+    for i, page in enumerate(pages):
+        start = 2 + ws.size**2  # "WORD SEARCH" == 2 then add puzzle size
+        if i == 1:
+            start += 1  # addition "(SOLUTION)" word
+        extracted_words = page.extract_words()
+        for i, word in enumerate(extracted_words[start:]):
+            if ":" in word["text"]:
+                start += i + 1
+                break
+        end = start + len(placed_words)
+        extracted_wordlist = [
+            word
+            for word in extracted_words[start:end]
+            if word["text"].upper() in placed_words
+        ]
+        assert len(ws.placed_words) == len(extracted_wordlist)
 
 
-def test_pdf_output_puzzle_size(iterations, tmp_path: Path):
+@pytest.mark.repeat(10)
+def test_pdf_output_words_secret_only(tmp_path: Path):
+    words = "cat bat rat hat mat"
+    ws = WordSearch(secret_words=words, size=random.randint(8, 21))
+    fp = Path.joinpath(tmp_path, f"{uuid.uuid4()}.pdf")
+    lowercase = random.choice([True, False])
+    ws.save(
+        fp,
+        solution=random.choice([True, False]),
+        lowercase=lowercase,
+    )
+
+    pages = pdfplumber.open(fp).pages
+    page1 = pages[0]
+    assert "<ALL SECRET WORDS>" in "".join(c["text"] for c in page1.chars)
+    if len(pages) == 2:
+        page2 = pages[1]
+        wordlist_list = utils.get_word_list_list(ws.key)
+        if lowercase:
+            wordlist_list = [w.lower() for w in wordlist_list]
+        extracted_words = [
+            word for word in page2.extract_words() if word["text"] in wordlist_list
+        ]
+        assert len(extracted_words) == len(ws.placed_hidden_words)
+
+
+@pytest.mark.repeat(10)
+def test_pdf_output_puzzle_size(tmp_path: Path):
     def parse_puzzle(extraction):
         puzzle = []
         for line in extraction.split("\n"):
@@ -514,19 +513,19 @@ def test_pdf_output_puzzle_size(iterations, tmp_path: Path):
                 puzzle.append(list(line.replace(" ", "")))
         return puzzle
 
-    for _ in range(iterations):
-        ws = WordSearch(size=random.randint(8, 21))
-        ws.random_words(random.randint(5, 21))
-        fp = Path.joinpath(tmp_path, f"{uuid.uuid4()}.pdf")
-        ws.save(fp)
-        reader = PdfReader(fp)
-        page = reader.pages[0]
-        puzzle = parse_puzzle(page.extract_text(0))
-        assert ws.size == len(puzzle)
-        assert ws.size == len(puzzle[0])
+    ws = WordSearch(size=random.randint(8, 21))
+    ws.random_words(random.randint(5, 21))
+    fp = Path.joinpath(tmp_path, f"{uuid.uuid4()}.pdf")
+    ws.save(fp)
+    reader = PdfReader(fp)
+    page = reader.pages[0]
+    puzzle = parse_puzzle(page.extract_text(0))
+    assert ws.size == len(puzzle)
+    assert ws.size == len(puzzle[0])
 
 
-def test_pdf_output_solution_highlighting(iterations, tmp_path: Path):
+@pytest.mark.repeat(10)
+def test_pdf_output_solution_highlighting(tmp_path: Path):
     def validate_puzzle_highlighting(
         ws: WordSearch,
         puzzle: list[dict[str, Any]],
@@ -557,106 +556,106 @@ def test_pdf_output_solution_highlighting(iterations, tmp_path: Path):
             )
             assert rect_contains_line(lx1, ly1, lx2, ly2, rx1, ry1, rx2, ry2)
 
-    for _ in range(iterations):
-        ws = WordSearch(size=random.randint(8, 21))
-        ws.random_words(random.randint(5, 21))
-        fp = Path.joinpath(tmp_path, f"{uuid.uuid4()}.pdf")
-        ws.save(fp, format="PDF", solution=True)
+    ws = WordSearch(size=random.randint(8, 21))
+    ws.random_words(random.randint(5, 21))
+    fp = Path.joinpath(tmp_path, f"{uuid.uuid4()}.pdf")
+    ws.save(fp, format="PDF", solution=True)
 
-        # read solution page from PDF
-        page = pdfplumber.open(fp).pages[1]
-        assert page
+    # read solution page from PDF
+    page = pdfplumber.open(fp).pages[1]
+    assert page
 
-        # extract puzzle line and wordlist lines
-        puzzle_lines = extract_puzzle_highlight_lines(page)
-        assert puzzle_lines
-        assert len(puzzle_lines) == len(page.lines) // 2
+    # extract puzzle line and wordlist lines
+    puzzle_lines = extract_puzzle_highlight_lines(page)
+    assert puzzle_lines
+    assert len(puzzle_lines) == len(page.lines) // 2
 
-        wordlist_lines = extract_wordlist_highlight_lines(page)
-        assert wordlist_lines
-        assert len(wordlist_lines) == len(page.lines) // 2
+    wordlist_lines = extract_wordlist_highlight_lines(page)
+    assert wordlist_lines
+    assert len(wordlist_lines) == len(page.lines) // 2
 
-        # find positions of puzzle and wordlist characters
-        chars_str = "".join(c["text"] for c in page.chars)
-        title = re.search(r"WORD.*\(SOLUTION\)", chars_str)
-        level_dirs = re.search(r"Find.*?:", chars_str)
-        answer_key = re.search("Answer Key", chars_str)
+    # find positions of puzzle and wordlist characters
+    chars_str = "".join(c["text"] for c in page.chars)
+    title = re.search(r"WORD.*\(SOLUTION\)", chars_str)
+    level_dirs = re.search(r"Find.*?:", chars_str)
+    answer_key = re.search("Answer Key", chars_str)
 
-        assert title and level_dirs and answer_key
+    assert title and level_dirs and answer_key
 
-        puzzle_start = title.end()
-        puzzle_end = level_dirs.start()
+    puzzle_start = title.end()
+    puzzle_end = level_dirs.start()
 
-        # extract puzzle
-        extracted_puzzle = page.chars[puzzle_start:puzzle_end]
-        assert ws.size == int(math.sqrt(len(extracted_puzzle)))
+    # extract puzzle
+    extracted_puzzle = page.chars[puzzle_start:puzzle_end]
+    assert ws.size == int(math.sqrt(len(extracted_puzzle)))
 
-        # validate puzzle highlighting
-        validate_puzzle_highlighting(ws, extracted_puzzle, puzzle_lines)
+    # validate puzzle highlighting
+    validate_puzzle_highlighting(ws, extracted_puzzle, puzzle_lines)
 
-        # extract wordlist
-        placed_words = [word.text for word in ws.placed_words]
+    # extract wordlist
+    placed_words = [word.text for word in ws.placed_words]
 
-        # find where wordlist should start
-        start = 3 + ws.size**2  # "WORD SEARCH (SOLUTION)" == 3 then add puzzle size *
-        extracted_words = page.extract_words()
-        for i, word in enumerate(extracted_words[start:]):
-            if ":" in word["text"]:
-                start += i + 1
-                break
-        end = start + len(placed_words)
-        extracted_wordlist = [
-            word
-            for word in extracted_words[start:end]
-            if word["text"].upper() in placed_words
-        ]
-        assert len(ws.placed_words) == len(extracted_wordlist)
+    # find where wordlist should start
+    start = 3 + ws.size**2  # "WORD SEARCH (SOLUTION)" == 3 then add puzzle size *
+    extracted_words = page.extract_words()
+    for i, word in enumerate(extracted_words[start:]):
+        if ":" in word["text"]:
+            start += i + 1
+            break
+    end = start + len(placed_words)
+    extracted_wordlist = [
+        word
+        for word in extracted_words[start:end]
+        if word["text"].upper() in placed_words
+    ]
+    assert len(ws.placed_words) == len(extracted_wordlist)
 
-        # check all wordlist characters are highlighted
-        validate_wordlist_highlighting(extracted_wordlist, wordlist_lines)
+    # check all wordlist characters are highlighted
+    validate_wordlist_highlighting(extracted_wordlist, wordlist_lines)
 
 
-def test_pdf_output_solution_character_placement(iterations, tmp_path: Path):
+@pytest.mark.repeat(10)
+def test_pdf_output_solution_character_placement(tmp_path: Path):
     # TODO: check for secret words too
-    for _ in range(iterations):
-        ws = WordSearch(size=random.randint(8, 21))
-        ws.random_words(random.randint(5, 21))
-        fp = Path.joinpath(tmp_path, f"{uuid.uuid4()}.pdf")
-        ws.save(fp, format="PDF", solution=True)
+    ws = WordSearch(size=random.randint(8, 21))
+    ws.random_words(random.randint(5, 21))
+    fp = Path.joinpath(tmp_path, f"{uuid.uuid4()}.pdf")
+    ws.save(fp, format="PDF", solution=True)
 
-        # read solution page from PDF
-        page = pdfplumber.open(fp).pages[1]
-        assert page
+    # read solution page from PDF
+    page = pdfplumber.open(fp).pages[1]
+    assert page
 
-        # split puzzle line and wordlist lines
-        puzzle_lines = extract_puzzle_highlight_lines(page)
-        assert puzzle_lines
+    # split puzzle line and wordlist lines
+    puzzle_lines = extract_puzzle_highlight_lines(page)
+    assert puzzle_lines
 
-        # find positions of puzzle and wordlist characters
-        chars_str = "".join(c["text"] for c in page.chars)
-        title = re.search(r"WORD.*\(SOLUTION\)", chars_str)
-        level_dirs = re.search(r"Find.*?:", chars_str)
+    # find positions of puzzle and wordlist characters
+    chars_str = "".join(c["text"] for c in page.chars)
+    title = re.search(r"WORD.*\(SOLUTION\)", chars_str)
+    level_dirs = re.search(r"Find.*?:", chars_str)
 
-        assert title
-        assert level_dirs
+    assert title
+    assert level_dirs
 
-        puzzle_start = title.end()
-        puzzle_end = level_dirs.start()
+    puzzle_start = title.end()
+    puzzle_end = level_dirs.start()
 
-        # extract puzzle
-        extracted_puzzle = page.chars[puzzle_start:puzzle_end]
-        assert ws.size == int(math.sqrt(len(extracted_puzzle)))
+    # extract puzzle
+    extracted_puzzle = page.chars[puzzle_start:puzzle_end]
+    assert ws.size == int(math.sqrt(len(extracted_puzzle)))
 
-        # check placement of all word characters
-        for word in ws.placed_hidden_words:
-            for i, coord in enumerate(word.coordinates):
-                y, x = coord
-                word_char = word.text[i]
-                puzzle_char = extracted_puzzle[y * ws.size + x]["text"]
-                assert word_char == puzzle_char
+    # check placement of all word characters
+    for word in ws.placed_hidden_words:
+        for i, coord in enumerate(word.coordinates):
+            y, x = coord
+            word_char = word.text[i]
+            puzzle_char = extracted_puzzle[y * ws.size + x]["text"]
+            assert word_char == puzzle_char
 
 
-def test_csv_output_puzzle_size(iterations, tmp_path: Path):
+@pytest.mark.repeat(10)
+def test_csv_output_puzzle_size(tmp_path: Path):
     def parse_puzzle(fp):
         puzzle = []
         with open(fp, newline="") as f:
@@ -670,11 +669,10 @@ def test_csv_output_puzzle_size(iterations, tmp_path: Path):
                     puzzle.append(row)
         return puzzle
 
-    for _ in range(iterations):
-        ws = WordSearch(size=random.randint(8, 21))
-        ws.random_words(random.randint(5, 21))
-        fp = Path.joinpath(tmp_path, f"{uuid.uuid4()}.pdf")
-        ws.save(fp, format="CSV")
-        puzzle = parse_puzzle(fp)
-        assert ws.size == len(puzzle)
-        assert ws.size == len(puzzle[0])
+    ws = WordSearch(size=random.randint(8, 21))
+    ws.random_words(random.randint(5, 21))
+    fp = Path.joinpath(tmp_path, f"{uuid.uuid4()}.pdf")
+    ws.save(fp, format="CSV")
+    puzzle = parse_puzzle(fp)
+    assert ws.size == len(puzzle)
+    assert ws.size == len(puzzle[0])
