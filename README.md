@@ -2,7 +2,7 @@
 
 Word-Search-Generator is a Python package for generating fun [Word Search Puzzles](https://en.wikipedia.org/wiki/Word_search).
 
-[![Tests](https://github.com/joshbduncan/word-search-generator/actions/workflows/tox.yml/badge.svg)](https://github.com/joshbduncan/word-search-generator/actions/workflows/tox.yml) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/word-search-generator) [![PyPI version](https://badge.fury.io/py/word-search-generator.svg)](https://badge.fury.io/py/word-search-generator)
+[![Tests](https://github.com/joshbduncan/word-search-generator/actions/workflows/test.yml/badge.svg)](https://github.com/joshbduncan/word-search-generator/actions/workflows/test.yml) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/word-search-generator) [![PyPI version](https://badge.fury.io/py/word-search-generator.svg)](https://badge.fury.io/py/word-search-generator)
 
 ![WordSearch Generator](https://user-images.githubusercontent.com/44387852/209227303-4289957f-ade1-44d9-a0c7-5b860ef446cf.gif)
 
