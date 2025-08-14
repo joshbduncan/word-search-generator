@@ -13,16 +13,24 @@ Word-Search-Generator is a Python package for generating fun [Word Search Puzzle
 
 ## Installation
 
-You can install Word-Search-Generator with [pipx](https://pypa.github.io/pipx/)...
+You can install Word-Search-Generator with [uv](https://docs.astral.sh/uv/getting-started/installation/)...
+
+To use in your python project:
 
 ```
-pipx install word-search-generator
+uv add word-search-generator
 ```
 
-Or, for a universal install, you can use `pip`.
+Or, to simply use from the CLI (uv refers to this as a tool):
 
 ```
-pip install word-search-generator
+uv tool install word-search-generator
+```
+
+Or, for a universal install, you can use the Python built-in `pip`:
+
+```
+python -m pip install word-search-generator
 ```
 
 ## Usage
