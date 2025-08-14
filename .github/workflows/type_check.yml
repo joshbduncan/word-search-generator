@@ -1,0 +1,22 @@
+name: Type Check
+
+on: [push, pull_request]
+
+jobs:
+    type_check:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Install uv
+              uses: astral-sh/setup-uv@v6
+
+            - name: Set up Python
+              run: uv python install
+
+            - name: Install the project
+              run: uv sync --group type_check
+
+            - name: Run mypy
+              run: uv run mypy src tests

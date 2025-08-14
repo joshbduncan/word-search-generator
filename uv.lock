@@ -1032,7 +1032,7 @@ test = [
     { name = "pytest-cov" },
     { name = "pytest-repeat" },
 ]
-types = [
+type-check = [
     { name = "mypy" },
 ]
 
@@ -1062,4 +1062,4 @@ test = [
     { name = "pytest-cov" },
     { name = "pytest-repeat" },
 ]
-types = [{ name = "mypy" }]
+type-check = [{ name = "mypy" }]

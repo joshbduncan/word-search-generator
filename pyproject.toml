@@ -20,7 +20,12 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Typing :: Typed",
 ]
-dependencies = ["fpdf2==2.7.8", "Pillow==11.0.0", "rich==13.6.0", "ordered-set>=4.0.0"]
+dependencies = [
+    "fpdf2==2.7.8",
+    "Pillow==11.0.0",
+    "rich==13.6.0",
+    "ordered-set>=4.0.0",
+]
 
 [project.urls]
 homepage = "https://github.com/joshbduncan/word-search-generator"
@@ -40,17 +45,9 @@ build-backend = "uv_build"
 default-groups = "all"
 
 [dependency-groups]
-dev = [
-    "pre-commit-uv",
-    "pre-commit",
-]
-lint = [
-        "ruff",
-]
-nox = [
-    "nox",
-    "nox-uv",
-]
+dev = ["pre-commit-uv", "pre-commit"]
+lint = ["ruff"]
+nox = ["nox", "nox-uv"]
 test = [
     "pdfplumber",
     "pypdf",
@@ -59,9 +56,7 @@ test = [
     "pytest-repeat",
     "pytest",
 ]
-types = [
-    "mypy",
-]
+type_check = ["mypy"]
 
 [tool.uv.sources]
 word-search-generator = { workspace = true }

@@ -14,10 +14,10 @@ def test(s: Session) -> None:
 
 
 @session(
-    uv_groups=["types"],
+    uv_groups=["type_check"],
     reuse_venv=True,
 )
-def types(s: Session) -> None:
+def type_check(s: Session) -> None:
     s.run("mypy", "src", "tests")
 
 
