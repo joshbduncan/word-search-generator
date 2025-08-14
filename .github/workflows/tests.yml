@@ -1,4 +1,4 @@
-name: Linting, Typing, and Testing with Tox
+name: Tests
 
 on:
   pull_request:
@@ -32,7 +32,7 @@ jobs:
         run: uv python install ${{ matrix.python-version }}
 
       - name: Install the project
-        run: uv sync --all-extras --dev
+        run: uv sync --extra test
 
-      - name: Run tox
-        run: uv run tox -p
+      - name: Run pytest
+        run: uv run pytest

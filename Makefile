@@ -34,16 +34,13 @@ format: ## runs cleaners
 
 polish: cleanup test  ## cleans and lints before running the test suite
 
-tox: ## runs linting, typechecking, and tests on all specified envs via tox
+nox: ## runs linting, ,formatting, type checking, and tests on all specified envs via nox
 	@echo "🎯 tox..."
 	uv run tox -p
 
 ##@ Build
 build: cleanup test ## build the app package
 	uv build
-
-check_descr: ## check the app long description
-	uvx twine check dist/*
 
 ##@ Release
 release: ## release on pypi

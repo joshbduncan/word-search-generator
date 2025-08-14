@@ -1,0 +1,23 @@
+name: Format
+
+on: [push, pull_request]
+
+jobs:
+  format:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install
+
+      - name: Install the project
+        run: uv sync --extra lint
+
+      - name: Run ruff format
+        run: uv run ruff format
