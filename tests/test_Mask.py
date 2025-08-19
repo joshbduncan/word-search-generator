@@ -5,7 +5,7 @@ from PIL import Image as PILImage
 
 from word_search_generator import WordSearch
 from word_search_generator.mask import CompoundMask, Mask, MaskNotGenerated
-from word_search_generator.mask.bitmap import Bitmap, BitmapImage, ContrastError
+from word_search_generator.mask.bitmap import Bitmap, ContrastError, ImageMask
 from word_search_generator.mask.ellipse import Ellipse
 from word_search_generator.mask.polygon import Polygon, RegularPolygon, Star
 from word_search_generator.mask.shapes import Circle, Heart
@@ -313,7 +313,7 @@ def test_bitmap_mask_draw_exception():
 def test_image_mask_init(tmp_path: Path):
     name = "test_image.jpg"
     path = Path.joinpath(tmp_path, name)
-    im = BitmapImage(path, method=2, static=False)
+    im = ImageMask(path, method=2, static=False)
     assert isinstance(im, Mask)
     assert im.fp == path
     assert im.method == 2
@@ -326,7 +326,7 @@ def test_image_mask_solid_black(tmp_path: Path):
     img_path = Path.joinpath(tmp_path, name)
     test_img.save(img_path, "JPEG")
     size = 11
-    im = BitmapImage(img_path)
+    im = ImageMask(img_path)
     im.generate(size)
     assert im.mask == [[im.ACTIVE] * size] * size
 
@@ -337,7 +337,7 @@ def test_image_mask_contrast_exception(tmp_path: Path):
     img_path = Path.joinpath(tmp_path, name)
     test_img.save(img_path, "PNG")
     size = 11
-    im = BitmapImage(img_path)
+    im = ImageMask(img_path)
     with pytest.raises(ContrastError):
         im.generate(size)
 

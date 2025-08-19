@@ -4,7 +4,6 @@ from pathlib import Path
 
 from ordered_set import OrderedSet
 
-from .. import utils
 from ..core.formatter import Formatter
 from ..core.game import (
     DirectionSet,
@@ -24,6 +23,7 @@ from ..core.validator import (
     NoSubwords,
     Validator,
 )
+from ..utils import get_random_words
 from ._formatter import WordSearchFormatter
 from ._generator import WordSearchGenerator
 
@@ -256,13 +256,13 @@ class WordSearch(Game):
             raise ValueError("Action must be either 'ADD' or 'REPLACE'.")
         if action.upper() == "ADD":
             self.add_words(
-                ",".join(utils.get_random_words(count)),
+                ",".join(get_random_words(count)),
                 secret=secret,
                 reset_size=reset_size,
             )
         else:
             self.replace_words(
-                ",".join(utils.get_random_words(count)),
+                ",".join(get_random_words(count)),
                 secret=secret,
                 reset_size=reset_size,
             )

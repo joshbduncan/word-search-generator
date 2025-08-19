@@ -21,7 +21,7 @@ def empty_generator():
             puzzle = []
             for word in game.words:
                 word.start_column = word.start_row = 1
-                word.direction = Direction.N
+                word.direction = Direction.N  # type: ignore
                 puzzle.append([word.text])
             return [[word.text for word in game.placed_words]]
 
@@ -93,19 +93,19 @@ def placed_words():
     BAT = Word("bat")
     BAT.start_row = 0
     BAT.start_column = 0
-    BAT.direction = Direction.SE
+    BAT.direction = Direction.SE  # type: ignore
     BAT.secret = False
 
     CAB = Word("cab")
     CAB.start_row = 4
     CAB.start_column = 2
-    CAB.direction = Direction.SE
+    CAB.direction = Direction.SE  # type: ignore
     CAB.secret = False
 
     RAT = Word("rat")
     RAT.start_row = 0
     RAT.start_column = 4
-    RAT.direction = Direction.S
+    RAT.direction = Direction.S  # type: ignore
     RAT.secret = False
     return {BAT, CAB, RAT}
 

@@ -1,9 +1,13 @@
 from pathlib import Path
+from typing import TYPE_CHECKING, cast
 
 from PIL import Image, ImageChops
 
 from ..utils import in_bounds
 from . import Mask, MaskNotGenerated
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 
 class ContrastError(Exception):
@@ -48,7 +52,7 @@ class Bitmap(Mask):
                 self._mask[y][x] = self.ACTIVE
 
 
-class BitmapImage(Bitmap):
+class ImageMask(Bitmap):
     """This class represents a subclass of the Bitmap object
     and generates a mask a mask from a raster image."""
 
@@ -78,8 +82,8 @@ class BitmapImage(Bitmap):
         self.puzzle_size = puzzle_size
         self._mask = self.build_mask(self.puzzle_size, self.INACTIVE)
         img = Image.open(self.fp, formats=("BMP", "JPEG", "PNG"))
-        self.points = BitmapImage.process_image(
-            img, self.puzzle_size, BitmapImage.threshold
+        self.points = ImageMask.process_image(
+            img, self.puzzle_size, ImageMask.threshold
         )
         if not self.points:
             raise ContrastError("The provided image lacked enough contrast.")
@@ -89,19 +93,29 @@ class BitmapImage(Bitmap):
     def process_image(
         image: Image.Image, size: int, threshold: int = 200
     ) -> list[tuple[int, int]]:
-        """Take a `PIL.Image` object, convert it to black-and-white, trim any
-        excess pixels from the edges, resize it, and return all of the black
-        pixels as a (x, y) coordinates."""
-        image = image.convert("L").point(
-            lambda px: 255 if px > BitmapImage.threshold else 0, mode="1"
+        """Convert to grayscale, threshold, resize, and return pixel coordinates."""
+
+        grayscale_img: Image.Image = image.convert("L")
+
+        bw_img: Image.Image = grayscale_img.point(
+            lambda px: 255 if px > threshold else 0
         )
-        diff = ImageChops.difference(image, Image.new("L", image.size, (255)))
-        bbox = diff.getbbox()
-        image = image.crop(bbox)
-        image.thumbnail((size, size))
-        w, _ = image.size
-        return [
-            (0 if i == 0 else i % w, i // w)
-            for i, px in enumerate(image.getdata())
-            if px <= threshold
-        ]
+
+        diff: Image.Image = ImageChops.difference(
+            bw_img, Image.new("L", bw_img.size, 255)
+        )
+
+        bbox: tuple[int, int, int, int] | None = diff.getbbox()
+        if bbox is None:
+            return []  # nothing but white
+
+        cropped: Image.Image = bw_img.crop(bbox)
+
+        cropped.thumbnail(size=(size, size), resample=Image.Resampling.NEAREST)
+
+        assert cropped.mode == "L"
+        pixels_iter = cast("Iterable[int]", cropped.getdata())
+        pixels: list[int] = list(pixels_iter)
+
+        w: int = cropped.size[0]
+        return [(i % w, i // w) for i, px in enumerate(pixels) if px <= threshold]

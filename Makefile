@@ -14,6 +14,9 @@ dev: ## build a virtual environment for development
 	uv venv
 	uv pip install -r pyproject.toml --all-extras
 
+ipython: ## run ipython inside of the uv venv
+	uv run --with ipython ipython
+
 cleanup: format lint typing ## format, lint, and type check
 
 lint: ## lint the app using ruff
@@ -23,6 +26,7 @@ lint: ## lint the app using ruff
 typing: ## type check the app using mypy
 	@echo "📝 type checking..."
 	uv run mypy src tests
+	uv run ty check src tests
 
 test: ## test the app using pytest
 	@echo "🧪 running test suite..."

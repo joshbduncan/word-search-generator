@@ -13,9 +13,10 @@ import pytest
 from pdfplumber.page import Page
 from pypdf import PdfReader
 
-from word_search_generator import WordSearch, utils
+from word_search_generator import WordSearch
 from word_search_generator.core.game import EmptyPuzzleError
 from word_search_generator.core.word import Direction, Word
+from word_search_generator.utils import get_random_words, get_word_list_list
 
 # TODO: add alternation for lowercase in tests
 
@@ -280,7 +281,7 @@ def test_export_pdf_puzzles(tmp_path: Path):
     """Export a bunch of puzzles as PDF and make sure they are all 1-page."""
     size = random.randint(WordSearch.MIN_PUZZLE_SIZE, WordSearch.MAX_PUZZLE_SIZE)
     words = ",".join(
-        utils.get_random_words(
+        get_random_words(
             random.randint(WordSearch.MIN_PUZZLE_WORDS, WordSearch.MAX_PUZZLE_WORDS)
         )
     )
@@ -300,7 +301,7 @@ def test_export_pdf_puzzles(tmp_path: Path):
 @pytest.mark.repeat(10)
 def test_export_pdf_puzzle_with_solution(tmp_path: Path):
     """Make sure a pdf puzzle exported with the solution is 2 pages."""
-    wordlist = utils.get_random_words(
+    wordlist = get_random_words(
         random.randint(WordSearch.MIN_PUZZLE_WORDS, WordSearch.MAX_PUZZLE_WORDS)
     )
     shortest_word_length = min(len(word) for word in wordlist)
@@ -491,7 +492,7 @@ def test_pdf_output_words_secret_only(tmp_path: Path):
     assert "<ALL SECRET WORDS>" in "".join(c["text"] for c in page1.chars)
     if len(pages) == 2:
         page2 = pages[1]
-        word_list = utils.get_word_list_list(ws.words)
+        word_list = get_word_list_list(ws.words)
         word_list_as_strings = (
             [w.text.lower() for w in word_list]
             if lowercase

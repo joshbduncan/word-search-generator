@@ -502,10 +502,13 @@ class Game:
             elif isinstance(direction, tuple):
                 o.add(Direction(direction))
                 continue
-            try:
-                o.add(Direction[direction.upper().strip()])
-            except KeyError as err:
-                raise ValueError(f"'{direction}' is not a valid direction.") from err
+            elif isinstance(direction, str):
+                try:
+                    o.add(Direction[direction.upper().strip()])
+                except KeyError as err:
+                    raise ValueError(
+                        f"'{direction}' is not a valid direction."
+                    ) from err
         return o
 
     def validate_level(self, d) -> DirectionSet:

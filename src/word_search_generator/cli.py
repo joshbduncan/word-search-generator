@@ -327,9 +327,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         puzzle.apply_mask(mask)
 
     if args.image_mask:
-        from .mask.bitmap import BitmapImage
+        from .mask.bitmap import ImageMask
 
-        puzzle.apply_mask(BitmapImage(args.image_mask))
+        puzzle.apply_mask(ImageMask(args.image_mask))
 
     # show the result
     if args.output or args.format:

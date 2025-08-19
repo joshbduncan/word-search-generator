@@ -43,10 +43,10 @@ class Word:
         self.coordinates: list[tuple[int, int]] = []
         self.direction: Direction | None = None
         self.secret = secret
-        self.color = colorsys.hsv_to_rgb(
-            random.random(),
-            random.randint(42, 98) / 100,
-            random.randint(40, 90) / 100,
+        self.color: tuple[int | float, int | float, int | float] = colorsys.hsv_to_rgb(
+            h=random.random(),
+            s=random.randint(42, 98) / 100,
+            v=random.randint(40, 90) / 100,
         )
 
     def validate(

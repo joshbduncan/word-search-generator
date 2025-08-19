@@ -7,7 +7,7 @@ import pytest
 from rich.color import ColorSystem
 from rich.console import Console
 
-from word_search_generator import WordSearch, utils
+from word_search_generator import WordSearch
 from word_search_generator.core.directions import LEVEL_DIRS
 from word_search_generator.core.game import (
     EmptyPuzzleError,
@@ -20,6 +20,7 @@ from word_search_generator.core.game import (
 )
 from word_search_generator.core.validator import NoSingleLetterWords
 from word_search_generator.mask.polygon import Rectangle
+from word_search_generator.utils import get_random_words
 from word_search_generator.word_search._formatter import WordSearchFormatter
 
 formatter = WordSearchFormatter()
@@ -149,13 +150,13 @@ def test_json_empty_puzzle_error(ws: WordSearch):
 
 
 def test_json_output_property_for_puzzle():
-    words = ",".join(utils.get_random_words(10))
+    words = ",".join(get_random_words(10))
     ws = WordSearch(words, level=3)
     assert json.loads(ws.json)["puzzle"] == ws.puzzle
 
 
 def test_json_output_property_for_key():
-    words = ",".join(utils.get_random_words(10))
+    words = ",".join(get_random_words(10))
     ws = WordSearch(words, level=3)
     json_key = json.loads(ws.json)["key"]
     for word, info in json_key.items():
@@ -165,7 +166,7 @@ def test_json_output_property_for_key():
 
 @pytest.mark.repeat(10)
 def test_for_empty_spaces():
-    words = ",".join(utils.get_random_words(10))
+    words = ",".join(get_random_words(10))
     ws = WordSearch(words, level=3)
     flat = [item for sublist in ws.puzzle for item in sublist]
     assert ws.size * ws.size == len(flat)

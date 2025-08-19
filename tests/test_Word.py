@@ -46,7 +46,7 @@ def test_inequality():
 
 def test_repr():
     w = Word("test")
-    w.direction = Direction.S
+    w.direction = Direction.S  # type: ignore
     w.position = Position(1, 2)
     assert eval(repr(w)) == w
 

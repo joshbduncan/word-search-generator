@@ -4,7 +4,7 @@ import copy
 import csv
 import json
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from fpdf import FPDF, drawing
 from rich import box
@@ -12,9 +12,15 @@ from rich.style import Style
 from rich.table import Table
 from rich.text import Text
 
-from .. import utils
 from ..console import console
 from ..core.formatter import Formatter
+from ..utils import (
+    get_answer_key_list,
+    get_answer_key_str,
+    get_LEVEL_DIRS_str,
+    get_word_list_list,
+    get_word_list_str,
+)
 
 if TYPE_CHECKING:  # pragma: no cover
     from ..core import GameType, Puzzle, Word
@@ -52,21 +58,27 @@ class WordSearchFormatter(Formatter):
             lowercase: Change letters to lower case. Defaults to False.
         """
 
-        pcopy: list[list[Any]] = (
+        pcopy_chars: list[list[str]] = (
             self.hide_filler_characters(game)
             if hide_fillers
             else copy.deepcopy(game.puzzle)
         )
-        wordlist = []
 
-        _word_list = utils.get_word_list_list(game.words)
+        pcopy: list[list[Text]] = [
+            [Text(ch.lower() if lowercase else ch) for ch in row] for row in pcopy_chars
+        ]
+        wordlist: list[Text] = []
+
+        assert isinstance(pcopy, list)
+
+        _word_list: list[Word] = get_word_list_list(game.words)
         if sort_word_list:
             _word_list.sort(key=lambda w: w.text)
         for word in _word_list:
             # TODO: should "secret" words be highlighted and included in wordlist
             if word.secret:
                 continue
-            style = word.rich_style if solution else Style()
+            style: Style = word.rich_style if solution else Style()
             wordlist.append(
                 Text(word.text.lower() if lowercase else word.text, style=style)
             )
@@ -93,8 +105,6 @@ class WordSearchFormatter(Formatter):
             table.add_column(width=1, justify="center", vertical="middle", no_wrap=True)
 
         for row in pcopy[min_y : max_y + 1]:
-            if lowercase:
-                row = [c.lower() if isinstance(c, str) else c for c in row]
             table.add_row(*row[min_x : max_x + 1])
 
         answer_key = "Answer Key"
@@ -102,7 +112,7 @@ class WordSearchFormatter(Formatter):
             answer_key += " (*Secret Words)"
         answer_key += ": "
 
-        word_key_strings = utils.get_answer_key_list(
+        word_key_strings = get_answer_key_list(
             _word_list,
             game.bounding_box,
             lowercase,
@@ -112,9 +122,7 @@ class WordSearchFormatter(Formatter):
 
         with self.CONSOLE.capture() as capture:
             self.CONSOLE.print(table)
-            self.CONSOLE.print(
-                f"Find words going {utils.get_LEVEL_DIRS_str(game.level)}:"
-            )
+            self.CONSOLE.print(f"Find words going {get_LEVEL_DIRS_str(game.level)}:")
             self.CONSOLE.print(*wordlist, sep=", ")
             self.CONSOLE.print()
             if not hide_key:
@@ -169,16 +177,16 @@ class WordSearchFormatter(Formatter):
         *args,
         **kwargs,
     ) -> Path:
-        word_list = utils.get_word_list_list(game.words)
+        word_list = get_word_list_list(game.words)
         if sort_word_list:
             word_list.sort(key=lambda w: w.text)
 
         puzzle = self.hide_filler_characters(game) if solution else game.cropped_puzzle
-        LEVEL_DIRS_str = utils.get_LEVEL_DIRS_str(game.level)
+        LEVEL_DIRS_str = get_LEVEL_DIRS_str(game.level)
         key_intro = "Answer Key"
         if hasattr(game, "placed_secret_words"):
             key_intro += " (*Secret Words)"
-        answer_key_list = utils.get_answer_key_list(word_list, game.bounding_box)
+        answer_key_list = get_answer_key_list(word_list, game.bounding_box)
         word_list_as_strings = [word.text for word in word_list]
 
         # lower case was requested change case or letters for puzzle, words, and key
@@ -219,7 +227,7 @@ class WordSearchFormatter(Formatter):
         *args,
         **kwargs,
     ) -> Path:
-        word_list = utils.get_word_list_list(game.words)
+        word_list = get_word_list_list(game.words)
         if sort_word_list:
             word_list.sort(key=lambda w: w.text)
 
@@ -355,7 +363,7 @@ def draw_word_list(
     lowercase: bool = False,
     sort_word_list: bool = True,
 ):
-    LEVEL_DIRS_str = utils.get_LEVEL_DIRS_str(game.level)
+    LEVEL_DIRS_str = get_LEVEL_DIRS_str(game.level)
     pdf.set_font("Helvetica", "BU", size=info_font_size)
     pdf.cell(
         pdf.epw,
@@ -370,7 +378,7 @@ def draw_word_list(
     pdf.set_font_size(info_font_size)
     pdf.set_char_spacing(0.5)
 
-    word_list = utils.get_word_list_list(game.words)
+    word_list = get_word_list_list(game.words)
     if sort_word_list:
         word_list.sort(key=lambda w: w.text)
 
@@ -407,7 +415,8 @@ def draw_word_list(
             if solution:
                 with pdf.new_path() as path:
                     path.style.fill_color = None
-                    path.style.stroke_color = drawing.DeviceRGB(*word.color, 0.5)
+                    r, g, b = word.color
+                    path.style.stroke_color = drawing.DeviceRGB(r, g, b, 0.5)
                     path.style.stroke_join_style = "round"
                     path.style.stroke_width = pdf.font_size * 0.875
                     path.move_to(
@@ -432,14 +441,14 @@ def draw_puzzle_key(
     lowercase: bool = False,
     sort_word_list: bool = True,
 ):
-    word_list = utils.get_word_list_list(game.words)
+    word_list = get_word_list_list(game.words)
     if sort_word_list:
         word_list.sort(key=lambda w: w.text)
 
     key_intro = "Answer Key"
     if hasattr(game, "placed_secret_words"):
         key_intro += " (*Secret Words)"
-    answer_key_str = utils.get_answer_key_str(word_list, game.bounding_box)
+    answer_key_str = get_answer_key_str(word_list, game.bounding_box)
 
     # if lower case requested, change for letters for puzzle, words, and key
     if lowercase:
@@ -511,7 +520,7 @@ def draw_puzzle_page(
         highlight_solution(pdf, game, gsize, start_x, start_y)
 
     # collect puzzle information
-    word_list_str = utils.get_word_list_str(game.words)
+    word_list_str = get_word_list_str(game.words)
 
     # catch case of all secret words
     if not word_list_str:
