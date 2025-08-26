@@ -2,18 +2,18 @@ import inspect
 import math
 import sys
 
-from . import Bitmap, CompoundMask
+from . import Bitmap, CompoundMask, Mask
 from .ellipse import Ellipse
 from .polygon import Polygon, Rectangle, RegularPolygon, Star
 
 
-def get_shape_objects():
-    """Return all built-in shape objects from this file"""
-    return [
-        name
+def get_shape_objects() -> dict[str, type[Mask]]:
+    """Return all built-in shape classes from this file, keyed by lowercase name."""
+    return {
+        name.lower(): obj
         for name, obj in inspect.getmembers(sys.modules[__name__], inspect.isclass)
-        if obj.__module__ is __name__
-    ]
+        if obj.__module__ is __name__ and issubclass(obj, Mask)
+    }
 
 
 class Circle(Ellipse):
@@ -22,7 +22,7 @@ class Circle(Ellipse):
 
 
 class Club(CompoundMask):
-    min_size = 18
+    min_size: int = 18
 
     def __init__(self) -> None:
         super().__init__()
@@ -112,7 +112,7 @@ class Donut(CompoundMask):
 
 
 class Fish(CompoundMask):
-    min_size = 18
+    min_size: int = 18
 
     def __init__(self) -> None:
         super().__init__()
@@ -162,7 +162,7 @@ for a {self.__class__.__name__} mask."
 
 
 class Flower(CompoundMask):
-    min_size = 9
+    min_size: int = 9
 
     def __init__(self) -> None:
         super().__init__()
@@ -196,7 +196,7 @@ for a {self.__class__.__name__} mask."
 
 
 class Heart(CompoundMask):
-    min_size = 8
+    min_size: int = 8
 
     def __init__(self) -> None:
         super().__init__()
@@ -284,7 +284,7 @@ class Pentagon(RegularPolygon):
 
 
 class Spade(CompoundMask):
-    min_size = 18
+    min_size: int = 18
 
     def __init__(self) -> None:
         super().__init__()
@@ -424,4 +424,4 @@ class Triangle(RegularPolygon):
         super().__init__(vertices=3)
 
 
-BUILTIN_MASK_SHAPES = get_shape_objects()
+BUILTIN_MASK_SHAPES: dict[str, type[Mask]] = get_shape_objects()

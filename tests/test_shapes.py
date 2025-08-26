@@ -1,11 +1,15 @@
 import io
 from contextlib import redirect_stdout
+from typing import TYPE_CHECKING
 
 import pytest
 
 from word_search_generator import WordSearch
 from word_search_generator.core.game import EmptyPuzzleError
 from word_search_generator.mask import shapes
+
+if TYPE_CHECKING:
+    from word_search_generator.mask import Mask
 
 
 def test_not_generated_error():
@@ -42,14 +46,14 @@ def test_min_size_spade():
         ws.apply_mask(shapes.Spade())
 
 
-def test_shape_mask_output(builtin_mask_shapes_output):
+def test_shape_mask_output(builtin_mask_shapes, builtin_mask_shapes_output):
     preview_size = 21
-    for shape in shapes.BUILTIN_MASK_SHAPES:
-        mask = eval(f"shapes.{shape}")()
+    for name, shape in builtin_mask_shapes.items():
+        mask: Mask = shape()
         mask.generate(preview_size)
 
         with io.StringIO() as buf, redirect_stdout(buf):
             mask.show()
             output = buf.getvalue()
 
-        assert builtin_mask_shapes_output[shape] == output
+        assert builtin_mask_shapes_output[name] == output

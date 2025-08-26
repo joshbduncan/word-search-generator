@@ -15,6 +15,8 @@ class Mask:
     INACTIVE = "#"
     METHODS = [1, 2, 3]
 
+    min_size: int | None = None
+
     def __init__(
         self,
         points: list[tuple[int, int]] | None = None,
