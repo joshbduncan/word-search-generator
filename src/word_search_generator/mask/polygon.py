@@ -1,7 +1,7 @@
 import math
 
 from ..utils import in_bounds, round_half_up
-from .mask import Mask, MaskNotGenerated
+from .mask import Mask, MaskMethod, MaskNotGenerated, MethodLiteral
 
 
 class Polygon(Mask):
@@ -11,7 +11,7 @@ class Polygon(Mask):
     def __init__(
         self,
         points: list[tuple[int, int]] | None = None,
-        method: int = 1,
+        method: MaskMethod | MethodLiteral = 1,
         static: bool = True,
     ) -> None:
         """Generate a polygon mask from 3 or more coordinate points.
@@ -157,7 +157,7 @@ class Rectangle(Polygon):
         width: int,
         height: int,
         origin: tuple[int, int] | None = None,
-        method: int = 1,
+        method: MaskMethod | MethodLiteral = 1,
         static: bool = True,
     ) -> None:
         """Generate a rectangle polygon.
@@ -193,7 +193,7 @@ class RegularPolygon(Polygon):
         radius: int | None = None,
         center: tuple[int, int] | None = None,
         angle: float = 0.0,
-        method: int = 1,
+        method: MaskMethod | MethodLiteral = 1,
         static: bool = False,
     ) -> None:
         """Generate a regular polygon mask with 3 or more sides.
@@ -291,7 +291,7 @@ class Star(Polygon):
         inner_radius: int | None = None,
         center: tuple[int, int] | None = None,
         angle: float = 0.0,
-        method: int = 1,
+        method: MaskMethod | MethodLiteral = 1,
         static: bool = False,
     ) -> None:
         """Generate a pointed star polygon mask.

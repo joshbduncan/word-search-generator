@@ -10,8 +10,6 @@ __all__ = [
     "Star",
 ]
 
-# Import all base masks shapes for easier access
-# (eg. `mask.Star` vs. `mask.polygon.Star`)
 from .bitmap import Bitmap as Bitmap
 from .bitmap import ImageMask as ImageMask
 from .ellipse import Ellipse as Ellipse

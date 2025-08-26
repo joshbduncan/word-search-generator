@@ -34,7 +34,7 @@ def test_mask_property_method_setter():
 
 
 def test_mask_property_method_setter_invalid_type():
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         m = Mask(method="a")  # type: ignore  # noqa: F841
 
 

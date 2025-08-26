@@ -2,6 +2,7 @@ import math
 
 from ..utils import distance, float_range
 from .bitmap import Bitmap
+from .mask import MaskMethod, MethodLiteral
 
 
 class Ellipse(Bitmap):
@@ -13,7 +14,7 @@ class Ellipse(Bitmap):
         width: int | None = None,
         height: int | None = None,
         center: tuple[int, int] | None = None,
-        method: int = 1,
+        method: MaskMethod | MethodLiteral = 1,
         static: bool = True,
     ) -> None:
         """Generate an ellipse mask.

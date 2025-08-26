@@ -1,3 +1,6 @@
+from enum import IntEnum
+from typing import Literal
+
 from ..utils import BoundingBox, find_bounding_box
 
 
@@ -5,6 +8,15 @@ class MaskNotGenerated(Exception):
     """Mask has not yet been generated."""
 
     pass
+
+
+class MaskMethod(IntEnum):
+    INTERSECTION = 1
+    ADDITIVE = 2
+    SUBTRACTIVE = 3
+
+
+MethodLiteral = Literal[1, 2, 3]
 
 
 class Mask:
@@ -20,22 +32,22 @@ class Mask:
     def __init__(
         self,
         points: list[tuple[int, int]] | None = None,
-        method: int = 1,
+        method: MaskMethod | MethodLiteral = MaskMethod.INTERSECTION,
         static: bool = True,
     ) -> None:
-        """Initialize a WordSearch puzzle mask object.
+        """Create a WordSearch puzzle mask.
 
         Args:
-            points (list[tuple[int, int]] | None, optional): Coordinate points
-                used to build the mask. Defaults to None.
-            method (int, optional): How Mask is applied to the puzzle
-                (1=Standard (Intersection), 2=Additive, 3=Subtractive). Defaults to 1.
-            static (bool, optional): Should this mask be reapplied
-                after changes to the parent puzzle size. Defaults to True.
-
-        Notes: Bitmap points will be filled in solid, Polygon points will first
-        be connected by lines in the order they are supplied and then the resulting
-        shape will be filled in using a ray-casting algorithm.
+            points: Coordinate points used to build the mask. If None, starts empty.
+                - For bitmap masks, the listed points are filled in solid.
+                - For polygon masks, the points are connected in order to form
+                edges, and the resulting shape is filled using a ray-casting
+                algorithm.
+            method: How the mask is applied to the puzzle. One of
+                `MaskMethod.INTERSECTION`, `MaskMethod.ADDITIVE`,
+                or `MaskMethod.SUBTRACTIVE`. Defaults to `INTERSECTION`.
+            static: Whether this mask should be reapplied automatically after
+                the parent puzzle’s size changes. Defaults to True.
         """
         self.points = points if points else []
         self.method = method
@@ -45,81 +57,95 @@ class Mask:
 
     @property
     def mask(self) -> list[list[str]]:
-        """Mask as a 2-D array (list[list[str]])."""
+        """Return the mask as a 2-D array of characters."""
         return self._mask
 
     @property
-    def method(self) -> int:
-        """Mask method."""
+    def method(self) -> MaskMethod:
+        """Return the mask method as a MaskMethod enum."""
         return self._method
 
     @method.setter
-    def method(self, value: int) -> None:
-        """Set the Mask method.
+    def method(self, value: MaskMethod | MethodLiteral) -> None:
+        """Set how the mask is applied to the puzzle.
 
         Args:
-            method (int): How Mask is applied to the puzzle
-            (1=Standard (Intersection), 2=Additive, 3=Subtractive). Defaults to 1.
+            value: The application mode, given either as a `MaskMethod` enum
+                or its corresponding integer value:
+                - `MaskMethod.INTERSECTION` (1)
+                - `MaskMethod.ADDITIVE` (2)
+                - `MaskMethod.SUBTRACTIVE` (3)
 
         Raises:
-            ValueError: Must 1, 2, or 3 (see `Mask.METHODS`).
+            ValueError: If the value is not a valid `MaskMethod`.
         """
-        if not isinstance(value, int):
-            raise TypeError("Must be an integer.")
-        if isinstance(value, int) and value not in Mask.METHODS:
-            raise ValueError(f"Must be one of {Mask.METHODS}")
-        self._method = value
+        try:
+            self._method = MaskMethod(value)
+        except ValueError as e:
+            raise ValueError(f"Must be one of {[m.value for m in MaskMethod]}") from e
 
     @property
-    def static(self) -> int:
-        """Mask static reapplication."""
+    def static(self) -> bool:
+        """Whether this mask should be reapplied after parent size changes."""
         return self._static
 
     @static.setter
     def static(self, value: bool) -> None:
-        """Set the Mask static property.
-
-        Args:
-            val (bool): Should this mask be reapplied after
-            changes to the parent puzzle size. Defaults to True.
-
-        Raises:
-            TypeError: Must be a boolean value.
-        """
+        """Set whether the mask should be reapplied after size changes."""
         if not isinstance(value, bool):
             raise TypeError("Must be a boolean value.")
         self._static = value
 
     @property
     def puzzle_size(self) -> int:
-        """Size of the puzzle the mask will applied to. Used with the
-        `generate()` to to calculate points and placement."""
+        """Current target puzzle size (positive integer)."""
         return self._puzzle_size
 
     @puzzle_size.setter
     def puzzle_size(self, value: int) -> None:
-        """Set the `Mask.puzzle_size` value. Should match the size
-        of the puzzle the mask will be applied to.
+        """Set the target puzzle size for this mask.
 
         Args:
-            val (int): Size.
+            value: Positive integer size of the puzzle grid. Must be greater
+                than zero and not smaller than `min_size` (if defined).
 
         Raises:
-            TypeError: Must be an integer.
+            TypeError: If `value` is not an integer.
+            ValueError: If `value` is <= 0 or smaller than `min_size`.
         """
         if not isinstance(value, int):
-            raise TypeError("Must be an integer.")
+            raise TypeError("puzzle_size must be an integer.")
+        if value <= 0:
+            raise ValueError("puzzle_size must be > 0.")
+        if self.min_size is not None and value < self.min_size:
+            raise ValueError(
+                f"puzzle_size {value} is smaller than min_size {self.min_size}."
+            )
+
+        # All checks passed—now update state
         self._puzzle_size = value
         if not self.static:
             self.reset_points()
 
     @property
+    def is_generated(self) -> bool:
+        """Return True if the mask grid has been generated."""
+        return bool(self._puzzle_size and self._mask)
+
+    @property
     def bounding_box(self) -> BoundingBox | None:
-        """Bounding box of the masked area as a rectangle defined
-        by a tuple of (top-left edge as x, y, bottom-right edge as x, y). Returned
-        points may lie outside of the puzzle bounds. This property is used
-        for filling mask shapes so it needs to know the actual mask bounds no
-        matter where lie."""
+        """Bounding box of the masked area.
+
+        Returns:
+            A tuple of two (x, y) coordinates:
+            - top-left corner
+            - bottom-right corner
+
+            Coordinates may extend beyond the puzzle bounds. This is intentional,
+            since the bounding box is used to fill mask shapes and must reflect the
+            actual extent of the mask regardless of puzzle size.
+
+        """
 
         if not self.mask:
             return None
@@ -127,66 +153,68 @@ class Mask:
 
     @staticmethod
     def build_mask(size: int, char: str) -> list[list[str]]:
-        """Generate a 2-D array (square) of `size` filled with `char`.
+        """Create a square 2-D mask filled with a given character.
 
         Args:
-            size (int): Size of array.
-            char (str, optional): Character to fill the array with.
+            size: Positive integer width and height of the mask.
+            char: Single character used to fill all cells.
 
         Returns:
-            list[list[str]]: 2-D array filled will `char`.
+            A `size × size` list of lists, with every entry set to `char`.
         """
         return [[char] * size for _ in range(size)]
 
     def generate(self, puzzle_size: int) -> None:
-        """Generate a new mask at `puzzle_size` and either fill points (`Bitmap`),
-        or connect points (`Polygon`) and then fill the resulting polygon shape."""
+        """Generate a new mask at `puzzle_size`."""
         self.puzzle_size = puzzle_size
         self._mask = self.build_mask(self.puzzle_size, self.INACTIVE)
         self._draw()
 
     def _draw(self) -> None:
-        """Placeholder for custom subclass `_draw()` methods.
+        """Placeholder for subclass-specific drawing logic.
+
+        Subclasses should override this method to implement how the mask
+        is drawn (e.g., filling points or polygons) after `generate()` is called.
 
         Raises:
-            MaskNotGenerated: Mask has not yet been generated.
+            MaskNotGenerated: If the mask has not been generated yet.
         """
-        if not self.puzzle_size:
-            raise MaskNotGenerated(
-                "Please use `object.generate()` before calling `object.show()`."
-            )
+        if not self.puzzle_size or not self._mask:
+            raise MaskNotGenerated("Mask not generated. Call `generate(size)` first.")
         pass
 
     def show(self, active_only: bool = False) -> None:
-        """Pretty print the mask. When `active_only` is True only the masked
-        areas that lie within the bound of (0,0) and (`puzzle_size`, `puzzle_size`)
-        will be shown. Used for mask creation and testing.
-
-        Args:
-            active_only (bool, optional): Only output the masked areas
-                that lie within the bounds of `Mask.puzzle_size`. Used for
-                mask creation and testing. Defaults to False.
-
-        Raises:
-            MaskNotGenerated: Mask has not yet been generated.
-        """
+        """Pretty print the mask (optionally restricted to active bbox)."""
         if not self.mask:
-            raise MaskNotGenerated(
-                "Please use `object.generate()` before calling `object.show()`."
-            )
+            raise MaskNotGenerated("Mask not generated. Call `generate(size)` first.")
+
         if active_only:
-            assert self.bounding_box
-            min_x, min_y = self.bounding_box[0]
-            max_x, max_y = self.bounding_box[1]
+            bbox = self.bounding_box
+            if not bbox:
+                # No active cells; nothing to show
+                return
+            (min_x, min_y), (max_x, max_y) = bbox
         else:
-            ((min_x, min_y), (max_x, max_y)) = (
-                (0, 0),
-                (self.puzzle_size, self.puzzle_size),
+            min_x = min_y = 0
+            max_x = max_y = self.puzzle_size - 1  # use inclusive max
+
+        # Clamp to [0, puzzle_size-1] to prevent negative-start wrap and overshoot
+        x0 = max(0, min_x)
+        y0 = max(0, min_y)
+        x1 = min(max_x, self.puzzle_size - 1)
+        y1 = min(max_y, self.puzzle_size - 1)
+
+        # If the bbox is completely outside, show nothing
+        if x0 > x1 or y0 > y1:
+            return
+
+        for row in self.mask[y0 : y1 + 1]:
+            segment = (
+                row
+                if not active_only
+                else [c if c == self.ACTIVE else " " for c in row]
             )
-        for r in self.mask[min_y : max_y + 1]:
-            if active_only:
-                r = [c if c == self.ACTIVE else " " for c in r]
-            print(" ".join(r[min_x : max_x + 1]))
+            print(" ".join(segment[x0 : x1 + 1]))
 
     def invert(self) -> None:
         """Invert the mask. Has no effect on the mask `method`."""
@@ -211,24 +239,35 @@ class Mask:
         """Reset all mask coordinate points."""
         self.points = []
 
+    def __repr__(self) -> str:
+        return (
+            f"{self.__class__.__name__}"
+            + f"(points={self.points}, "
+            + f"method={self.method}, "
+            + f"static={self.static}, "
+        )
+
 
 class CompoundMask(Mask):
     """This class represents a subclass of the Mask object
     and allows you to generate a single mask from a set of masks."""
 
     def __init__(
-        self, masks: list[Mask] | None = None, method: int = 1, static: bool = True
+        self,
+        masks: list[Mask] | None = None,
+        method: MaskMethod | MethodLiteral = 1,
+        static: bool = True,
     ) -> None:
-        """Initialize a WordSearch puzzle compound mask object
-        built from multiple `Mask` objects.
+        """Create a compound mask composed of multiple `Mask` objects.
 
         Args:
-            masks (list[Mask] | None, optional): Masks objects used to build
-                a the CompoundMask. Defaults to None.
-            method (int, optional): How Mask is applied to the puzzle
-                (1=Standard (Intersection), 2=Additive, 3=Subtractive). Defaults to 1.
-            static (bool, optional): Should this mask be reapplied
-                after changes to the parent puzzle size. Defaults to True.
+            masks: Child masks to combine into this `CompoundMask`.
+                If None, starts with an empty list.
+            method: How the compound mask is applied to the puzzle.
+                One of MaskMethod.INTERSECTION, ADDITIVE, or SUBTRACTIVE.
+                Defaults to INTERSECTION.
+            static: Whether this mask should be reapplied automatically
+                after the parent puzzle size changes. Defaults to True.
         """
         super().__init__(method=method, static=static)
         self.masks = masks if masks else []
@@ -249,31 +288,40 @@ class CompoundMask(Mask):
             self._apply_mask(mask)
 
     def _apply_mask(self, mask: Mask) -> None:
-        """Apply `Mask` to the compound mask.
-
-        Args:
-            mask (Mask): Mask to apply.
-
-        Raises:
-            MaskNotGenerated: Mask has not yet been generated.
-        """
+        """Apply a child mask to this compound mask."""
         if not self.puzzle_size:
-            raise MaskNotGenerated(
-                "Please use `object.generate()` before calling `object.show()`."
-            )
-        for y in range(self.puzzle_size):
-            for x in range(self.puzzle_size):
-                if mask.method == 1:
-                    if (
-                        mask.mask[y][x] == self.ACTIVE
-                        and self.mask[y][x] == self.ACTIVE
-                    ):
-                        self.mask[y][x] = self.ACTIVE
-                    else:
-                        self.mask[y][x] = self.INACTIVE
-                elif mask.method == 2:
-                    if mask.mask[y][x] == self.ACTIVE:
-                        self.mask[y][x] = self.ACTIVE
-                else:
-                    if mask.mask[y][x] == self.ACTIVE:
-                        self.mask[y][x] = self.INACTIVE
+            raise MaskNotGenerated("Mask not generated. Call `generate(size)` first.")
+
+        if mask.method is MaskMethod.INTERSECTION:
+            # self = self ∧ mask
+            self._mask = [
+                [
+                    self.ACTIVE
+                    if (a == self.ACTIVE and b == self.ACTIVE)
+                    else self.INACTIVE
+                    for a, b in zip(row_self, row_mask, strict=False)
+                ]
+                for row_self, row_mask in zip(self._mask, mask._mask, strict=False)
+            ]
+        elif mask.method is MaskMethod.ADDITIVE:
+            # self = self ∨ mask
+            self._mask = [
+                [
+                    self.ACTIVE
+                    if (a == self.ACTIVE or b == self.ACTIVE)
+                    else self.INACTIVE
+                    for a, b in zip(row_self, row_mask, strict=False)
+                ]
+                for row_self, row_mask in zip(self._mask, mask._mask, strict=False)
+            ]
+        elif mask.method is MaskMethod.SUBTRACTIVE:
+            # self = self ∧ ¬mask
+            self._mask = [
+                [
+                    self.ACTIVE
+                    if (a == self.ACTIVE and b != self.ACTIVE)
+                    else self.INACTIVE
+                    for a, b in zip(row_self, row_mask, strict=False)
+                ]
+                for row_self, row_mask in zip(self._mask, mask._mask, strict=False)
+            ]

@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, cast
 from PIL import Image, ImageChops
 
 from ..utils import in_bounds
-from .mask import Mask, MaskNotGenerated
+from .mask import Mask, MaskMethod, MaskNotGenerated, MethodLiteral
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -21,7 +21,7 @@ class Bitmap(Mask):
     def __init__(
         self,
         points: list[tuple[int, int]] | None = None,
-        method: int = 1,
+        method: MaskMethod | MethodLiteral = 1,
         static: bool = True,
     ) -> None:
         """Initialize a WordSearch puzzle bitmap mask object.
@@ -58,7 +58,12 @@ class ImageMask(Bitmap):
 
     threshold = 200  # normalization contrast point
 
-    def __init__(self, fp: str | Path, method: int = 1, static: bool = False) -> None:
+    def __init__(
+        self,
+        fp: str | Path,
+        method: MaskMethod | MethodLiteral = 1,
+        static: bool = False,
+    ) -> None:
         """Generate a bitmap mask from a raster image.
 
         Note: Ideally, the raster image should be a single color (dark) on a solid
