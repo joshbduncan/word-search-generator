@@ -4,9 +4,10 @@ import pytest
 from PIL import Image as PILImage
 
 from word_search_generator import WordSearch
-from word_search_generator.mask import CompoundMask, Mask, MaskNotGenerated
+from word_search_generator.mask import CompoundMask, Mask
 from word_search_generator.mask.bitmap import Bitmap, ContrastError, ImageMask
 from word_search_generator.mask.ellipse import Ellipse
+from word_search_generator.mask.mask import MaskNotGenerated
 from word_search_generator.mask.polygon import Polygon, RegularPolygon, Star
 from word_search_generator.mask.shapes import Circle, Heart
 from word_search_generator.utils import get_random_words

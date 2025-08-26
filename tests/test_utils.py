@@ -71,3 +71,9 @@ def test_get_random_words_max_length():
     word_list = ["cat", "bat", "rat", "donkey", "horse"]
     random_words = get_random_words(2, max_length=3, word_list=word_list)
     assert all(len(word) <= 3 for word in random_words)
+
+
+def test_get_random_words_value_error():
+    word_list = ["peace", "love", "happiness"]
+    with pytest.raises(ValueError):
+        get_random_words(2, max_length=3, word_list=word_list)

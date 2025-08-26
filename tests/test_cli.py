@@ -129,6 +129,16 @@ def test_preview_masks():
     assert result.returncode == 0
 
 
+def test_preview_mask_with_arg():
+    result = subprocess.run("word-search -pm club", shell=True)
+    assert result.returncode == 0
+
+
+def test_preview_mask_with_arg_error():
+    result = subprocess.run("word-search -pm cat", shell=True)
+    assert result.returncode == 2
+
+
 def test_mask():
     result = subprocess.run("word-search -r 5 -s 21 -m Triangle", shell=True)
     assert result.returncode == 0
@@ -151,6 +161,26 @@ def test_image_mask(tmp_path: Path):
     test_img.save(img_path, "JPEG")
     result = subprocess.run(f"word-search -r 5 -im {img_path}", shell=True)
     assert result.returncode == 0
+
+
+def test_preview_themes():
+    result = subprocess.run("word-search -pt", shell=True)
+    assert result.returncode == 0
+
+
+def test_preview_themes_with_arg():
+    result = subprocess.run("word-search -pt sports", shell=True)
+    assert result.returncode == 0
+
+
+def test_preview_theme_with_arg_error():
+    result = subprocess.run("word-search -pt cat", shell=True)
+    assert result.returncode == 2
+
+
+def test_themes_but_no_random():
+    result = subprocess.run("word-search --theme sports", shell=True)
+    assert result.returncode == 2
 
 
 @pytest.mark.repeat(10)

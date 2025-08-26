@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, cast
 from PIL import Image, ImageChops
 
 from ..utils import in_bounds
-from . import Mask, MaskNotGenerated
+from .mask import Mask, MaskNotGenerated
 
 if TYPE_CHECKING:
     from collections.abc import Iterable

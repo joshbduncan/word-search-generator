@@ -8,10 +8,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- themed word lists (issue #63), lists can be found in `src/word_search_generator/data/`
+    - accessible in the base package at `WORD_LISTS` which is a `dict[str, list[str]]`
 - add `ty` type checker to the project (using along with mypy for now)
+- cli
+    - -pm/--preview-masks now also accepts an additional argument for which mask to preview (all masks are still shown if no argument is provided)
+    - -pt/--preview-themes to see contents of all available themed word lists, provide a specific list as a second argument to narrow the preview
+    - --examples gives argument examples to help with getting started (also included with help)
 
 ### Changed
 
+- dropped support for python 3.10
+- `Mask` and `CompoundMask` classes moved into `mask.py`
+- `utils.get_random_words()`
+    - now returns a string of words (comma separated)
+    - accepts new argument `word_list` from which to sample from (themed word lists)
+- BUILTIN_MASK_SHAPES now return a dict of available mask shapes `dict[str, type[Mask]]`
 - `mask.BitmapImage` changed to `mask.ImageMask`
 
 ### Fixed

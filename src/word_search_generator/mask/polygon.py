@@ -1,7 +1,7 @@
 import math
 
 from ..utils import in_bounds, round_half_up
-from . import Mask, MaskNotGenerated
+from .mask import Mask, MaskNotGenerated
 
 
 class Polygon(Mask):

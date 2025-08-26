@@ -6,7 +6,7 @@ from pathlib import Path
 
 from .core.directions import LEVEL_DIRS
 from .core.word import Direction
-from .mask import Mask, shapes
+from .mask import ImageMask, Mask, shapes
 from .utils import get_random_words
 from .word_search import WordSearch
 from .words import WORD_LISTS
@@ -381,7 +381,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                     f"Valid choices: {', '.join(sorted(BUILTIN_MASK_SHAPES))}"
                 )
         preview_masks(masks)
-        return 0
+        parser.exit()
 
     # check for theme preview second
     if args.preview_themes:
@@ -397,7 +397,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                     f"Valid choices: {', '.join(sorted(WORD_LISTS.keys()))}"
                 )
         preview_themes(themes)
-        return 0
+        parser.exit()
 
     # process puzzle words
     words = process_words(args)
@@ -431,8 +431,6 @@ def main(argv: Sequence[str] | None = None) -> int:
         puzzle.apply_mask(mask)
 
     if args.image_mask:
-        from .mask.bitmap import ImageMask
-
         puzzle.apply_mask(ImageMask(args.image_mask))
 
     # show the result
