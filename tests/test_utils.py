@@ -1,9 +1,15 @@
+import random
+
+import pytest
+
 from word_search_generator.utils import (
     float_range,
     get_answer_key_list,
+    get_random_words,
     get_word_list_list,
     stringify,
 )
+from word_search_generator.words import WORD_LISTS
 
 
 def test_stringify():
@@ -49,3 +55,19 @@ def test_float_range_invalid_args():
 
 def test_float_range_negative():
     assert len(list(float_range(0.40, 0.30, -0.1))) == 2  # type: ignore
+
+
+@pytest.mark.repeat(10)
+def test_get_random_words():
+    word_list = random.choice(list(WORD_LISTS.values()))
+    assert len(word_list)
+    random_words = get_random_words(5, word_list=word_list)
+    assert isinstance(random_words, str)
+    random_words_list = random_words.split(",")
+    assert all(word in word_list for word in random_words_list)
+
+
+def test_get_random_words_max_length():
+    word_list = ["cat", "bat", "rat", "donkey", "horse"]
+    random_words = get_random_words(2, max_length=3, word_list=word_list)
+    assert all(len(word) <= 3 for word in random_words)

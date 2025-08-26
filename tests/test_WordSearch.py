@@ -155,13 +155,13 @@ def test_json_empty_puzzle_error(ws: WordSearch):
 
 
 def test_json_output_property_for_puzzle():
-    words = ",".join(get_random_words(10))
+    words = get_random_words(10)
     ws: WordSearch = WordSearch(words, level=3)
     assert json.loads(ws.json)["puzzle"] == ws.puzzle
 
 
 def test_json_output_property_for_key():
-    words = ",".join(get_random_words(10))
+    words = get_random_words(10)
     ws: WordSearch = WordSearch(words, level=3)
     json_key = json.loads(ws.json)["key"]
     for word, info in json_key.items():
@@ -171,7 +171,7 @@ def test_json_output_property_for_key():
 
 @pytest.mark.repeat(10)
 def test_for_empty_spaces():
-    words = ",".join(get_random_words(10))
+    words = get_random_words(10)
     ws: WordSearch = WordSearch(words, level=3)
     flat = [item for sublist in ws.puzzle for item in sublist]
     assert ws.size * ws.size == len(flat)
@@ -248,7 +248,7 @@ def test_random_words_only():
 
 def test_random_words_added():
     ws: WordSearch = WordSearch("dog cat rat", size=25)
-    ws.random_words(2, "ADD")
+    ws.random_words(2, action="ADD")
     assert len(ws.words) > 3
 
 
@@ -273,7 +273,7 @@ def test_random_words_action_type_error():
 def test_random_words_action_value_error():
     ws: WordSearch = WordSearch()
     with pytest.raises(ValueError):
-        ws.random_words(5, "SUBTRACT")
+        ws.random_words(5, action="SUBTRACT")
 
 
 def test_invalid_size_at_init_value():

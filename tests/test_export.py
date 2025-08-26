@@ -280,12 +280,10 @@ def test_export_empty_puzzle(tmp_path: Path, format):
 def test_export_pdf_puzzles(tmp_path: Path):
     """Export a bunch of puzzles as PDF and make sure they are all 1-page."""
     size = random.randint(WordSearch.MIN_PUZZLE_SIZE, WordSearch.MAX_PUZZLE_SIZE)
-    words = ",".join(
-        get_random_words(
-            random.randint(WordSearch.MIN_PUZZLE_WORDS, WordSearch.MAX_PUZZLE_WORDS)
-        )
+    words = get_random_words(
+        random.randint(WordSearch.MIN_PUZZLE_WORDS, WordSearch.MAX_PUZZLE_WORDS)
     )
-    shortest_word_length = len(min(words, key=len))
+    shortest_word_length: int = len(min(words.split(","), key=len))
     if size < shortest_word_length:
         size = shortest_word_length
     level = random.randint(1, 3)
@@ -304,7 +302,7 @@ def test_export_pdf_puzzle_with_solution(tmp_path: Path):
     wordlist = get_random_words(
         random.randint(WordSearch.MIN_PUZZLE_WORDS, WordSearch.MAX_PUZZLE_WORDS)
     )
-    shortest_word_length = min(len(word) for word in wordlist)
+    shortest_word_length: int = len(min(wordlist.split(","), key=len))
     size = random.choice(
         range(
             max(WordSearch.MIN_PUZZLE_SIZE, shortest_word_length),
@@ -312,7 +310,7 @@ def test_export_pdf_puzzle_with_solution(tmp_path: Path):
         )
     )
     level = random.randint(1, 3)
-    puzzle = WordSearch(",".join(wordlist), level=level, size=size)
+    puzzle = WordSearch(wordlist, level=level, size=size)
     fp = Path.joinpath(tmp_path, f"{uuid.uuid4()}.pdf")
     puzzle.save(fp, solution=True)
     pages = pdfplumber.open(fp).pages

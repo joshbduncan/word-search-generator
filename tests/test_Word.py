@@ -82,7 +82,7 @@ def test_word_bool_false():
 
 
 def test_rich_style(capsys):
-    words = get_random_words(25)
+    words = get_random_words(25).split(",")
     for w in words:
         word = Word(w)
         style_parameters = word.rich_style._make_ansi_codes(ColorSystem.TRUECOLOR)

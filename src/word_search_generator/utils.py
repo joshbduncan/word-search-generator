@@ -149,8 +149,17 @@ def get_random_words(
     n: int,
     max_length: int | None = None,
     word_list: list[str] | None = None,
-) -> list[str]:
-    """Return a list of random dictionary words."""
+) -> str:
+    """Return a string of random words separated by a comma.
+
+    Args:
+        n: Random words to return
+        max_length: Maximum allowed length of any returned word. Defaults to None.
+        word_list: List of words to sample from. Defaults to base dictionary.
+
+    Returns:
+        A string of random words separated by a comma.
+    """
     if word_list is None:
         word_list = WORD_LISTS["dictionary"]
 
@@ -158,7 +167,7 @@ def get_random_words(
         word_list = [word for word in word_list if len(word) <= max_length]
 
     try:
-        return random.sample(word_list, n)
+        return ",".join(random.sample(word_list, n))
     except ValueError as e:
         e.add_note(
             f"You requested '{n}' random words but only '{len(word_list)}' \

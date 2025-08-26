@@ -36,7 +36,7 @@ def test_only_placed_words_in_key(ws):
 
 
 def test_too_many_supplied_words():
-    w = ",".join(get_random_words(25))
+    w = get_random_words(25)
     ws = WordSearch(w, size=5)
     assert len(ws.words) != len(ws.placed_words)
 

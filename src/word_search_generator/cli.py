@@ -321,12 +321,10 @@ def process_words(args: argparse.Namespace) -> str:
             if args.theme
             else WORD_LISTS["dictionary"]
         )
-        words = ",".join(
-            get_random_words(
-                args.random,
-                max_length=args.size if args.size else None,
-                word_list=word_list,
-            )
+        words = get_random_words(
+            args.random,
+            max_length=args.size if args.size else None,
+            word_list=word_list,
         )
     elif args.input:
         words = args.input.read_text()
@@ -349,7 +347,7 @@ def process_secret_words(args: argparse.Namespace) -> str:
     if args.secret_words:
         secret_words = args.secret_words
     elif args.random_secret_words:
-        secret_words = ",".join(get_random_words(args.random_secret_words))
+        secret_words = get_random_words(args.random_secret_words)
     return secret_words
 
 
