@@ -67,7 +67,7 @@ def create_parser() -> argparse.ArgumentParser:
 examples:
   %(prog)s animals,tiger,shark -s 15
   %(prog)s --random 30 --theme animals --cheat -f PDF -o puzzle.pdf
-  %(prog)s -i words.txt --size 20 --mask STAR
+  %(prog)s -i words.txt --size 20 --mask star5
   %(prog)s --random 25 --theme coastal --secret-words wave,sand
   %(prog)s --random 30 --theme automotive --difficulty 4 --cheat
   %(prog)s --random 30 --theme sports --difficulty N,E,SW
