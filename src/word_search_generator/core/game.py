@@ -505,10 +505,9 @@ class Game:
             elif isinstance(direction, str):
                 try:
                     o.add(Direction[direction.upper().strip()])
-                except KeyError as err:
-                    raise ValueError(
-                        f"'{direction}' is not a valid direction."
-                    ) from err
+                except KeyError as e:
+                    e.add_note(f"'{direction}' is not a valid direction.")
+                    raise ValueError() from e
         return o
 
     def validate_level(self, d) -> DirectionSet:
@@ -516,11 +515,12 @@ class Game:
         if isinstance(d, int):  # traditional numeric level
             try:
                 return LEVEL_DIRS[d]
-            except KeyError as err:
-                raise ValueError(
+            except KeyError as e:
+                e.add_note(
                     f"{d} is not a valid difficulty number"
                     + f"[{', '.join([str(i) for i in LEVEL_DIRS])}]"
-                ) from err
+                )
+                raise ValueError() from e
         if isinstance(d, str):  # comma-delimited list
             return self._validate_direction_iterable(d.split(","))
         if isinstance(d, Iterable):  # probably used by external code
