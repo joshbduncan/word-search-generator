@@ -5,7 +5,7 @@ options.default_venv_backend = "uv"
 
 
 @session(
-    python=["3.10", "3.11", "3.12", "3.13"],
+    python=["3.11", "3.12", "3.13"],
     uv_groups=["test"],
     reuse_venv=True,
 )
