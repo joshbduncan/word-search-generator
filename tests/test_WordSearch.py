@@ -2,6 +2,7 @@ import json
 import pathlib
 import random
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 from rich.color import ColorSystem
@@ -23,7 +24,11 @@ from word_search_generator.mask.polygon import Rectangle
 from word_search_generator.utils import get_random_words
 from word_search_generator.word_search._formatter import WordSearchFormatter
 
-formatter = WordSearchFormatter()
+if TYPE_CHECKING:
+    from word_search_generator.mask import Mask
+
+
+formatter: WordSearchFormatter = WordSearchFormatter()
 
 
 def check_key(key: Key, puzzle: Puzzle) -> bool:
@@ -151,13 +156,13 @@ def test_json_empty_puzzle_error(ws: WordSearch):
 
 def test_json_output_property_for_puzzle():
     words = ",".join(get_random_words(10))
-    ws = WordSearch(words, level=3)
+    ws: WordSearch = WordSearch(words, level=3)
     assert json.loads(ws.json)["puzzle"] == ws.puzzle
 
 
 def test_json_output_property_for_key():
     words = ",".join(get_random_words(10))
-    ws = WordSearch(words, level=3)
+    ws: WordSearch = WordSearch(words, level=3)
     json_key = json.loads(ws.json)["key"]
     for word, info in json_key.items():
         pos = (info["start_row"], info["start_col"])
@@ -167,18 +172,18 @@ def test_json_output_property_for_key():
 @pytest.mark.repeat(10)
 def test_for_empty_spaces():
     words = ",".join(get_random_words(10))
-    ws = WordSearch(words, level=3)
+    ws: WordSearch = WordSearch(words, level=3)
     flat = [item for sublist in ws.puzzle for item in sublist]
     assert ws.size * ws.size == len(flat)
 
 
 def test_puzzle_with_secret_words(words):
-    ws = WordSearch(words, secret_words=words + ", dewlap")
+    ws: WordSearch = WordSearch(words, secret_words=words + ", dewlap")
     assert len(ws.secret_words) == 1  # should all be ignored due to overlap
 
 
 def test_clearing_secret_directions(words):
-    ws = WordSearch(words, secret_level=1)
+    ws: WordSearch = WordSearch(words, secret_level=1)
     with pytest.raises(ValueError):
         ws.secret_directions = set()
 
@@ -213,12 +218,12 @@ def test_replace_words_with_resize(ws: WordSearch):
 
 
 def test_no_placed_words():
-    ws = WordSearch()
+    ws: WordSearch = WordSearch()
     assert len(ws.placed_words) == 0
 
 
 def test_no_hidden_words():
-    ws = WordSearch()
+    ws: WordSearch = WordSearch()
     assert len(ws.placed_words) == 0
 
 
@@ -229,63 +234,64 @@ def test_placed_hidden_words(ws: WordSearch):
 
 
 def test_placed_secret_words():
-    ws = WordSearch("pig horse cow", secret_words="cat bat rat")
+    ws: WordSearch = WordSearch("pig horse cow", secret_words="cat bat rat")
     assert len(ws.placed_secret_words) == len(
         {word for word in ws.secret_words if word.direction}
     )
 
 
 def test_random_words_only():
-    ws = WordSearch()
+    ws: WordSearch = WordSearch()
     ws.random_words(5)
     assert len(ws.words) > 0
 
 
 def test_random_words_added():
-    ws = WordSearch("dog cat rat", size=25)
+    ws: WordSearch = WordSearch("dog cat rat", size=25)
     ws.random_words(2, "ADD")
     assert len(ws.words) > 3
 
 
 def test_random_words_count_type_error():
-    ws = WordSearch()
+    ws: WordSearch = WordSearch()
     with pytest.raises(TypeError):
         ws.random_words("five")  # type: ignore
 
 
 def test_random_words_count_value_error():
-    ws = WordSearch()
+    ws: WordSearch = WordSearch()
     with pytest.raises(ValueError):
         ws.random_words(500)
 
 
 def test_random_words_action_type_error():
-    ws = WordSearch()
+    ws: WordSearch = WordSearch()
     with pytest.raises(TypeError):
         ws.random_words(5, action=5)  # type: ignore
 
 
 def test_random_words_action_value_error():
-    ws = WordSearch()
+    ws: WordSearch = WordSearch()
     with pytest.raises(ValueError):
         ws.random_words(5, "SUBTRACT")
 
 
 def test_invalid_size_at_init_value():
     with pytest.raises(ValueError):
-        ws = WordSearch(size=250)  # noqa: F841
+        ws: WordSearch = WordSearch(size=250)  # noqa: F841
 
 
 def test_invalid_size_at_init_type():
     with pytest.raises(TypeError):
-        ws = WordSearch(size="250")  # type: ignore  # noqa: F841
+        ws: WordSearch = WordSearch(size="250")  # type: ignore  # noqa: F841
 
 
 @pytest.mark.repeat(10)
 def test_puzzle_solution_output(builtin_mask_shapes, capsys):
-    ws = WordSearch(size=random.randint(21, 35))
+    ws: WordSearch = WordSearch(size=random.randint(21, 35))
     ws.random_words(random.randint(5, 21))
-    mask = random.choice(builtin_mask_shapes)
+    mask_class: type[Mask] = random.choice(list(builtin_mask_shapes.values()))
+    mask: Mask = mask_class()
     if mask:
         ws.apply_mask(mask)
     ws.formatter.CONSOLE = Console(color_system="truecolor", force_terminal=True)  # type: ignore[union-attr]
@@ -304,20 +310,20 @@ def test_puzzle_solution_output(builtin_mask_shapes, capsys):
 
 
 def test_unplaced_words():
-    ws = WordSearch("dog", size=5)
+    ws: WordSearch = WordSearch("dog", size=5)
     ws.add_words("generator")
     ws.add_words("refrigerator", secret=True)
     assert len(ws.unplaced_words) == 2
 
 
 def test_unplaced_hidden_words():
-    ws = WordSearch("dog", size=5)
+    ws: WordSearch = WordSearch("dog", size=5)
     ws.add_words("generator")
     assert len(ws.unplaced_hidden_words) == 1
 
 
 def test_unplaced_secret_words():
-    ws = WordSearch("dog", size=5)
+    ws: WordSearch = WordSearch("dog", size=5)
     ws.add_words("generator", secret=True)
     assert len(ws.unplaced_secret_words) == 1
 
@@ -328,26 +334,26 @@ def test_invalid_export_format(ws: WordSearch):
 
 
 def test_missing_word_error():
-    ws = WordSearch("dog", size=5, require_all_words=True)
+    ws: WordSearch = WordSearch("dog", size=5, require_all_words=True)
     with pytest.raises(MissingWordError):
         ws.add_words("generator")
 
 
 def test_cropped_puzzle_height(words):
     size = 21
-    ws = WordSearch(words, size=size)
+    ws: WordSearch = WordSearch(words, size=size)
     assert len(ws.cropped_puzzle) == size
 
 
 def test_cropped_puzzle_width(words):
     size = 21
-    ws = WordSearch(words, size=size)
+    ws: WordSearch = WordSearch(words, size=size)
     assert len(ws.cropped_puzzle[0]) == size
 
 
 def test_cropped_puzzle_masked_1(words):
     size = 20
-    ws = WordSearch(words, size=size)
+    ws: WordSearch = WordSearch(words, size=size)
     ws.apply_mask(Rectangle(size - 2, size - 2, (1, 1)))
     assert ws.puzzle[1][1] == ws.cropped_puzzle[0][0]
     assert ws.puzzle[size - 2][size - 2] == ws.cropped_puzzle[size - 3][size - 3]
@@ -355,7 +361,7 @@ def test_cropped_puzzle_masked_1(words):
 
 def test_cropped_puzzle_size(words):
     size = 20
-    ws = WordSearch(words, size=size)
+    ws: WordSearch = WordSearch(words, size=size)
     rec_w = size - 5
     rec_h = size - 7
     ws.apply_mask(Rectangle(rec_w, rec_h, (1, 1)))
@@ -367,7 +373,7 @@ def test_cropped_puzzle_size(words):
 
 def test_cropped_puzzle_masked_2(words):
     size = 20
-    ws = WordSearch(words, size=size)
+    ws: WordSearch = WordSearch(words, size=size)
     ws.apply_mask(Rectangle(size - 10, size - 10, (1, 1)))
     assert ws.puzzle[1][1] == ws.cropped_puzzle[0][0]
     assert ws.puzzle[size - 10][size - 10] == ws.cropped_puzzle[size - 11][size - 11]
@@ -384,25 +390,27 @@ def test_word_placement(builtin_mask_shapes):
             col += word.direction.c_move
         return True
 
-    ws = WordSearch(size=random.randint(21, 35))
+    ws: WordSearch = WordSearch(size=random.randint(21, 35))
     ws.random_words(random.randint(5, 21))
-    mask = random.choice(builtin_mask_shapes)
+    mask_class: type[Mask] = random.choice(list(builtin_mask_shapes.values()))
+    mask: Mask = mask_class()
     if mask:
         ws.apply_mask(mask)
     assert all(check_chars(ws.puzzle, word) for word in ws.placed_words)
 
 
 def test_puzzle_size_error():
-    ws = WordSearch("abracadabra")
+    ws: WordSearch = WordSearch("abracadabra")
     with pytest.raises(PuzzleSizeError):
         ws.size = 5
 
 
 @pytest.mark.repeat(10)
 def test_hide_fillers(builtin_mask_shapes):
-    ws = WordSearch(size=random.randint(21, 35))
+    ws: WordSearch = WordSearch(size=random.randint(21, 35))
     ws.random_words(random.randint(5, 21))
-    mask = random.choice(builtin_mask_shapes)
+    mask_class: type[Mask] = random.choice(list(builtin_mask_shapes.values()))
+    mask: Mask = mask_class()
     if mask:
         ws.apply_mask(mask)
     hidden_fillers = formatter.hide_filler_characters(ws)
@@ -414,9 +422,10 @@ def test_hide_fillers(builtin_mask_shapes):
 
 @pytest.mark.repeat(10)
 def test_solution_plus_hide_fillers(builtin_mask_shapes):
-    ws = WordSearch(size=random.randint(21, 35))
+    ws: WordSearch = WordSearch(size=random.randint(21, 35))
     ws.random_words(random.randint(5, 21))
-    mask = random.choice(builtin_mask_shapes)
+    mask_class: type[Mask] = random.choice(list(builtin_mask_shapes.values()))
+    mask: Mask = mask_class()
     if mask:
         ws.apply_mask(mask)
     chars = {c for chars in ws.puzzle for c in chars}
@@ -429,13 +438,13 @@ def test_word_directions(words, secret_words):
     Secret words go on diagonals.
     Do they all obey the restriction rules?
     """
-    ws = WordSearch(words, secret_words=secret_words, secret_level=7)
+    ws: WordSearch = WordSearch(words, secret_words=secret_words, secret_level=7)
     assert all(w.direction in ws.directions for w in ws.placed_hidden_words)
     assert all(w.direction in ws.secret_directions for w in ws.placed_secret_words)
 
 
 def test_validator_setter(words):
-    ws = WordSearch(words, validators=None)
+    ws: WordSearch = WordSearch(words, validators=None)
     ws.validators = [NoSingleLetterWords()]
     assert all(isinstance(v, NoSingleLetterWords) for v in ws.validators)  # type: ignore[union-attr]
 
@@ -458,7 +467,7 @@ def test_word_order_preservation():
     """Test that words maintain their original insertion order."""
     # Test with non-alphabetical order
     words = "zebra,apple,python,banana,xray,cherry,moon,date,ocean,forest"
-    ws = WordSearch(words)
+    ws: WordSearch = WordSearch(words)
 
     # Extract word texts in order
     word_texts = [word.text for word in ws.words]
@@ -483,7 +492,7 @@ def test_word_order_preservation():
 def test_word_order_preservation_with_operations():
     """Test that word order is preserved through various operations."""
     # Start with some words
-    ws = WordSearch("first,second")
+    ws: WordSearch = WordSearch("first,second")
 
     # Add more words
     ws.add_words("third,fourth")
@@ -502,7 +511,7 @@ def test_word_order_preservation_with_operations():
 def test_word_order_preservation_placed_words():
     """Test that placed words maintain order."""
     words = "cat,dog,bird,fish,mouse"
-    ws = WordSearch(words)
+    ws: WordSearch = WordSearch(words)
     ws.generate()
 
     # Get placed words in order
@@ -521,7 +530,7 @@ def test_word_order_preservation_placed_words():
 
 def test_word_search_show_with_sorting(capsys):
     """Test WordSearch.show() with default sorting behavior."""
-    ws = WordSearch("zebra,apple,cat")
+    ws: WordSearch = WordSearch("zebra,apple,cat")
     ws.show(sort_word_list=True)
 
     # Capture the printed output
@@ -532,7 +541,7 @@ def test_word_search_show_with_sorting(capsys):
 
 def test_word_search_show_without_sorting(capsys):
     """Test WordSearch.show() with sorting disabled."""
-    ws = WordSearch("zebra,apple,cat")
+    ws: WordSearch = WordSearch("zebra,apple,cat")
     ws.show(sort_word_list=False)
 
     # Capture the printed output
@@ -543,7 +552,7 @@ def test_word_search_show_without_sorting(capsys):
 
 def test_word_search_save_csv_with_sorting(tmp_path):
     """Test WordSearch.save() CSV format with sorting."""
-    ws = WordSearch("zebra,apple,cat")
+    ws: WordSearch = WordSearch("zebra,apple,cat")
     csv_file = tmp_path / "test_sorted.csv"
 
     ws.save(csv_file, format="CSV", sort_word_list=True)
@@ -569,7 +578,7 @@ def test_word_search_save_csv_with_sorting(tmp_path):
 
 def test_word_search_save_csv_without_sorting(tmp_path):
     """Test WordSearch.save() CSV format without sorting."""
-    ws = WordSearch("zebra,apple,cat")
+    ws: WordSearch = WordSearch("zebra,apple,cat")
     csv_file = tmp_path / "test_unsorted.csv"
 
     ws.save(csv_file, format="CSV", sort_word_list=False)
@@ -595,7 +604,7 @@ def test_word_search_save_csv_without_sorting(tmp_path):
 
 def test_word_search_save_json_with_sorting(tmp_path):
     """Test WordSearch.save() JSON format with sorting."""
-    ws = WordSearch("dog,cat,bat")
+    ws: WordSearch = WordSearch("dog,cat,bat")
     json_file = tmp_path / "test_sorted.json"
 
     ws.save(json_file, format="JSON", sort_word_list=True)

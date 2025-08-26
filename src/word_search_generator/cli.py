@@ -1,24 +1,33 @@
 import argparse
 import sys
-from collections.abc import Sequence
+from collections.abc import ItemsView, Sequence
 from importlib.metadata import version
 from pathlib import Path
 
 from .core.directions import LEVEL_DIRS
-from .core.game import Game
 from .core.word import Direction
 from .mask import Mask, shapes
 from .utils import get_random_words
+from .word_search import WordSearch
+from .words import WORD_LISTS
 
-BUILTIN_MASK_SHAPES_OBJECTS = shapes.get_shape_objects()
+BUILTIN_MASK_SHAPES: dict[str, type[Mask]] = shapes.get_shape_objects()
+
+
+class PrintExamples(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        formatter = parser._get_formatter()  # gets your RawDescriptionHelpFormatter
+        formatter.add_text(parser.epilog)
+        print(formatter.format_help())  # only prints the epilog part
+        parser.exit()
 
 
 class RandomAction(argparse.Action):
     """Restrict argparse `-r`, `--random` inputs."""
 
     def __call__(self, parser, namespace, values, option_string=None):
-        min_val = Game.MIN_PUZZLE_WORDS
-        max_val = Game.MAX_PUZZLE_WORDS
+        min_val = WordSearch.MIN_PUZZLE_WORDS
+        max_val = WordSearch.MAX_PUZZLE_WORDS
         if values < min_val or values > max_val:
             parser.error(f"{option_string} must be >={min_val} and <={max_val}")
         setattr(namespace, self.dest, values)
@@ -46,26 +55,37 @@ class SizeAction(argparse.Action):
     """Restrict argparse `-s`, `--size` inputs."""
 
     def __call__(self, parser, namespace, values, option_string=None):
-        min_val = Game.MIN_PUZZLE_SIZE
-        max_val = Game.MAX_PUZZLE_SIZE
+        min_val = WordSearch.MIN_PUZZLE_SIZE
+        max_val = WordSearch.MAX_PUZZLE_SIZE
         if values < min_val or values > max_val:
             parser.error(f"{option_string} must be >={min_val} and <={max_val}")
         setattr(namespace, self.dest, values)
 
 
 def create_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
+    examples = """\
+examples:
+  %(prog)s animals,tiger,shark -s 15
+  %(prog)s --random 30 --theme animals --cheat -f PDF -o puzzle.pdf
+  %(prog)s -i words.txt --size 20 --mask STAR
+  %(prog)s --random 25 --theme coastal --secret-words wave,sand
+  %(prog)s --random 30 --theme automotive --difficulty 4 --cheat
+  %(prog)s --random 30 --theme sports --difficulty N,E,SW
+    """
+
+    parser: argparse.ArgumentParser = argparse.ArgumentParser(
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
         description=f"""Generate Word Search Puzzles! \
 
 
 Valid Levels: {", ".join([str(i) for i in LEVEL_DIRS])}
 Valid Directions: {", ".join([d.name for d in Direction])}
 * Directions are to be provided as a comma-separated list.""",
-        epilog="Copyright 2025 Josh Duncan (joshbduncan.com)",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     words_group = parser.add_mutually_exclusive_group()
     secret_words_group = parser.add_mutually_exclusive_group()
+    preview_group = parser.add_mutually_exclusive_group()
     mask_group = parser.add_mutually_exclusive_group()
     sort_group = parser.add_mutually_exclusive_group()
     words_group.add_argument(
@@ -99,12 +119,19 @@ Valid Directions: {", ".join([d.name for d in Direction])}
 puzzle words can go. See valid arguments above.",
     )
     parser.add_argument(
+        "--examples",
+        nargs=0,
+        action=PrintExamples,
+        help="Show extended usage examples and exit.",
+    )
+    parser.add_argument(
         "-f",
         "--format",
-        choices=["CSV", "JSON", "PDF", "csv", "json", "pdf"],
+        choices=["csv", "json", "pdf"],
+        type=str.lower,
         metavar="EXPORT_FORMAT",
         help='Puzzle output format \
-(choices: "CSV", "JSON", "PDF").',
+(choices: "csv", "json", "pdf").',
     )
     parser.add_argument(
         "-hk",
@@ -128,10 +155,11 @@ puzzle words can go. See valid arguments above.",
     mask_group.add_argument(
         "-m",
         "--mask",
-        choices=BUILTIN_MASK_SHAPES_OBJECTS,
+        choices=BUILTIN_MASK_SHAPES,
+        type=str.lower,
         metavar="MASK_SHAPE",
         help=f"Mask the puzzle to a shape \
-(choices: {', '.join(BUILTIN_MASK_SHAPES_OBJECTS)}).",
+(choices: {', '.join(sorted(BUILTIN_MASK_SHAPES.keys()))}).",
     )
     parser.add_argument(
         "--no-validators",
@@ -144,11 +172,24 @@ puzzle words can go. See valid arguments above.",
         type=Path,
         help="Output path for the saved puzzle.",
     )
-    parser.add_argument(
+    preview_group.add_argument(
         "-pm",
         "--preview-masks",
-        action="store_true",
-        help="Preview all built-in mask shapes.",
+        nargs="?",  # 0 or 1 values
+        const="*",  # if no value given, set to "*"
+        type=str.lower,
+        metavar="MASK",
+        help="Preview a mask shape (give MASK), or all masks if none is provided.",
+    )
+    preview_group.add_argument(
+        "-pt",
+        "--preview-themes",
+        nargs="?",  # 0 or 1 values
+        const="*",  # if no value given, set to "*"
+        type=str.lower,
+        metavar="THEME",
+        help="Preview a theme word list (give THEME), \
+or all word lists if none is provided.",
     )
     words_group.add_argument(
         "-r",
@@ -176,7 +217,15 @@ If all words can't be placed, and exception will be raised.",
         "--size",
         action=SizeAction,
         type=int,
-        help=f"{Game.MIN_PUZZLE_SIZE} <= puzzle size <= {Game.MIN_PUZZLE_SIZE}",
+        help=f"{WordSearch.MIN_PUZZLE_SIZE} <= size <= {WordSearch.MAX_PUZZLE_SIZE}",
+    )
+    parser.add_argument(
+        "--theme",
+        choices=WORD_LISTS.keys(),
+        type=str.lower,
+        metavar="THEME",
+        help=f"Pick random words from a themed word list \
+(choices: {', '.join(sorted(WORD_LISTS.keys()))}). Requires --random.",
     )
     secret_words_group.add_argument(
         "-x",
@@ -213,19 +262,24 @@ secret puzzle words can go. See valid arguments above.",
     return parser
 
 
-def preview_masks() -> None:
+def preview_masks(
+    masks: list[tuple[str, type[Mask]]] | ItemsView[str, type[Mask]] | None = None,
+) -> None:
     from rich import box
     from rich.table import Table
 
     from .console import console
 
-    preview_size = 21
+    preview_size: int = 21
 
-    for shape in BUILTIN_MASK_SHAPES_OBJECTS:
-        mask: Mask = eval(f"shapes.{shape}")()
+    if masks is None:
+        masks = BUILTIN_MASK_SHAPES.items()
+
+    for name, shape in masks:
+        mask: Mask = shape()
         mask.generate(preview_size)
         table = Table(
-            title=shape,
+            title=name.upper(),
             title_style="bold italic green",
             box=box.SIMPLE_HEAD,
             padding=0,
@@ -247,17 +301,42 @@ def preview_masks() -> None:
         console.print(table)
 
 
+def preview_themes(
+    themes: list[tuple[str, list[str]]] | ItemsView[str, list[str]] | None = None,
+) -> None:
+    if themes is None:
+        themes = WORD_LISTS.items()
+
+    for name, word_list in themes:
+        print(f"{name.upper()}:")
+        print(", ".join(word_list))
+        print("")
+
+
 def process_words(args: argparse.Namespace) -> str:
-    words = ""
+    words: str = ""
     if args.random:
+        word_list: list[str] = (
+            WORD_LISTS.get(args.theme, WORD_LISTS["dictionary"])
+            if args.theme
+            else WORD_LISTS["dictionary"]
+        )
         words = ",".join(
-            get_random_words(args.random, max_length=args.size if args.size else None)
+            get_random_words(
+                args.random,
+                max_length=args.size if args.size else None,
+                word_list=word_list,
+            )
         )
     elif args.input:
         words = args.input.read_text()
-    elif isinstance(args.words, list):
-        # needed when words were provided as "command, then, space"
-        words = ",".join([word.replace(",", "") for word in args.words])
+    elif isinstance(args.words, list) and args.words:
+        if len(args.words) == 1 and "," in args.words[0]:
+            words = ",".join(w.strip() for w in args.words[0].split(","))
+        else:
+            words = ",".join(word.replace(",", "") for word in args.words)
+
+        # words = ",".join([word.replace(",", "") for word in args.words])
     elif not sys.stdin.isatty():
         # disable interactive tty which can be confusing
         # but still process words were piped in from the shell
@@ -274,10 +353,6 @@ def process_secret_words(args: argparse.Namespace) -> str:
     return secret_words
 
 
-def build_puzzle(args: argparse.Namespace):
-    pass
-
-
 def main(argv: Sequence[str] | None = None) -> int:
     """Word Search Generator CLI.
 
@@ -290,9 +365,40 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = create_parser()
     args = parser.parse_args(argv)
 
+    # dependency: --random-from requires --random
+    if args.theme and not args.random:
+        parser.error("--theme requires --random N")
+
     # check for mask preview first
     if args.preview_masks:
-        preview_masks()
+        if args.preview_masks == "*":  # no arg given
+            masks = None
+        else:
+            try:
+                preview_mask: type[Mask] = BUILTIN_MASK_SHAPES[args.preview_masks]
+                masks = [(args.preview_masks, preview_mask)]
+            except KeyError:
+                parser.error(
+                    f"Mask '{args.preview_masks}' not found. "
+                    f"Valid choices: {', '.join(sorted(BUILTIN_MASK_SHAPES))}"
+                )
+        preview_masks(masks)
+        return 0
+
+    # check for theme preview second
+    if args.preview_themes:
+        if args.preview_themes == "*":  # no arg given
+            themes = None
+        else:
+            try:
+                theme: list[str] = WORD_LISTS[args.preview_themes]
+                themes = [(args.preview_themes, theme)]
+            except KeyError:
+                parser.error(
+                    f"Theme '{args.preview_themes}' not found. "
+                    f"Valid choices: {', '.join(sorted(WORD_LISTS.keys()))}"
+                )
+        preview_themes(themes)
         return 0
 
     # process puzzle words
@@ -306,9 +412,6 @@ def main(argv: Sequence[str] | None = None) -> int:
         print("No words provided. Learn more with the '-h' flag.", file=sys.stderr)
         return 1
 
-    # create a new puzzle object from provided arguments
-    from .word_search import WordSearch
-
     puzzle = WordSearch(
         words,
         level=args.difficulty,
@@ -321,9 +424,12 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     # apply masking if specified
     if args.mask:
-        mask = eval(f"shapes.{args.mask}")()
-        if hasattr(mask, "min_size") and not args.size and puzzle.size < mask.min_size:
+        mask_class: type[Mask] = BUILTIN_MASK_SHAPES[args.mask]
+        mask: Mask = mask_class()
+
+        if mask.min_size is not None and not args.size and puzzle.size < mask.min_size:
             puzzle.size = mask.min_size
+
         puzzle.apply_mask(mask)
 
     if args.image_mask:

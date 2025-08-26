@@ -285,8 +285,9 @@ class WordSearchFormatter(Formatter):
         # write the final PDF to the filesystem
         try:
             pdf.output(path)
-        except OSError as err:
-            raise OSError(f"File could not be saved to '{path}'.") from err
+        except OSError as e:
+            e.add_note(f"File could not be saved to '{path}'.")
+            raise
         return path.absolute()
 
     @staticmethod

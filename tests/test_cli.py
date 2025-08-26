@@ -2,11 +2,15 @@ import random
 import re
 import subprocess
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 from PIL import Image
 
 from word_search_generator.core.word import Direction, Word
+
+if TYPE_CHECKING:
+    from word_search_generator.mask import Mask
 
 
 def test_entrypoint():
@@ -186,7 +190,8 @@ def test_cli_output(builtin_mask_shapes):
 
     size = random.randint(18, 36)
     words = random.randint(5, 21)
-    mask = random.choice(builtin_mask_shapes)
+    mask_class: type[Mask] = random.choice(list(builtin_mask_shapes.values()))
+    mask: Mask = mask_class()
     command = f"word-search -r {words} -s {size}"
     if mask:
         command += f" -m {mask.__class__.__name__}"
@@ -222,7 +227,8 @@ def test_cli_output_lowercase(builtin_mask_shapes):
 
     size = random.randint(18, 36)
     words = random.randint(5, 21)
-    mask = random.choice(builtin_mask_shapes)
+    mask_class: type[Mask] = random.choice(list(builtin_mask_shapes.values()))
+    mask: Mask = mask_class()
     command = f"word-search -r {words} -s {size} -lc"
     if mask:
         command += f" -m {mask.__class__.__name__}"

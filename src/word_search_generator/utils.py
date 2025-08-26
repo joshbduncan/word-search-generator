@@ -4,7 +4,7 @@ import math
 import random
 from typing import TYPE_CHECKING, TypeAlias
 
-from .words import WORD_LIST
+from .words import WORD_LISTS
 
 if TYPE_CHECKING:  # pragma: no cover
     from .core.game import DirectionSet, Puzzle, Word, WordSet
@@ -145,8 +145,23 @@ def get_answer_key_str(words: list[Word], bbox: BoundingBox) -> str:
     return ", ".join(get_answer_key_list(words, bbox))
 
 
-def get_random_words(n: int, max_length: int | None = None) -> list[str]:
+def get_random_words(
+    n: int,
+    max_length: int | None = None,
+    word_list: list[str] | None = None,
+) -> list[str]:
     """Return a list of random dictionary words."""
-    if max_length:
-        return random.sample([word for word in WORD_LIST if len(word) <= max_length], n)
-    return random.sample(WORD_LIST, n)
+    if word_list is None:
+        word_list = WORD_LISTS["dictionary"]
+
+    if max_length is not None:
+        word_list = [word for word in word_list if len(word) <= max_length]
+
+    try:
+        return random.sample(word_list, n)
+    except ValueError as e:
+        e.add_note(
+            f"You requested '{n}' random words but only '{len(word_list)}' \
+were available in the specified word list."
+        )
+        raise
