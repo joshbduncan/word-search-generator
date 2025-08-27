@@ -7,8 +7,6 @@ from ..utils import BoundingBox, find_bounding_box
 class MaskNotGenerated(Exception):
     """Mask has not yet been generated."""
 
-    pass
-
 
 class MaskMethod(IntEnum):
     INTERSECTION = 1
@@ -25,7 +23,6 @@ class Mask:
 
     ACTIVE = "*"
     INACTIVE = "#"
-    METHODS = [1, 2, 3]
 
     min_size: int | None = None
 
@@ -82,7 +79,8 @@ class Mask:
         try:
             self._method = MaskMethod(value)
         except ValueError as e:
-            raise ValueError(f"Must be one of {[m.value for m in MaskMethod]}") from e
+            valid_methods = [m.value for m in MaskMethod]
+            raise ValueError(f"Must be one of {valid_methods}, got {value}.") from e
 
     @property
     def static(self) -> bool:
@@ -130,7 +128,7 @@ class Mask:
     @property
     def is_generated(self) -> bool:
         """Return True if the mask grid has been generated."""
-        return bool(self._puzzle_size and self._mask)
+        return self._puzzle_size > 0 and len(self._mask) > 0
 
     @property
     def bounding_box(self) -> BoundingBox | None:
@@ -161,7 +159,14 @@ class Mask:
 
         Returns:
             A `size × size` list of lists, with every entry set to `char`.
+
+        Raises:
+            ValueError: If size <= 0 or char is not a single character.
         """
+        if size <= 0:
+            raise ValueError("size must be positive")
+        if len(char) != 1:
+            raise ValueError("char must be a single character")
         return [[char] * size for _ in range(size)]
 
     def generate(self, puzzle_size: int) -> None:
@@ -239,12 +244,21 @@ class Mask:
         """Reset all mask coordinate points."""
         self.points = []
 
+    def __str__(self) -> str:
+        """Return a string representation of the mask for debugging."""
+        if not self.is_generated:
+            return f"{self.__class__.__name__}(not generated)"
+        return (
+            f"{self.__class__.__name__}({self.puzzle_size}x{self.puzzle_size}, "
+            f"method={self.method.name})"
+        )
+
     def __repr__(self) -> str:
         return (
-            f"{self.__class__.__name__}"
-            + f"(points={self.points}, "
-            + f"method={self.method}, "
-            + f"static={self.static}, "
+            f"{self.__class__.__name__}("
+            f"points={self.points}, "
+            f"method={self.method}, "
+            f"static={self.static})"
         )
 
 
@@ -255,7 +269,7 @@ class CompoundMask(Mask):
     def __init__(
         self,
         masks: list[Mask] | None = None,
-        method: MaskMethod | MethodLiteral = 1,
+        method: MaskMethod | MethodLiteral = MaskMethod.INTERSECTION,
         static: bool = True,
     ) -> None:
         """Create a compound mask composed of multiple `Mask` objects.
@@ -273,6 +287,16 @@ class CompoundMask(Mask):
         self.masks = masks if masks else []
 
     def add_mask(self, mask: Mask) -> None:
+        """Add a mask to the compound mask.
+
+        Args:
+            mask: The mask to add.
+
+        Raises:
+            TypeError: If mask is not a Mask instance.
+        """
+        if not isinstance(mask, Mask):
+            raise TypeError("mask must be a Mask instance")
         self.masks.append(mask)
 
     def generate(self, puzzle_size: int) -> None:
@@ -280,7 +304,7 @@ class CompoundMask(Mask):
         from `CompoundMask.masks` in order.
 
         Note: Unlike the parent `Mask` object a `CompoundMask` is initially filled
-        with `self.ACTIVE`. This allows for the proper inaction between masks."""
+        with `self.ACTIVE`. This allows for the proper interaction between masks."""
         self.puzzle_size = puzzle_size
         self._mask = self.build_mask(self.puzzle_size, self.ACTIVE)
         for mask in self.masks:
@@ -291,6 +315,11 @@ class CompoundMask(Mask):
         """Apply a child mask to this compound mask."""
         if not self.puzzle_size:
             raise MaskNotGenerated("Mask not generated. Call `generate(size)` first.")
+
+        if len(mask._mask) != self.puzzle_size or (
+            mask._mask and len(mask._mask[0]) != self.puzzle_size
+        ):
+            raise ValueError("Child mask size does not match compound mask size")
 
         if mask.method is MaskMethod.INTERSECTION:
             # self = self ∧ mask
