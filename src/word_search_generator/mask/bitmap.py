@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 
 class ContrastError(Exception):
-    pass
+    """Raised when an image lacks sufficient contrast for mask generation."""
 
 
 class Bitmap(Mask):
@@ -21,7 +21,7 @@ class Bitmap(Mask):
     def __init__(
         self,
         points: list[tuple[int, int]] | None = None,
-        method: MaskMethod | MethodLiteral = 1,
+        method: MaskMethod | MethodLiteral = MaskMethod.INTERSECTION,
         static: bool = True,
     ) -> None:
         """Initialize a WordSearch puzzle bitmap mask object.
@@ -54,58 +54,107 @@ class Bitmap(Mask):
 
 class ImageMask(Bitmap):
     """This class represents a subclass of the Bitmap object
-    and generates a mask a mask from a raster image."""
+    and generates a mask from a raster image."""
 
-    threshold = 200  # normalization contrast point
+    threshold: int = 200  # normalization contrast point
 
     def __init__(
         self,
         fp: str | Path,
-        method: MaskMethod | MethodLiteral = 1,
+        method: MaskMethod | MethodLiteral = MaskMethod.INTERSECTION,
         static: bool = False,
     ) -> None:
         """Generate a bitmap mask from a raster image.
 
-        Note: Ideally, the raster image should be a single color (dark) on a solid
-        or transparent background (think black pixels on white background).
-        Multi-color images will work, but know that all colors will be converted
-        to grayscale first.
-
         Args:
-            fp (str | Path): A filepath (string) or `pathlib.Path` object
+            fp: A filepath (string) or `pathlib.Path` object
                 to the raster image the mask will be generated from.
-            method (int, optional): How Mask is applied to the puzzle
-                (1=Standard (Intersection), 2=Additive, 3=Subtractive). Defaults to 1.
-            static (bool, optional): Should this mask be reapplied
-                after changes to the parent puzzle size. Defaults to True.
+            method: How Mask is applied to the puzzle. Defaults to INTERSECTION.
+            static: Should this mask be reapplied after changes to the
+                parent puzzle size. Defaults to False.
+
+        Raises:
+            TypeError: If fp is not a string or Path object.
+            FileNotFoundError: If the image file doesn't exist.
         """
+        if not isinstance(fp, str | Path):
+            raise TypeError("`fp` must be a string or Path object")
+
+        fp_path = Path(fp)
+        if not fp_path.exists():
+            raise FileNotFoundError(f"Image file not found: {fp}")
+        if not fp_path.is_file():
+            raise ValueError(f"Path is not a file: {fp}")
+
         super().__init__(method=method, static=static)
-        self.fp = fp
+        self.fp = fp_path  # Store as Path object for consistency
 
     def generate(self, puzzle_size: int) -> None:
-        """Generate a new mask at `puzzle_size` from a raster image."""
+        """Generate a new mask at `puzzle_size` from a raster image.
+
+        Raises:
+            ContrastError: If the image lacks sufficient contrast.
+            OSError: If the image file cannot be opened or read.
+        """
         self.puzzle_size = puzzle_size
         self._mask = self.build_mask(self.puzzle_size, self.INACTIVE)
-        img = Image.open(self.fp, formats=("BMP", "JPEG", "PNG"))
-        self.points = ImageMask.process_image(
-            img, self.puzzle_size, ImageMask.threshold
-        )
+
+        try:
+            with Image.open(self.fp, formats=("BMP", "JPEG", "PNG")) as img:
+                self.points = ImageMask.process_image(
+                    img, self.puzzle_size, ImageMask.threshold
+                )
+        except OSError as e:
+            raise OSError(f"Failed to open image file {self.fp}: {e}") from e
+
         if not self.points:
-            raise ContrastError("The provided image lacked enough contrast.")
+            raise ContrastError(
+                f"The provided image '{self.fp}' lacked sufficient contrast "
+                f"(threshold={ImageMask.threshold})"
+            )
         self._draw()
 
     @staticmethod
     def process_image(
         image: Image.Image, size: int, threshold: int = 200
     ) -> list[tuple[int, int]]:
-        """Convert to grayscale, threshold, resize, and return pixel coordinates."""
+        """Convert image to binary mask coordinates.
 
+        Converts the image to grayscale, applies threshold to create a binary
+        image, crops to content, resizes to fit the puzzle size, and returns
+        coordinates of dark pixels.
+
+        Args:
+            image: PIL Image object to process.
+            size: Target size for the mask (width and height).
+            threshold: Pixel intensity threshold (0-255). Pixels below this
+                value are considered "active" mask areas. Defaults to 200.
+
+        Returns:
+            List of (x, y) coordinate tuples for active mask pixels.
+            Empty list if no contrast is found.
+
+        Raises:
+            TypeError: If image is not a PIL Image object.
+            ValueError: If size <= 0 or threshold not in range 0-255.
+        """
+        # Input validation
+        if not isinstance(image, Image.Image):
+            raise TypeError("image must be a PIL Image object")
+        if size <= 0:
+            raise ValueError("size must be positive")
+        if not 0 <= threshold <= 255:
+            raise ValueError("threshold must be between 0 and 255")
+
+        # Convert to grayscale
         grayscale_img: Image.Image = image.convert("L")
 
+        # Apply threshold to create binary image
         bw_img: Image.Image = grayscale_img.point(
             lambda px: 255 if px > threshold else 0
         )
 
+        # Find bounding box of non-white content
         diff: Image.Image = ImageChops.difference(
             bw_img, Image.new("L", bw_img.size, 255)
         )
@@ -114,10 +163,11 @@ class ImageMask(Bitmap):
         if bbox is None:
             return []  # nothing but white
 
+        # Crop to content and resize to target size
         cropped: Image.Image = bw_img.crop(bbox)
-
         cropped.thumbnail(size=(size, size), resample=Image.Resampling.NEAREST)
 
+        # Extract pixel data and convert to coordinates
         assert cropped.mode == "L"
         pixels_iter = cast("Iterable[int]", cropped.getdata())
         pixels: list[int] = list(pixels_iter)

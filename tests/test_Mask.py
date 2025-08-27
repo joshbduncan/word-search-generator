@@ -313,10 +313,12 @@ def test_bitmap_mask_draw_exception():
 
 def test_image_mask_init(tmp_path: Path):
     name = "test_image.jpg"
-    path = Path.joinpath(tmp_path, name)
-    im = ImageMask(path, method=2, static=False)
+    test_img = PILImage.new("L", (100, 100), (0))
+    img_path = Path.joinpath(tmp_path, name)
+    test_img.save(img_path, "JPEG")
+    im = ImageMask(img_path, method=2, static=False)
     assert isinstance(im, Mask)
-    assert im.fp == path
+    assert im.fp == img_path
     assert im.method == 2
     assert im.static is False
 
