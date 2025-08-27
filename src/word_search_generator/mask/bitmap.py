@@ -27,11 +27,11 @@ class Bitmap(Mask):
         """Initialize a WordSearch puzzle bitmap mask object.
 
         Args:
-            points (list[tuple[int, int]] | None, optional): Coordinate points
+            points: Coordinate points
                 used to build the mask. Defaults to None.
-            method (int, optional): How Mask is applied to the puzzle
+            method: How Mask is applied to the puzzle
                 (1=Standard (Intersection), 2=Additive, 3=Subtractive). Defaults to 1.
-            static (bool, optional): Should this mask be reapplied
+            static: Should this mask be reapplied
                 after changes to the parent puzzle size. Defaults to True.
         """
         super().__init__(points=points, method=method, static=static)

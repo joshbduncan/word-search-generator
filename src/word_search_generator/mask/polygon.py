@@ -5,13 +5,17 @@ from .mask import Mask, MaskMethod, MaskNotGenerated, MethodLiteral
 
 
 class Polygon(Mask):
-    """This class represents a subclass of the Mask object
-    and generates a polygon mask from a set of coordinate points."""
+    """Generates polygon-shaped masks from coordinate points.
+
+    Creates arbitrary polygon shapes by connecting a series of points
+    and filling the resulting closed shape. Supports complex polygons
+    with multiple vertices.
+    """
 
     def __init__(
         self,
         points: list[tuple[int, int]] | None = None,
-        method: MaskMethod | MethodLiteral = 1,
+        method: MaskMethod | MethodLiteral = MaskMethod.INTERSECTION,
         static: bool = True,
     ) -> None:
         """Generate a polygon mask from 3 or more coordinate points.
@@ -22,15 +26,13 @@ class Polygon(Mask):
         returning to the origin point (eg. `.points[0]`).
 
         Args:
-            points (list[tuple[int, int]] | None, optional): Polygon
-                coordinate points. Defaults to None.
-            method (int, optional): How Mask is applied to the puzzle
-                (1=Standard (Intersection), 2=Additive, 3=Subtractive). Defaults to 1.
-            static (bool, optional): Should this mask be reapplied
-                after changes to the parent puzzle size. Defaults to True.
+            points: Polygon coordinate points. Defaults to None.
+            method: How Mask is applied to the puzzle. Defaults to INTERSECTION.
+            static: Should this mask be reapplied after changes to the
+                parent puzzle size. Defaults to True.
 
         Raises:
-            ValueError: _description_
+            ValueError: If fewer than 3 points are provided.
         """
         if points and len(points) < 3:
             raise ValueError(
@@ -58,7 +60,7 @@ class Polygon(Mask):
         self._mask = self.build_mask(self.puzzle_size, self.INACTIVE)
         self._draw()
 
-    def _draw(self) -> None:  # doesn't draw evenly on second half pf point (going up)
+    def _draw(self) -> None:  # doesn't draw evenly on second half of points (going up)
         """Connect each coordinate point within `.points` in the
         order they are listed and then fill in the resulting shape."""
         for i in range(len(self.points)):
@@ -118,21 +120,30 @@ class Polygon(Mask):
             if in_bounds(x, y, self.puzzle_size, self.puzzle_size):
                 self.mask[y][x] = c
 
+    @staticmethod
+    def point_in_polygon(
+        point: tuple[int, int], polygon: list[tuple[int, int]]
+    ) -> bool:
+        """Ray casting algorithm to determine if a point is within a polygon.
+
+        Args:
+            point: The (x, y) coordinate to test.
+            polygon: List of polygon vertices as (x, y) tuples.
+
+        Returns:
+            True if the point is inside the polygon.
+        """
+        x, y = point
+        intersections = 0
+        for i in range(len(polygon) - 1):
+            x1, y1 = polygon[i]
+            x2, y2 = polygon[i + 1]
+            if (y < y1) != (y < y2) and x < (x2 - x1) * (y - y1) / (y2 - y1) + x1:
+                intersections += 1
+        return intersections % 2 == 1
+
     def _fill_shape(self, c: str) -> None:
         """Fill the interior of a polygon using the single character string `c`."""
-
-        def ray_casting(point, polygon):
-            """Ray Casting algorithm used to determine if a
-            coordinate is within a polygon."""
-            x, y = point
-            ct = 0
-            for i in range(len(polygon) - 1):
-                x1, y1 = polygon[i]
-                x2, y2 = polygon[i + 1]
-                if (y < y1) != (y < y2) and x < (x2 - x1) * (y - y1) / (y2 - y1) + x1:
-                    ct += 1
-            return ct % 2 == 1
-
         if not self.puzzle_size or not self.bounding_box:
             raise MaskNotGenerated(
                 "No puzzle size specified. Please use the `generate()` method."
@@ -144,20 +155,26 @@ class Polygon(Mask):
         max_x, max_y = bbox[1]
         for y in range(min_y, max_y + 1):
             for x in range(min_x, max_x + 1):
-                in_polygon = ray_casting((x, y), self.points + [self.points[0]])
+                in_polygon = self.point_in_polygon(
+                    (x, y), self.points + [self.points[0]]
+                )
                 if in_polygon and in_bounds(x, y, self.puzzle_size, self.puzzle_size):
                     self.mask[y][x] = c
 
 
 class Rectangle(Polygon):
-    """This subclass of `Polygon` represents a Rectangle mask object."""
+    """Generates rectangular mask shapes.
+
+    Creates rectangular masks by defining four corner points and
+    filling the resulting rectangular area.
+    """
 
     def __init__(
         self,
         width: int,
         height: int,
         origin: tuple[int, int] | None = None,
-        method: MaskMethod | MethodLiteral = 1,
+        method: MaskMethod | MethodLiteral = MaskMethod.INTERSECTION,
         static: bool = True,
     ) -> None:
         """Generate a rectangle polygon.
@@ -165,27 +182,44 @@ class Rectangle(Polygon):
         Note: (0, 0) coordinate is at top-left of puzzle.
 
         Args:
-            width (int): Rectangle width.
-            height (int): Rectangle height.
-            origin (tuple[int, int], optional): Top-left origin point from
-                which polygon be drawn. Defaults to puzzle top-left at (0, 0).
-            method (int, optional): How Mask is applied to the puzzle
-                (1=Standard (Intersection), 2=Additive, 3=Subtractive). Defaults to 1.
-            static (bool, optional): Should this mask be reapplied
-                after changes to the parent puzzle size. Defaults to True.
+            width: Rectangle width.
+            height: Rectangle height.
+            origin: Top-left origin point from which polygon be drawn.
+                Defaults to puzzle top-left at (0, 0). Can be negative for
+                mathematical positioning flexibility.
+            method: How Mask is applied to the puzzle. Defaults to INTERSECTION.
+            static: Should this mask be reapplied after changes to the
+                parent puzzle size. Defaults to True.
+
+        Raises:
+            ValueError: If width or height are <= 0.
+            TypeError: If origin is not a tuple of two coordinates.
         """
-        originX, originY = origin if origin else (0, 0)
+        if width <= 0 or height <= 0:
+            raise ValueError("width and height must be positive")
+
+        if origin is not None:
+            if not isinstance(origin, tuple) or len(origin) != 2:
+                raise TypeError("origin must be a tuple of two coordinates")
+            if not all(isinstance(coord, int | float) for coord in origin):
+                raise TypeError("origin coordinates must be numbers")
+
+        origin_x, origin_y = origin if origin else (0, 0)
         points = [
-            (originX, originY),
-            (originX, originY + height - 1),
-            (originX + width - 1, originY + height - 1),
-            (originX + width - 1, originY),
+            (origin_x, origin_y),
+            (origin_x, origin_y + height - 1),
+            (origin_x + width - 1, origin_y + height - 1),
+            (origin_x + width - 1, origin_y),
         ]
         super().__init__(points=points, method=method, static=static)
 
 
 class RegularPolygon(Polygon):
-    """This subclass of `Polygon` represents a RegularPolygon mask object."""
+    """Generates regular polygon masks with equal sides and angles.
+
+    Creates polygons like triangles, squares, pentagons, hexagons, etc.
+    All sides have equal length and all interior angles are equal.
+    """
 
     def __init__(
         self,
@@ -193,34 +227,40 @@ class RegularPolygon(Polygon):
         radius: int | None = None,
         center: tuple[int, int] | None = None,
         angle: float = 0.0,
-        method: MaskMethod | MethodLiteral = 1,
+        method: MaskMethod | MethodLiteral = MaskMethod.INTERSECTION,
         static: bool = False,
     ) -> None:
         """Generate a regular polygon mask with 3 or more sides.
         All sides and internal angles will be equal.
 
         Args:
-            vertices (int, optional): Vertices (sides) of polygon (>=3).
-                Defaults to 3.
-            radius (int | None, optional): Distance from center point to vertices.
-                Defaults to half of the `puzzle_width` provided to the
-                `.generate()` method.
-            center (tuple[int, int] | None, optional): Center origin point
-                from which the polygon will be calculated. Defaults to puzzle center.
-            angle (float, optional): Rotation angle in degrees polygon.
-                Defaults to 0.0.
-            method (int, optional): How Mask is applied to the puzzle
-                (1=Standard (Intersection), 2=Additive, 3=Subtractive). Defaults to 1.
-            static (bool, optional): Should this mask be reapplied
-                after changes to the parent puzzle size. Defaults to True.
+            vertices: Vertices (sides) of polygon (>=3). Defaults to 3.
+            radius: Distance from center point to vertices. Defaults to half
+                of the `puzzle_size` provided to the `.generate()` method.
+            center: Center origin point from which the polygon will be calculated.
+                Defaults to puzzle center. Can be negative for mathematical positioning.
+            angle: Rotation angle in degrees polygon. Defaults to 0.0.
+            method: How Mask is applied to the puzzle. Defaults to INTERSECTION.
+            static: Should this mask be reapplied after changes to the
+                parent puzzle size. Defaults to False.
 
         Raises:
-            ValueError: Polygon vertices must be >=3.
+            ValueError: If vertices < 3 or radius <= 0.
+            TypeError: If center is not a tuple of two coordinates.
         """
         if vertices < 3:
             raise ValueError(
                 "Minimum of 3 points (vertices) required to create a Polygon."
             )
+        if radius is not None and radius <= 0:
+            raise ValueError("radius must be positive")
+
+        if center is not None:
+            if not isinstance(center, tuple) or len(center) != 2:
+                raise TypeError("center must be a tuple of two coordinates")
+            if not all(isinstance(coord, int | float) for coord in center):
+                raise TypeError("center coordinates must be numbers")
+
         super().__init__(method=method, static=static)
         self.vertices = vertices
         self.radius = radius
@@ -253,7 +293,18 @@ class RegularPolygon(Polygon):
         radius: int,
         center: tuple[int, int],
         angle: float,
-    ):
+    ) -> list[tuple[int, int]]:
+        """Calculate vertex coordinates for a regular polygon.
+
+        Args:
+            vertices: Number of polygon vertices.
+            radius: Distance from center to each vertex.
+            center: Center point of the polygon.
+            angle: Rotation angle in degrees.
+
+        Returns:
+            List of (x, y) coordinate tuples for each vertex.
+        """
         points = []
         cx, cy = center
         angle_step = 360.0 / vertices
@@ -282,7 +333,11 @@ class RegularPolygon(Polygon):
 
 
 class Star(Polygon):
-    """This subclass of `Polygon` represents a Star mask object."""
+    """Generates pointed star polygon masks.
+
+    Creates multi-pointed star shapes with alternating outer and inner
+    vertices to form the classic star appearance.
+    """
 
     def __init__(
         self,
@@ -291,34 +346,43 @@ class Star(Polygon):
         inner_radius: int | None = None,
         center: tuple[int, int] | None = None,
         angle: float = 0.0,
-        method: MaskMethod | MethodLiteral = 1,
+        method: MaskMethod | MethodLiteral = MaskMethod.INTERSECTION,
         static: bool = False,
     ) -> None:
         """Generate a pointed star polygon mask.
 
         Args:
-            outer_vertices (int, optional): Number of outer vertices (>=3).
-            Defaults to 5.
-            outer_radius (int | None, optional): Distance from center point
-            to outer vertices. Defaults to None.
-            inner_radius (int | None, optional): Distance from center point
-            to inner vertices. Defaults to None.
-            center (tuple[int, int] | None, optional): Center origin point
-            from which the polygon will be calculated. Defaults to puzzle center.
-            angle (float, optional): Rotation angle in degrees polygon.
-            Defaults to 0.0.
-            method (int, optional): How Mask is applied to the puzzle
-            (1=Standard (Intersection), 2=Additive, 3=Subtractive). Defaults to 1.
-            static (bool, optional): Should this mask be reapplied
-            after changes to the parent puzzle size. Defaults to True.
+            outer_vertices: Number of outer vertices (>=3). Defaults to 5.
+            outer_radius: Distance from center point to outer vertices.
+                Defaults to puzzle radius.
+            inner_radius: Distance from center point to inner vertices.
+                Defaults to half the puzzle radius.
+            center: Center origin point from which the polygon will be calculated.
+                Defaults to puzzle center. Can be negative for mathematical positioning.
+            angle: Rotation angle in degrees polygon. Defaults to 0.0.
+            method: How Mask is applied to the puzzle. Defaults to INTERSECTION.
+            static: Should this mask be reapplied after changes to the
+                parent puzzle size. Defaults to False.
 
         Raises:
-            ValueError: Polygon outer vertices must be >=3.
+            ValueError: If outer_vertices < 3 or radii <= 0.
+            TypeError: If center is not a tuple of two coordinates.
         """
         if outer_vertices < 3:
             raise ValueError(
                 "Minimum of 3 points (vertices) required to create a Polygon."
             )
+        if outer_radius is not None and outer_radius <= 0:
+            raise ValueError("outer_radius must be positive")
+        if inner_radius is not None and inner_radius <= 0:
+            raise ValueError("inner_radius must be positive")
+
+        if center is not None:
+            if not isinstance(center, tuple) or len(center) != 2:
+                raise TypeError("center must be a tuple of two coordinates")
+            if not all(isinstance(coord, int | float) for coord in center):
+                raise TypeError("center coordinates must be numbers")
+
         super().__init__(method=method, static=static)
         self.outer_vertices = outer_vertices
         self.outer_radius = outer_radius
@@ -349,7 +413,20 @@ class Star(Polygon):
         inner_radius: int,
         center: tuple[int, int],
         angle: float,
-    ):
+    ) -> list[tuple[int, int]]:
+        """Calculate vertex coordinates for a star polygon.
+
+        Args:
+            outer_vertices: Number of outer star points.
+            outer_radius: Distance from center to outer vertices.
+            inner_radius: Distance from center to inner vertices.
+            center: Center point of the star.
+            angle: Rotation angle in degrees.
+
+        Returns:
+            List of (x, y) coordinate tuples alternating
+                between outer and inner vertices.
+        """
         points = []
         cx, cy = center
         angle_step = 180.0 / outer_vertices
