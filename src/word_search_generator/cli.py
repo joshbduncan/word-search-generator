@@ -43,10 +43,10 @@ class DifficultyAction(argparse.Action):
             for d in values.split(","):
                 if d.strip().isnumeric():
                     parser.error(
-                        f"{option_string} must be \
-either numeric levels \
-({', '.join([str(i) for i in LEVEL_DIRS])}) or accepted \
-cardinal directions ({', '.join([d.name for d in Direction])})."
+                        f"{option_string} must be either numeric levels "
+                        f"({', '.join([str(i) for i in LEVEL_DIRS])}) or accepted "
+                        f"cardinal directions "
+                        f"({', '.join([d.name for d in Direction])})."
                     )
             setattr(namespace, self.dest, values)
 
@@ -203,7 +203,7 @@ or all word lists if none is provided.",
         "--require-all-words",
         action="store_true",
         help="Require all words to be placed by the generator. \
-If all words can't be placed, and exception will be raised.",
+If all words can't be placed, an exception will be raised.",
     )
     secret_words_group.add_argument(
         "-rx",
@@ -333,8 +333,6 @@ def process_words(args: argparse.Namespace) -> str:
             words = ",".join(w.strip() for w in args.words[0].split(","))
         else:
             words = ",".join(word.replace(",", "") for word in args.words)
-
-        # words = ",".join([word.replace(",", "") for word in args.words])
     elif not sys.stdin.isatty():
         # disable interactive tty which can be confusing
         # but still process words were piped in from the shell
@@ -405,7 +403,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     # process secret puzzle words
     secret_words = process_secret_words(args)
 
-    # if not words were found exit the script
+    # if no words were found exit the script
     if not words and not secret_words:
         print("No words provided. Learn more with the '-h' flag.", file=sys.stderr)
         return 1
