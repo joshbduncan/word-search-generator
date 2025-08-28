@@ -17,7 +17,7 @@ from ..core.formatter import Formatter
 from ..utils import (
     get_answer_key_list,
     get_answer_key_str,
-    get_LEVEL_DIRS_str,
+    get_level_dirs_str,
     get_word_list_list,
     get_word_list_str,
 )
@@ -122,7 +122,7 @@ class WordSearchFormatter(Formatter):
 
         with self.CONSOLE.capture() as capture:
             self.CONSOLE.print(table)
-            self.CONSOLE.print(f"Find words going {get_LEVEL_DIRS_str(game.level)}:")
+            self.CONSOLE.print(f"Find words going {get_level_dirs_str(game.level)}:")
             self.CONSOLE.print(*wordlist, sep=", ")
             self.CONSOLE.print()
             if not hide_key:
@@ -182,7 +182,7 @@ class WordSearchFormatter(Formatter):
             word_list.sort(key=lambda w: w.text)
 
         puzzle = self.hide_filler_characters(game) if solution else game.cropped_puzzle
-        LEVEL_DIRS_str = get_LEVEL_DIRS_str(game.level)
+        level_dirs_str = get_level_dirs_str(game.level)
         key_intro = "Answer Key"
         if hasattr(game, "placed_secret_words"):
             key_intro += " (*Secret Words)"
@@ -211,7 +211,7 @@ class WordSearchFormatter(Formatter):
             f_writer.writerow([""])
             f_writer.writerow(["Word List:"])
             f_writer.writerow(word_list_as_strings)
-            f_writer.writerow([f"* Words can go {LEVEL_DIRS_str}."])
+            f_writer.writerow([f"* Words can go {level_dirs_str}."])
             f_writer.writerow([""])
             f_writer.writerow([f"{key_intro}: "])
             f_writer.writerow(answer_key_list)
@@ -364,11 +364,11 @@ def draw_word_list(
     lowercase: bool = False,
     sort_word_list: bool = True,
 ):
-    LEVEL_DIRS_str = get_LEVEL_DIRS_str(game.level)
+    level_dirs_str = get_level_dirs_str(game.level)
     pdf.set_font("Helvetica", "BU", size=info_font_size)
     pdf.cell(
         pdf.epw,
-        text=f"Find words going {LEVEL_DIRS_str}:",
+        text=f"Find words going {level_dirs_str}:",
         align="C",
         new_y="NEXT",
     )

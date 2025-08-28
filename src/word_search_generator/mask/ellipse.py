@@ -151,7 +151,9 @@ class Ellipse(Bitmap):
         return points
 
     @staticmethod
-    def within_radius(x: int, y: int, radius: float, ratio: float) -> bool:
+    def within_radius(
+        x: int | float, y: int | float, radius: float, ratio: float
+    ) -> bool:
         """Check if a coordinate is within the ellipse radius.
 
         Args:
