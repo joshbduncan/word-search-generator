@@ -59,6 +59,21 @@ class Direction(Enum):
         return self.value[1]
 
 
+"""Difficulty level mappings for word placement directions.
+
+Each level restricts which directions words can be placed in, with higher
+numbers generally being more difficult (except for specialized levels 7-8):
+
+- Level -1: Invalid/testing level (no directions)
+- Level 1: Beginner (right and down only)
+- Level 2: Easy (right-facing directions and down)
+- Level 3: Normal (all 8 directions)
+- Level 4: Hard (excludes easiest directions)
+- Level 5: Expert (excludes horizontal right)
+- Level 6: Master (backward-facing directions only)
+- Level 7: Challenge (diagonals only)
+- Level 8: Orthogonal (no diagonals)
+"""
 LEVEL_DIRS: dict[int, set[Direction]] = {
     -1: set(),  # Invalid level: no valid directions (used for testing/validation)
     1: {  # Beginner: horizontal right and vertical down only
@@ -116,18 +131,3 @@ LEVEL_DIRS: dict[int, set[Direction]] = {
         Direction.W,
     },
 }
-"""Difficulty level mappings for word placement directions.
-
-Each level restricts which directions words can be placed in, with higher
-numbers generally being more difficult (except for specialized levels 7-8):
-
-- Level -1: Invalid/testing level (no directions)
-- Level 1: Beginner (right and down only)
-- Level 2: Easy (right-facing directions and down)
-- Level 3: Normal (all 8 directions)
-- Level 4: Hard (excludes easiest directions)
-- Level 5: Expert (excludes horizontal right)
-- Level 6: Master (backward-facing directions only)
-- Level 7: Challenge (diagonals only)
-- Level 8: Orthogonal (no diagonals)
-"""
