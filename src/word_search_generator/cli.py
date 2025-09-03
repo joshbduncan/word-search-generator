@@ -5,6 +5,7 @@ from importlib.metadata import version
 from pathlib import Path
 
 from .core.directions import LEVEL_DIRS
+from .core.formatter import ExportFormat
 from .core.word import Direction
 from .mask import ImageMask, Mask, shapes
 from .utils import get_random_words
@@ -435,12 +436,16 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.output or args.format:
         from datetime import datetime
 
-        format = args.format if args.format else "PDF"
+        # Convert string format to ExportFormat enum
+        if args.format:
+            format = ExportFormat.from_string(args.format)
+        else:
+            format = ExportFormat.PDF
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S").replace(":", "")
         path = (
             args.output
             if args.output
-            else f"WordSearchPuzzle {timestamp}.{format.lower()}"
+            else f"WordSearchPuzzle {timestamp}.{str(format).lower()}"
         )
         foutput = puzzle.save(
             path=path,
