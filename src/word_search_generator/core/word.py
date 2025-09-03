@@ -36,14 +36,29 @@ class Word:
         text: str,
         secret: bool = False,
     ) -> None:
-        """Initialize a Word Search puzzle Word."""
-        self.text = text.upper().strip()
+        """Initialize a Word Search puzzle Word.
+
+        Args:
+            text: The word text to use in the puzzle.
+            secret: Whether this is a secret word (hidden from key).
+
+        Raises:
+            ValueError: If text is empty or contains only whitespace.
+        """
+        if not isinstance(text, str):
+            raise TypeError(f"Word text must be a string, got {type(text).__name__}")
+
+        cleaned_text = text.upper().strip()
+        if not cleaned_text:
+            raise ValueError("Word text cannot be empty or contain only whitespace")
+
+        self.text = cleaned_text
         self.start_row: int | None = None
         self.start_column: int | None = None
         self.coordinates: list[tuple[int, int]] = []
         self.direction: Direction | None = None
         self.secret = secret
-        self.color: tuple[int | float, int | float, int | float] = colorsys.hsv_to_rgb(
+        self.color: tuple[float, float, float] = colorsys.hsv_to_rgb(
             h=random.random(),
             s=random.randint(42, 98) / 100,
             v=random.randint(40, 90) / 100,
@@ -55,34 +70,52 @@ class Word:
         """Validate the word against a list of validators.
 
         Args:
-            validators: Validators to test.
+            validators: Validators to test against the word.
             placed_words: Currently placed puzzle words.
 
         Raises:
-            TypeError: Incorrect validator type provided.
+            TypeError: If validator is not a Validator instance.
+            ValueError: If validators or placed_words is None.
 
         Returns:
-            Word passes all validators.
+            True if the word passes all validators, False otherwise.
         """
+        if validators is None:
+            raise ValueError("Validators cannot be None")
+        if placed_words is None:
+            raise ValueError("Placed words cannot be None")
+
         for validator in validators:
             if not isinstance(validator, Validator):
-                raise TypeError(f"Invalid validator: {validator}.")
+                raise TypeError(
+                    f"Expected Validator instance, got {type(validator).__name__}: "
+                    f"{validator}"
+                )
+
             if not validator.validate(self.text, placed_words=placed_words):
                 return False
         return True
 
     @property
     def lowercase(self) -> str:
-        """Return lowercase version of the word."""
+        """Return lowercase version of the word.
+
+        Returns:
+            Lowercase word text if placed, empty string if not placed.
+        """
         if not self.placed:
             return ""
         return self.text.lower()
 
     @property
     def placed(self) -> bool:
-        """Is the word currently placed in a puzzle.
+        """Check if the word is currently placed in a puzzle.
 
-        Note: Used `is not None` since 0 vals for start_row/column are not truthy
+        Returns:
+            True if the word has a start position and direction, False otherwise.
+
+        Note:
+            Uses `is not None` since 0 values for start_row/column are not truthy.
         """
         return all(
             (
@@ -94,8 +127,11 @@ class Word:
 
     @property
     def position(self) -> Position:
-        """Current start position of the word in the puzzle
-        as (start_row, start_column)."""
+        """Get the current start position of the word in the puzzle.
+
+        Returns:
+            Position namedtuple containing (start_row, start_column).
+        """
         return Position(self.start_row, self.start_column)
 
     @position.setter
@@ -110,27 +146,44 @@ class Word:
 
     @property
     def position_xy(self) -> Position:
-        """Returns a the word position with 1-based indexing
-        and a familiar (x, y) coordinate system"""
+        """Get the word position with 1-based indexing and (x, y) coordinate system.
+
+        Returns:
+            Position namedtuple with 1-based coordinates (row + 1, column + 1).
+        """
         return Position(
-            self.start_row + 1 if self.start_row is not None else self.start_row,
-            (
-                self.start_column + 1
-                if self.start_column is not None
-                else self.start_column
-            ),
+            self._add_one_if_not_none(self.start_row),
+            self._add_one_if_not_none(self.start_column),
         )
+
+    def _add_one_if_not_none(self, value: int | None) -> int | None:
+        """Helper method to add 1 to a value if it's not None.
+
+        Args:
+            value: Integer value or None.
+
+        Returns:
+            value + 1 if value is not None, otherwise None.
+        """
+        return value + 1 if value is not None else None
 
     @property
     def rich_style(self) -> Style:
-        """Returns a rich Style for outputting the word in the cli."""
+        """Get a Rich Style object for colored CLI output.
+
+        Returns:
+            Rich Style with random background color and bold text.
+        """
         r, g, b = (int(v * 255) for v in self.color)
         return Style(bgcolor=f"rgb({r},{g},{b})", bold=True)
 
     @property
     def key_info(self) -> KeyInfo:
-        """Returns the Word placement information formatted
-        correctly for a WordSearch puzzle key."""
+        """Get word placement information for puzzle key display.
+
+        Returns:
+            KeyInfo TypedDict containing start position, direction, and secret status.
+        """
         return {
             "start": self.position,
             "direction": self.direction,
@@ -139,8 +192,11 @@ class Word:
 
     @property
     def key_info_json(self) -> KeyInfoJson:
-        """Returns the Word placement information formatted
-        correctly for a WordSearch puzzle key used in the JSON property."""
+        """Get word placement information formatted for JSON serialization.
+
+        Returns:
+            KeyInfoJson TypedDict with separate row/column fields and string direction.
+        """
         return {
             "start_row": self.start_row,
             "start_col": self.start_column,
@@ -154,70 +210,80 @@ class Word:
         lowercase: bool = False,
         reversed_letters: bool = False,
     ) -> str:
-        """Return a string representation of the Word placement
-        information formatted correctly for a WordSearch puzzle key
-        when the WordSearch object it output using the `print()` or
-        `.show()` method.
+        """Get formatted string representation for puzzle key display.
+
+        Used when outputting WordSearch objects via print() or show() methods.
 
         Args:
             bbox: The current puzzle bounding box.
-            lowercase: Should words be lowercase. Defaults to False.
-            reversed_letters: Should words letters be reversed. Defaults to False.
+            lowercase: Whether to display word in lowercase.
+            reversed_letters: Whether to reverse the word letters.
 
         Returns:
-            Word placement information.
+            Formatted word placement information string, or empty if not placed.
         """
         if not self.placed:
             return ""
+
+        if self.direction is None:
+            raise ValueError("Word direction cannot be None when placed")
+
         col, row = self.offset_position_xy(bbox)
         word_text = self.lowercase if lowercase else self.text
+
         if reversed_letters:
             word_text = word_text[::-1]
-        return (
-            f"{'*' if self.secret else ''}"
-            + f"{word_text} "
-            + f"{self.direction.name if self.direction else self.direction}"
-            + f" @ {(col, row)}"
-        )
+
+        secret_marker = "*" if self.secret else ""
+        direction_name = self.direction.name
+
+        return f"{secret_marker}{word_text} {direction_name} @ {(col, row)}"
 
     def offset_position_xy(self, bbox: BoundingBox) -> Position:
-        """Returns a string representation of the word position with
-        1-based indexing and a familiar (x, y) coordinate system. The
-        position will be offset by the puzzle bounding box when a puzzle
-        has been masked.
+        """Get word position with 1-based indexing, offset by bounding box.
+
+        The position is adjusted for masked puzzles by subtracting the bounding
+        box offset and adding 1 for 1-based indexing.
 
         Args:
-            bbox (BoundingBox): The current
-                puzzle bounding box.
+            bbox: The current puzzle bounding box.
+
+        Returns:
+            Position with (column, row) offset by bounding box.
         """
         return Position(
-            (
-                self.start_column + 1 - bbox[0][0]
-                if self.start_column is not None
-                else self.start_column
-            ),
-            (
-                self.start_row + 1 - bbox[0][1]
-                if self.start_row is not None
-                else self.start_row
-            ),
+            self._offset_coordinate(self.start_column, bbox[0][0]),
+            self._offset_coordinate(self.start_row, bbox[0][1]),
         )
 
     def offset_coordinates(self, bbox: BoundingBox) -> list[Position]:
-        """Returns a list of the Word letter coordinates, offset
-        by the puzzle bounding box.
+        """Get list of word letter coordinates, offset by bounding box.
 
         Args:
-            bbox (BoundingBox): The current
-                puzzle bounding box.
+            bbox: The current puzzle bounding box.
+
+        Returns:
+            List of Position objects for each letter coordinate.
         """
         return [
             Position(
-                x + 1 - bbox[0][0] if x is not None else x,
-                y + 1 - bbox[0][1] if y is not None else y,
+                self._offset_coordinate(x, bbox[0][0]),
+                self._offset_coordinate(y, bbox[0][1]),
             )
             for y, x in self.coordinates
         ]
+
+    def _offset_coordinate(self, value: int | None, offset: int) -> int | None:
+        """Helper method to apply bounding box offset with 1-based indexing.
+
+        Args:
+            value: Original coordinate value or None.
+            offset: Bounding box offset to subtract.
+
+        Returns:
+            value + 1 - offset if value is not None, otherwise None.
+        """
+        return value + 1 - offset if value is not None else None
 
     def remove_from_puzzle(self):
         """Remove word placement details when a puzzle is reset."""
