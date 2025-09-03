@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, TypeAlias
 
 from .words import WORD_LISTS
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from collections.abc import Iterator
 
     from .core.game import DirectionSet, Puzzle, Word, WordSet
