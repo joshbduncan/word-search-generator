@@ -3,11 +3,13 @@ from __future__ import annotations
 import random
 from typing import TYPE_CHECKING, TypeAlias
 
+from ..core import GameType
+from ..core.game import Puzzle
 from ..core.generator import Generator, WordFitError, retry
 from ..core.word import Direction, Word
 from ..utils import in_bounds
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from ..core import GameType
     from ..core.game import Puzzle
 
@@ -17,7 +19,14 @@ Fits: TypeAlias = list[tuple[str, list[tuple[int, int]]]]
 
 
 class WordSearchGenerator(Generator):
-    """Default generator for standard WordSearch puzzles."""
+    """Default generator for standard WordSearch puzzles.
+
+    Implements the core puzzle generation algorithm that:
+    1. Places words in the grid according to direction constraints
+    2. Handles both regular and secret words with different placement rules
+    3. Fills remaining spaces with random characters to complete the puzzle
+    4. Includes validation to prevent unintended word duplicates
+    """
 
     def generate(self, game: GameType) -> Puzzle:
         self.game = game
@@ -126,7 +135,7 @@ class WordSearchGenerator(Generator):
         fits: Fits = []
         # check all directions for level
         directions = secret_directions = self.game.directions
-        if hasattr(self.game, "secret_directions"):
+        if hasattr(self.game, "secret_directions") and self.game.secret_directions:
             secret_directions = self.game.secret_directions
         for d in secret_directions if word.secret else directions:
             coords = self.test_a_fit(word.text, position, d)
@@ -151,15 +160,23 @@ class WordSearchGenerator(Generator):
             ):
                 continue
             fit = self.try_to_fit_word(word)
-            if fit:
+            # Handle graceful failure from retry decorator (returns None on failure)
+            if fit is not None and fit:
                 placed_words.append(word.text)
             if len(placed_words) == self.game.MAX_PUZZLE_WORDS:
                 break
 
     @retry()
-    def try_to_fit_word(self, word: Word) -> bool:
+    def try_to_fit_word(self, word: Word) -> bool | None:
         """Try to fit `word` at randomized coordinates.
-        @retry wrapper controls the number of attempts"""
+
+        The @retry wrapper controls the number of attempts and returns None
+        if all retries are exhausted without successfully placing the word.
+
+        Returns:
+            True if word was successfully placed, False if placement failed,
+            or None if all retries were exhausted.
+        """
         row = random.randint(0, len(self.puzzle) - 1)
         col = random.randint(0, len(self.puzzle) - 1)
 
