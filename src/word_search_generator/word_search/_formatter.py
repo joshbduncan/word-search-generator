@@ -13,7 +13,8 @@ from rich.table import Table
 from rich.text import Text
 
 from ..console import console
-from ..core.formatter import Formatter
+from ..core import GameType, Puzzle, Word
+from ..core.formatter import ExportFormat, Formatter
 from ..utils import (
     get_answer_key_list,
     get_answer_key_str,
@@ -22,7 +23,7 @@ from ..utils import (
     get_word_list_str,
 )
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from ..core import GameType, Puzzle, Word
     from .word_search import WordSearch
 
@@ -133,18 +134,16 @@ class WordSearchFormatter(Formatter):
         self,
         game: GameType,
         path: str | Path,
-        format: str = "PDF",
+        format: ExportFormat = ExportFormat.PDF,
         solution: bool = False,
         lowercase: bool = False,
         hide_key: bool = False,
         sort_word_list: bool = True,
     ) -> Path:
-        if format.upper() not in ["CSV", "JSON", "PDF"]:
-            raise ValueError('Save file format must be either "CSV", "JSON", or "PDF".')
         # convert strings to PATH object
         if isinstance(path, str):
             path = Path(path)
-        if format.upper() == "CSV":
+        if format == ExportFormat.CSV:
             saved_file = self.write_csv_file(
                 path,
                 game,  # type: ignore
@@ -152,7 +151,7 @@ class WordSearchFormatter(Formatter):
                 lowercase,
                 sort_word_list,
             )
-        elif format.upper() == "JSON":
+        elif format == ExportFormat.JSON:
             saved_file = self.write_json_file(
                 path,
                 game,  # type: ignore
@@ -339,7 +338,7 @@ def highlight_solution(
 
         # mypy check for word position
         if not word_start_x or not word_start_y or not word_end_x or not word_end_y:
-            continue  # pragma: no cover
+            continue
 
         with pdf.new_path() as path:
             path.style.fill_color = None
@@ -403,7 +402,7 @@ def draw_word_list(
         line_offset = (pdf.epw - line_width) / 2
         pdf.set_x(pdf.get_x() + line_offset)
         for word in words:
-            if word.secret and not solution:  # pragma: no cover
+            if word.secret and not solution:
                 continue
             start_x = pdf.get_x()
             start_y = pdf.get_y()

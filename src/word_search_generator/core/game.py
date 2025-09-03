@@ -6,7 +6,7 @@ from typing import TypeAlias
 
 from ordered_set import OrderedSet
 
-from ..core.formatter import Formatter
+from ..core.formatter import ExportFormat, Formatter
 from ..core.generator import Generator
 from ..mask import CompoundMask, Mask
 from ..utils import BoundingBox, find_bounding_box
@@ -64,6 +64,7 @@ class MissingWordError(Exception):
 
 
 Puzzle: TypeAlias = list[list[str]]
+
 DirectionSet: TypeAlias = set[Direction]
 Key: TypeAlias = dict[str, KeyInfo]
 KeyJson: TypeAlias = dict[str, KeyInfoJson]
@@ -324,12 +325,18 @@ class Game:
             raise MissingFormatterError()
         print(self.formatter.show(self, *args, **kwargs))
 
-    def save(self, path: str | Path, format: str = "PDF", *args, **kwargs) -> str:
+    def save(
+        self,
+        path: str | Path,
+        format: ExportFormat = ExportFormat.PDF,
+        *args,
+        **kwargs,
+    ) -> Path:
         """Save the current puzzle to a file.
 
         Args:
             path: File save path.
-            format: Type of file to save ("CSV", "JSON", "PDF"). Defaults to "PDF".
+            format: Export format. Defaults to ExportFormat.PDF.
 
         Raises:
             EmptyPuzzleError: Puzzle not yet generated or puzzle has no placed words.
@@ -342,7 +349,7 @@ class Game:
             raise EmptyPuzzleError()
         if not self.formatter:
             raise MissingFormatterError()
-        return str(self.formatter.save(self, path, format, *args, **kwargs))
+        return self.formatter.save(self, path, format, *args, **kwargs)
 
     # *************************************************************** #
     # ******************** PROCESSING/GENERATION ******************** #

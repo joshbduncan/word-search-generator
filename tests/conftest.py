@@ -3,7 +3,14 @@ from pathlib import Path
 import pytest
 
 from word_search_generator import WordSearch
-from word_search_generator.core import Formatter, Game, GameType, Generator, Validator
+from word_search_generator.core import (
+    Formatter,
+    Game,
+    GameType,
+    Generator,
+    Validator,
+)
+from word_search_generator.core.formatter import ExportFormat
 from word_search_generator.core.game import Puzzle
 from word_search_generator.core.word import Direction, Word
 from word_search_generator.mask import Mask, shapes
@@ -38,7 +45,7 @@ def empty_formatter(tmp_path: Path):
             self,
             game: GameType,
             path: str | Path,
-            format: str = "PDF",
+            format: ExportFormat = ExportFormat.PDF,
             solution: bool = False,
             *args,
             **kwargs,

@@ -14,6 +14,7 @@ from pdfplumber.page import Page
 from pypdf import PdfReader
 
 from word_search_generator import WordSearch
+from word_search_generator.core.formatter import ExportFormat
 from word_search_generator.core.game import EmptyPuzzleError
 from word_search_generator.core.word import Direction, Word
 from word_search_generator.utils import get_random_words, get_word_list_list
@@ -174,7 +175,7 @@ def extract_wordlist_highlight_lines(page: Page) -> list[list[float]]:
 def test_export_csv(words, tmp_path: Path):
     puzzle = WordSearch(words)
     fp = Path.joinpath(tmp_path, "test.csv")
-    puzzle.save(fp, format="csv")
+    puzzle.save(fp, format=ExportFormat.CSV)
     (
         extracted_puzzle,
         extracted_words,
@@ -197,7 +198,7 @@ def test_export_csv(words, tmp_path: Path):
 def test_export_csv_only_secret_words(tmp_path: Path):
     puzzle = WordSearch(secret_words="cat bat rat hat")
     fp = Path.joinpath(tmp_path, "test.csv")
-    puzzle.save(fp, format="csv")
+    puzzle.save(fp, format=ExportFormat.CSV)
     (
         extracted_puzzle,
         extracted_words,
@@ -220,7 +221,7 @@ def test_export_csv_only_secret_words(tmp_path: Path):
 def test_export_csv_lowercase(words, tmp_path: Path):
     puzzle = WordSearch(words)
     fp = Path.joinpath(tmp_path, "test.csv")
-    puzzle.save(fp, format="csv", lowercase=True)
+    puzzle.save(fp, format=ExportFormat.CSV, lowercase=True)
     (
         extracted_puzzle,
         extracted_words,
@@ -246,7 +247,7 @@ def test_export_csv_lowercase(words, tmp_path: Path):
 def test_export_json(words, tmp_path: Path):
     puzzle = WordSearch(words)
     fp = Path.joinpath(tmp_path, "test.json")
-    puzzle.save(fp, format="json")
+    puzzle.save(fp, format=ExportFormat.JSON)
     data = json.loads(Path(fp).read_text())
     for word in puzzle.words:
         assert word.text in data["words"]
@@ -255,7 +256,7 @@ def test_export_json(words, tmp_path: Path):
 def test_export_json_lowercase(words, tmp_path: Path):
     puzzle = WordSearch(words)
     fp = Path.joinpath(tmp_path, "test.json")
-    puzzle.save(fp, format="json", lowercase=True)
+    puzzle.save(fp, format=ExportFormat.JSON, lowercase=True)
     data = json.loads(Path(fp).read_text())
     for word in puzzle.words:
         assert word.text.lower() in data["words"]
@@ -289,7 +290,7 @@ def test_export_pdf_puzzles(tmp_path: Path):
     level = random.randint(1, 3)
     puzzle = WordSearch(words, level=level, size=size)
     fp = Path.joinpath(tmp_path, f"{uuid.uuid4()}.pdf")
-    puzzle.save(fp, format="pdf")
+    puzzle.save(fp, format=ExportFormat.PDF)
 
     with open(fp, "rb") as f:
         pdf = PdfReader(f)
@@ -332,7 +333,7 @@ def test_export_csv_overwrite_file_error(tmp_path: Path):
     fp.touch()
     puzzle = WordSearch("cat, bird, donkey")
     with pytest.raises(FileExistsError):
-        puzzle.save(fp, format="CSV")
+        puzzle.save(fp, format=ExportFormat.CSV)
 
 
 def test_export_json_overwrite_file_error(tmp_path: Path):
@@ -341,7 +342,7 @@ def test_export_json_overwrite_file_error(tmp_path: Path):
     fp.touch()
     puzzle = WordSearch("cat, bird, donkey")
     with pytest.raises(FileExistsError):
-        puzzle.save(fp, format="JSON")
+        puzzle.save(fp, format=ExportFormat.JSON)
 
 
 def test_export_pdf_os_error(words):
@@ -563,7 +564,7 @@ def test_pdf_output_solution_highlighting(tmp_path: Path):
     ws = WordSearch(size=random.randint(8, 21))
     ws.random_words(random.randint(5, 21))
     fp = Path.joinpath(tmp_path, f"{uuid.uuid4()}.pdf")
-    ws.save(fp, format="PDF", solution=True)
+    ws.save(fp, format=ExportFormat.PDF, solution=True)
 
     # read solution page from PDF
     page = pdfplumber.open(fp).pages[1]
@@ -624,7 +625,7 @@ def test_pdf_output_solution_character_placement(tmp_path: Path):
     ws = WordSearch(size=random.randint(8, 21))
     ws.random_words(random.randint(5, 21))
     fp = Path.joinpath(tmp_path, f"{uuid.uuid4()}.pdf")
-    ws.save(fp, format="PDF", solution=True)
+    ws.save(fp, format=ExportFormat.PDF, solution=True)
 
     # read solution page from PDF
     page = pdfplumber.open(fp).pages[1]
@@ -676,7 +677,7 @@ def test_csv_output_puzzle_size(tmp_path: Path):
     ws = WordSearch(size=random.randint(8, 21))
     ws.random_words(random.randint(5, 21))
     fp = Path.joinpath(tmp_path, f"{uuid.uuid4()}.pdf")
-    ws.save(fp, format="CSV")
+    ws.save(fp, format=ExportFormat.CSV)
     puzzle = parse_puzzle(fp)
     assert ws.size == len(puzzle)
     assert ws.size == len(puzzle[0])

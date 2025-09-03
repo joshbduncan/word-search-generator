@@ -10,6 +10,7 @@ from rich.console import Console
 
 from word_search_generator import WordSearch
 from word_search_generator.core.directions import LEVEL_DIRS
+from word_search_generator.core.formatter import ExportFormat
 from word_search_generator.core.game import (
     EmptyPuzzleError,
     EmptyWordlistError,
@@ -330,7 +331,7 @@ def test_unplaced_secret_words():
 
 def test_invalid_export_format(ws: WordSearch):
     with pytest.raises(ValueError):
-        ws.save("test.pdf", format="GIF")
+        ExportFormat.from_string("GIF")
 
 
 def test_missing_word_error():
@@ -555,7 +556,7 @@ def test_word_search_save_csv_with_sorting(tmp_path):
     ws: WordSearch = WordSearch("zebra,apple,cat")
     csv_file = tmp_path / "test_sorted.csv"
 
-    ws.save(csv_file, format="CSV", sort_word_list=True)
+    ws.save(csv_file, format=ExportFormat.CSV, sort_word_list=True)
     assert csv_file.exists()
 
     content = csv_file.read_text()
@@ -581,7 +582,7 @@ def test_word_search_save_csv_without_sorting(tmp_path):
     ws: WordSearch = WordSearch("zebra,apple,cat")
     csv_file = tmp_path / "test_unsorted.csv"
 
-    ws.save(csv_file, format="CSV", sort_word_list=False)
+    ws.save(csv_file, format=ExportFormat.CSV, sort_word_list=False)
     assert csv_file.exists()
 
     content = csv_file.read_text()
@@ -607,7 +608,7 @@ def test_word_search_save_json_with_sorting(tmp_path):
     ws: WordSearch = WordSearch("dog,cat,bat")
     json_file = tmp_path / "test_sorted.json"
 
-    ws.save(json_file, format="JSON", sort_word_list=True)
+    ws.save(json_file, format=ExportFormat.JSON, sort_word_list=True)
     assert json_file.exists()
 
     import json

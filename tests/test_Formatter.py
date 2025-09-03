@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from word_search_generator import WordSearch
+from word_search_generator.core.formatter import ExportFormat
 from word_search_generator.word_search._formatter import WordSearchFormatter
 
 
@@ -32,7 +33,7 @@ def test_formatter_save_csv_with_sorting(tmp_path):
     formatter = WordSearchFormatter()
     csv_file = tmp_path / "test.csv"
 
-    formatter.save(ws, csv_file, format="CSV", sort_word_list=True)
+    formatter.save(ws, csv_file, format=ExportFormat.CSV, sort_word_list=True)
     assert csv_file.exists()
 
     content = csv_file.read_text()
@@ -50,7 +51,7 @@ def test_formatter_save_csv_without_sorting(tmp_path):
     formatter = WordSearchFormatter()
     csv_file = tmp_path / "test.csv"
 
-    formatter.save(ws, csv_file, format="CSV", sort_word_list=False)
+    formatter.save(ws, csv_file, ExportFormat.CSV, sort_word_list=False)
     assert csv_file.exists()
 
     content = csv_file.read_text()
@@ -68,7 +69,7 @@ def test_formatter_save_json_with_sorting(tmp_path):
     formatter = WordSearchFormatter()
     json_file = tmp_path / "test.json"
 
-    formatter.save(ws, json_file, format="JSON", sort_word_list=True)
+    formatter.save(ws, json_file, ExportFormat.JSON, sort_word_list=True)
     assert json_file.exists()
 
     import json
@@ -89,7 +90,7 @@ def test_formatter_save_json_without_sorting(tmp_path):
     formatter = WordSearchFormatter()
     json_file = tmp_path / "test.json"
 
-    formatter.save(ws, json_file, format="JSON", sort_word_list=False)
+    formatter.save(ws, json_file, ExportFormat.JSON, sort_word_list=False)
     assert json_file.exists()
 
     import json
@@ -110,7 +111,9 @@ def test_formatter_save_pdf_with_sorting(tmp_path):
     formatter = WordSearchFormatter()
     pdf_file = tmp_path / "test.pdf"
 
-    saved_path = formatter.save(ws, pdf_file, format="PDF", sort_word_list=True)
+    saved_path = formatter.save(
+        ws, pdf_file, format=ExportFormat.PDF, sort_word_list=True
+    )
     assert Path(saved_path).exists()
 
 
@@ -120,7 +123,9 @@ def test_formatter_save_pdf_without_sorting(tmp_path):
     formatter = WordSearchFormatter()
     pdf_file = tmp_path / "test.pdf"
 
-    saved_path = formatter.save(ws, pdf_file, format="PDF", sort_word_list=False)
+    saved_path = formatter.save(
+        ws, pdf_file, format=ExportFormat.PDF, sort_word_list=False
+    )
     assert Path(saved_path).exists()
 
 

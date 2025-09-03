@@ -4,7 +4,7 @@ from pathlib import Path
 
 from ordered_set import OrderedSet
 
-from ..core.formatter import Formatter
+from ..core.formatter import ExportFormat, Formatter
 from ..core.game import (
     DirectionSet,
     EmptyPuzzleError,
@@ -198,14 +198,14 @@ class WordSearch(Game):
     def save(
         self,
         path: str | Path,
-        format: str = "PDF",
+        format: ExportFormat = ExportFormat.PDF,
         solution: bool = False,
         lowercase: bool = False,
         hide_key: bool = False,
         sort_word_list: bool = True,
         *args,
         **kwargs,
-    ) -> str:
+    ) -> Path:
         return super().save(
             path=path,
             format=format,
