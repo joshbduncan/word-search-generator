@@ -316,7 +316,3 @@ class Word:
 
     def __str__(self) -> str:
         return self.text
-
-
-# in the future, add allowed_directions = set() and priority = 999
-NULL_WORD = Word("", True)

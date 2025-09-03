@@ -1,3 +1,4 @@
+import pytest
 from rich.color import ColorSystem
 from rich.style import Style
 
@@ -77,8 +78,8 @@ def test_word_bool_true():
 
 
 def test_word_bool_false():
-    w = Word("")
-    assert not w
+    with pytest.raises(ValueError):
+        w = Word("")  # noqa: F841
 
 
 def test_rich_style(capsys):
