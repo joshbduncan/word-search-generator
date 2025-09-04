@@ -247,16 +247,17 @@ class WordSearch(Game):
             ValueError: `action` must be one of ["ADD", "REPLACE"].
         """
         if not isinstance(count, int):
-            raise TypeError("Size must be an integer.")
+            raise TypeError(f"Count must be an integer, got {type(count).__name__}.")
         if not self.MIN_PUZZLE_WORDS <= count <= self.MAX_PUZZLE_WORDS:
             raise ValueError(
-                f"Requested random words must be >= {self.MIN_PUZZLE_SIZE}"
-                + f" and <= {self.MAX_PUZZLE_WORDS}."
+                f"Random word count must be between {self.MIN_PUZZLE_WORDS} and "
+                f"{self.MAX_PUZZLE_WORDS} (inclusive), got {count}."
             )
         if not isinstance(action, str):
-            raise TypeError("Action must be a string.")
+            raise TypeError(f"Action must be a string, got {type(action).__name__}.")
         if action.upper() not in ["ADD", "REPLACE"]:
-            raise ValueError("Action must be either 'ADD' or 'REPLACE'.")
+            valid_actions = "ADD, REPLACE"
+            raise ValueError(f"Action must be one of: {valid_actions}. Got '{action}'.")
         if action.upper() == "ADD":
             self.add_words(
                 get_random_words(count, word_list=word_list),
@@ -287,7 +288,10 @@ class WordSearch(Game):
         if not self.generator:
             raise MissingGeneratorError()
         if not self.words:
-            raise EmptyWordlistError("No words have been added to the puzzle.")
+            raise EmptyWordlistError(
+                "Cannot generate puzzle: no words have been added. "
+                "Use add_words() to add words to the puzzle."
+            )
         if not self.size or reset_size:
             self.size = self._calc_puzzle_size(self._words, self._directions)
         min_word_length = (
@@ -295,7 +299,9 @@ class WordSearch(Game):
         )
         if self.size and self.size < min_word_length:
             raise PuzzleSizeError(
-                f"Specified puzzle size `{self.size}` is smaller than shortest word."
+                f"Puzzle size ({self.size}) is too small for the shortest word "
+                f"({min_word_length} characters). Increase puzzle size to at "
+                f"least {min_word_length} or reduce word length."
             )
         for word in self.words:
             word.remove_from_puzzle()
@@ -303,7 +309,15 @@ class WordSearch(Game):
             self._mask = self._build_puzzle(self.size, self.ACTIVE)
         self._puzzle = self.generator.generate(self)
         if self.require_all_words and self.unplaced_hidden_words:
-            raise MissingWordError("All words could not be placed in the puzzle.")
+            unplaced_texts = [w.text for w in list(self.unplaced_hidden_words)[:5]]
+            unplaced_str = ", ".join(unplaced_texts)
+            more_indicator = "..." if len(self.unplaced_hidden_words) > 5 else ""
+            raise MissingWordError(
+                f"Not all words could be placed in the puzzle. "
+                f"{len(self.unplaced_hidden_words)} words were not placed: "
+                f"{unplaced_str}{more_indicator}. Try increasing puzzle size "
+                f"or disabling require_all_words."
+            )
 
     # ******************************************************** #
     # ******************** DUNDER METHODS ******************** #
