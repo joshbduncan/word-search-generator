@@ -72,7 +72,13 @@ class EmptyPuzzleError(Exception):
         >>> game.show()   # Raises EmptyPuzzleError
     """
 
-    def __init__(self, message="Try adding words using the `add_words()` method."):
+    def __init__(
+        self,
+        message=(
+            "Puzzle has no placed words. Add words using add_words() or ensure "
+            "words can be placed in the available space."
+        ),
+    ):
         self.message = message
         super().__init__(self.message)
 
@@ -89,7 +95,13 @@ class MissingGeneratorError(Exception):
         >>> game.generate()  # Raises MissingGeneratorError
     """
 
-    def __init__(self, message="Generator required for puzzle generation."):
+    def __init__(
+        self,
+        message=(
+            "No generator configured. Set a generator using the 'generator' "
+            "parameter or Game.DEFAULT_GENERATOR."
+        ),
+    ):
         self.message = message
         super().__init__(self.message)
 
@@ -106,7 +118,13 @@ class MissingFormatterError(Exception):
         >>> game.show()  # Raises MissingFormatterError
     """
 
-    def __init__(self, message="Formatter required for outputting the puzzle."):
+    def __init__(
+        self,
+        message=(
+            "No formatter configured. Set a formatter using the 'formatter' "
+            "parameter or Game.DEFAULT_FORMATTER to display or save puzzles."
+        ),
+    ):
         self.message = message
         super().__init__(self.message)
 
@@ -419,11 +437,11 @@ class Game:
         # calculate puzzle size
         if size:
             if not isinstance(size, int):
-                raise TypeError("Size must be an integer.")
+                raise TypeError(f"Size must be an integer, got {type(size).__name__}.")
             if not self.MIN_PUZZLE_SIZE <= size <= self.MAX_PUZZLE_SIZE:
                 raise ValueError(
-                    f"Puzzle size must be >= {self.MIN_PUZZLE_SIZE}"
-                    + f" and <= {self.MAX_PUZZLE_SIZE}."
+                    f"Puzzle size must be between {self.MIN_PUZZLE_SIZE} and "
+                    f"{self.MAX_PUZZLE_SIZE} (inclusive), got {size}."
                 )
             self._size = size
 
@@ -627,7 +645,7 @@ class Game:
         """Set valid puzzle directions to a predefined level set.
         Here for backward compatibility."""
         if not isinstance(value, int):
-            raise TypeError("Level must be an integer.")
+            raise TypeError(f"Level must be an integer, got {type(value).__name__}.")
         self._directions = self.validate_level(value)
 
     def _get_level(self) -> DirectionSet:
@@ -654,11 +672,11 @@ class Game:
                 less than `self.MAX_PUZZLE_SIZE`.
         """
         if not isinstance(value, int):
-            raise TypeError("Size must be an integer.")
+            raise TypeError(f"Size must be an integer, got {type(value).__name__}.")
         if not self.MIN_PUZZLE_SIZE <= value <= self.MAX_PUZZLE_SIZE:
             raise PuzzleSizeError(
-                f"Puzzle size must be >= {self.MIN_PUZZLE_SIZE}"
-                + f" and <= {self.MAX_PUZZLE_SIZE}."
+                f"Puzzle size must be between {self.MIN_PUZZLE_SIZE} and "
+                f"{self.MAX_PUZZLE_SIZE} (inclusive), got {value}."
             )
         if self.size != value:
             self._size = value
@@ -775,7 +793,10 @@ class Game:
         if not self.generator:
             raise MissingGeneratorError()
         if not self.words:
-            raise EmptyWordlistError("No words have been added to the puzzle.")
+            raise EmptyWordlistError(
+                "Cannot generate puzzle: no words have been added. "
+                "Use add_words() to add words to the puzzle."
+            )
         if not self.size or reset_size:
             self.size = self._calc_puzzle_size(self._words, self._directions)
         min_word_length = (
@@ -783,7 +804,9 @@ class Game:
         )
         if self.size and self.size < min_word_length:
             raise PuzzleSizeError(
-                f"Specified puzzle size `{self.size}` is smaller than shortest word."
+                f"Puzzle size ({self.size}) is too small for the shortest word "
+                f"({min_word_length} characters). Increase puzzle size to at "
+                f"least {min_word_length} or reduce word length."
             )
         for word in self.words:
             word.remove_from_puzzle()
@@ -791,9 +814,22 @@ class Game:
             self._mask = self._build_puzzle(self.size, self.ACTIVE)
         self._puzzle = self.generator.generate(self)
         if not self.masked and not self.placed_words:
-            raise NoValidWordsError("No valid words have been added to the puzzle.")
+            raise NoValidWordsError(
+                "No words could be placed in the puzzle. This may be caused by: "
+                "words being too long for the puzzle size, overly restrictive "
+                "validators, or insufficient space. Try increasing puzzle size, "
+                "reducing validation constraints, or using shorter words."
+            )
         if self.require_all_words and self.unplaced_words:
-            raise MissingWordError("All words could not be placed in the puzzle.")
+            unplaced_texts = [w.text for w in list(self.unplaced_words)[:5]]
+            unplaced_str = ", ".join(unplaced_texts)
+            more_indicator = "..." if len(self.unplaced_words) > 5 else ""
+            raise MissingWordError(
+                f"Not all words could be placed in the puzzle. "
+                f"{len(self.unplaced_words)} words were not placed: "
+                f"{unplaced_str}{more_indicator}. Try increasing puzzle size "
+                f"or disabling require_all_words."
+            )
 
     def _process_input(self, words: str, secret: bool = False) -> WordSet:
         clean_words = self._cleanup_input(words, secret=secret)
@@ -879,7 +915,8 @@ class Game:
         """Cleanup provided input string."""
         if not isinstance(words, str):
             raise TypeError(
-                "Words must be a string separated by spaces, commas, or new lines"
+                f"Words must be a string separated by spaces, commas, or new "
+                f"lines, got {type(words).__name__}"
             )
         # remove new lines
         words = words.replace("\n", ",")
@@ -911,8 +948,15 @@ class Game:
                 try:
                     o.add(Direction[direction.upper().strip()])
                 except KeyError as e:
-                    e.add_note(f"'{direction}' is not a valid direction.")
-                    raise ValueError() from e
+                    valid_directions = ", ".join([d.name for d in Direction])
+                    e.add_note(
+                        f"'{direction}' is not a valid direction. "
+                        f"Valid directions are: {valid_directions}"
+                    )
+                    raise ValueError(
+                        f"Invalid direction '{direction}'. "
+                        f"Valid directions are: {valid_directions}"
+                    ) from e
         return o
 
     def validate_level(self, d) -> DirectionSet:
@@ -953,18 +997,26 @@ class Game:
             try:
                 return LEVEL_DIRS[d]
             except KeyError as e:
+                valid_levels = ", ".join([str(i) for i in LEVEL_DIRS])
                 e.add_note(
-                    f"{d} is not a valid difficulty number"
-                    + f"[{', '.join([str(i) for i in LEVEL_DIRS])}]"
+                    f"{d} is not a valid difficulty level. "
+                    f"Valid levels are: {valid_levels}"
                 )
-                raise ValueError() from e
+                raise ValueError(
+                    f"Invalid difficulty level {d}. Valid levels are: {valid_levels}"
+                ) from e
         if isinstance(d, str):  # comma-delimited list
             return self._validate_direction_iterable(d.split(","))
         if isinstance(d, Iterable):  # probably used by external code
             if not d:
-                raise ValueError("Empty iterable provided.")
+                raise ValueError(
+                    "Empty iterable provided. At least one direction must be specified."
+                )
             return self._validate_direction_iterable(d)
-        raise TypeError(f"{type(d)} given, not str, int, or Iterable[str]\n{d}")
+        raise TypeError(
+            f"Expected str, int, or Iterable[str] for level specification, "
+            f"got {type(d).__name__}: {d}"
+        )
 
     # ************************************************* #
     # ******************** MASKING ******************** #
@@ -1013,7 +1065,9 @@ class Game:
         if not self.puzzle:
             raise EmptyPuzzleError()
         if not isinstance(mask, Mask | CompoundMask):
-            raise TypeError("Please provide a Mask object.")
+            raise TypeError(
+                f"Expected a Mask or CompoundMask object, got {type(mask).__name__}."
+            )
         if mask.puzzle_size != self.size:
             mask.generate(self.size)
         for y in range(self.size):
