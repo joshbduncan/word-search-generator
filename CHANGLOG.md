@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - themed word lists (issue #63), lists can be found in `src/word_search_generator/data/`
     - accessible in the base package at `WORD_LISTS` which is a `dict[str, list[str]]`
+- detailed class and method documentation
 - add `ty` type checker to the project (using along with mypy for now)
 - cli
     - -pm/--preview-masks now also accepts an additional argument for which mask to preview (all masks are still shown if no argument is provided)
@@ -19,16 +20,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - dropped support for python 3.10
-- `Mask` and `CompoundMask` classes moved into `mask.py`
+- lots and lots of refactoring
+- mask module refactor
+    - improved validation
+    - `method` changed from standard int to enum `MaskMethod | MethodLiteral`
+    - `Mask` and `CompoundMask` classes moved into `mask.py`
 - `utils.get_random_words()`
     - now returns a string of words (comma separated)
     - accepts new argument `word_list` from which to sample from (themed word lists)
 - BUILTIN_MASK_SHAPES now return a dict of available mask shapes `dict[str, type[Mask]]`
 - `mask.BitmapImage` changed to `mask.ImageMask`
+- `Formatter.save()` method on the abstract base class now expects a value from the `ExportFormat` enum for the `format` variable
 
 ### Fixed
 
-- type errors (found by ty)
+- mask shape calculation (especially for small puzzle sizes)
+- better error handling with more specific error messages
+- enhanced type hints for better type safety
 
 ## [4.1.0] 2025-08-08
 
