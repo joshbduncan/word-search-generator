@@ -1,3 +1,43 @@
+"""Word search puzzle game engine.
+
+This module provides the core Game class for creating, managing, and manipulating
+word search puzzles. The Game class serves as the central orchestrator that combines
+words, generators, formatters, validators, and masks to create complete word search
+puzzles.
+
+Key Concepts:
+    - Game: Main class that manages the entire puzzle lifecycle
+    - Puzzle: The letter grid containing placed words and filler characters
+    - Mask: Optional shapes that constrain where words can be placed
+    - Generator: Algorithm for placing words and filling empty spaces
+    - Formatter: Output handler for displaying or saving puzzles
+    - Validator: Rules engine for filtering valid words
+
+Architecture:
+    The Game class follows a component-based design where different aspects
+    of puzzle creation are handled by specialized components:
+
+    1. Word Management: Add, remove, and validate words
+    2. Grid Generation: Place words using configurable algorithms
+    3. Masking System: Apply geometric constraints to puzzle shapes
+    4. Output Control: Format and export puzzles in various formats
+    5. Validation Framework: Ensure word quality and puzzle constraints
+
+Example:
+    Basic puzzle creation:
+
+    >>> game = Game(words="cat dog bird", level=2, size=15)
+    >>> game.show()  # Display the puzzle
+    >>> game.save("puzzle.pdf")  # Export to PDF
+
+Dependencies:
+    - Generator: Handles word placement algorithms
+    - Formatter: Manages puzzle display and export
+    - Validator: Applies word filtering rules
+    - Mask: Defines puzzle shape constraints
+    - Word: Represents individual puzzle words with metadata
+"""
+
 import json
 from collections.abc import Iterable, Sized
 from math import log2
@@ -16,7 +56,21 @@ from .word import KeyInfo, KeyInfoJson, Word
 
 
 class EmptyPuzzleError(Exception):
-    """For when a `Game` puzzle is requested but is currently empty."""
+    """Raised when attempting to access puzzle data before generation.
+
+    This exception is raised when methods that require a completed puzzle
+    are called before the puzzle has been generated or when the puzzle
+    has no successfully placed words.
+
+    Common scenarios:
+    - Calling show(), save(), or json property before adding words
+    - Generator fails to place any words due to constraints
+    - Puzzle is reset without regeneration
+
+    Example:
+        >>> game = Game()  # No words added
+        >>> game.show()   # Raises EmptyPuzzleError
+    """
 
     def __init__(self, message="Try adding words using the `add_words()` method."):
         self.message = message
@@ -24,7 +78,16 @@ class EmptyPuzzleError(Exception):
 
 
 class MissingGeneratorError(Exception):
-    """For when a `Game` object doesn't have a generator specified."""
+    """Raised when puzzle generation is attempted without a generator.
+
+    The Game class requires a Generator instance to place words and fill
+    the puzzle grid. This error occurs when generate() is called but no
+    generator was provided in the constructor or set via the property.
+
+    Example:
+        >>> game = Game(words="cat dog", generator=None)
+        >>> game.generate()  # Raises MissingGeneratorError
+    """
 
     def __init__(self, message="Generator required for puzzle generation."):
         self.message = message
@@ -32,7 +95,16 @@ class MissingGeneratorError(Exception):
 
 
 class MissingFormatterError(Exception):
-    """For when a `Game` object doesn't have a formatter specified."""
+    """Raised when puzzle output is attempted without a formatter.
+
+    The Game class requires a Formatter instance to display or save
+    puzzles. This error occurs when show() or save() methods are called
+    but no formatter was provided in the constructor or set via the property.
+
+    Example:
+        >>> game = Game(words="cat dog", formatter=None)
+        >>> game.show()  # Raises MissingFormatterError
+    """
 
     def __init__(self, message="Formatter required for outputting the puzzle."):
         self.message = message
@@ -40,52 +112,269 @@ class MissingFormatterError(Exception):
 
 
 class PuzzleSizeError(ValueError):
-    """For when a puzzle has an improper size."""
+    """Raised when an invalid puzzle size is specified.
+
+    Puzzle sizes must be integers within the valid range defined by
+    MIN_PUZZLE_SIZE and MAX_PUZZLE_SIZE constants. Also raised when
+    the specified size is smaller than the longest word to be placed.
+
+    Example:
+        >>> game = Game(size=2)    # Too small - raises PuzzleSizeError
+        >>> game = Game(size=100)  # Too large - raises PuzzleSizeError
+        >>> game = Game(words="verylongword", size=5)  # Raises PuzzleSizeError
+    """
 
     pass
 
 
 class EmptyWordlistError(Exception):
-    """For when a `Game` object has no words."""
+    """Raised when puzzle generation is attempted with no words.
+
+    The Game class requires at least one word to generate a puzzle.
+    This error occurs when generate() is called but the word list
+    is empty or was never populated.
+
+    Example:
+        >>> game = Game()  # No words specified
+        >>> game.generate()  # Raises EmptyWordlistError
+    """
 
     pass
 
 
 class NoValidWordsError(Exception):
-    """For when a `Game` object has no valid words."""
+    """Raised when no words pass validation or can be placed.
+
+    This error occurs when all provided words are either filtered out
+    by validators or cannot be placed in the puzzle due to size or
+    geometric constraints. Common causes include overly restrictive
+    validators, words too long for the puzzle, or conflicting masks.
+
+    Example:
+        >>> game = Game(words="superlongwordthatcannotfit", size=5)
+        >>> # Raises NoValidWordsError during generation
+    """
 
     pass
 
 
 class MissingWordError(Exception):
-    """For when a `Game` object cannot place all of its words."""
+    """Raised when require_all_words=True but some words cannot be placed.
+
+    When the Game is configured to require all words to be successfully
+    placed, this error is raised if the generator cannot fit every word
+    in the puzzle due to space constraints or conflicts.
+
+    Example:
+        >>> game = Game(words="cat dog bird", size=5, require_all_words=True)
+        >>> # May raise MissingWordError if not enough space
+    """
 
     pass
 
 
+# Type Aliases for Game Components
+
 Puzzle: TypeAlias = list[list[str]]
+"""2D grid representing the puzzle letter matrix.
+
+A puzzle is stored as a list of rows, where each row is a list of single
+characters. This structure supports both the main puzzle grid and mask
+overlays. Characters can be letters (A-Z) or special mask markers.
+
+Example:
+    [["A", "B", "C"], ["D", "E", "F"], ["G", "H", "I"]]
+"""
 
 DirectionSet: TypeAlias = set[Direction]
+"""Set of allowed word placement directions for puzzle generation.
+
+Contains Direction enum values that define which orientations words can
+be placed in the puzzle (horizontal, vertical, diagonal, etc.). Used to
+control puzzle difficulty by limiting available directions.
+
+Example:
+    {Direction.E, Direction.S, Direction.SE}  # Right, Down, Diagonal
+"""
+
 Key: TypeAlias = dict[str, KeyInfo]
+"""Answer key mapping word text to placement details.
+
+Dictionary where keys are word strings and values are KeyInfo objects
+containing position, direction, and coordinate information for placed words.
+Provides the solution data needed to highlight words in the puzzle.
+
+Example:
+    {"CAT": KeyInfo(start=(1,1), direction=Direction.E, length=3)}
+"""
+
 KeyJson: TypeAlias = dict[str, KeyInfoJson]
+"""JSON-serializable version of the answer key.
+
+Similar to Key but with JSON-compatible value types instead of KeyInfo
+objects. Used for exporting puzzle solutions in JSON format.
+
+Example:
+    {"CAT": {"start": [1,1], "direction": "E", "length": 3}}
+"""
+
 WordSet: TypeAlias = OrderedSet[Word]
+"""Ordered collection of Word objects for puzzle generation.
+
+OrderedSet maintains word insertion order while preventing duplicates.
+This ensures consistent puzzle generation and allows users to control
+word priority by insertion order.
+
+Example:
+    OrderedSet([Word("CAT"), Word("DOG"), Word("BIRD")])
+"""
 
 
 class Game:
-    """Base object for a word base puzzle game."""
+    """Core word search puzzle game engine and orchestrator.
 
+    The Game class serves as the main interface for creating, managing, and
+    manipulating word search puzzles. It coordinates between generators, formatters,
+    validators, and masks to create complete puzzle experiences.
+
+    Key Features:
+        - Automatic puzzle generation with configurable algorithms
+        - Multiple output formats (PDF, text, JSON, etc.)
+        - Geometric masking for custom puzzle shapes
+        - Word validation and filtering
+        - Direction control for difficulty adjustment
+        - Size optimization based on word content
+
+    Args:
+        words: Words to include in the puzzle. Can be a space/comma-separated
+            string or a WordSet collection.
+        level: Difficulty level (int 1-4) or custom direction specification.
+            Higher levels allow more directions (diagonal, backwards, etc.).
+        size: Puzzle grid size in characters. Auto-calculated if not specified.
+        require_all_words: If True, raises error if any words cannot be placed.
+        generator: Word placement algorithm. Uses DEFAULT_GENERATOR if None.
+        formatter: Output handler for display/export. Uses DEFAULT_FORMATTER if None.
+        validators: Collection of word validation rules.
+
+    Raises:
+        TypeError: If size is not an integer.
+        ValueError: If size is outside valid range or level is invalid.
+        PuzzleSizeError: If specified size is too small for the longest word.
+
+    Examples:
+        Basic puzzle creation:
+
+        >>> game = Game(words="cat dog bird mouse", level=2, size=15)
+        >>> game.show()  # Display the puzzle
+        >>> game.save("puzzle.pdf")  # Export to PDF
+
+        Advanced configuration:
+
+        >>> from word_search_generator.core import Generator, Formatter
+        >>> game = Game(
+        ...     words="python programming code",
+        ...     level="E,S,SE,SW",  # Custom directions
+        ...     require_all_words=True,
+        ...     generator=MyCustomGenerator(),
+        ...     formatter=MyCustomFormatter()
+        ... )
+
+        Working with masks:
+
+        >>> from word_search_generator.mask import CircleMask
+        >>> game = Game(words="circle round sphere", size=20)
+        >>> game.apply_mask(CircleMask(10))  # Circular puzzle shape
+        >>> game.show()
+
+        JSON export:
+
+        >>> game = Game(words="export json data")
+        >>> puzzle_data = game.json  # Get JSON representation
+        >>> print(game.key)  # View answer key
+    """
+
+    # Puzzle Size Constraints
     MIN_PUZZLE_SIZE = 5
+    """Minimum allowed puzzle grid size in characters.
+
+    Puzzles smaller than this size cannot accommodate most words and provide
+    insufficient challenge. This constraint ensures puzzles have adequate space
+    for word placement and random filler characters.
+    """
+
     MAX_PUZZLE_SIZE = 50
+    """Maximum allowed puzzle grid size in characters.
+
+    Large puzzles become difficult to solve and consume excessive computational
+    resources during generation. This limit balances puzzle complexity with
+    practical performance constraints.
+    """
+
     MIN_PUZZLE_WORDS = 1
+    """Minimum number of words required for puzzle generation.
+
+    At least one word is needed to create a meaningful word search puzzle.
+    This constraint prevents empty or invalid puzzle creation attempts.
+    """
+
     MAX_PUZZLE_WORDS = 100
+    """Maximum number of words allowed in a single puzzle.
+
+    Too many words can make puzzles unsolvable and may cause generation
+    failures due to space constraints. This limit ensures reasonable
+    puzzle complexity and generation performance.
+    """
+
     MAX_FIT_TRIES = 1000
+    """Maximum attempts for placing words during generation.
 
+    This limit prevents infinite loops when word placement is impossible
+    due to geometric constraints, conflicting words, or insufficient space.
+    Generator algorithms use this value to determine when to give up on
+    placing remaining words.
+    """
+
+    # Default Component Configuration
     DEFAULT_GENERATOR: Generator | None = None
-    DEFAULT_FORMATTER: Formatter | None = None
-    DEFAULT_VALIDATORS: Iterable[Validator] = []
+    """Default generator instance used when none is specified.
 
+    If None, users must provide a generator or set this class attribute
+    before creating Game instances. Allows global configuration of the
+    default word placement algorithm.
+    """
+
+    DEFAULT_FORMATTER: Formatter | None = None
+    """Default formatter instance used when none is specified.
+
+    If None, users must provide a formatter or set this class attribute
+    before using display/export methods. Allows global configuration of
+    the default output formatting.
+    """
+
+    DEFAULT_VALIDATORS: Iterable[Validator] = []
+    """Default word validation rules applied during generation.
+
+    Empty list means no validation by default. Can be set to a collection
+    of Validator instances to apply global word filtering rules across
+    all Game instances.
+    """
+
+    # Mask Character Constants
     ACTIVE = "*"
+    """Character marking active/available grid cells in puzzle masks.
+
+    Cells marked with this character can contain words and filler letters.
+    Used internally by the masking system to define the active puzzle area
+    when geometric constraints are applied.
+    """
+
     INACTIVE = "#"
+    """Character marking inactive/blocked grid cells in puzzle masks.
+
+    Cells marked with this character are excluded from puzzle generation
+    and display. Used internally by the masking system to create custom
+    puzzle shapes and geometric constraints.
+    """
 
     def __init__(
         self,
@@ -167,22 +456,73 @@ class Game:
 
     @property
     def solution(self) -> None:
-        """Solution to the current puzzle state."""
+        """Display the puzzle solution with words highlighted.
+
+        This property has the side effect of printing the puzzle solution
+        directly to stdout using the configured formatter. Unlike other
+        properties, it does not return a value but triggers display output.
+
+        Raises:
+            EmptyPuzzleError: If puzzle is not generated or has no placed words.
+            MissingFormatterError: If no formatter is configured.
+
+        Note:
+            This property modifies program state by printing output. Consider
+            using the show() method directly for more explicit behavior.
+        """
         self.show(solution=True)
 
     @property
     def mask(self) -> Puzzle:
-        """The current puzzle state."""
+        """The current puzzle mask defining active/inactive grid areas.
+
+        The mask is a 2D grid where each cell contains either ACTIVE ('*')
+        or INACTIVE ('#') characters. ACTIVE cells can contain words and
+        filler characters, while INACTIVE cells are excluded from puzzle
+        generation and display.
+
+        Returns:
+            2D list representing the mask state, with ACTIVE/INACTIVE markers.
+
+        Note:
+            The mask dimensions always match the puzzle size. If no explicit
+            masks have been applied, all cells default to ACTIVE.
+        """
         return self._mask
 
     @property
     def masks(self) -> list[Mask]:
-        """Puzzle masking status."""
+        """List of all mask objects applied to this puzzle.
+
+        Contains all Mask instances that have been applied using apply_mask()
+        or apply_masks(). Each mask defines a geometric shape or pattern that
+        constrains where words can be placed in the puzzle grid.
+
+        Returns:
+            List of Mask objects currently applied to the puzzle. Empty list
+            indicates no masks are active (full rectangular grid).
+
+        See Also:
+            apply_mask(): Apply a single mask to the puzzle
+            apply_masks(): Apply multiple masks to the puzzle
+            remove_masks(): Clear all applied masks
+        """
         return self._masks
 
     @property
     def masked(self) -> bool:
-        """Puzzle masking status."""
+        """Whether any masks are currently applied to the puzzle.
+
+        Returns True if one or more mask objects have been applied using
+        apply_mask() or apply_masks(), False if the puzzle uses the default
+        rectangular grid without geometric constraints.
+
+        Returns:
+            True if masks are active, False for standard rectangular puzzles.
+
+        Note:
+            This is equivalent to checking if the masks list is non-empty.
+        """
         return bool(self.masks)
 
     @property
@@ -205,13 +545,45 @@ class Game:
 
     @property
     def key(self) -> Key:
-        """The current puzzle answer key (1-based) based from
-        Position(0, 0) of the entire puzzle (not masked area)."""
+        """Answer key mapping word text to placement information.
+
+        Creates a dictionary where each key is a placed word's text and each
+        value contains the word's position, direction, and coordinate details.
+        Coordinates are 1-based and reference the entire puzzle grid, not just
+        the active masked area.
+
+        Returns:
+            Dictionary mapping word text to KeyInfo objects containing:
+            - start_position: (row, col) where word begins (1-based)
+            - direction: Direction enum indicating word orientation
+            - length: Number of characters in the word
+
+        Note:
+            Only includes words that were successfully placed in the puzzle.
+            Unplaced words are excluded from the answer key.
+        """
         return {word.text: word.key_info for word in self.placed_words}
 
     @property
     def json(self) -> str:
-        """The current puzzle, and words in JSON."""
+        """JSON representation of the puzzle and placed words.
+
+        Creates a JSON string containing the cropped puzzle grid and a list
+        of all successfully placed word texts. The puzzle grid only includes
+        the active area defined by the bounding box, excluding empty borders.
+
+        Returns:
+            JSON string with two fields:
+            - "puzzle": 2D array of the cropped puzzle grid
+            - "words": List of placed word texts (strings)
+
+        Raises:
+            EmptyPuzzleError: If puzzle is not generated or has no placed words.
+
+        Example:
+            >>> game.json
+            '{"puzzle": [["A","B","C"], ["D","E","F"]], "words": ["ABC", "DEF"]}'
+        """
         if not self.puzzle or not self.placed_words:
             raise EmptyPuzzleError()
         return json.dumps(
@@ -361,18 +733,44 @@ class Game:
         return [[char] * size for _ in range(size)]
 
     def generate(self, reset_size: bool = False) -> None:
-        """Generate the puzzle grid.
+        """Generate the complete puzzle grid with word placement and filler.
+
+        This is the core method that orchestrates the entire puzzle creation
+        process. It coordinates word placement, mask application, and filler
+        character generation to produce a complete, solvable puzzle.
+
+        The generation process follows these steps:
+        1. Validates that a generator is available
+        2. Ensures at least one word exists for placement
+        3. Calculates optimal puzzle size (if needed)
+        4. Validates size constraints against word lengths
+        5. Clears any previous word placements
+        6. Initializes or updates the mask grid
+        7. Delegates to the generator for word placement and filling
+        8. Validates generation results and requirements
 
         Args:
-            reset_size: Recalculate the puzzle size before generation.
-                Defaults to False.
+            reset_size: If True, recalculates the optimal puzzle size based on
+                current words and difficulty level before generation. Useful when
+                words have been added/removed or level changed. Defaults to False.
 
         Raises:
-            MissingGeneratorError: No set puzzle generator.
-            EmptyWordlistError: No game words.
-            PuzzleSizeError: Invalid puzzle size.
-            NoValidWordsError: No valid game words.
-            MissingWordError: Not all game words could be placed by the generator.
+            MissingGeneratorError: No generator instance is configured. Set via
+                constructor or the generator property.
+            EmptyWordlistError: The word list is empty. Add words using add_words()
+                or provide them in the constructor.
+            PuzzleSizeError: The current size is invalid or smaller than the
+                longest word that needs to be placed.
+            NoValidWordsError: All words were filtered out by validators or none
+                could be placed due to constraints. Check validators and puzzle size.
+            MissingWordError: Some words couldn't be placed when require_all_words=True.
+                Consider increasing puzzle size or reducing difficulty.
+
+        Example:
+            >>> game = Game(words="cat dog bird")
+            >>> game.generate()  # Creates puzzle with current settings
+            >>> game.add_words("mouse")
+            >>> game.generate(reset_size=True)  # Recalculates size for new words
         """
         if not self.generator:
             raise MissingGeneratorError()
@@ -518,7 +916,39 @@ class Game:
         return o
 
     def validate_level(self, d) -> DirectionSet:
-        """Given a d, try to turn it into a list of valid moves."""
+        """Convert level specification to a validated set of Direction enums.
+
+        This method provides flexible input handling for difficulty levels and
+        custom direction specifications. It supports numeric difficulty levels,
+        comma-separated direction strings, and collections of direction objects.
+
+        Numeric levels correspond to predefined difficulty settings:
+        - Level 1: Horizontal and vertical only (easiest)
+        - Level 2: Adds basic diagonals
+        - Level 3: Includes reverse directions
+        - Level 4: All directions including complex diagonals (hardest)
+
+        Args:
+            d: Direction specification. Can be:
+                - int: Predefined difficulty level (1-4)
+                - str: Comma-separated direction names ("E,S,SE")
+                - Iterable: Collection of Direction objects, strings, or tuples
+
+        Returns:
+            Set of validated Direction enum values for word placement.
+
+        Raises:
+            ValueError: If numeric level is invalid, direction name is unknown,
+                or empty iterable is provided.
+            TypeError: If input type is not supported (not str, int, or Iterable).
+            KeyError: If direction string doesn't match any Direction enum name.
+
+        Examples:
+            >>> game.validate_level(2)  # Returns predefined level 2 directions
+            >>> game.validate_level("E,S,SE")  # Custom direction set
+            >>> game.validate_level([Direction.E, Direction.S])  # Direction objects
+            >>> game.validate_level([(1,0), (0,1)])  # Tuple coordinates
+        """
         if isinstance(d, int):  # traditional numeric level
             try:
                 return LEVEL_DIRS[d]
@@ -541,7 +971,45 @@ class Game:
     # ************************************************* #
 
     def apply_mask(self, mask: Mask) -> None:
-        """Apply a singular mask object to the puzzle."""
+        """Apply a geometric mask to constrain puzzle shape and word placement.
+
+        Masks define custom shapes for puzzles by marking grid cells as active
+        or inactive. This enables creation of themed puzzles (circles, stars, etc.)
+        or puzzles that fit specific layouts. The mask is combined with the current
+        puzzle state using the mask's specified method.
+
+        Mask Application Methods:
+        - Method 1 (Intersection): Only cells active in both mask and current state
+        - Method 2 (Union): Cells active in either mask or current state
+        - Method 3 (Exclusion): Deactivate cells marked as active in the mask
+
+        The mask is automatically resized to match the puzzle dimensions if needed.
+        After application, the puzzle is regenerated to reflect the new constraints.
+
+        Args:
+            mask: Mask object defining the geometric constraints. Must be a Mask
+                or CompoundMask instance with appropriate dimensions and method.
+
+        Raises:
+            EmptyPuzzleError: If no puzzle has been generated yet. Call generate()
+                or ensure words are added first.
+            TypeError: If mask is not a Mask or CompoundMask instance.
+
+        Example:
+            >>> from word_search_generator.mask import CircleMask, StarMask
+            >>> game = Game(words="circle round sphere")
+            >>> game.apply_mask(CircleMask(radius=8))  # Circular puzzle
+            >>>
+            >>> # Apply multiple masks
+            >>> game.apply_mask(StarMask(points=5, size=10))
+            >>>
+            >>> # View current mask state
+            >>> game.show_mask()
+
+        Note:
+            The mask is added to the masks collection and can be removed later
+            using remove_masks(). Applying multiple masks creates compound effects.
+        """
         if not self.puzzle:
             raise EmptyPuzzleError()
         if not isinstance(mask, Mask | CompoundMask):
