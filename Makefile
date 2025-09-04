@@ -12,7 +12,7 @@ help: ## Display this help section
 ##@ Development
 dev: ## build a virtual environment for development
 	uv venv
-	uv pip install -r pyproject.toml --all-extras
+	uv sync --all-extras
 
 ipython: ## run ipython inside of the uv venv
 	uv run --with ipython ipython
@@ -30,7 +30,7 @@ typing: ## type check the app using mypy
 
 test: ## test the app using pytest
 	@echo "🧪 running test suite..."
-	uv run pytest -vv --cov-report term-missing
+	uv run pytest -vv --cov=src --cov-report term-missing
 
 format: ## runs cleaners
 	@echo "🧾 formatting..."
@@ -38,9 +38,9 @@ format: ## runs cleaners
 
 polish: cleanup test  ## cleans and lints before running the test suite
 
-nox: ## runs linting, ,formatting, type checking, and tests on all specified envs via nox
-	@echo "🎯 tox..."
-	uv run tox -p
+nox: ## runs linting, formatting, type checking, and tests on all specified envs via nox
+	@echo "🎯 nox..."
+	uv run nox -p
 
 ##@ Build
 build: cleanup test ## build the app package
