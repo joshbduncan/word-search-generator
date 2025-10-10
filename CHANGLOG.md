@@ -31,6 +31,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - BUILTIN_MASK_SHAPES now return a dict of available mask shapes `dict[str, type[Mask]]`
 - `mask.BitmapImage` changed to `mask.ImageMask`
 - `Formatter.save()` method on the abstract base class now expects a value from the `ExportFormat` enum for the `format` variable
+- Python 3.14 compatibility
+    - updated [pyproject.toml](/pyproject.toml)
+    - updated [noxfile.py](/noxfile.py)
+    - updated [text.yml](/.github/workflows/test.yml)
 
 ### Fixed
 

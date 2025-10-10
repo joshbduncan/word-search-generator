@@ -1,6 +1,6 @@
 [project]
 name = "word-search-generator"
-version = "4.1.0"
+version = "5.0.0"
 authors = [{ name = "Josh Duncan", email = "joshbduncan@gmail.com" }]
 description = "Make awesome Word Search puzzles"
 readme = "README.md"
@@ -8,22 +8,22 @@ requires-python = ">=3.11"
 keywords = ["puzzles", "games", "word-search"]
 license = "MIT"
 classifiers = [
-    "Intended Audience :: End Users/Desktop",
-    "License :: OSI Approved :: MIT License",
-    "Natural Language :: English",
-    "Operating System :: OS Independent",
-    "Programming Language :: Python",
-    "Topic :: Games/Entertainment :: Puzzle Games",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
-    "Typing :: Typed",
+  "Intended Audience :: End Users/Desktop",
+  "Natural Language :: English",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Games/Entertainment :: Puzzle Games",
+  "Typing :: Typed",
 ]
 dependencies = [
-    "fpdf2==2.7.8",
-    "Pillow==11.0.0",
-    "rich==14.1.0",
-    "ordered-set>=4.0.0",
+  "fpdf2==2.7.8",
+  "Pillow==11.0.0",
+  "rich==14.1.0",
+  "ordered-set>=4.0.0",
 ]
 
 [project.urls]
@@ -48,12 +48,12 @@ dev = ["pre-commit-uv", "pre-commit"]
 lint = ["ruff"]
 nox = ["nox", "nox-uv"]
 test = [
-    "pdfplumber",
-    "pypdf",
-    "pytest-asyncio",
-    "pytest-cov",
-    "pytest-repeat",
-    "pytest",
+  "pdfplumber",
+  "pypdf",
+  "pytest-asyncio",
+  "pytest-cov",
+  "pytest-repeat",
+  "pytest",
 ]
 type_check = ["mypy", "ty"]
 
