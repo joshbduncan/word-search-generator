@@ -460,16 +460,16 @@ wheels = [
 
 [[package]]
 name = "fpdf2"
-version = "2.7.8"
+version = "2.8.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "defusedxml" },
     { name = "fonttools" },
     { name = "pillow" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/22/e3/aca53302c60eab2e3d03125027b3fd1497926f14ca9ce80576940f020830/fpdf2-2.7.8.tar.gz", hash = "sha256:21733fe27cc75021e5a4d7d69de95e185adf9717b1f9b1e14aa27d277d5c10fd", size = 228317, upload-time = "2024-02-10T04:30:47.232Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/87/ff/4a1dd414e5c5df5a11904118afdb544f3a446c9c512cc77e9741cf74fb30/fpdf2-2.8.4.tar.gz", hash = "sha256:12b1f1dd35d0c2f35284bcfe10b153d6ca4baf29377379843e73d3f971eab6b7", size = 284963, upload-time = "2025-08-11T10:47:21.193Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/58/71/3bbd5bae6b0a04af113a5847c53596cdd306c4fb338691905cd5ee3d6314/fpdf2-2.7.8-py2.py3-none-any.whl", hash = "sha256:b09a297cbb14878ec4443ea2bef504d15e5cf4d92903118f013cb05e204fd491", size = 203684, upload-time = "2024-02-10T04:30:44.65Z" },
+    { url = "https://files.pythonhosted.org/packages/bf/e3/b1f6a8e864394d26ee25e90405670ba4d2cc89a7ca27b4f1d8bfe4001e45/fpdf2-2.8.4-py2.py3-none-any.whl", hash = "sha256:bce1afc437107906dcdb0b95c300c7501002fe412c2ed36fa33c8f0a2f87ef3e", size = 251700, upload-time = "2025-08-11T10:47:19.484Z" },
 ]
 
 [[package]]
@@ -1212,7 +1212,7 @@ type-check = [
 
 [package.metadata]
 requires-dist = [
-    { name = "fpdf2", specifier = "==2.7.8" },
+    { name = "fpdf2", specifier = "==2.8.4" },
     { name = "ordered-set", specifier = ">=4.0.0" },
     { name = "pillow", specifier = "==12.0.0" },
     { name = "rich", specifier = "==14.1.0" },
