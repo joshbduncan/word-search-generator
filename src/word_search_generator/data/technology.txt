@@ -61,7 +61,6 @@ Ethereum
 VirtualReality
 AugmentedReality
 MixedReality
-3DPrinting
 Nanotechnology
 Biotechnology
 QuantumComputing
