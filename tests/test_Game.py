@@ -78,7 +78,7 @@ def test_set_puzzle_level(
 )
 def test_set_secret_level(words, level: int, expected: set[Direction]):
     ws = WordSearch(words)
-    ws.secret_directions = level  # type: ignore[assignment]
+    ws.secret_directions = level
     assert ws.secret_directions == expected
 
 
@@ -279,7 +279,7 @@ def test_missing_formatter(tmp_path: Path):
 def test_missing_default_formatter(tmp_path: Path):
     words = OrderedSet([Word("dog"), Word("cat"), Word("horse")])
     game = Game(words, generator=WordSearchGenerator())
-    game.formatter = game.DEFAULT_FORMATTER = None  # type: ignore[assignment]
+    game.formatter = game.DEFAULT_FORMATTER = None
     with pytest.raises(MissingFormatterError):
         game.save(tmp_path.joinpath("hey-yo.pdf"))
 

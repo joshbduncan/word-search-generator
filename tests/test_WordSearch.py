@@ -36,7 +36,7 @@ def check_key(key: Key, puzzle: Puzzle) -> bool:
     """Test the puzzle key against the current puzzle state."""
     for word, info in key.items():
         row, col = info["start"]  # type: ignore
-        d = info["direction"]  # type: ignore
+        d = info["direction"]
         for char in word:
             if puzzle[row][col] != char:  # type: ignore
                 return False
@@ -191,7 +191,7 @@ def test_clearing_secret_directions(words):
 
 def test_get_level(ws: WordSearch):
     ws.level = 2
-    assert ws.level == LEVEL_DIRS[2]  # type: ignore
+    assert ws.level == LEVEL_DIRS[2]
 
 
 def test_add_words_with_resize(ws: WordSearch):

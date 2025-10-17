@@ -13,7 +13,6 @@ from rich.table import Table
 from rich.text import Text
 
 from ..console import console
-from ..core import GameType, Puzzle, Word
 from ..core.formatter import ExportFormat, Formatter
 from ..utils import (
     get_answer_key_list,
@@ -24,8 +23,7 @@ from ..utils import (
 )
 
 if TYPE_CHECKING:
-    from ..core import GameType, Puzzle, Word
-    from .word_search import WordSearch
+    from ..core import Game, Puzzle, Word
 
 
 class WordSearchFormatter(Formatter):
@@ -43,7 +41,7 @@ class WordSearchFormatter(Formatter):
 
     def show(
         self,
-        game: GameType,
+        game: Game,
         solution: bool = False,
         hide_fillers: bool = False,
         lowercase: bool = False,
@@ -132,7 +130,7 @@ class WordSearchFormatter(Formatter):
 
     def save(
         self,
-        game: GameType,
+        game: Game,
         path: str | Path,
         format: ExportFormat = ExportFormat.PDF,
         solution: bool = False,
@@ -143,33 +141,36 @@ class WordSearchFormatter(Formatter):
         # convert strings to PATH object
         if isinstance(path, str):
             path = Path(path)
-        if format == ExportFormat.CSV:
-            saved_file = self.write_csv_file(
-                path,
-                game,  # type: ignore
-                solution,
-                lowercase,
-                sort_word_list,
-            )
-        elif format == ExportFormat.JSON:
-            saved_file = self.write_json_file(
-                path,
-                game,  # type: ignore
-                solution,
-                lowercase,
-                sort_word_list,
-            )
-        else:
-            saved_file = self.write_pdf_file(
-                path, game, solution, lowercase, hide_key, sort_word_list
-            )
+
+        match format:
+            case ExportFormat.CSV:
+                saved_file = self.write_csv_file(
+                    path,
+                    game,
+                    solution,
+                    lowercase,
+                    sort_word_list,
+                )
+            case ExportFormat.JSON:
+                saved_file = self.write_json_file(
+                    path,
+                    game,
+                    solution,
+                    lowercase,
+                    sort_word_list,
+                )
+            case _:
+                saved_file = self.write_pdf_file(
+                    path, game, solution, lowercase, hide_key, sort_word_list
+                )
+
         # return saved file path
         return saved_file
 
     def write_csv_file(
         self,
         path: Path,
-        game: WordSearch,
+        game: Game,
         solution: bool = False,
         lowercase: bool = False,
         sort_word_list: bool = True,
@@ -219,7 +220,7 @@ class WordSearchFormatter(Formatter):
     def write_json_file(
         self,
         path: Path,
-        game: WordSearch,
+        game: Game,
         solution: bool = False,
         lowercase: bool = False,
         sort_word_list: bool = True,
@@ -255,7 +256,7 @@ class WordSearchFormatter(Formatter):
     def write_pdf_file(
         self,
         path: Path,
-        game: GameType,
+        game: Game,
         solution: bool = False,
         lowercase: bool = False,
         hide_key: bool = False,
@@ -291,7 +292,7 @@ class WordSearchFormatter(Formatter):
 
     @staticmethod
     def hide_filler_characters(
-        game: GameType,
+        game: Game,
     ) -> Puzzle:
         """Remove filler characters from a puzzle."""
         output: Puzzle = copy.deepcopy(game.puzzle)
@@ -313,9 +314,7 @@ def draw_page_title(title: str, pdf: FPDF, formatter: WordSearchFormatter):
     pdf.ln(0.125)
 
 
-def draw_puzzle(
-    pdf: FPDF, game: GameType, gsize: float, lowercase: bool = False
-) -> None:
+def draw_puzzle(pdf: FPDF, game: Game, gsize: float, lowercase: bool = False) -> None:
     for row in game.cropped_puzzle:
         for char in row:
             pdf.cell(
@@ -329,7 +328,7 @@ def draw_puzzle(
 
 
 def highlight_solution(
-    pdf: FPDF, game: GameType, gsize: float, start_x: float, start_y: float
+    pdf: FPDF, game: Game, gsize: float, start_x: float, start_y: float
 ):
     for word in game.placed_words:
         word_start, *_, word_end = word.offset_coordinates(game.bounding_box)
@@ -357,7 +356,7 @@ def highlight_solution(
 
 def draw_word_list(
     pdf: FPDF,
-    game: GameType,
+    game: Game,
     info_font_size: float,
     solution: bool = False,
     lowercase: bool = False,
@@ -437,7 +436,7 @@ def draw_word_list(
 def draw_puzzle_key(
     formatter: WordSearchFormatter,
     pdf: FPDF,
-    game: GameType,
+    game: Game,
     lowercase: bool = False,
     sort_word_list: bool = True,
 ):
@@ -470,7 +469,7 @@ def draw_puzzle_key(
 def draw_puzzle_page(
     formatter: WordSearchFormatter,
     pdf: FPDF,
-    game: GameType,
+    game: Game,
     solution: bool = False,
     lowercase: bool = False,
     hide_key: bool = False,

@@ -6,7 +6,6 @@ from word_search_generator import WordSearch
 from word_search_generator.core import (
     Formatter,
     Game,
-    GameType,
     Generator,
     Validator,
 )
@@ -24,11 +23,11 @@ def empty_game():
 @pytest.fixture
 def empty_generator():
     class G(Generator):
-        def generate(self, game: GameType) -> Puzzle:
+        def generate(self, game: Game) -> Puzzle:
             puzzle: Puzzle = []
             for word in game.words:
                 word.start_column = word.start_row = 1
-                word.direction = Direction.N  # type: ignore
+                word.direction = Direction.N
                 puzzle.append([word.text])
             return [[word.text for word in game.placed_words]]
 
@@ -38,12 +37,12 @@ def empty_generator():
 @pytest.fixture
 def empty_formatter(tmp_path: Path):
     class F(Formatter):
-        def show(self, game: GameType, *args, **kwargs) -> str:
+        def show(self, game: Game, *args, **kwargs) -> str:
             return ""
 
         def save(
             self,
-            game: GameType,
+            game: Game,
             path: str | Path,
             format: ExportFormat = ExportFormat.PDF,
             solution: bool = False,
@@ -100,19 +99,19 @@ def placed_words():
     BAT: Word = Word("bat")
     BAT.start_row = 0
     BAT.start_column = 0
-    BAT.direction = Direction.SE  # type: ignore
+    BAT.direction = Direction.SE
     BAT.secret = False
 
     CAB: Word = Word("cab")
     CAB.start_row = 4
     CAB.start_column = 2
-    CAB.direction = Direction.SE  # type: ignore
+    CAB.direction = Direction.SE
     CAB.secret = False
 
     RAT: Word = Word("rat")
     RAT.start_row = 0
     RAT.start_column = 4
-    RAT.direction = Direction.S  # type: ignore
+    RAT.direction = Direction.S
     RAT.secret = False
     return {BAT, CAB, RAT}
 

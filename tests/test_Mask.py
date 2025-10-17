@@ -457,7 +457,7 @@ def test_masked_property_false(ws):
 
 def test_add_mask_error(ws):
     with pytest.raises(TypeError):
-        ws.apply_mask("J")  # type: ignore
+        ws.apply_mask("J")
 
 
 def test_apply_mask_method_1():

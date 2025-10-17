@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, TypeAlias
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-    from . import GameType
+    from . import Game
     from .game import Puzzle
 
 WordFit: TypeAlias = tuple[str, list[tuple[int, int]]]
@@ -117,7 +117,7 @@ class Generator(ABC):
             )
 
     @abstractmethod
-    def generate(self, game: GameType) -> Puzzle:
+    def generate(self, game: Game) -> Puzzle:
         """Generate a puzzle grid with words placed according to game rules.
 
         This method must be implemented by subclasses to define the specific

@@ -229,7 +229,7 @@ def test_cli_output(builtin_mask_shapes):
     # assert output == ""
     puzzle = parse_puzzle(output)
     words = parse_words(output)
-    assert all(check_chars(puzzle, word) for word in words)  # type: ignore
+    assert all(check_chars(puzzle, word) for word in words)
 
 
 @pytest.mark.repeat(10)

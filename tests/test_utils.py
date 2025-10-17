@@ -46,15 +46,15 @@ def test_answer_key_list(ws, words):
 
 
 def test_float_range():
-    assert len(list(float_range(0.10))) == 1  # type: ignore
+    assert len(list(float_range(0.10))) == 1
 
 
 def test_float_range_invalid_args():
-    assert not list(float_range(0.40, 0.10, 0.01))  # type: ignore
+    assert not list(float_range(0.40, 0.10, 0.01))
 
 
 def test_float_range_negative():
-    assert len(list(float_range(0.40, 0.30, -0.1))) == 2  # type: ignore
+    assert len(list(float_range(0.40, 0.30, -0.1))) == 2
 
 
 @pytest.mark.repeat(10)

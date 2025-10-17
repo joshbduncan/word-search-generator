@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from . import GameType
+    from . import Game
 
 
 class ExportFormat(Enum):
@@ -61,7 +61,7 @@ class Formatter(ABC):
     """
 
     @abstractmethod
-    def show(self, game: GameType) -> str:
+    def show(self, game: Game) -> str:
         """Return a string representation of the game.
 
         Args:
@@ -73,7 +73,7 @@ class Formatter(ABC):
 
     @abstractmethod
     def save(
-        self, game: GameType, path: str | Path, format: ExportFormat = ExportFormat.PDF
+        self, game: Game, path: str | Path, format: ExportFormat = ExportFormat.PDF
     ) -> Path:
         """Save the current puzzle to a file.
 

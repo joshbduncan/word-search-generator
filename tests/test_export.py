@@ -438,7 +438,7 @@ def test_pdf_output_key(tmp_path: Path):
     page = reader.pages[0]
     puzzle = parse_puzzle(page.extract_text(0))
     words = parse_words(page.extract_text(180))
-    assert all(check_chars(puzzle, word) for word in words)  # type: ignore
+    assert all(check_chars(puzzle, word) for word in words)
 
 
 @pytest.mark.repeat(10)

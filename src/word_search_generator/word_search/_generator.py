@@ -3,14 +3,13 @@ from __future__ import annotations
 import random
 from typing import TYPE_CHECKING, TypeAlias
 
-from ..core import GameType
 from ..core.game import Puzzle
 from ..core.generator import Generator, WordFitError, retry
 from ..core.word import Direction, Word
 from ..utils import in_bounds
 
 if TYPE_CHECKING:
-    from ..core import GameType
+    from ..core import Game
     from ..core.game import Puzzle
 
 
@@ -28,7 +27,7 @@ class WordSearchGenerator(Generator):
     4. Includes validation to prevent unintended word duplicates
     """
 
-    def generate(self, game: GameType) -> Puzzle:
+    def generate(self, game: Game) -> Puzzle:
         self.game = game
         self.puzzle = game._build_puzzle(game.size, "")
         self.fill_words()
