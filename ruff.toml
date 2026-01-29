@@ -76,3 +76,7 @@ skip-magic-trailing-comma = false
 
 # Like Black, automatically detect the appropriate line ending.
 line-ending = "auto"
+
+# Format Python code inside of docstrings
+docstring-code-format = true
+docstring-code-line-length = 88
