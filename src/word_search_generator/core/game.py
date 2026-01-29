@@ -1166,12 +1166,26 @@ class Game:
         return False
 
     def __repr__(self) -> str:
+        """Return a simplified string representation of the Game.
+
+        Focuses on the core puzzle characteristics (words, level, size) that define
+        the puzzle's identity according to __eq__. Does not include implementation
+        details like generator, formatter, or validators.
+
+        Returns:
+            A string representation showing the puzzle's key parameters.
+
+        Examples:
+            >>> game = Game(words="cat dog bird", level=2, size=15)
+            >>> repr(game)
+            "Game(words='CAT,DOG,BIRD', level='E,S,SE,NE', size=15)"
+        """
+        words_str = ",".join(word.text for word in self.words)
         return (
-            f"{self.__class__.__name__}"
-            + f"(words='{','.join([word.text for word in self.words])}', "
-            + f"level={self.direction_set_repr}, "
-            + f"size={self.size}, "
-            + f"require_all_words={self.require_all_words})"
+            f"{self.__class__.__name__}("
+            f"words='{words_str}', "
+            f"level={self.direction_set_repr}, "
+            f"size={self.size})"
         )
 
     def __str__(self) -> str:

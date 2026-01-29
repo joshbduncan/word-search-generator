@@ -9,10 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Comprehensive Google-style docstrings to `WordSearch` class methods (`show()`, `save()`, `__eq__()`, `__repr__()`) with detailed parameter descriptions, usage examples, and exception documentation
+- Comprehensive docstring for `Game.__repr__()` with usage examples
 
 
 ### Changed
 
+- Simplified `Game.__repr__()` to focus on core puzzle characteristics (words, level, size) that define puzzle identity according to `__eq__`. Removed `require_all_words` and implementation details like generator/formatter for cleaner, more maintainable output
 - Enabled Ruff docstring code formatting to automatically reformat Python code examples in docstrings
 - Configured docstring code snippets to use 88-character line length for consistency
 - Consolidated Ruff linting rules by moving `extend-select` rules directly into `select` array
@@ -25,7 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added per-file ignore rules for `E402` in `__init__.py` files and `TCH004` in `bitmap.py`
 - Cleaned up type ignore comments in mask tests for better code clarity
-- Type checking error in `WordSearchGenerator.find_a_fit()` for secret word direction handling
+- Type checking error in `WordSearchGenerator.find_a_fit()` where `hasattr()` assertions for `secret_directions` caused `~AlwaysFalsy` type inference issues. Replaced with `getattr()` pattern for proper type narrowing
+- Updated `test_repr` to test repr informativeness and object recreation without relying on `eval()` magic
 
 ## [5.0.0] 2025-10-15
 
