@@ -31,7 +31,7 @@ exclude = [
 line-length = 88
 indent-width = 4
 
-# Assume Python 3.10
+# Assume Python 3.11
 target-version = "py311"
 
 [lint]
@@ -48,14 +48,21 @@ select = [
     "SIM",
     # isort
     "I",
+    # flake8-comprehensions
+    "C4",
+    # flake8-type-checking
+    "TCH",
 ]
-
-extend-select = ["C4", "I", "SIM", "TCH"]
 
 # Allow fix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]
-# fixable = ["B", "I"]
 unfixable = []
+
+[lint.per-file-ignores]
+# Ignore `E402` (import violations) in all `__init__.py`.
+"__init__.py" = ["E402"]
+# Ignore `TCH004` in `bitmap.py` (https://github.com/charliermarsh/ruff/issues/2852).
+"src/word_search_generator/mask/bitmap.py" = ["TCH004"]
 
 [format]
 # Like Black, use double quotes for strings.
@@ -69,9 +76,3 @@ skip-magic-trailing-comma = false
 
 # Like Black, automatically detect the appropriate line ending.
 line-ending = "auto"
-
-[lint.per-file-ignores]
-# Ignore `E402` (import violations) in all `__init__.py`.
-"__init__.py" = ["E402"]
-# Ignore `TCH004` in `bitmap.py` (https://github.com/charliermarsh/ruff/issues/2852).
-"src/word_search_generator/mask/bitmap.py" = ["TCH004"]
