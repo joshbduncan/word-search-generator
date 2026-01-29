@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Comprehensive Google-style docstrings to `WordSearch` class methods (`show()`, `save()`, `__eq__()`, `__repr__()`) with detailed parameter descriptions, usage examples, and exception documentation
+
+
+### Changed
+
+- Enabled Ruff docstring code formatting to automatically reformat Python code examples in docstrings
+- Configured docstring code snippets to use 88-character line length for consistency
+- Consolidated Ruff linting rules by moving `extend-select` rules directly into `select` array
+- Replaced mypy with `ty` for type checking across the project
+- Updated copyright year to 2026 in LICENSE and package files
+- Updated target Python version from 3.10 to 3.11 in Ruff configuration
+- Project dependencies updated to latest releases
+
+### Fixed
+
+- Added per-file ignore rules for `E402` in `__init__.py` files and `TCH004` in `bitmap.py`
+- Cleaned up type ignore comments in mask tests for better code clarity
+
 ## [5.0.0] 2025-10-15
 
 ### Added
