@@ -69,7 +69,7 @@ class EmptyPuzzleError(Exception):
 
     Example:
         >>> game = Game()  # No words added
-        >>> game.show()   # Raises EmptyPuzzleError
+        >>> game.show()  # Raises EmptyPuzzleError
     """
 
     def __init__(
@@ -137,7 +137,7 @@ class PuzzleSizeError(ValueError):
     the specified size is smaller than the longest word to be placed.
 
     Example:
-        >>> game = Game(size=2)    # Too small - raises PuzzleSizeError
+        >>> game = Game(size=2)  # Too small - raises PuzzleSizeError
         >>> game = Game(size=100)  # Too large - raises PuzzleSizeError
         >>> game = Game(words="verylongword", size=5)  # Raises PuzzleSizeError
     """
@@ -294,7 +294,7 @@ class Game:
         ...     level="E,S,SE,SW",  # Custom directions
         ...     require_all_words=True,
         ...     generator=MyCustomGenerator(),
-        ...     formatter=MyCustomFormatter()
+        ...     formatter=MyCustomFormatter(),
         ... )
 
         Working with masks:
@@ -991,7 +991,7 @@ class Game:
             >>> game.validate_level(2)  # Returns predefined level 2 directions
             >>> game.validate_level("E,S,SE")  # Custom direction set
             >>> game.validate_level([Direction.E, Direction.S])  # Direction objects
-            >>> game.validate_level([(1,0), (0,1)])  # Tuple coordinates
+            >>> game.validate_level([(1, 0), (0, 1)])  # Tuple coordinates
         """
         if isinstance(d, int):  # traditional numeric level
             try:
