@@ -747,7 +747,22 @@ class Game:
 
     @staticmethod
     def _build_puzzle(size: int, char: str) -> Puzzle:
-        """Build an empty nested list/puzzle grid."""
+        """Build an empty nested list/puzzle grid.
+
+        Creates a square 2D list filled with the specified character.
+        Used to initialize empty puzzles and masks.
+
+        Args:
+            size: Grid dimensions (size x size).
+            char: Character to fill each cell with.
+
+        Returns:
+            A size x size 2D list where each cell contains char.
+
+        Examples:
+            >>> Game._build_puzzle(3, "*")
+            [['*', '*', '*'], ['*', '*', '*'], ['*', '*', '*']]
+        """
         return [[char] * size for _ in range(size)]
 
     def generate(self, reset_size: bool = False) -> None:
@@ -832,6 +847,18 @@ class Game:
             )
 
     def _process_input(self, words: str, secret: bool = False) -> WordSet:
+        """Process and clean input word string into a WordSet.
+
+        Internal helper method that delegates to _cleanup_input and returns
+        the result as a WordSet. Used by add_words, remove_words, and replace_words.
+
+        Args:
+            words: Raw word string (space, comma, or newline separated).
+            secret: Whether to mark these words as secret. Defaults to False.
+
+        Returns:
+            WordSet containing the cleaned and validated words.
+        """
         clean_words = self._cleanup_input(words, secret=secret)
         return clean_words
 
@@ -912,7 +939,27 @@ class Game:
         self.generate(reset_size=reset_size)
 
     def _cleanup_input(self, words: str, secret: bool = False) -> WordSet:
-        """Cleanup provided input string."""
+        """Clean and parse input word string into validated Word objects.
+
+        Processes a raw string of words separated by spaces, commas, or newlines
+        into a WordSet of validated Word objects. Applies configured validators
+        and enforces MAX_PUZZLE_WORDS limit.
+
+        Args:
+            words: Raw word string with words separated by spaces, commas, or newlines.
+            secret: Whether to mark the words as secret (hidden from word list).
+                Defaults to False.
+
+        Returns:
+            OrderedSet of Word objects that passed validation, up to MAX_PUZZLE_WORDS.
+
+        Raises:
+            TypeError: If words is not a string.
+
+        Examples:
+            >>> game._cleanup_input("cat dog, bird\\npig")
+            OrderedSet([Word('CAT'), Word('DOG'), Word('BIRD'), Word('PIG')])
+        """
         if not isinstance(words, str):
             raise TypeError(
                 f"Words must be a string separated by spaces, commas, or new "
@@ -934,8 +981,28 @@ class Game:
     def _validate_direction_iterable(
         d: Iterable[str | tuple[int, int] | Direction],
     ) -> DirectionSet:
-        """Validates that all the directions in d are found as keys to
-        directions.dir_moves and therefore are valid directions."""
+        """Validate and convert an iterable of directions to a DirectionSet.
+
+        Accepts directions in multiple formats (strings, tuples, Direction enums)
+        and converts them to a standardized set of Direction enum values.
+
+        Args:
+            d: Iterable containing direction specifications in any supported format:
+                - Direction enum values (e.g., Direction.E)
+                - Tuple coordinates (e.g., (0, 1) for East)
+                - String names (e.g., "E", "EAST", case-insensitive)
+
+        Returns:
+            Set of validated Direction enum values.
+
+        Raises:
+            ValueError: If any direction string is not a valid direction name.
+            TypeError: If a direction is not a string, tuple, or Direction enum.
+
+        Examples:
+            >>> Game._validate_direction_iterable(["E", "S", (1, 1)])
+            {<Direction.E: (0, 1)>, <Direction.S: (1, 0)>, <Direction.SE: (1, 1)>}
+        """
         o = set()
         for direction in d:
             if isinstance(direction, Direction):
@@ -1135,15 +1202,31 @@ class Game:
         self.generate()
 
     def remove_masks(self) -> None:
+        """Remove all masks from the puzzle and reset to full grid.
+
+        Clears the mask list and resets the puzzle mask to all active cells,
+        then regenerates the puzzle without geometric constraints.
+        """
         self._masks = []
         self._mask = self._build_puzzle(self.size, self.ACTIVE)
         self.generate()
 
     def remove_static_masks(self) -> None:
+        """Remove only static masks from the puzzle, keeping dynamic masks.
+
+        Static masks have fixed sizes and cannot adapt to puzzle size changes.
+        This method filters them out while preserving dynamic masks that can
+        scale with the puzzle.
+        """
         self._masks = [mask for mask in self.masks if not mask.static]
 
     def _reapply_masks(self) -> None:
-        """Reapply all current masks to the puzzle."""
+        """Reapply all current masks to the puzzle after size or mask changes.
+
+        Internal method that rebuilds the mask grid from scratch and reapplies
+        all stored masks. Skips static masks that don't match the current puzzle
+        size to prevent invalid mask applications.
+        """
         self._mask = self._build_puzzle(self.size, self.ACTIVE)
         for mask in self.masks:
             if mask.static and mask.puzzle_size != self.size:
@@ -1155,6 +1238,25 @@ class Game:
     # ******************************************************** #
 
     def __eq__(self, __o: object) -> bool:
+        """Compare two Game objects for equality based on puzzle characteristics.
+
+        Two games are considered equal if they have the same words, allowed
+        directions, and puzzle size. Implementation details like generator,
+        formatter, and current puzzle state are not compared.
+
+        Args:
+            __o: Object to compare against.
+
+        Returns:
+            True if both objects are Game instances with identical words,
+            directions, and size. False otherwise.
+
+        Examples:
+            >>> g1 = Game("cat dog", level=2, size=10, generator=gen)
+            >>> g2 = Game("cat dog", level=2, size=10, generator=gen)
+            >>> g1 == g2
+            True
+        """
         if isinstance(__o, Game):
             return all(
                 (
@@ -1189,6 +1291,20 @@ class Game:
         )
 
     def __str__(self) -> str:
+        """Return a formatted string representation of the puzzle.
+
+        Uses the configured formatter to display the puzzle grid. If the puzzle
+        hasn't been generated or no formatter is set, returns a placeholder message.
+
+        Returns:
+            Formatted puzzle string from the formatter, or "Empty puzzle." if
+            the puzzle is not generated or no formatter is configured.
+
+        Examples:
+            >>> game = Game("cat dog", generator=gen, formatter=fmt)
+            >>> print(game)
+            # Displays formatted puzzle grid
+        """
         if not self.puzzle or not self.formatter:
             return "Empty puzzle."
         return self.formatter.show(self)

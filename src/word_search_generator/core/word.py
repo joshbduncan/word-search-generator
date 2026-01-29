@@ -11,17 +11,46 @@ from .validator import Validator
 
 
 class Position(NamedTuple):
+    """Represents a 2D coordinate position in the puzzle grid.
+
+    Attributes:
+        row: The row index (0-based), or None if not placed.
+        column: The column index (0-based), or None if not placed.
+    """
+
     row: int | None
     column: int | None
 
 
 class KeyInfo(TypedDict):
+    """Type definition for word placement information in the answer key.
+
+    Used internally to store placement details with typed access.
+
+    Attributes:
+        start: Starting position (row, column) of the word, or None if not placed.
+        direction: Direction the word is oriented (E, S, SE, etc.), or None.
+        secret: Whether this is a secret word (not shown in word list).
+    """
+
     start: Position | None
     direction: Direction | None
     secret: bool
 
 
 class KeyInfoJson(TypedDict):
+    """JSON-serializable version of KeyInfo for export purposes.
+
+    Uses separate start_row/start_col fields and string direction for
+    JSON compatibility.
+
+    Attributes:
+        start_row: Starting row index, or None if not placed.
+        start_col: Starting column index, or None if not placed.
+        direction: Direction name as string (e.g., "E", "S"), or None.
+        secret: Whether this is a secret word (not shown in word list).
+    """
+
     start_row: int | None
     start_col: int | None
     direction: str | None
@@ -293,26 +322,73 @@ class Word:
         self.direction = None
 
     def __bool__(self) -> bool:
-        """Returns the truthiness of a word.
-        Should always return true, except for the null word."""
+        """Check if the word has text content.
+
+        Returns:
+            True if the word has non-empty text, False otherwise.
+            Should always return True except for null/empty words.
+        """
         return bool(self.text)
 
     def __eq__(self, __o: object) -> bool:
-        """Returns True if both instances have the same text."""
+        """Compare two Word objects for equality based on text.
+
+        Two words are considered equal if they have the same text,
+        regardless of placement, direction, or secret status.
+
+        Args:
+            __o: Object to compare against.
+
+        Returns:
+            True if both objects are Word instances with identical text,
+            False otherwise.
+        """
         if not isinstance(__o, Word):
             return False
         return self.text == __o.text
 
     def __hash__(self) -> int:
-        """Returns the hashes value of the word text."""
+        """Return hash value based on word text.
+
+        Allows Word objects to be used in sets and as dictionary keys.
+        Words with the same text will have the same hash.
+
+        Returns:
+            Hash value of the word's text string.
+        """
         return hash(self.text)
 
     def __len__(self) -> int:
-        """Returns the length of the word text."""
+        """Return the number of characters in the word.
+
+        Returns:
+            Length of the word's text string.
+        """
         return len(self.text)
 
     def __repr__(self) -> str:
+        """Return a string representation of the Word for debugging.
+
+        Returns:
+            String in the format "Word('TEXT', secret_status)" showing
+            the word text and whether it's a secret word.
+
+        Examples:
+            >>> word = Word("cat")
+            >>> repr(word)
+            "Word('CAT', False)"
+        """
         return f"{self.__class__.__name__}('{self.text}', " + f"{self.secret})"
 
     def __str__(self) -> str:
+        """Return the word's text as a string.
+
+        Returns:
+            The uppercase text of the word.
+
+        Examples:
+            >>> word = Word("cat")
+            >>> str(word)
+            "CAT"
+        """
         return self.text
