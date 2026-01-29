@@ -36,7 +36,6 @@ lint: ## lint the app using ruff
 
 typing: ## type check the app using mypy
 	@echo "📝 type checking..."
-	uv run mypy src tests
 	uv run ty check src tests
 
 test: ## test the app using pytest

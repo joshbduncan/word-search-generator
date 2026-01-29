@@ -55,7 +55,7 @@ test = [
   "pytest-repeat",
   "pytest",
 ]
-type_check = ["mypy", "ty"]
+type_check = ["ty"]
 
 [tool.uv.sources]
 word-search-generator = { workspace = true }
