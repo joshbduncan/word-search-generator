@@ -186,6 +186,56 @@ class WordSearch(Game):
         reversed_letters: bool = False,
         sort_word_list: bool = True,
     ):
+        """Display the current puzzle in the console.
+
+        Prints a formatted representation of the word search puzzle with optional
+        styling and formatting options. This method displays the puzzle grid, word list,
+        and answer key based on the provided parameters.
+
+        Args:
+            solution: Highlight the puzzle solution with colored words. When True,
+                placed words are shown with color highlighting. Defaults to False.
+            hide_fillers: Hide filler letters (show only placed words). When True,
+                only letters that are part of actual words are displayed, with filler
+                characters replaced by spaces. Defaults to False.
+            lowercase: Convert all letters to lowercase. When True, all puzzle letters
+                and words in the list are displayed in lowercase. Defaults to False.
+            hide_key: Hide the answer key from the output. When True, the answer key
+                showing word positions and directions is not displayed at the bottom
+                of the puzzle. Defaults to False.
+            reversed_letters: Show reversed letter positions in the answer key.
+                Affects how word coordinates are displayed in the key.
+                Defaults to False.
+            sort_word_list: Sort the word list alphabetically. When True, words are
+                displayed in alphabetical order. When False, words appear in the order
+                they were added to the puzzle. Defaults to True.
+
+        Raises:
+            EmptyPuzzleError: If puzzle is not generated or has no placed words.
+            MissingFormatterError: If no formatter is configured.
+
+        Examples:
+            Display a basic puzzle:
+
+            >>> ws = WordSearch("cat dog bird")
+            >>> ws.show()
+
+            Display with solution highlighted:
+
+            >>> ws.show(solution=True)
+
+            Display only the placed words (no fillers):
+
+            >>> ws.show(hide_fillers=True)
+
+            Display in lowercase without answer key:
+
+            >>> ws.show(lowercase=True, hide_key=True)
+
+            Display with words in original order:
+
+            >>> ws.show(sort_word_list=False)
+        """
         return super().show(
             solution=solution,
             hide_fillers=hide_fillers,
@@ -199,13 +249,59 @@ class WordSearch(Game):
         self,
         path: str | Path,
         format: ExportFormat = ExportFormat.PDF,
-        solution: bool = False,
-        lowercase: bool = False,
-        hide_key: bool = False,
-        sort_word_list: bool = True,
         *args,
         **kwargs,
     ) -> Path:
+        """Save the current puzzle to a file.
+
+        This method supports additional formatting options through keyword arguments
+        that control how the puzzle is displayed and saved.
+
+        Args:
+            path: File save path.
+            format: Export format. Defaults to ExportFormat.PDF.
+            **kwargs: Additional formatting options:
+                solution (bool): Show solution with word highlighted.
+                    Defaults to False.
+                lowercase (bool): Convert all letters to lowercase. Defaults to False.
+                hide_key (bool): Hide the answer key from the output. Defaults to False.
+                sort_word_list (bool): Sort the word list alphabetically. If False,
+                    words appear in the order they were added. Defaults to True.
+
+        Raises:
+            EmptyPuzzleError: Puzzle not yet generated or puzzle has no placed words.
+            MissingFormatterError: No puzzle formatter set.
+
+        Returns:
+            Final save path of the file.
+
+        Examples:
+            Save a basic puzzle:
+
+            >>> ws = WordSearch("cat dog bird")
+            >>> ws.save("puzzle.pdf")
+
+            Save with solution highlighted:
+
+            >>> ws.save("solution.pdf", solution=True)
+
+            Save as CSV with lowercase letters and no answer key:
+
+            >>> ws.save(
+            ...     "puzzle.csv",
+            ...     format=ExportFormat.CSV,
+            ...     lowercase=True,
+            ...     hide_key=True,
+            ... )
+
+            Save with words in original order (unsorted):
+
+            >>> ws.save("puzzle.pdf", sort_word_list=False)
+        """
+        solution = kwargs.get("solution", False)
+        lowercase = kwargs.get("lowercase", False)
+        hide_key = kwargs.get("hide_key", False)
+        sort_word_list = kwargs.get("sort_word_list", True)
         return super().save(
             path=path,
             format=format,
@@ -324,6 +420,30 @@ class WordSearch(Game):
     # ******************************************************** #
 
     def __eq__(self, __o: object) -> bool:
+        """Compare two WordSearch objects for equality.
+
+        Two WordSearch objects are considered equal if they have the same words,
+        directions, size, secret words, and secret directions. This comparison
+        checks the configuration and word lists, not the generated puzzle state.
+
+        Args:
+            __o: Object to compare against.
+
+        Returns:
+            True if both objects are WordSearch instances with identical
+            configuration (words, directions, size, secret words, and secret
+            directions). False otherwise.
+
+        Examples:
+            >>> ws1 = WordSearch("cat dog", level=2, size=10)
+            >>> ws2 = WordSearch("cat dog", level=2, size=10)
+            >>> ws1 == ws2
+            True
+
+            >>> ws3 = WordSearch("cat dog", level=3, size=10)
+            >>> ws1 == ws3
+            False
+        """
         if isinstance(__o, WordSearch):
             return all(
                 (
@@ -337,6 +457,17 @@ class WordSearch(Game):
         return False
 
     def __repr__(self) -> str:
+        """Return a detailed string representation of the WordSearch object.
+
+        Creates a string that shows how to recreate the WordSearch instance,
+        including all configuration parameters such as words, level, size,
+        secret words, and additional settings.
+
+        Returns:
+            String representation in the format:
+            WordSearch(words='...', level=..., size=..., secret_words='...',
+                      secret_level=..., require_all_words=...)
+        """
         return (
             f"{self.__class__.__name__}"
             + f"(words='{','.join([word.text for word in self.hidden_words])}', "
