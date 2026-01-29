@@ -10,7 +10,7 @@ from ..utils import in_bounds
 
 if TYPE_CHECKING:
     from ..core import Game
-    from ..core.game import Puzzle
+    from ..core.game import DirectionSet, Puzzle
 
 
 Fit: TypeAlias = tuple[str, list[tuple[int, int]]]
@@ -133,10 +133,16 @@ class WordSearchGenerator(Generator):
         """Look for random place in the puzzle where `word` fits."""
         fits: Fits = []
         # check all directions for level
-        directions = secret_directions = self.game.directions
-        if hasattr(self.game, "secret_directions") and self.game.secret_directions:
-            secret_directions = self.game.secret_directions
-        for d in secret_directions if word.secret else directions:
+        if word.secret:
+            possible_directions: DirectionSet | None = getattr(
+                self.game, "secret_directions", None
+            )
+            if not possible_directions:
+                raise RuntimeError("Secret words require non-empty secret_directions")
+        else:
+            possible_directions: DirectionSet = self.game.directions
+
+        for d in possible_directions:
             coords = self.test_a_fit(word.text, position, d)
             if coords:
                 fits.append((Direction(d).name, coords))

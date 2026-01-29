@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added per-file ignore rules for `E402` in `__init__.py` files and `TCH004` in `bitmap.py`
 - Cleaned up type ignore comments in mask tests for better code clarity
+- Type checking error in `WordSearchGenerator.find_a_fit()` for secret word direction handling
 
 ## [5.0.0] 2025-10-15
 
