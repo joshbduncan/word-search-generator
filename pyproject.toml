@@ -30,7 +30,7 @@ dependencies = [
 homepage = "https://github.com/joshbduncan/word-search-generator"
 documentation = "https://github.com/joshbduncan/word-search-generator/wiki"
 repository = "https://github.com/joshbduncan/word-search-generator.git"
-changelog = "https://github.com/joshbduncan/word-search-generator/blob/main/CHANGLOG.md"
+changelog = "https://github.com/joshbduncan/word-search-generator/blob/main/CHANGELOG.md"
 bug-tracker = "https://github.com/joshbduncan/word-search-generator/issues"
 
 [project.scripts]

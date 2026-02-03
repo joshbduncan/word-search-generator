@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Comprehensive Google-style docstrings to `WordSearch` class methods (`show()`, `save()`, `__eq__()`, `__repr__()`) with detailed parameter descriptions, usage examples, and exception documentation
-- Comprehensive docstring for `Game.__repr__()` with usage examples
+- Comprehensive docstrings for core module.
 
 
 ### Changed
