@@ -9,12 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Comprehensive Google-style docstrings to `WordSearch` class methods (`show()`, `save()`, `__eq__()`, `__repr__()`) with detailed parameter descriptions, usage examples, and exception documentation
-- Comprehensive docstrings for core module.
+- Comprehensive docstrings for core module
+- Comprehensive docstrings for `cli` module including module docstring, all `argparse.Action` subclasses, and all functions
 
 
 ### Changed
 
 - Simplified `Game.__repr__()` to focus on core puzzle characteristics (words, level, size) that define puzzle identity according to `__eq__`. Removed `require_all_words` and implementation details like generator/formatter for cleaner, more maintainable output
+- Moved `datetime` import in `cli.main()` from lazy inline import to top-level with other stdlib imports
+- Renamed `format` variable in `cli.main()` to `export_format` to avoid shadowing the `format` builtin
 - Enabled Ruff docstring code formatting to automatically reformat Python code examples in docstrings
 - Configured docstring code snippets to use 88-character line length for consistency
 - Consolidated Ruff linting rules by moving `extend-select` rules directly into `select` array
@@ -25,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Stale comment in `cli.main()` referencing non-existent `--random-from` flag, updated to accurately describe `--theme` dependency on `--random`
+- Replaced `assert mask.bounding_box` in `cli.preview_masks()` with an explicit guard that warns and skips the mask, preventing silent failure when running with `-O`
 - Added per-file ignore rules for `E402` in `__init__.py` files and `TCH004` in `bitmap.py`
 - Cleaned up type ignore comments in mask tests for better code clarity
 - Type checking error in `WordSearchGenerator.find_a_fit()` where `hasattr()` assertions for `secret_directions` caused `~AlwaysFalsy` type inference issues. Replaced with `getattr()` pattern for proper type narrowing

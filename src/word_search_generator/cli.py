@@ -1,6 +1,20 @@
+"""Command-line interface for the word-search-generator package.
+
+This module provides the CLI entry point for generating word search puzzles
+directly from the terminal. It handles argument parsing, input processing,
+mask/theme previews, puzzle generation, and output (console display or file
+export).
+
+Usage:
+    word-search-generator cat,dog,bird -s 15
+    word-search-generator --random 30 --theme animals --cheat -f PDF -o puzzle.pdf
+    word-search-generator -i words.txt --size 20 --mask star5
+"""
+
 import argparse
 import sys
 from collections.abc import ItemsView, Sequence
+from datetime import datetime
 from importlib.metadata import version
 from pathlib import Path
 
@@ -16,7 +30,17 @@ BUILTIN_MASK_SHAPES: dict[str, type[Mask]] = shapes.get_shape_objects()
 
 
 class PrintExamples(argparse.Action):
+    """Custom argparse action that prints the epilog examples and exits."""
+
     def __call__(self, parser, namespace, values, option_string=None):
+        """Print the parser epilog (usage examples) and exit.
+
+        Args:
+            parser: The ArgumentParser instance.
+            namespace: The Namespace object being populated.
+            values: The associated command-line values (unused).
+            option_string: The option string that triggered this action.
+        """
         formatter = parser._get_formatter()  # gets your RawDescriptionHelpFormatter
         formatter.add_text(parser.epilog)
         print(formatter.format_help())  # only prints the epilog part
@@ -27,6 +51,17 @@ class RandomAction(argparse.Action):
     """Restrict argparse `-r`, `--random` inputs."""
 
     def __call__(self, parser, namespace, values, option_string=None):
+        """Validate that the word count is within allowed bounds.
+
+        Args:
+            parser: The ArgumentParser instance.
+            namespace: The Namespace object being populated.
+            values: The integer word count provided by the user.
+            option_string: The option string that triggered this action.
+
+        Raises:
+            SystemExit: If values is outside MIN_PUZZLE_WORDS..MAX_PUZZLE_WORDS.
+        """
         min_val = WordSearch.MIN_PUZZLE_WORDS
         max_val = WordSearch.MAX_PUZZLE_WORDS
         if values < min_val or values > max_val:
@@ -38,6 +73,21 @@ class DifficultyAction(argparse.Action):
     """Validate difficulty level integers or directional strings."""
 
     def __call__(self, parser, namespace, values, option_string=None):
+        """Parse and validate a difficulty level or direction string.
+
+        Accepts either a single numeric level (converted to int) or a
+        comma-separated list of cardinal direction strings. Errors if
+        the list mixes numeric and directional values.
+
+        Args:
+            parser: The ArgumentParser instance.
+            namespace: The Namespace object being populated.
+            values: The raw string value provided by the user.
+            option_string: The option string that triggered this action.
+
+        Raises:
+            SystemExit: If values contains a mix of numeric and direction strings.
+        """
         if values.isnumeric():
             setattr(namespace, self.dest, int(values))
         else:
@@ -56,6 +106,17 @@ class SizeAction(argparse.Action):
     """Restrict argparse `-s`, `--size` inputs."""
 
     def __call__(self, parser, namespace, values, option_string=None):
+        """Validate that the puzzle size is within allowed bounds.
+
+        Args:
+            parser: The ArgumentParser instance.
+            namespace: The Namespace object being populated.
+            values: The integer size provided by the user.
+            option_string: The option string that triggered this action.
+
+        Raises:
+            SystemExit: If values is outside MIN_PUZZLE_SIZE..MAX_PUZZLE_SIZE.
+        """
         min_val = WordSearch.MIN_PUZZLE_SIZE
         max_val = WordSearch.MAX_PUZZLE_SIZE
         if values < min_val or values > max_val:
@@ -64,6 +125,14 @@ class SizeAction(argparse.Action):
 
 
 def create_parser() -> argparse.ArgumentParser:
+    """Build and return the configured ArgumentParser for the CLI.
+
+    Defines all arguments, mutually exclusive groups, and default values
+    for the word-search-generator command-line interface.
+
+    Returns:
+        Fully configured ArgumentParser ready to parse sys.argv.
+    """
     examples = """\
 examples:
   %(prog)s animals,tiger,shark -s 15
@@ -266,6 +335,15 @@ secret puzzle words can go. See valid arguments above.",
 def preview_masks(
     masks: list[tuple[str, type[Mask]]] | ItemsView[str, type[Mask]] | None = None,
 ) -> None:
+    """Print a Rich-formatted table preview of one or more mask shapes.
+
+    Each mask is rendered at a fixed preview size and displayed in its own
+    table with the shape name as the title.
+
+    Args:
+        masks: Mask name/class pairs to preview. When None, all builtin
+            mask shapes are previewed.
+    """
     from rich import box
     from rich.table import Table
 
@@ -289,7 +367,10 @@ def preview_masks(
             show_lines=False,
         )
 
-        assert mask.bounding_box
+        if not mask.bounding_box:
+            print(f"Warning: could not generate bounding box for '{name}', skipping.")
+            continue
+
         min_x, min_y = mask.bounding_box[0]
         max_x, max_y = mask.bounding_box[1]
 
@@ -305,6 +386,15 @@ def preview_masks(
 def preview_themes(
     themes: list[tuple[str, list[str]]] | ItemsView[str, list[str]] | None = None,
 ) -> None:
+    """Print the contents of one or more themed word lists.
+
+    Each theme is printed with its name in uppercase followed by its
+    comma-separated word list.
+
+    Args:
+        themes: Theme name/word-list pairs to preview. When None, all
+            available themed word lists are previewed.
+    """
     if themes is None:
         themes = WORD_LISTS.items()
 
@@ -315,6 +405,18 @@ def preview_themes(
 
 
 def process_words(args: argparse.Namespace) -> str:
+    """Extract puzzle words from the parsed CLI arguments.
+
+    Resolves words from (in priority order): --random generation using an
+    optional --theme, a file path via --input, positional arguments, or
+    stdin if data was piped in.
+
+    Args:
+        args: Parsed argparse Namespace containing CLI arguments.
+
+    Returns:
+        Comma-separated word string, or empty string if no words were found.
+    """
     words: str = ""
     if args.random:
         word_list: list[str] = (
@@ -342,6 +444,17 @@ def process_words(args: argparse.Namespace) -> str:
 
 
 def process_secret_words(args: argparse.Namespace) -> str:
+    """Extract secret words from the parsed CLI arguments.
+
+    Resolves secret words from either --secret-words (explicit string)
+    or --random-secret-words (random generation).
+
+    Args:
+        args: Parsed argparse Namespace containing CLI arguments.
+
+    Returns:
+        Comma-separated secret word string, or empty string if none.
+    """
     secret_words = ""
     if args.secret_words:
         secret_words = args.secret_words
@@ -351,18 +464,22 @@ def process_secret_words(args: argparse.Namespace) -> str:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    """Word Search Generator CLI.
+    """Generate and display or save a word search puzzle from the CLI.
+
+    Orchestrates the full CLI workflow: argument parsing, preview handling,
+    word processing, puzzle creation, mask application, and output.
 
     Args:
-        argv (Sequence[str] | None, optional): Command line arguments. Defaults to None.
+        argv: Command-line arguments to parse. Defaults to None,
+            which causes argparse to read from sys.argv.
 
     Returns:
-        int: Exit status.
+        0 on success, 1 if no words were provided.
     """
     parser = create_parser()
     args = parser.parse_args(argv)
 
-    # dependency: --random-from requires --random
+    # --theme requires --random to know how many words to pick
     if args.theme and not args.random:
         parser.error("--theme requires --random N")
 
@@ -434,22 +551,18 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     # show the result
     if args.output or args.format:
-        from datetime import datetime
-
-        # Convert string format to ExportFormat enum
-        if args.format:
-            format = ExportFormat.from_string(args.format)
-        else:
-            format = ExportFormat.PDF
+        export_format = (
+            ExportFormat.from_string(args.format) if args.format else ExportFormat.PDF
+        )
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S").replace(":", "")
         path = (
             args.output
             if args.output
-            else f"WordSearchPuzzle {timestamp}.{str(format).lower()}"
+            else f"WordSearchPuzzle {timestamp}.{str(export_format).lower()}"
         )
         foutput = puzzle.save(
             path=path,
-            format=format,
+            format=export_format,
             solution=args.cheat,
             lowercase=args.lowercase,
             hide_key=args.hide_key,
