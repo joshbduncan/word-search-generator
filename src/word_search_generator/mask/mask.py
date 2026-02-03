@@ -9,12 +9,24 @@ class MaskNotGenerated(Exception):
 
 
 class MaskMethod(IntEnum):
+    """How a mask is combined with the current puzzle mask.
+
+    Attributes:
+        INTERSECTION: Only cells that are active in both the existing mask
+            and the new mask remain active (logical AND).
+        ADDITIVE: Cells that are active in either mask become active
+            (logical OR).
+        SUBTRACTIVE: Cells that are active in the new mask are removed
+            from the existing mask (logical AND NOT).
+    """
+
     INTERSECTION = 1
     ADDITIVE = 2
     SUBTRACTIVE = 3
 
 
 MethodLiteral = Literal[1, 2, 3]
+"""Integer alias type for MaskMethod values (1, 2, or 3)."""
 
 
 class Mask:
@@ -170,7 +182,14 @@ class Mask:
         return [[char] * size for _ in range(size)]
 
     def generate(self, puzzle_size: int) -> None:
-        """Generate a new mask at `puzzle_size`."""
+        """Generate the mask grid and draw the shape at the given size.
+
+        Initialises an empty (all-INACTIVE) grid, then delegates to
+        ``_draw()`` so the concrete subclass can fill in its shape.
+
+        Args:
+            puzzle_size: Side length of the square puzzle grid.
+        """
         self.puzzle_size = puzzle_size
         self._mask = self.build_mask(self.puzzle_size, self.INACTIVE)
         self._draw()
@@ -189,7 +208,21 @@ class Mask:
         pass
 
     def show(self, active_only: bool = False) -> None:
-        """Pretty print the mask (optionally restricted to active bbox)."""
+        """Pretty-print the mask grid to stdout.
+
+        Each cell is separated by a space. When ``active_only`` is True only
+        the bounding box around active cells is printed, and inactive cells
+        within that region are replaced with spaces so the shape is easier to
+        read visually.
+
+        Args:
+            active_only: If True, crop the output to the active bounding box
+                and blank out inactive cells. If False, print the full
+                ``puzzle_size × puzzle_size`` grid. Defaults to False.
+
+        Raises:
+            MaskNotGenerated: If the mask has not been generated yet.
+        """
         if not self.mask:
             raise MaskNotGenerated("Mask not generated. Call `generate(size)` first.")
 
@@ -254,6 +287,13 @@ class Mask:
         )
 
     def __repr__(self) -> str:
+        """Return a developer-friendly string showing constructor arguments.
+
+        Returns:
+            A string of the form
+            ``ClassName(points=[…], method=<MaskMethod…>, static=…)``
+            suitable for logging and debugging.
+        """
         return (
             f"{self.__class__.__name__}("
             f"points={self.points}, "
@@ -300,11 +340,16 @@ class CompoundMask(Mask):
         self.masks.append(mask)
 
     def generate(self, puzzle_size: int) -> None:
-        """Generate a new mask at `puzzle_size` and the apply all Mask objects
-        from `CompoundMask.masks` in order.
+        """Generate the compound mask by compositing all child masks in order.
 
-        Note: Unlike the parent `Mask` object a `CompoundMask` is initially filled
-        with `self.ACTIVE`. This allows for the proper interaction between masks."""
+        Unlike the base ``Mask``, the grid starts fully ACTIVE so that the
+        first child mask (typically INTERSECTION) carves out the initial
+        shape without blanking everything.  Each child is generated at the
+        same ``puzzle_size`` and then applied via ``_apply_mask``.
+
+        Args:
+            puzzle_size: Side length of the square puzzle grid.
+        """
         self.puzzle_size = puzzle_size
         self._mask = self.build_mask(self.puzzle_size, self.ACTIVE)
         for mask in self.masks:
@@ -312,7 +357,22 @@ class CompoundMask(Mask):
             self._apply_mask(mask)
 
     def _apply_mask(self, mask: Mask) -> None:
-        """Apply a child mask to this compound mask."""
+        """Composite a single child mask onto this compound mask.
+
+        The boolean operation performed depends on the child's ``method``:
+
+        * ``INTERSECTION`` — keep only cells active in *both* grids (AND).
+        * ``ADDITIVE``     — activate any cell active in *either* grid (OR).
+        * ``SUBTRACTIVE``  — deactivate cells that are active in the child (AND NOT).
+
+        Args:
+            mask: A child mask that has already been generated at the same
+                ``puzzle_size`` as this compound mask.
+
+        Raises:
+            MaskNotGenerated: If this compound mask has not been generated.
+            ValueError: If the child mask dimensions do not match.
+        """
         if not self.puzzle_size:
             raise MaskNotGenerated("Mask not generated. Call `generate(size)` first.")
 

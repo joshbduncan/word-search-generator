@@ -42,8 +42,19 @@ class Polygon(Mask):
 
     @property
     def split_points(self) -> tuple[list[tuple[int, int]], list[tuple[int, int]]]:
-        """Polygon points path split in half for better drawing
-        performance with Bresenham's line algorithm."""
+        """Split the vertex list into left and right halves for drawing.
+
+        Some complex polygons (e.g. stars) do not fill correctly when all
+        edges are drawn in a single pass with Bresenham's line algorithm.
+        This property partitions the path into two sub-paths that both start
+        at ``points[0]``: one walks forward through the first half of the
+        vertices, the other walks backward through the second half.
+
+        Returns:
+            A two-element tuple ``(left_side, right_side)`` where each
+            element is a list of ``(x, y)`` vertices forming a sub-path
+            from the origin point.
+        """
         left_offset = (
             len(self.points) // 2 + 1
             if len(self.points) % 2 == 0
@@ -268,6 +279,18 @@ class RegularPolygon(Polygon):
         self.angle = angle
 
     def generate(self, puzzle_size: int) -> None:
+        """Generate a regular-polygon mask at the given size.
+
+        If no explicit ``radius`` or ``center`` was supplied at construction
+        time, both are derived from ``puzzle_size``: the radius is half the
+        grid (minus one cell on even grids to keep the shape centred), and
+        the center defaults to ``(radius, radius)``.  Vertex coordinates are
+        then computed by ``calculate_vertices`` and the shape is drawn and
+        filled on the mask grid.
+
+        Args:
+            puzzle_size: Side length of the square puzzle grid.
+        """
         self.puzzle_size = puzzle_size
         self._mask = self.build_mask(self.puzzle_size, self.INACTIVE)
         radius = (
@@ -322,8 +345,21 @@ class RegularPolygon(Polygon):
 
     @staticmethod
     def cos_sin_from_degrees(degrees: float) -> tuple[float, float]:
-        """Return a (cosine, sin) pair for a given angle(in degrees).
-        Corrects for proper 90 degree angles."""
+        """Compute ``(cos, sin)`` for an angle given in degrees.
+
+        Exact values are returned for the cardinal multiples of 90 degrees
+        (90, 180, 270) to avoid floating-point rounding artefacts that would
+        otherwise produce small non-zero components (e.g. ``6.12e-17``
+        instead of ``0.0``).  All other angles are converted via
+        ``math.radians`` and evaluated normally.
+
+        Args:
+            degrees: Angle in degrees.  Normalised to ``[0, 360)`` before
+                evaluation.
+
+        Returns:
+            A ``(cosine, sine)`` tuple for the given angle.
+        """
         degrees = degrees % 360.0
         proper_90s = {90.0: (0.0, 1.0), 180.0: (-1.0, 0), 270.0: (0, -1.0)}
         if degrees in proper_90s:
@@ -391,6 +427,19 @@ class Star(Polygon):
         self.angle = angle
 
     def generate(self, puzzle_size: int) -> None:
+        """Generate a star-polygon mask at the given size.
+
+        Defaults that were not provided at construction time are derived
+        from ``puzzle_size``: the outer radius is half the grid (adjusted
+        for even grids), the inner radius is half the outer radius, and the
+        center is placed at ``(outer_radius, outer_radius)``.  Vertices are
+        computed by ``calculate_vertices`` and the shape is drawn using the
+        split-path strategy (``_draw_in_halves``) required for correct
+        fill behaviour on star polygons.
+
+        Args:
+            puzzle_size: Side length of the square puzzle grid.
+        """
         self.puzzle_size = puzzle_size
         self._mask = self.build_mask(self.puzzle_size, self.INACTIVE)
         puzzle_radius = (

@@ -64,6 +64,21 @@ class Club(CompoundMask):
         super().__init__()
 
     def generate(self, puzzle_size: int) -> None:
+        """Generate the club mask at the given size.
+
+        Builds five sub-masks: three overlapping ellipses for the lobes
+        (top, lower-left, lower-right) and two rectangles (vertical stem
+        and horizontal base), all composited with ADDITIVE blending onto
+        an initially-active grid.
+
+        Args:
+            puzzle_size: Side length of the square puzzle grid.
+
+        Raises:
+            ValueError: If ``puzzle_size`` is less than ``min_size`` or
+                if any derived dimension is non-positive.
+            TypeError: If ``puzzle_size`` is not an integer.
+        """
         if puzzle_size < self.min_size:
             raise ValueError(
                 f"Puzzle size >= {self.min_size} required "
@@ -154,6 +169,21 @@ class Donut(CompoundMask):
         super().__init__()
 
     def generate(self, puzzle_size: int) -> None:
+        """Generate the donut mask at the given size.
+
+        An outer circle is drawn first (INTERSECTION), then a smaller
+        concentric circle is subtracted (SUBTRACTIVE) to create the hole.
+        Outer and hole sizes are calculated by
+        ``calculate_golden_donut_ratio``.
+
+        Args:
+            puzzle_size: Side length of the square puzzle grid.
+
+        Raises:
+            ValueError: If ``puzzle_size`` is less than ``min_size`` or
+                if any derived dimension is non-positive.
+            TypeError: If ``puzzle_size`` is not an integer.
+        """
         if puzzle_size < self.min_size:
             raise ValueError(
                 f"Puzzle size >= {self.min_size} required "
@@ -185,7 +215,24 @@ class Donut(CompoundMask):
 
     @staticmethod
     def calculate_golden_donut_ratio(puzzle_size: int) -> tuple[int, int]:
-        """Calculate proportional donut and hole sizes."""
+        """Derive visually-proportional outer and hole diameters.
+
+        The outer diameter fills nearly the full grid (odd sizes use the
+        grid size directly; even sizes subtract one to stay centred).  The
+        hole diameter is scaled quadratically from the grid size, then
+        clamped to ``[3, puzzle_size // 2]`` and nudged to an odd value so
+        it centres cleanly.
+
+        Args:
+            puzzle_size: Side length of the square puzzle grid.  Must be
+                at least 6.
+
+        Returns:
+            A ``(donut, hole)`` tuple of integer diameters.
+
+        Raises:
+            ValueError: If ``puzzle_size`` is less than 6.
+        """
         if puzzle_size < 6:
             raise ValueError("Puzzle size must be at least 6 for Donut shape")
 
@@ -212,6 +259,21 @@ class Fish(CompoundMask):
         super().__init__()
 
     def generate(self, puzzle_size: int) -> None:
+        """Generate the fish mask at the given size.
+
+        Three ellipses are composited: the main oval body (INTERSECTION),
+        a round tail fin (ADDITIVE), and a slightly-offset duplicate of
+        the fin that is subtracted (SUBTRACTIVE) to cut the classic
+        V-shaped notch.
+
+        Args:
+            puzzle_size: Side length of the square puzzle grid.
+
+        Raises:
+            ValueError: If ``puzzle_size`` is less than ``min_size`` or
+                if any derived dimension is non-positive.
+            TypeError: If ``puzzle_size`` is not an integer.
+        """
         if puzzle_size < self.min_size:
             raise ValueError(
                 f"Puzzle size >= {self.min_size} required "
@@ -280,6 +342,20 @@ class Flower(CompoundMask):
         super().__init__()
 
     def generate(self, puzzle_size: int) -> None:
+        """Generate the flower mask at the given size.
+
+        A full circle is drawn first, then two diagonal bitmap lines and
+        two thin cross ellipses are subtracted to divide the circle into
+        four distinct petals.
+
+        Args:
+            puzzle_size: Side length of the square puzzle grid.
+
+        Raises:
+            ValueError: If ``puzzle_size`` is less than ``min_size`` or
+                if any derived dimension is non-positive.
+            TypeError: If ``puzzle_size`` is not an integer.
+        """
         if puzzle_size < self.min_size:
             raise ValueError(
                 f"Puzzle size >= {self.min_size} required "
@@ -334,6 +410,20 @@ class Heart(CompoundMask):
         super().__init__()
 
     def generate(self, puzzle_size: int) -> None:
+        """Generate the heart mask at the given size.
+
+        Two overlapping ellipses form the upper lobes (left via
+        INTERSECTION, right via ADDITIVE).  A four-vertex polygon
+        connects the outer edges of the lobes down to a single bottom
+        point, completing the classic heart shape.
+
+        Args:
+            puzzle_size: Side length of the square puzzle grid.
+
+        Raises:
+            ValueError: If ``puzzle_size`` is less than ``min_size``.
+            TypeError: If ``puzzle_size`` is not an integer.
+        """
         if puzzle_size < self.min_size:
             raise ValueError(
                 f"Puzzle size >= {self.min_size} required "
@@ -448,6 +538,22 @@ class Spade(CompoundMask):
         super().__init__()
 
     def generate(self, puzzle_size: int) -> None:
+        """Generate the spade mask at the given size.
+
+        Two side-by-side ellipses form the lower lobes (left via
+        INTERSECTION, right via ADDITIVE).  A four-vertex polygon
+        connects their tops through a single apex point to create the
+        upper pointed section.  A vertical and horizontal rectangle pair
+        form the stem at the bottom.
+
+        Args:
+            puzzle_size: Side length of the square puzzle grid.
+
+        Raises:
+            ValueError: If ``puzzle_size`` is less than ``min_size`` or
+                if any derived dimension is non-positive.
+            TypeError: If ``puzzle_size`` is not an integer.
+        """
         if puzzle_size < self.min_size:
             raise ValueError(
                 f"Puzzle size >= {self.min_size} required "
@@ -579,6 +685,21 @@ class Tree(CompoundMask):
         super().__init__()
 
     def generate(self, puzzle_size: int) -> None:
+        """Generate the tree mask at the given size.
+
+        A triangular canopy (3-vertex ``RegularPolygon``) is drawn first,
+        then a centred rectangular trunk is added below it via ADDITIVE
+        blending.  Trunk width and height are derived from the canopy's
+        base width so the proportions scale naturally.
+
+        Args:
+            puzzle_size: Side length of the square puzzle grid.
+
+        Raises:
+            ValueError: If ``puzzle_size`` is less than ``min_size`` or
+                if any derived dimension is invalid.
+            TypeError: If ``puzzle_size`` is not an integer.
+        """
         if puzzle_size < self.min_size:
             raise ValueError(
                 f"Puzzle size >= {self.min_size} required "
@@ -660,6 +781,19 @@ class Square(Rectangle):
         super().__init__(width=10, height=10)
 
     def generate(self, puzzle_size: int) -> None:
+        """Generate a square mask centred within the puzzle grid.
+
+        The square side length is the largest even number that fits the
+        grid, so it can be centred with an integer offset on both axes.
+
+        Args:
+            puzzle_size: Side length of the square puzzle grid.
+
+        Raises:
+            ValueError: If ``puzzle_size`` is not positive or if derived
+                dimensions are invalid.
+            TypeError: If ``puzzle_size`` is not an integer.
+        """
         if not isinstance(puzzle_size, int):
             raise TypeError(
                 f"puzzle_size must be an integer, got {type(puzzle_size).__name__}"
@@ -696,6 +830,20 @@ class Oval(Ellipse):
         self.aspect_ratio = 1.5  # Make it wider than it is tall
 
     def generate(self, puzzle_size: int) -> None:
+        """Generate an oval mask centred within the puzzle grid.
+
+        Width is set to 90 % of the grid size (leaving a small margin)
+        and height is derived by dividing the width by ``aspect_ratio``.
+        The ellipse point-set is then computed and drawn onto the mask.
+
+        Args:
+            puzzle_size: Side length of the square puzzle grid.
+
+        Raises:
+            ValueError: If ``puzzle_size`` is not positive or if derived
+                dimensions are non-positive.
+            TypeError: If ``puzzle_size`` is not an integer.
+        """
         if not isinstance(puzzle_size, int):
             raise TypeError(
                 f"puzzle_size must be an integer, got {type(puzzle_size).__name__}"

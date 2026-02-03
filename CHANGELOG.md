@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comprehensive Google-style docstrings to `WordSearch` class methods (`show()`, `save()`, `__eq__()`, `__repr__()`) with detailed parameter descriptions, usage examples, and exception documentation
 - Comprehensive docstrings for core module
 - Comprehensive docstrings for `cli` module including module docstring, all `argparse.Action` subclasses, and all functions
+- Comprehensive docstrings for `mask` module including `Mask.show()`, `Mask.__repr__()`, `CompoundMask.generate()`, `CompoundMask._apply_mask()`, `Polygon.split_points`, `RegularPolygon.generate()`, `RegularPolygon.cos_sin_from_degrees()`, `Star.generate()`, and all concrete shape `generate()` overrides (`Club`, `Donut`, `Fish`, `Flower`, `Heart`, `Spade`, `Tree`, `Square`, `Oval`) plus `Donut.calculate_golden_donut_ratio()`
 
 
 ### Changed
