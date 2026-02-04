@@ -1,3 +1,13 @@
+"""Word-search puzzle output formatting and export.
+
+This module provides ``WordSearchFormatter``, the default
+:class:`~word_search_generator.core.formatter.Formatter` implementation for
+word-search puzzles.  It renders puzzles to the console via Rich tables and
+exports them to CSV, JSON, and PDF files.  A set of module-level helper
+functions handles the individual PDF drawing steps (title, grid, solution
+highlights, word list, answer key).
+"""
+
 from __future__ import annotations
 
 import copy
@@ -27,6 +37,29 @@ if TYPE_CHECKING:
 
 
 class WordSearchFormatter(Formatter):
+    """Formatter that renders word-search puzzles to the console and files.
+
+    Console output uses a Rich ``Table`` for the grid and styled ``Text``
+    objects for optional solution highlighting.  File export supports CSV,
+    JSON, and PDF (via fpdf2).  PDF layout is driven by the class-level
+    constants below, which control page dimensions, font sizes, and the
+    puzzle-grid width in inches.
+
+    Attributes:
+        PDF_AUTHOR: PDF metadata author field.
+        PDF_CREATOR: PDF metadata creator field.
+        PDF_TITLE: PDF metadata title field.
+        PDF_FONT_SIZE_XXL: Point size used for the page title.
+        PDF_FONT_SIZE_XL: Base point size for the word-list / directions text.
+            Scaled down when the word count is large so everything fits on one
+            page.
+        PDF_FONT_SIZE_L: Point size for medium body text.
+        PDF_FONT_SIZE_M: Point size for small body text.
+        PDF_FONT_SIZE_S: Point size used for the upside-down answer key.
+        PDF_PUZZLE_WIDTH: Width of the puzzle grid in inches on the PDF page.
+        CONSOLE: The Rich ``Console`` instance used for terminal output.
+    """
+
     # pdf export settings
     PDF_AUTHOR = "Josh Duncan"
     PDF_CREATOR = "word-search @ joshbduncan.com"
@@ -49,12 +82,27 @@ class WordSearchFormatter(Formatter):
         reversed_letters=False,
         sort_word_list: bool = True,
     ):
-        """Return a string representation of the game.
+        """Render the puzzle to a Rich-styled string for console output.
+
+        Builds a ``rich.table.Table`` from the (optionally cropped) puzzle
+        grid, appends the word list and answer key, and returns the whole
+        block as a captured string.
 
         Args:
-            solution: Highlight the puzzle solution. Defaults to False.
-            hide_fillers: Hide filler letters (show only words). Defaults to False.
-            lowercase: Change letters to lower case. Defaults to False.
+            game: The game instance to display.
+            solution: Highlight placed words with per-word colours.
+                Defaults to False.
+            hide_fillers: Replace non-word cells with spaces so only the
+                placed words are visible.  Defaults to False.
+            lowercase: Convert all letters to lower case.  Defaults to False.
+            hide_key: Omit the answer key from the output.  Defaults to False.
+            reversed_letters: Reverse coordinate display in the answer key.
+                Defaults to False.
+            sort_word_list: Sort the word list alphabetically.  When False
+                words appear in insertion order.  Defaults to True.
+
+        Returns:
+            The full console-ready string (table + word list + optional key).
         """
 
         pcopy_chars: list[list[str]] = (
@@ -138,6 +186,25 @@ class WordSearchFormatter(Formatter):
         hide_key: bool = False,
         sort_word_list: bool = True,
     ) -> Path:
+        """Dispatch puzzle export to the correct writer.
+
+        Converts a bare string path to a :class:`~pathlib.Path`, then
+        routes to :meth:`write_csv_file`, :meth:`write_json_file`, or
+        :meth:`write_pdf_file` based on ``format``.
+
+        Args:
+            game: The game instance to save.
+            path: Destination file path (string or Path).
+            format: Target container format.  Defaults to ``ExportFormat.PDF``.
+            solution: Include a solution page / solution-only grid.
+                Defaults to False.
+            lowercase: Write all letters in lower case.  Defaults to False.
+            hide_key: Omit the answer key (PDF only).  Defaults to False.
+            sort_word_list: Sort the word list alphabetically.  Defaults to True.
+
+        Returns:
+            The absolute path of the file that was written.
+        """
         # convert strings to PATH object
         if isinstance(path, str):
             path = Path(path)
@@ -177,6 +244,28 @@ class WordSearchFormatter(Formatter):
         *args,
         **kwargs,
     ) -> Path:
+        """Write the puzzle to a CSV file.
+
+        The file contains the grid rows, the word list, the allowed
+        directions, and the answer key.  When ``solution`` is True filler
+        characters are stripped from the grid so only placed-word letters
+        remain.
+
+        Args:
+            path: Destination file path.  Must not already exist.
+            game: The game instance to export.
+            solution: Strip filler characters from the grid.
+                Defaults to False.
+            lowercase: Convert all text to lower case.  Defaults to False.
+            sort_word_list: Sort the word list alphabetically.
+                Defaults to True.
+
+        Returns:
+            The absolute path of the written file.
+
+        Raises:
+            FileExistsError: If ``path`` already exists on disk.
+        """
         word_list = get_word_list_list(game.words)
         if sort_word_list:
             word_list.sort(key=lambda w: w.text)
@@ -227,6 +316,27 @@ class WordSearchFormatter(Formatter):
         *args,
         **kwargs,
     ) -> Path:
+        """Write the puzzle to a JSON file.
+
+        The JSON object contains three keys: ``puzzle`` (the 2-D grid),
+        ``words`` (the word list), and ``key`` (per-word placement info
+        from :attr:`~word_search_generator.core.word.Word.key_info_json`).
+
+        Args:
+            path: Destination file path.  Must not already exist.
+            game: The game instance to export.
+            solution: Strip filler characters from the grid.
+                Defaults to False.
+            lowercase: Convert all text to lower case.  Defaults to False.
+            sort_word_list: Sort the word list alphabetically.
+                Defaults to True.
+
+        Returns:
+            The absolute path of the written file.
+
+        Raises:
+            FileExistsError: If ``path`` already exists on disk.
+        """
         word_list = get_word_list_list(game.words)
         if sort_word_list:
             word_list.sort(key=lambda w: w.text)
@@ -262,6 +372,29 @@ class WordSearchFormatter(Formatter):
         hide_key: bool = False,
         sort_word_list: bool = True,
     ) -> Path:
+        """Write the puzzle to a Letter-sized PDF file.
+
+        Always produces a puzzle page.  When ``solution`` is True a second
+        page is appended with the words highlighted in colour.  The answer
+        key is printed upside-down at the bottom of the puzzle page unless
+        ``hide_key`` is True.
+
+        Args:
+            path: Destination file path.  Must not already exist.
+            game: The game instance to export.
+            solution: Append a solution page.  Defaults to False.
+            lowercase: Convert all letters to lower case.  Defaults to False.
+            hide_key: Omit the upside-down answer key.  Defaults to False.
+            sort_word_list: Sort the word list alphabetically.
+                Defaults to True.
+
+        Returns:
+            The absolute path of the written file.
+
+        Raises:
+            FileExistsError: If ``path`` already exists on disk.
+            OSError: If the file system refuses the write.
+        """
         # setup the PDF document
         pdf = FPDF(orientation="P", unit="in", format="Letter")
         pdf.set_author(self.PDF_AUTHOR)
@@ -294,7 +427,18 @@ class WordSearchFormatter(Formatter):
     def hide_filler_characters(
         game: Game,
     ) -> Puzzle:
-        """Remove filler characters from a puzzle."""
+        """Return a copy of the puzzle with every non-word cell blanked.
+
+        Iterates over the full grid and replaces any cell whose
+        ``(col, row)`` coordinate is not part of a placed word with a
+        single space.  The original ``game.puzzle`` is not mutated.
+
+        Args:
+            game: The game instance whose puzzle grid is blanked.
+
+        Returns:
+            A deep copy of the puzzle grid with filler cells set to ``" "``.
+        """
         output: Puzzle = copy.deepcopy(game.puzzle)
         word_coords = {
             coord
@@ -309,12 +453,31 @@ class WordSearchFormatter(Formatter):
 
 
 def draw_page_title(title: str, pdf: FPDF, formatter: WordSearchFormatter):
+    """Write a bold, centred title at the current PDF cursor position.
+
+    Args:
+        title: Text to render (e.g. ``"WORD SEARCH"``).
+        pdf: The active FPDF document.
+        formatter: Formatter instance whose font-size constants are used.
+    """
     pdf.set_font("Helvetica", "B", formatter.PDF_FONT_SIZE_XXL)
     pdf.cell(pdf.epw, 0.25, title, new_y="NEXT", align="C", center=True)
     pdf.ln(0.125)
 
 
 def draw_puzzle(pdf: FPDF, game: Game, gsize: float, lowercase: bool = False) -> None:
+    """Render the puzzle grid as a table of single-character cells.
+
+    Each cell is a square with side length ``gsize`` inches.  The grid is
+    taken from :attr:`~word_search_generator.core.game.Game.cropped_puzzle`
+    so masked / inactive border rows are already stripped.
+
+    Args:
+        pdf: The active FPDF document.
+        game: The game instance whose cropped puzzle is drawn.
+        gsize: Cell side length in inches.
+        lowercase: Convert every letter to lower case.  Defaults to False.
+    """
     for row in game.cropped_puzzle:
         for char in row:
             pdf.cell(
@@ -330,6 +493,23 @@ def draw_puzzle(pdf: FPDF, game: Game, gsize: float, lowercase: bool = False) ->
 def highlight_solution(
     pdf: FPDF, game: Game, gsize: float, start_x: float, start_y: float
 ):
+    """Draw a coloured stroke through each placed word on the PDF page.
+
+    Each word gets a semi-transparent line from its first letter centre to
+    its last letter centre, using the per-word colour assigned at creation
+    time.  Words whose start or end position cannot be resolved are
+    silently skipped.
+
+    Args:
+        pdf: The active FPDF document.
+        game: The game instance containing placed words.
+        gsize: Cell side length in inches (same value used by
+            :func:`draw_puzzle`).
+        start_x: X coordinate (inches) of the top-left corner of the
+            puzzle grid on the page.
+        start_y: Y coordinate (inches) of the top-left corner of the
+            puzzle grid on the page.
+    """
     for word in game.placed_words:
         word_start, *_, word_end = word.offset_coordinates(game.bounding_box)
         word_start_x, word_start_y = word_start
@@ -362,6 +542,24 @@ def draw_word_list(
     lowercase: bool = False,
     sort_word_list: bool = True,
 ):
+    """Render the directions hint and the word list below the puzzle grid.
+
+    Words are laid out in centred, wrapping lines that fit the effective
+    page width.  On a solution page each word is additionally underlined
+    with the same semi-transparent colour stroke used in the grid
+    highlights.  Secret words are included only when ``solution`` is True;
+    if the list would otherwise be empty a placeholder label is printed.
+
+    Args:
+        pdf: The active FPDF document.
+        game: The game instance whose words are listed.
+        info_font_size: Point size for the word-list text (already scaled
+            by the caller based on word count).
+        solution: Include secret words and draw colour underlines.
+            Defaults to False.
+        lowercase: Convert all word text to lower case.  Defaults to False.
+        sort_word_list: Sort the word list alphabetically.  Defaults to True.
+    """
     level_dirs_str = get_level_dirs_str(game.level)
     pdf.set_font("Helvetica", "BU", size=info_font_size)
     pdf.cell(
@@ -440,6 +638,22 @@ def draw_puzzle_key(
     lowercase: bool = False,
     sort_word_list: bool = True,
 ):
+    """Print the answer key upside-down at the bottom of the current page.
+
+    The page is rotated 180 degrees around its centre, the text cursor is
+    moved to what is visually the bottom margin, and the key is written in
+    the smallest font size.  This means the reader must flip the page to
+    read it without accidentally glancing at the answers.
+
+    Args:
+        formatter: Formatter instance whose ``PDF_FONT_SIZE_S`` constant is
+            used for the key text.
+        pdf: The active FPDF document.
+        game: The game instance whose answer key is rendered.
+        lowercase: Convert word names in the key to lower case.
+            Defaults to False.
+        sort_word_list: Sort the word list alphabetically.  Defaults to True.
+    """
     word_list = get_word_list_list(game.words)
     if sort_word_list:
         word_list.sort(key=lambda w: w.text)
@@ -475,15 +689,22 @@ def draw_puzzle_page(
     hide_key: bool = False,
     sort_word_list: bool = True,
 ) -> None:
-    """Draw the puzzle information on a FPDF PDF page.
+    """Compose a full puzzle page inside an FPDF document.
+
+    Adds a new page, writes the title, draws the grid, optionally overlays
+    solution highlights, prints the word list, and (unless suppressed)
+    renders the upside-down answer key.  Font sizes are scaled so that
+    puzzles with many words still fit on a single Letter-sized page.
 
     Args:
-        pdf: FPDF PDF document.
-        game: Current Word Search puzzle.
-        solution: Highlight the puzzle solution.. Defaults to False.
-
-    Returns:
-        FPDF PDF with drawn puzzle page.
+        formatter: Formatter instance whose PDF constants drive layout.
+        pdf: The active FPDF document; a new page is appended.
+        game: The game instance to render.
+        solution: Overlay coloured word highlights and include secret words
+            in the word list.  Defaults to False.
+        lowercase: Convert all letters to lower case.  Defaults to False.
+        hide_key: Omit the upside-down answer key.  Defaults to False.
+        sort_word_list: Sort the word list alphabetically.  Defaults to True.
     """
 
     # add a new page and setup the margins

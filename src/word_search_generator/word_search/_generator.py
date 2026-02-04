@@ -1,3 +1,13 @@
+"""Word-search puzzle generation algorithm.
+
+This module provides ``WordSearchGenerator``, the default
+:class:`~word_search_generator.core.generator.Generator` implementation.  It
+places words into a square grid one at a time at random positions and
+directions, rejects placements that would create duplicate words, and fills
+every remaining active cell with a random letter from the configured
+alphabet.
+"""
+
 from __future__ import annotations
 
 import random
@@ -28,6 +38,21 @@ class WordSearchGenerator(Generator):
     """
 
     def generate(self, game: Game) -> Puzzle:
+        """Generate a completed puzzle grid for the given game.
+
+        Initialises an empty grid, attempts to place every word via
+        :meth:`fill_words`, then fills remaining active cells with random
+        filler characters via :meth:`fill_blanks`.  The filler step is
+        skipped entirely when no word was successfully placed (avoids an
+        infinite loop on an empty grid).
+
+        Args:
+            game: The game instance that owns the word list, mask, and
+                size information.
+
+        Returns:
+            The completed ``size × size`` puzzle grid.
+        """
         self.game = game
         self.puzzle = game._build_puzzle(game.size, "")
         self.fill_words()
@@ -38,8 +63,25 @@ class WordSearchGenerator(Generator):
     def no_duped_words(
         self, char: str, position: tuple[int, int], current_word: str | None = None
     ) -> bool:
-        """Make sure that adding `char` at `position` will not create a
-        duplicate of any word already placed in the puzzle."""
+        """Check whether placing ``char`` at ``position`` keeps the grid dupe-free.
+
+        Captures character fragments radiating outward from ``position``
+        in all four axis-aligned and diagonal directions, substitutes the
+        candidate character, and compares the before/after occurrence
+        counts of every already-placed word (forward and reversed).  Words
+        that are substrings of (or contain) ``current_word`` are excluded
+        from the check so that the word currently being placed does not
+        block itself.
+
+        Args:
+            char: Single character being considered for placement.
+            position: ``(row, col)`` index into the puzzle grid.
+            current_word: Text of the word currently being placed, used to
+                skip self-referencing sub-word checks.  Defaults to None.
+
+        Returns:
+            True if the placement does not create any new duplicate.
+        """
         placed_word_strings = []
         for word in self.game.words:
             if word.placed:
@@ -69,6 +111,24 @@ class WordSearchGenerator(Generator):
         return before_ct == after_ct
 
     def capture_fragments(self, radius: int, position: tuple[int, int]) -> list[str]:
+        """Extract character strings along all four axes through ``position``.
+
+        Four fragments are returned — one for each pair of opposing
+        directions: diagonal (top-left ↔ bottom-right), horizontal
+        (left ↔ right), vertical (top ↔ bottom), and anti-diagonal
+        (bottom-left ↔ top-right).  The cell at ``position`` is replaced
+        with the sentinel ``"*"`` so the caller can later substitute the
+        candidate character without a second grid read.  Cells that fall
+        outside the grid boundaries are skipped.
+
+        Args:
+            radius: Half-width of the capture window.  Typically the length
+                of the longest already-placed word.
+            position: ``(row, col)`` centre of the capture window.
+
+        Returns:
+            A list of exactly four strings, each representing one axis.
+        """
         row, col = position
         fragments = []
         height = width = self.game.size
@@ -108,8 +168,22 @@ class WordSearchGenerator(Generator):
         position: tuple[int, int],
         direction: Direction,
     ) -> list[tuple[int, int]]:
-        """Test if word fits in the puzzle at the specified
-        coordinates heading in the specified direction."""
+        """Check whether ``word`` can be laid down from ``position`` in ``direction``.
+
+        A placement is valid only if every cell along the path is either
+        empty or already contains the matching character, is within grid
+        bounds, and is ACTIVE on the mask.
+
+        Args:
+            word: The word text to test.
+            position: ``(row, col)`` starting cell.
+            direction: The :class:`~word_search_generator.core.word.Direction`
+                that defines the per-character row/col step.
+
+        Returns:
+            A list of ``(row, col)`` coordinates for each letter if the
+            word fits; an empty list otherwise.
+        """
         coordinates = []
         row, col = position
         # iterate over each letter in the word
@@ -130,7 +204,24 @@ class WordSearchGenerator(Generator):
         return coordinates
 
     def find_a_fit(self, word: Word, position: tuple[int, int]) -> Fit:
-        """Look for random place in the puzzle where `word` fits."""
+        """Collect every valid direction from ``position`` and pick one at random.
+
+        Secret words are tested against ``secret_directions``; all other
+        words use the game's primary direction set.
+
+        Args:
+            word: The :class:`~word_search_generator.core.word.Word` to place.
+            position: ``(row, col)`` starting cell that has already been
+                verified as available by the caller.
+
+        Returns:
+            A ``(direction_name, coordinates)`` tuple for the chosen fit.
+
+        Raises:
+            WordFitError: If no direction produces a valid fit.
+            RuntimeError: If ``word`` is secret but ``secret_directions``
+                is empty or missing.
+        """
         fits: Fits = []
         # check all directions for level
         if word.secret:
@@ -152,8 +243,14 @@ class WordSearchGenerator(Generator):
         return random.choice(fits)
 
     def fill_words(self) -> None:
-        """Fill puzzle with the supplied `words`.
-        Some words will be skipped if they don't fit."""
+        """Attempt to place every game word into the puzzle grid.
+
+        Hidden words are tried first, then secret words.  Each word is
+        validated against the game's validator list before placement is
+        attempted; words that fail validation or exhaust all retry
+        attempts are silently skipped.  Placement stops early once
+        ``MAX_PUZZLE_WORDS`` words have been successfully placed.
+        """
         # try to place each word on the puzzle
         placed_words: list[str] = []
         hidden_words = [word for word in self.game.words if not word.secret]
@@ -173,14 +270,28 @@ class WordSearchGenerator(Generator):
 
     @retry()
     def try_to_fit_word(self, word: Word) -> bool | None:
-        """Try to fit `word` at randomized coordinates.
+        """Attempt a single placement of ``word`` at a random grid cell.
 
-        The @retry wrapper controls the number of attempts and returns None
-        if all retries are exhausted without successfully placing the word.
+        A random ``(row, col)`` is chosen.  If that cell is occupied by a
+        different character or is INACTIVE on the mask a
+        :exc:`~word_search_generator.core.generator.WordFitError` is raised
+        so the :func:`~word_search_generator.core.generator.retry` decorator
+        can try again.  On success the word's metadata (start position,
+        direction, coordinates) is updated in place.
+
+        If placing a character would create a duplicate of an already-placed
+        word the entire partial placement is rolled back before raising.
+
+        Args:
+            word: The word to place.
 
         Returns:
-            True if word was successfully placed, False if placement failed,
-            or None if all retries were exhausted.
+            True if the word was successfully placed.  The ``@retry``
+            wrapper returns None when all attempts are exhausted.
+
+        Raises:
+            WordFitError: When the randomly chosen cell or direction does
+                not yield a valid placement (caught by ``@retry``).
         """
         row = random.randint(0, len(self.puzzle) - 1)
         col = random.randint(0, len(self.puzzle) - 1)
@@ -222,7 +333,13 @@ class WordSearchGenerator(Generator):
         return word.placed
 
     def fill_blanks(self) -> None:
-        """Fill empty puzzle spaces with random characters."""
+        """Fill every empty ACTIVE cell with a random alphabet character.
+
+        Each candidate character is checked via :meth:`no_duped_words`
+        before it is committed; a new random character is drawn until one
+        passes, guaranteeing the finished grid contains no unintended
+        duplicate words.
+        """
         # iterate over the entire puzzle
 
         size = len(self.puzzle)

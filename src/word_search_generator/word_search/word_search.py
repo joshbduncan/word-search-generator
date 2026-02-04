@@ -1,3 +1,12 @@
+"""Primary WordSearch puzzle class.
+
+This module exposes ``WordSearch``, the user-facing entry point for creating,
+displaying, and saving word-search puzzles.  It wires together the default
+generator, formatter, and validators defined elsewhere in the package and adds
+word-search-specific features such as secret words and independent secret-word
+direction sets.
+"""
+
 import json
 from collections.abc import Iterable
 from pathlib import Path
@@ -29,7 +38,26 @@ from ._generator import WordSearchGenerator
 
 
 class WordSearch(Game):
-    """This class represents a WordSearch object."""
+    """User-facing word-search puzzle.
+
+    Extends the base :class:`~word_search_generator.core.game.Game` with
+    word-search-specific features: secret words that are hidden from the
+    word list, an independent direction set for those secret words, and
+    sensible defaults for the generator, formatter, and word validators.
+
+    Class Attributes:
+        MIN_PUZZLE_SIZE: Smallest allowed grid side length.
+        MAX_PUZZLE_SIZE: Largest allowed grid side length.
+        MIN_PUZZLE_WORDS: Minimum number of words accepted.
+        MAX_PUZZLE_WORDS: Maximum number of words the generator will place.
+        MAX_FIT_TRIES: Per-word retry limit passed to the generator.
+        DEFAULT_GENERATOR: ``WordSearchGenerator`` instance used when none is
+            provided.
+        DEFAULT_FORMATTER: ``WordSearchFormatter`` instance used when none is
+            provided.
+        DEFAULT_VALIDATORS: List of built-in validators (no palindromes, no
+            punctuation, no single-letter words, no sub-words).
+    """
 
     MIN_PUZZLE_SIZE = 5
     MAX_PUZZLE_SIZE = 50
@@ -59,25 +87,39 @@ class WordSearch(Game):
         formatter: Formatter | None = None,
         validators: Iterable[Validator] | None = DEFAULT_VALIDATORS,
     ):
-        """Initialize a game.
+        """Create a new word-search puzzle.
+
+        If ``words`` (or ``secret_words``) is provided the puzzle is
+        generated immediately.  Omit both to create an empty puzzle and
+        populate it later with :meth:`add_words`.
 
         Args:
-            words: A string of words separated by spaces, commas, or new lines.
-                Will be trimmed if more. Defaults to None.
-            level: Difficulty level or potential word directions. Defaults to 2.
-            size: Puzzle size. Defaults to None.
-            secret_words: A string of words separated by spaces, commas, or new lines.
-                Words will be 'secret' meaning they will not be included in the
-                word list. Defaults to None.
-            secret_level: Difficulty level or potential word directions for
-                'secret' words. Defaults to None.
-            require_all_words: Raises an error when `generator` cannot place all of
-                the words.  Secret words are not included in this check.
-            generator: Puzzle generator. Defaults to None.
-            formatter: Game formatter. Defaults to None.
-            validators: An iterable of validators that puzzle words will be checked
-                against during puzzle generation. Provide an empty iterable to disable
-                word validation. Defaults to `DEFAULT_VALIDATORS`.
+            words: Words separated by spaces, commas, or newlines.  Excess
+                words beyond ``MAX_PUZZLE_WORDS`` are silently dropped.
+                Defaults to None.
+            level: Preset difficulty (1–3) or a comma-separated string of
+                cardinal directions (e.g. ``"N,S,E,W"``).  Controls which
+                directions hidden words may travel.  Defaults to 2.
+            size: Square grid side length.  Must fall within
+                ``[MIN_PUZZLE_SIZE, MAX_PUZZLE_SIZE]``.  Calculated
+                automatically when None.  Defaults to None.
+            secret_words: Same format as ``words``.  These words are placed
+                in the grid but omitted from the printed word list.
+                Defaults to None.
+            secret_level: Direction constraint for secret words, using the
+                same format as ``level``.  Defaults to the value of
+                ``level`` (or 2 if that is also None).
+            require_all_words: When True, :meth:`generate` raises
+                :exc:`~word_search_generator.core.game.MissingWordError` if
+                any hidden word could not be placed.  Secret words are
+                excluded from this check.  Defaults to False.
+            generator: Custom :class:`~word_search_generator.core.generator.Generator`.
+                Defaults to ``DEFAULT_GENERATOR``.
+            formatter: Custom :class:`~word_search_generator.core.formatter.Formatter`.
+                Defaults to ``DEFAULT_FORMATTER``.
+            validators: Validators applied to each word before placement.
+                Pass an empty iterable to disable all validation.
+                Defaults to ``DEFAULT_VALIDATORS``.
         """
         # determine valid word directions
         self._secret_directions: DirectionSet = (
@@ -163,12 +205,14 @@ class WordSearch(Game):
 
     @secret_directions.setter
     def secret_directions(self, value: int | str | Iterable[str]):
-        """Possible directions for secret puzzle words.
+        """Set the allowed directions for secret words and regenerate.
 
         Args:
-            val: Either a preset puzzle level (int), cardinal directions
-                as a comma separated string, or an iterable of valid directions
-                from the Direction object.
+            value: A preset difficulty level (int), a comma-separated string
+                of cardinal directions (e.g. ``"N,S,E,W"``), or an iterable
+                of valid :class:`~word_search_generator.core.word.Direction`
+                values.  The puzzle is regenerated automatically after the
+                change.
         """
         self._secret_directions = self.validate_level(value)
         self.generate()
@@ -323,24 +367,30 @@ class WordSearch(Game):
         secret: bool = False,
         reset_size: bool = False,
     ) -> None:
-        """Add `count` randomly generated words to the puzzle.
+        """Populate the puzzle with randomly-sampled words.
+
+        Words are drawn from ``word_list`` when provided; otherwise they
+        come from the package's built-in dictionary.
 
         Args:
-            count: Count of random words to add.
-            word_list: _description_. Defaults to None.
-            action: Should the random words be added ("ADD") to the current wordlist
-                or should they replace ("REPLACE") the current wordlist.
-                Defaults to "REPLACE".
-            secret: Should the new words be secret. Defaults to False.
-            reset_size: Reset the puzzle size based on the updated words.
-                Defaults to False.
+            count: Number of random words to sample.  Must be in
+                ``[MIN_PUZZLE_WORDS, MAX_PUZZLE_WORDS]``.
+            word_list: Source pool to sample from.  When None the
+                package's built-in word list is used.  Defaults to None.
+            action: ``"ADD"`` appends the new words to the existing word
+                list; ``"REPLACE"`` swaps them in.  Case-insensitive.
+                Defaults to ``"REPLACE"``.
+            secret: When True the sampled words are marked as secret
+                (hidden from the printed word list).  Defaults to False.
+            reset_size: When True the puzzle grid is resized to fit the
+                updated word list before regeneration.  Defaults to False.
 
         Raises:
-            TypeError: `count` must be an integer.
-            ValueError: `count` must be greater than `self.MIN_PUZZLE_SIZE`
-                and less than `self.MAX_PUZZLE_SIZE`.
-            TypeError: `action` must be a string.
-            ValueError: `action` must be one of ["ADD", "REPLACE"].
+            TypeError: If ``count`` is not an integer or ``action`` is not
+                a string.
+            ValueError: If ``count`` is outside
+                ``[MIN_PUZZLE_WORDS, MAX_PUZZLE_WORDS]`` or ``action`` is
+                not one of ``"ADD"`` / ``"REPLACE"``.
         """
         if not isinstance(count, int):
             raise TypeError(f"Count must be an integer, got {type(count).__name__}.")
