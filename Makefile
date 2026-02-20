@@ -12,12 +12,7 @@ help: ## Display this help section
 ##@ Development
 dev: ## build a virtual environment for development
 	@echo "🏗️ setting up development environment..."
-	uv venv
 	uv sync --all-extras
-
-install: ## install package in development mode
-	@echo "📦 installing in development mode..."
-	uv pip install -e .
 
 ipython: ## run ipython inside of the uv venv
 	uv run --with ipython ipython
