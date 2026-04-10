@@ -157,7 +157,7 @@ class WordSearchFormatter(Formatter):
             table.add_row(*row[min_x : max_x + 1])
 
         answer_key = "Answer Key"
-        if game.placed_secret_words:  # type:ignore [attr-defined]
+        if hasattr(game, "placed_secret_words"):
             answer_key += " (*Secret Words)"
         answer_key += ": "
 

@@ -2,7 +2,7 @@
 
 # Configuration file for ipython.
 
-c = get_config()
+c = get_config()  # ty:ignore[unresolved-reference]
 
 # ------------------------------------------------------------------------------
 # InteractiveShellApp(Configurable) configuration

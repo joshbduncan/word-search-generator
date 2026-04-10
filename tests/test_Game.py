@@ -146,14 +146,16 @@ def test_invalid_puzzle_size(ws: WordSearch, size, expected_size):
 def test_cleanup_input(base_game: Game, words: str, ct: int):
     assert len(base_game._cleanup_input(words, False)) == ct
     with pytest.raises(TypeError):
-        base_game._cleanup_input(["cat", "bat", "rat"])  # type: ignore[arg-type]
+        base_game._cleanup_input(
+            ["cat", "bat", "rat"]
+        )  # ty:ignore[invalid-argument-type]
     with pytest.raises(TypeError):
         base_game._cleanup_input(1, False, 10)  # type: ignore
 
 
 def test_invalid_level_direction_type(base_game: Game):
     with pytest.raises(TypeError):
-        base_game.validate_level(None)  # type: ignore[arg-type]
+        base_game.validate_level(None)  # ty:ignore[invalid-argument-type]
 
 
 def test_missing_generator():

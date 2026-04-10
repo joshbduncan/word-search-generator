@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [5.1.0] 2026-04-10
 
 ### Added
 
@@ -24,15 +24,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `DEFAULT_GENERATOR`, `DEFAULT_FORMATTER`, and `DEFAULT_VALIDATORS` in `Game` wrapped with `ClassVar`; overrides in `WordSearch` use matching base-class types to preserve `ClassVar` invariance
 - `Callable` import in `generator.py` moved under `TYPE_CHECKING` (file already uses `from __future__ import annotations`)
 - `EmptyAlphabetError.__init__` `message` parameter given explicit `str` type annotation
+- Migrated `type: ignore` suppression comments in tests and `ipython_config.py` to `ty:ignore` syntax
+- Dependency versions updated in `uv.lock` (attrs 25.4.0 → 26.1.0, charset-normalizer, and others)
 - Comprehensive Google-style docstrings to `WordSearch` class methods (`show()`, `save()`, `__eq__()`, `__repr__()`) with detailed parameter descriptions, usage examples, and exception documentation
 - Comprehensive docstrings for core module
 - Comprehensive docstrings for `cli` module including module docstring, all `argparse.Action` subclasses, and all functions
 - Comprehensive docstrings for `word_search` module: module docstrings for `_formatter.py`, `_generator.py`, and `word_search.py`; class docstrings for `WordSearchFormatter` and `WordSearch`; full Args/Returns/Raises on all `WordSearchFormatter` methods (`show()`, `save()`, `write_csv_file()`, `write_json_file()`, `write_pdf_file()`, `hide_filler_characters()`) and all module-level PDF helpers (`draw_page_title()`, `draw_puzzle()`, `highlight_solution()`, `draw_word_list()`, `draw_puzzle_key()`, `draw_puzzle_page()`); full Args/Returns/Raises on all `WordSearchGenerator` methods (`generate()`, `no_duped_words()`, `capture_fragments()`, `test_a_fit()`, `find_a_fit()`, `fill_words()`, `try_to_fit_word()`, `fill_blanks()`); expanded `WordSearch.__init__()` and fixed `secret_directions` setter (wrong arg name) and `random_words()` (placeholder `_description_` and wrong constant names in Raises)
 - Comprehensive docstrings for `mask` module including `Mask.show()`, `Mask.__repr__()`, `CompoundMask.generate()`, `CompoundMask._apply_mask()`, `Polygon.split_points`, `RegularPolygon.generate()`, `RegularPolygon.cos_sin_from_degrees()`, `Star.generate()`, and all concrete shape `generate()` overrides (`Club`, `Donut`, `Fish`, `Flower`, `Heart`, `Spade`, `Tree`, `Square`, `Oval`) plus `Donut.calculate_golden_donut_ratio()`
-
-
-### Changed
-
 - Simplified `Game.__repr__()` to focus on core puzzle characteristics (words, level, size) that define puzzle identity according to `__eq__`. Removed `require_all_words` and implementation details like generator/formatter for cleaner, more maintainable output
 - Moved `datetime` import in `cli.main()` from lazy inline import to top-level with other stdlib imports
 - Renamed `format` variable in `cli.main()` to `export_format` to avoid shadowing the `format` builtin
@@ -46,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Replaced `game.placed_secret_words  # type:ignore [attr-defined]` in `WordSearchFormatter.show()` with a proper `hasattr()` guard, eliminating the type suppression comment and making the check safe at runtime
 - Stale comment in `cli.main()` referencing non-existent `--random-from` flag, updated to accurately describe `--theme` dependency on `--random`
 - Replaced `assert mask.bounding_box` in `cli.preview_masks()` with an explicit guard that warns and skips the mask, preventing silent failure when running with `-O`
 - Added per-file ignore rules for `E402` in `__init__.py` files and `TCH004` in `bitmap.py`
