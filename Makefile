@@ -19,7 +19,7 @@ ipython: ## run ipython inside of the uv venv
 
 clean: ## clean build artifacts and cache files
 	@echo "🧹 cleaning..."
-	rm -rf build/ dist/ *.egg-info/ .pytest_cache/ .coverage .mypy_cache/
+	rm -rf build/ dist/ *.egg-info/ .pytest_cache/ .coverage
 	find . -type d -name __pycache__ -delete
 	find . -type f -name "*.pyc" -delete
 
@@ -29,7 +29,7 @@ lint: ## lint the app using ruff
 	@echo "📝 linting..."
 	uv run ruff check --fix
 
-typing: ## type check the app using mypy
+typing: ## type check the app using ty
 	@echo "📝 type checking..."
 	uv run ty check src tests
 

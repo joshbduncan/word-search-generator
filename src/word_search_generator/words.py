@@ -10,9 +10,10 @@ alphabetic strings) and any invalid entries are filtered out.
 
 import sys
 from importlib.resources import files
+from importlib.resources.abc import Traversable
 from pathlib import PurePath
 
-data_dir = files("word_search_generator").joinpath("data")
+data_dir: Traversable = files("word_search_generator").joinpath("data")
 
 WORD_LISTS: dict[str, list[str]] = {}
 
@@ -29,7 +30,7 @@ def _is_valid_word(word: str) -> bool:
     return bool(word.strip()) and word.strip().isalpha()
 
 
-def _load_word_list(file_path, name: str) -> list[str]:
+def _load_word_list(file_path: Traversable, name: str) -> list[str]:
     """Load and validate words from a text file.
 
     Args:

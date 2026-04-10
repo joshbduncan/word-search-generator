@@ -2,12 +2,11 @@ from __future__ import annotations
 
 import string
 from abc import ABC, abstractmethod
-from collections.abc import Iterable
 from functools import wraps
-from typing import TYPE_CHECKING, TypeAlias
+from typing import TYPE_CHECKING, Any, TypeAlias
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Callable, Iterable
 
     from . import Game
     from .game import Puzzle
@@ -15,15 +14,15 @@ if TYPE_CHECKING:
 WordFit: TypeAlias = tuple[str, list[tuple[int, int]]]
 WordFits: TypeAlias = list[WordFit]
 
-ALPHABET = list(string.ascii_uppercase)
+ALPHABET: list[str] = list(string.ascii_uppercase)
 
 
 class EmptyAlphabetError(Exception):
     """For when a `WordSearchGenerator` alphabet is empty."""
 
     def __init__(
-        self, message="No valid alphabet characters provided to the generator."
-    ):
+        self, message: str = "No valid alphabet characters provided to the generator."
+    ) -> None:
         self.message = message
         super().__init__(self.message)
 
@@ -31,12 +30,14 @@ class EmptyAlphabetError(Exception):
 class WordFitError(Exception):
     """Raised when a word cannot be fit in the puzzle grid."""
 
-    def __init__(self, message: str = "Word could not be fit in the puzzle grid"):
+    def __init__(
+        self, message: str = "Word could not be fit in the puzzle grid"
+    ) -> None:
         self.message = message
         super().__init__(self.message)
 
 
-def retry(retries: int = 1000):
+def retry(retries: int = 1000) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """Custom retry decorator for retrying a function `retries` times.
 
     Args:
@@ -47,9 +48,9 @@ def retry(retries: int = 1000):
         Returns None if all retries are exhausted without success.
     """
 
-    def decorator(func):
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         @wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
             for _ in range(retries):
                 try:
                     return func(*args, **kwargs)

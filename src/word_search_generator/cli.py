@@ -17,6 +17,7 @@ from collections.abc import ItemsView, Sequence
 from datetime import datetime
 from importlib.metadata import version
 from pathlib import Path
+from typing import Any
 
 from .core.directions import LEVEL_DIRS
 from .core.formatter import ExportFormat
@@ -32,7 +33,13 @@ BUILTIN_MASK_SHAPES: dict[str, type[Mask]] = shapes.get_shape_objects()
 class PrintExamples(argparse.Action):
     """Custom argparse action that prints the epilog examples and exits."""
 
-    def __call__(self, parser, namespace, values, option_string=None):
+    def __call__(
+        self,
+        parser: argparse.ArgumentParser,
+        namespace: argparse.Namespace,
+        values: Any,
+        option_string: str | None = None,
+    ) -> None:
         """Print the parser epilog (usage examples) and exit.
 
         Args:
@@ -50,7 +57,13 @@ class PrintExamples(argparse.Action):
 class RandomAction(argparse.Action):
     """Restrict argparse `-r`, `--random` inputs."""
 
-    def __call__(self, parser, namespace, values, option_string=None):
+    def __call__(
+        self,
+        parser: argparse.ArgumentParser,
+        namespace: argparse.Namespace,
+        values: Any,
+        option_string: str | None = None,
+    ) -> None:
         """Validate that the word count is within allowed bounds.
 
         Args:
@@ -72,7 +85,13 @@ class RandomAction(argparse.Action):
 class DifficultyAction(argparse.Action):
     """Validate difficulty level integers or directional strings."""
 
-    def __call__(self, parser, namespace, values, option_string=None):
+    def __call__(
+        self,
+        parser: argparse.ArgumentParser,
+        namespace: argparse.Namespace,
+        values: Any,
+        option_string: str | None = None,
+    ) -> None:
         """Parse and validate a difficulty level or direction string.
 
         Accepts either a single numeric level (converted to int) or a
@@ -105,7 +124,13 @@ class DifficultyAction(argparse.Action):
 class SizeAction(argparse.Action):
     """Restrict argparse `-s`, `--size` inputs."""
 
-    def __call__(self, parser, namespace, values, option_string=None):
+    def __call__(
+        self,
+        parser: argparse.ArgumentParser,
+        namespace: argparse.Namespace,
+        values: Any,
+        option_string: str | None = None,
+    ) -> None:
         """Validate that the puzzle size is within allowed bounds.
 
         Args:

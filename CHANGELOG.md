@@ -8,6 +8,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `ClassVar` annotations to all unannotated class-level attributes across `Mask`, `Game`, `WordSearch`, and `WordSearchFormatter` to satisfy `ty`'s `reportUnannotatedClassAttribute` rule
+- Type annotations for all `argparse.Action.__call__()` overrides in `cli.py` (`parser`, `namespace`, `values: Any`, `option_string`, `-> None`)
+- Return type `-> None` on exception `__init__` methods in `Game` (`EmptyPuzzleError`, `MissingGeneratorError`, `MissingFormatterError`) and `Generator` (`EmptyAlphabetError`, `WordFitError`)
+- Full type annotations on the `retry()` decorator and its inner `decorator`/`wrapper` functions in `generator.py`
+- `Traversable` type annotation for the `file_path` parameter of `_load_word_list()` in `words.py`
+- `-> None` return type on `Word.remove_from_puzzle()`
+- `bool` type and `-> str` return type on `WordSearchFormatter.show()`
+- `Console` type annotation for `WordSearchFormatter.CONSOLE` class attribute (imported under `TYPE_CHECKING`)
+
+### Changed
+
+- Minimum required Python version bumped from 3.11 to 3.12; updated `pyproject.toml`, `uv.lock`, and `AGENTS.md` accordingly
+- Replaced `mypy` with `ty` as the sole type checker; removed `mypy` from `Makefile` `typing` and `clean` targets and updated `AGENTS.md`
+- `DEFAULT_GENERATOR`, `DEFAULT_FORMATTER`, and `DEFAULT_VALIDATORS` in `Game` wrapped with `ClassVar`; overrides in `WordSearch` use matching base-class types to preserve `ClassVar` invariance
+- `Callable` import in `generator.py` moved under `TYPE_CHECKING` (file already uses `from __future__ import annotations`)
+- `EmptyAlphabetError.__init__` `message` parameter given explicit `str` type annotation
 - Comprehensive Google-style docstrings to `WordSearch` class methods (`show()`, `save()`, `__eq__()`, `__repr__()`) with detailed parameter descriptions, usage examples, and exception documentation
 - Comprehensive docstrings for core module
 - Comprehensive docstrings for `cli` module including module docstring, all `argparse.Action` subclasses, and all functions

@@ -314,7 +314,7 @@ class Word:
         """
         return value + 1 - offset if value is not None else None
 
-    def remove_from_puzzle(self):
+    def remove_from_puzzle(self) -> None:
         """Remove word placement details when a puzzle is reset."""
         self.start_row = None
         self.start_column = None

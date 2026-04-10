@@ -1,5 +1,5 @@
 from enum import IntEnum
-from typing import Literal
+from typing import ClassVar, Literal
 
 from ..utils import BoundingBox, find_bounding_box
 
@@ -33,8 +33,8 @@ class Mask:
     """This class represents Mask object that can be applied
     to a WordSearch puzzle."""
 
-    ACTIVE = "*"
-    INACTIVE = "#"
+    ACTIVE: ClassVar[str] = "*"
+    INACTIVE: ClassVar[str] = "#"
 
     min_size: int | None = None
 

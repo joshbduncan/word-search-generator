@@ -4,18 +4,16 @@ version = "5.0.0"
 authors = [{ name = "Josh Duncan", email = "joshbduncan@gmail.com" }]
 description = "Make awesome Word Search puzzles"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 keywords = ["puzzles", "games", "word-search"]
 license = "MIT"
 classifiers = [
   "Intended Audience :: End Users/Desktop",
+  "License :: OSI Approved :: MIT License",
   "Natural Language :: English",
   "Operating System :: OS Independent",
   "Programming Language :: Python",
-  "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
-  "Programming Language :: Python :: 3.13",
-  "Programming Language :: Python :: 3.14",
   "Topic :: Games/Entertainment :: Puzzle Games",
   "Typing :: Typed",
 ]

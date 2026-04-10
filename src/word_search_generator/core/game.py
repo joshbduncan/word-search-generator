@@ -42,7 +42,7 @@ import json
 from collections.abc import Iterable, Sized
 from math import log2
 from pathlib import Path
-from typing import TypeAlias
+from typing import ClassVar, TypeAlias
 
 from ordered_set import OrderedSet
 
@@ -78,7 +78,7 @@ class EmptyPuzzleError(Exception):
             "Puzzle has no placed words. Add words using add_words() or ensure "
             "words can be placed in the available space."
         ),
-    ):
+    ) -> None:
         self.message = message
         super().__init__(self.message)
 
@@ -101,7 +101,7 @@ class MissingGeneratorError(Exception):
             "No generator configured. Set a generator using the 'generator' "
             "parameter or Game.DEFAULT_GENERATOR."
         ),
-    ):
+    ) -> None:
         self.message = message
         super().__init__(self.message)
 
@@ -124,7 +124,7 @@ class MissingFormatterError(Exception):
             "No formatter configured. Set a formatter using the 'formatter' "
             "parameter or Game.DEFAULT_FORMATTER to display or save puzzles."
         ),
-    ):
+    ) -> None:
         self.message = message
         super().__init__(self.message)
 
@@ -312,7 +312,7 @@ class Game:
     """
 
     # Puzzle Size Constraints
-    MIN_PUZZLE_SIZE = 5
+    MIN_PUZZLE_SIZE: ClassVar[int] = 5
     """Minimum allowed puzzle grid size in characters.
 
     Puzzles smaller than this size cannot accommodate most words and provide
@@ -320,7 +320,7 @@ class Game:
     for word placement and random filler characters.
     """
 
-    MAX_PUZZLE_SIZE = 50
+    MAX_PUZZLE_SIZE: ClassVar[int] = 50
     """Maximum allowed puzzle grid size in characters.
 
     Large puzzles become difficult to solve and consume excessive computational
@@ -328,14 +328,14 @@ class Game:
     practical performance constraints.
     """
 
-    MIN_PUZZLE_WORDS = 1
+    MIN_PUZZLE_WORDS: ClassVar[int] = 1
     """Minimum number of words required for puzzle generation.
 
     At least one word is needed to create a meaningful word search puzzle.
     This constraint prevents empty or invalid puzzle creation attempts.
     """
 
-    MAX_PUZZLE_WORDS = 100
+    MAX_PUZZLE_WORDS: ClassVar[int] = 100
     """Maximum number of words allowed in a single puzzle.
 
     Too many words can make puzzles unsolvable and may cause generation
@@ -343,7 +343,7 @@ class Game:
     puzzle complexity and generation performance.
     """
 
-    MAX_FIT_TRIES = 1000
+    MAX_FIT_TRIES: ClassVar[int] = 1000
     """Maximum attempts for placing words during generation.
 
     This limit prevents infinite loops when word placement is impossible
@@ -353,7 +353,7 @@ class Game:
     """
 
     # Default Component Configuration
-    DEFAULT_GENERATOR: Generator | None = None
+    DEFAULT_GENERATOR: ClassVar[Generator | None] = None
     """Default generator instance used when none is specified.
 
     If None, users must provide a generator or set this class attribute
@@ -361,7 +361,7 @@ class Game:
     default word placement algorithm.
     """
 
-    DEFAULT_FORMATTER: Formatter | None = None
+    DEFAULT_FORMATTER: ClassVar[Formatter | None] = None
     """Default formatter instance used when none is specified.
 
     If None, users must provide a formatter or set this class attribute
@@ -369,7 +369,7 @@ class Game:
     the default output formatting.
     """
 
-    DEFAULT_VALIDATORS: Iterable[Validator] = []
+    DEFAULT_VALIDATORS: ClassVar[Iterable[Validator]] = []
     """Default word validation rules applied during generation.
 
     Empty list means no validation by default. Can be set to a collection
@@ -378,7 +378,7 @@ class Game:
     """
 
     # Mask Character Constants
-    ACTIVE = "*"
+    ACTIVE: ClassVar[str] = "*"
     """Character marking active/available grid cells in puzzle masks.
 
     Cells marked with this character can contain words and filler letters.
@@ -386,7 +386,7 @@ class Game:
     when geometric constraints are applied.
     """
 
-    INACTIVE = "#"
+    INACTIVE: ClassVar[str] = "#"
     """Character marking inactive/blocked grid cells in puzzle masks.
 
     Cells marked with this character are excluded from puzzle generation
@@ -403,7 +403,7 @@ class Game:
         generator: Generator | None = None,
         formatter: Formatter | None = None,
         validators: Iterable[Validator] | None = None,
-    ):
+    ) -> None:
         # setup puzzle
         self._words: WordSet = OrderedSet()
         self._level: DirectionSet = set()
@@ -621,7 +621,7 @@ class Game:
         return self._directions
 
     @directions.setter
-    def directions(self, value: int | str | Iterable[str]):
+    def directions(self, value: int | str | Iterable[str]) -> None:
         """Possible directions for puzzle words.
 
         Args:
@@ -660,7 +660,7 @@ class Game:
         return self._size
 
     @size.setter
-    def size(self, value: int):
+    def size(self, value: int) -> None:
         """Set the puzzle size. All puzzles are square.
 
         Args:
@@ -1026,7 +1026,9 @@ class Game:
                     ) from e
         return o
 
-    def validate_level(self, d) -> DirectionSet:
+    def validate_level(
+        self, d: int | str | Iterable[str | tuple[int, int] | Direction]
+    ) -> DirectionSet:
         """Convert level specification to a validated set of Direction enums.
 
         This method provides flexible input handling for difficulty levels and

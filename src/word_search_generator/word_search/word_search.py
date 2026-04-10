@@ -10,6 +10,7 @@ direction sets.
 import json
 from collections.abc import Iterable
 from pathlib import Path
+from typing import ClassVar
 
 from ordered_set import OrderedSet
 
@@ -59,15 +60,15 @@ class WordSearch(Game):
             punctuation, no single-letter words, no sub-words).
     """
 
-    MIN_PUZZLE_SIZE = 5
-    MAX_PUZZLE_SIZE = 50
-    MIN_PUZZLE_WORDS = 1
-    MAX_PUZZLE_WORDS = 100
-    MAX_FIT_TRIES = 1000
+    MIN_PUZZLE_SIZE: ClassVar[int] = 5
+    MAX_PUZZLE_SIZE: ClassVar[int] = 50
+    MIN_PUZZLE_WORDS: ClassVar[int] = 1
+    MAX_PUZZLE_WORDS: ClassVar[int] = 100
+    MAX_FIT_TRIES: ClassVar[int] = 1000
 
-    DEFAULT_GENERATOR = WordSearchGenerator()
-    DEFAULT_FORMATTER = WordSearchFormatter()
-    DEFAULT_VALIDATORS = [
+    DEFAULT_GENERATOR: ClassVar[Generator | None] = WordSearchGenerator()
+    DEFAULT_FORMATTER: ClassVar[Formatter | None] = WordSearchFormatter()
+    DEFAULT_VALIDATORS: ClassVar[Iterable[Validator]] = [
         NoPalindromes(),
         NoPunctuation(),
         NoSingleLetterWords(),
@@ -86,7 +87,7 @@ class WordSearch(Game):
         generator: Generator | None = None,
         formatter: Formatter | None = None,
         validators: Iterable[Validator] | None = DEFAULT_VALIDATORS,
-    ):
+    ) -> None:
         """Create a new word-search puzzle.
 
         If ``words`` (or ``secret_words``) is provided the puzzle is
@@ -204,7 +205,7 @@ class WordSearch(Game):
         return self._secret_directions
 
     @secret_directions.setter
-    def secret_directions(self, value: int | str | Iterable[str]):
+    def secret_directions(self, value: int | str | Iterable[str]) -> None:
         """Set the allowed directions for secret words and regenerate.
 
         Args:
@@ -229,7 +230,7 @@ class WordSearch(Game):
         hide_key: bool = False,
         reversed_letters: bool = False,
         sort_word_list: bool = True,
-    ):
+    ) -> None:
         """Display the current puzzle in the console.
 
         Prints a formatted representation of the word search puzzle with optional

@@ -14,7 +14,7 @@ import copy
 import csv
 import json
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 from fpdf import FPDF, drawing
 from rich import box
@@ -33,6 +33,8 @@ from ..utils import (
 )
 
 if TYPE_CHECKING:
+    from rich.console import Console
+
     from ..core import Game, Puzzle, Word
 
 
@@ -61,16 +63,16 @@ class WordSearchFormatter(Formatter):
     """
 
     # pdf export settings
-    PDF_AUTHOR = "Josh Duncan"
-    PDF_CREATOR = "word-search @ joshbduncan.com"
-    PDF_TITLE = "Word Search Puzzle"
-    PDF_FONT_SIZE_XXL = 18
-    PDF_FONT_SIZE_XL = 15
-    PDF_FONT_SIZE_L = 12
-    PDF_FONT_SIZE_M = 9
-    PDF_FONT_SIZE_S = 5
-    PDF_PUZZLE_WIDTH = 7  # inches
-    CONSOLE = console
+    PDF_AUTHOR: ClassVar[str] = "Josh Duncan"
+    PDF_CREATOR: ClassVar[str] = "word-search @ joshbduncan.com"
+    PDF_TITLE: ClassVar[str] = "Word Search Puzzle"
+    PDF_FONT_SIZE_XXL: ClassVar[int] = 18
+    PDF_FONT_SIZE_XL: ClassVar[int] = 15
+    PDF_FONT_SIZE_L: ClassVar[int] = 12
+    PDF_FONT_SIZE_M: ClassVar[int] = 9
+    PDF_FONT_SIZE_S: ClassVar[int] = 5
+    PDF_PUZZLE_WIDTH: ClassVar[int] = 7  # inches
+    CONSOLE: ClassVar[Console] = console
 
     def show(
         self,
@@ -79,9 +81,9 @@ class WordSearchFormatter(Formatter):
         hide_fillers: bool = False,
         lowercase: bool = False,
         hide_key: bool = False,
-        reversed_letters=False,
+        reversed_letters: bool = False,
         sort_word_list: bool = True,
-    ):
+    ) -> str:
         """Render the puzzle to a Rich-styled string for console output.
 
         Builds a ``rich.table.Table`` from the (optionally cropped) puzzle
@@ -452,7 +454,7 @@ class WordSearchFormatter(Formatter):
         return output
 
 
-def draw_page_title(title: str, pdf: FPDF, formatter: WordSearchFormatter):
+def draw_page_title(title: str, pdf: FPDF, formatter: WordSearchFormatter) -> None:
     """Write a bold, centred title at the current PDF cursor position.
 
     Args:
@@ -492,7 +494,7 @@ def draw_puzzle(pdf: FPDF, game: Game, gsize: float, lowercase: bool = False) ->
 
 def highlight_solution(
     pdf: FPDF, game: Game, gsize: float, start_x: float, start_y: float
-):
+) -> None:
     """Draw a coloured stroke through each placed word on the PDF page.
 
     Each word gets a semi-transparent line from its first letter centre to
@@ -541,7 +543,7 @@ def draw_word_list(
     solution: bool = False,
     lowercase: bool = False,
     sort_word_list: bool = True,
-):
+) -> None:
     """Render the directions hint and the word list below the puzzle grid.
 
     Words are laid out in centred, wrapping lines that fit the effective
@@ -637,7 +639,7 @@ def draw_puzzle_key(
     game: Game,
     lowercase: bool = False,
     sort_word_list: bool = True,
-):
+) -> None:
     """Print the answer key upside-down at the bottom of the current page.
 
     The page is rotated 180 degrees around its centre, the text cursor is

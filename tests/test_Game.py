@@ -153,7 +153,7 @@ def test_cleanup_input(base_game: Game, words: str, ct: int):
 
 def test_invalid_level_direction_type(base_game: Game):
     with pytest.raises(TypeError):
-        base_game.validate_level(None)
+        base_game.validate_level(None)  # type: ignore[arg-type]
 
 
 def test_missing_generator():
@@ -279,7 +279,9 @@ def test_missing_formatter(tmp_path: Path):
 def test_missing_default_formatter(tmp_path: Path):
     words = OrderedSet([Word("dog"), Word("cat"), Word("horse")])
     game = Game(words, generator=WordSearchGenerator())
-    game.formatter = game.DEFAULT_FORMATTER = None
+    game.formatter = game.DEFAULT_FORMATTER = (
+        None  # ty:ignore[invalid-attribute-access]
+    )
     with pytest.raises(MissingFormatterError):
         game.save(tmp_path.joinpath("hey-yo.pdf"))
 
