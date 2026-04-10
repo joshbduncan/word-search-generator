@@ -147,8 +147,8 @@ def test_cleanup_input(base_game: Game, words: str, ct: int):
     assert len(base_game._cleanup_input(words, False)) == ct
     with pytest.raises(TypeError):
         base_game._cleanup_input(
-            ["cat", "bat", "rat"]
-        )  # ty:ignore[invalid-argument-type]
+            ["cat", "bat", "rat"]  # ty:ignore[invalid-argument-type]
+        )
     with pytest.raises(TypeError):
         base_game._cleanup_input(1, False, 10)  # type: ignore
 
@@ -281,9 +281,7 @@ def test_missing_formatter(tmp_path: Path):
 def test_missing_default_formatter(tmp_path: Path):
     words = OrderedSet([Word("dog"), Word("cat"), Word("horse")])
     game = Game(words, generator=WordSearchGenerator())
-    game.formatter = game.DEFAULT_FORMATTER = (
-        None  # ty:ignore[invalid-attribute-access]
-    )
+    game.formatter = game.DEFAULT_FORMATTER = None  # ty:ignore[invalid-attribute-access]
     with pytest.raises(MissingFormatterError):
         game.save(tmp_path.joinpath("hey-yo.pdf"))
 

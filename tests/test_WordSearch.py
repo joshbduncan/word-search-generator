@@ -295,9 +295,9 @@ def test_puzzle_solution_output(builtin_mask_shapes, capsys):
     mask: Mask = mask_class()
     if mask:
         ws.apply_mask(mask)
-    ws.formatter.CONSOLE = Console(
+    ws.formatter.CONSOLE = Console(  # ty:ignore[invalid-assignment]
         color_system="truecolor", force_terminal=True
-    )  # ty:ignore[invalid-assignment]
+    )
     ws.show(solution=True)
 
     captured = capsys.readouterr()
@@ -449,9 +449,7 @@ def test_word_directions(words, secret_words):
 def test_validator_setter(words):
     ws: WordSearch = WordSearch(words, validators=None)
     ws.validators = [NoSingleLetterWords()]
-    assert all(
-        isinstance(v, NoSingleLetterWords) for v in ws.validators
-    )  # ty:ignore[not-iterable]
+    assert all(isinstance(v, NoSingleLetterWords) for v in ws.validators)  # ty:ignore[not-iterable]
 
 
 def test_validator_setter_invalid_validator(words):
