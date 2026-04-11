@@ -1,9 +1,8 @@
 VENV:=.venv
 BIN:=$(VENV)/bin
-PWD := $(realpath $(dir $(abspath $(firstword $(MAKEFILE_LIST)))))
 
 .DEFAULT_GOAL := help
-.PHONY: help
+.PHONY: help dev ipython clean cleanup lint typing test format nox build release
 ##@ General
 help: ## Display this help section
 	@echo $(MAKEFILE_LIST)
@@ -41,27 +40,16 @@ format: ## runs cleaners
 	@echo "🧾 formatting..."
 	uv run ruff format
 
-polish: cleanup test  ## cleans and lints before running the test suite
-
-verify: test ## run all verification steps
-	@echo "✅ all checks passed"
-
 nox: ## runs linting, formatting, type checking, and tests on all specified envs via nox
 	@echo "🎯 nox..."
-	uv run nox -p
+	uv run nox
 
 ##@ Build
-build: cleanup ## build the app package
+build: cleanup test ## build the app package
 	@echo "🏗️ building package..."
 	uv build
 
 ##@ Release
-pre-release: build ## verify package before release
-	@echo "🔍 verifying package..."
-	uvx twine check dist/*
-	@echo "📋 package contents:"
-	@ls -la dist/
-
-release: pre-release ## release on pypi (with verification)
+release: build ## release on pypi (with verification)
 	@echo "🚀 uploading to PyPI..."
-	uvx twine upload dist/*.whl dist/*.tar.gz
+	uv publish
