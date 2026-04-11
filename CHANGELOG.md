@@ -39,8 +39,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Consolidated Ruff linting rules by moving `extend-select` rules directly into `select` array
 - Replaced mypy with `ty` for type checking across the project
 - Updated copyright year to 2026 in LICENSE and package files
-- Updated target Python version from 3.10 to 3.11 in Ruff configuration
+- Updated target Python version from 3.10 to 3.12 in Ruff configuration
+- Switched `TypeAlias` annotation to the `type` keyword
+    - Changed all `x = WordSet()` to `x: WordSet = OrderedSet()`
 - Project dependencies updated to latest releases
+    -fpdf2 2.8.7
+    -pillow 12.2.0
+    -rich 14.3.3
+    -ordered-set 4.1.0
 
 ### Fixed
 
@@ -51,6 +57,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Cleaned up type ignore comments in mask tests for better code clarity
 - Type checking error in `WordSearchGenerator.find_a_fit()` where `hasattr()` assertions for `secret_directions` caused `~AlwaysFalsy` type inference issues. Replaced with `getattr()` pattern for proper type narrowing
 - Updated `test_repr` to test repr informativeness and object recreation without relying on `eval()` magic
+- Updated Pillow `Image.Image.getdata` to `Image.Image.get_flattened_data`: Image.Image.getdata is deprecated and will be removed in Pillow 14 (2027-10-15).
 
 ## [5.0.0] 2025-10-15
 

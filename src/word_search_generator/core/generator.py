@@ -3,7 +3,7 @@ from __future__ import annotations
 import string
 from abc import ABC, abstractmethod
 from functools import wraps
-from typing import TYPE_CHECKING, Any, TypeAlias
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable
@@ -11,8 +11,8 @@ if TYPE_CHECKING:
     from . import Game
     from .game import Puzzle
 
-WordFit: TypeAlias = tuple[str, list[tuple[int, int]]]
-WordFits: TypeAlias = list[WordFit]
+type WordFit = tuple[str, list[tuple[int, int]]]
+type WordFits = list[WordFit]
 
 ALPHABET: list[str] = list(string.ascii_uppercase)
 

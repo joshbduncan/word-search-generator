@@ -11,7 +11,7 @@ alphabet.
 from __future__ import annotations
 
 import random
-from typing import TYPE_CHECKING, TypeAlias
+from typing import TYPE_CHECKING
 
 from ..core.game import Puzzle
 from ..core.generator import Generator, WordFitError, retry
@@ -23,8 +23,8 @@ if TYPE_CHECKING:
     from ..core.game import DirectionSet, Puzzle
 
 
-Fit: TypeAlias = tuple[str, list[tuple[int, int]]]
-Fits: TypeAlias = list[tuple[str, list[tuple[int, int]]]]
+type Fit = tuple[str, list[tuple[int, int]]]
+type Fits = list[tuple[str, list[tuple[int, int]]]]
 
 
 class WordSearchGenerator(Generator):

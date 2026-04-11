@@ -169,7 +169,7 @@ class ImageMask(Bitmap):
 
         # Extract pixel data and convert to coordinates
         assert cropped.mode == "L"
-        pixels_iter = cast("Iterable[int]", cropped.getdata())
+        pixels_iter = cast("Iterable[int]", cropped.get_flattened_data())
         pixels: list[int] = list(pixels_iter)
 
         w: int = cropped.size[0]

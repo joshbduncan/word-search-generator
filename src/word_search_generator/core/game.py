@@ -42,7 +42,7 @@ import json
 from collections.abc import Iterable, Sized
 from math import log2
 from pathlib import Path
-from typing import ClassVar, TypeAlias
+from typing import ClassVar
 
 from ordered_set import OrderedSet
 
@@ -193,7 +193,7 @@ class MissingWordError(Exception):
 
 # Type Aliases for Game Components
 
-Puzzle: TypeAlias = list[list[str]]
+type Puzzle = list[list[str]]
 """2D grid representing the puzzle letter matrix.
 
 A puzzle is stored as a list of rows, where each row is a list of single
@@ -204,7 +204,7 @@ Example:
     [["A", "B", "C"], ["D", "E", "F"], ["G", "H", "I"]]
 """
 
-DirectionSet: TypeAlias = set[Direction]
+type DirectionSet = set[Direction]
 """Set of allowed word placement directions for puzzle generation.
 
 Contains Direction enum values that define which orientations words can
@@ -215,7 +215,7 @@ Example:
     {Direction.E, Direction.S, Direction.SE}  # Right, Down, Diagonal
 """
 
-Key: TypeAlias = dict[str, KeyInfo]
+type Key = dict[str, KeyInfo]
 """Answer key mapping word text to placement details.
 
 Dictionary where keys are word strings and values are KeyInfo objects
@@ -226,7 +226,7 @@ Example:
     {"CAT": KeyInfo(start=(1,1), direction=Direction.E, length=3)}
 """
 
-KeyJson: TypeAlias = dict[str, KeyInfoJson]
+type KeyJson = dict[str, KeyInfoJson]
 """JSON-serializable version of the answer key.
 
 Similar to Key but with JSON-compatible value types instead of KeyInfo
@@ -236,7 +236,7 @@ Example:
     {"CAT": {"start": [1,1], "direction": "E", "length": 3}}
 """
 
-WordSet: TypeAlias = OrderedSet[Word]
+type WordSet = OrderedSet[Word]
 """Ordered collection of Word objects for puzzle generation.
 
 OrderedSet maintains word insertion order while preventing duplicates.

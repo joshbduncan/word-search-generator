@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import math
 import random
-from typing import TYPE_CHECKING, TypeAlias
+from typing import TYPE_CHECKING
 
 from .words import WORD_LISTS
 
@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from .core.game import DirectionSet, Puzzle, Word, WordSet
 
 
-BoundingBox: TypeAlias = tuple[tuple[int, int], tuple[int, int]]
+type BoundingBox = tuple[tuple[int, int], tuple[int, int]]
 
 
 def round_half_up(n: float, decimals: int = 0) -> float:

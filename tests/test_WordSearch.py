@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
+from ordered_set import OrderedSet
 from rich.color import ColorSystem
 from rich.console import Console
 
@@ -461,7 +462,7 @@ def test_validator_setter_invalid_validator(words):
 
 
 def test_no_words_to_generate(ws: WordSearch):
-    ws._words = WordSet()
+    ws._words: WordSet = OrderedSet()
     with pytest.raises(EmptyWordlistError):
         ws.generate()
 
