@@ -1,6 +1,6 @@
 [project]
 name = "word-search-generator"
-version = "5.1.0"
+version = "5.1.1"
 authors = [{ name = "Josh Duncan", email = "joshbduncan@gmail.com" }]
 description = "Make awesome Word Search puzzles"
 readme = "README.md"
@@ -19,7 +19,7 @@ classifiers = [
 ]
 dependencies = [
   "fpdf2==2.8.7",
-  "pillow==12.2.0",
+  "pillow>=13.0.0",
   "rich==14.3.3",
   "ordered-set==4.1.0",
 ]

@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.1.1] 2026-11-27
+
+### Security
+
+- Bumped Pillow to 13.0.0 to address CVE-2026-112900 (EPS/Ghostscript filename injection in `Image.open()`) along with the other fixes in the Pillow 13.0.0 security release (CVE-2026-112403, CVE-2026-112393). `word-search-generator` only opens BMP, JPEG, and PNG images for bitmap masks, so the EPS code path is not reachable through this package, but the vulnerable Pillow version is no longer installed alongside it.
+
+### Changed
+
+- Pillow dependency changed from an exact pin (`pillow==12.2.0`) to a minimum version (`pillow>=13.0.0`) so downstream installs can pick up future Pillow security fixes without waiting on a new release
+- `uv.lock` regenerated with uv 0.13.5 (lockfile format revision 5)
+- Makefile cleanup: removed unused `polish`, `verify`, and `pre-release` targets; `build` now runs the test suite; `release` depends on `build`; all targets declared `.PHONY`
+
 ## [5.1.0] 2026-04-10
 
 ### Added
