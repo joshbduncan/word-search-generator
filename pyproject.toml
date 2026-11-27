@@ -9,7 +9,6 @@ keywords = ["puzzles", "games", "word-search"]
 license = "MIT"
 classifiers = [
   "Intended Audience :: End Users/Desktop",
-  "License :: OSI Approved :: MIT License",
   "Natural Language :: English",
   "Operating System :: OS Independent",
   "Programming Language :: Python",
@@ -35,7 +34,7 @@ bug-tracker = "https://github.com/joshbduncan/word-search-generator/issues"
 word-search = "word_search_generator.cli:main"
 
 [build-system]
-requires = ["uv_build>=0.9.26,<0.10.0"]
+requires = ["uv_build>=0.13.5,<0.14.0"]
 build-backend = "uv_build"
 
 [tool.uv]

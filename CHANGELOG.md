@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Pillow dependency changed from an exact pin (`pillow==12.2.0`) to a minimum version (`pillow>=13.0.0`) so downstream installs can pick up future Pillow security fixes without waiting on a new release
 - `uv.lock` regenerated with uv 0.13.5 (lockfile format revision 5)
+- `build-system.requires` updated to `uv_build>=0.13.5,<0.14.0` to match the current uv version
+- Removed the deprecated `License :: OSI Approved :: MIT License` classifier; the license is declared by the PEP 639 `license = "MIT"` field
 - Makefile cleanup: removed unused `polish`, `verify`, and `pre-release` targets; `build` now runs the test suite; `release` depends on `build`; all targets declared `.PHONY`
 
 ## [5.1.0] 2026-04-10
